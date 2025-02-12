@@ -35,3 +35,39 @@ A GUI application for comparing localization files (CSV, LANG, XML) across diffe
   - Machine translation integration
   - Dark/Light theme toggle
   - Session history
+
+Development
+Technologies Used
+Python 3.8
+Tkinter (GUI)
+GitPython (Git integration)
+colorama (CLI colors)
+csv/xml modules (file parsing)
+
+- **Contributing**
+  -Fork the repository
+
+  -Create a feature branch (git checkout -b feature/your-feature)
+
+  -Commit changes (git commit -m 'Add some feature')
+
+  -Push to branch (git push origin feature/your-feature)
+
+  -Open a Pull Request
+
+**Please follow these guidelines:**
+
+- Report bugs using GitHub Issues
+
+- Suggest features via Discussions
+
+- Follow PEP8 coding standards
+
+- Include tests for new features
+
+**License**
+MIT License
+
+Copyright (c) 2023 Alp Yalay
+
+Permission is hereby granted...

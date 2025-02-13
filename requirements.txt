@@ -1,0 +1,5 @@
+gitpython==3.1.40
+colorama==0.4.6
+fpdf2==2.7.7
+pandas==2.1.4
+openpyxl==3.1.2

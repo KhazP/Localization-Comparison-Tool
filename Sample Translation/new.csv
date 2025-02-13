@@ -1,5 +1,25 @@
-key,value
-greeting,hello
-world,World!
-file_description,This is the new file.
-new_line,A new line has been added.
+<?xml version="1.0" encoding="UTF-8"?>
+<lang>
+    <!-- Main Menu -->
+    <string name="menu.main.play">Oyna</string>
+    <string name="menu.main.options">Seçenekler</string>
+    <string name="menu.main.quit">Çıkış</string>
+    
+    <!-- Options Menu -->
+    <string name="menu.options.graphics">Grafik Kalitesi</string>
+    <string name="menu.options.sound">Ses Seviyesi</string>
+    <string name="menu.options.language">Dil</string>
+    
+    <!-- Lobby -->
+    <!-- Missing: menu.lobby.info.maxplayers.server -->
+    <string name="menu.lobby.info.status">Sunucu Durumu</string>
+    <string name="menu.lobby.wait">Oyuncular Bekleniyor...</string>
+    
+    <!-- Navigation -->
+    <string name="menu.nav.back">Geri</string>
+    <!-- Missing: menu.nav.select -->
+    
+    <!-- Error Messages -->
+    <string name="error.connection">Bağlantı Hatası</string>
+    <string name="error.timeout">Sunucu Zaman Aşımı</string>
+</lang>

@@ -11,6 +11,15 @@ import xml_parser  # New import added at top
 # New import for mixed parser
 sys.path.append("E:/ProgramTests/LocalizerAppMain")
 from MixedParser import mixed_parser
+import json
+import requests
+import html
+from typing import Optional
+import re
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 # Setup logging at the top of the file
 logging.basicConfig(level=logging.DEBUG,
@@ -52,6 +61,41 @@ class ParsingResult:
     
     def __bool__(self):
         return self.success
+
+# New base class and parser subclasses
+class TranslationParser:
+    def parse(self, content: str) -> dict:
+        raise NotImplementedError
+
+class LangParser(TranslationParser):
+    def parse(self, content: str) -> dict:
+        # Reuse the existing plain text lang parser function
+        return read_lang_file(content)
+
+class JSONParser(TranslationParser):
+    def parse(self, content: str) -> dict:
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON parse error: {str(e)}")
+            return {}
+
+class YAMLParser(TranslationParser):
+    def parse(self, content: str) -> dict:
+        if yaml:
+            try:
+                data = yaml.safe_load(content)
+                if isinstance(data, dict):
+                    return data
+                else:
+                    logging.error("YAML content is not a dict")
+                    return {}
+            except yaml.YAMLError as e:
+                logging.error(f"YAML parse error: {str(e)}")
+                return {}
+        else:
+            logging.error("PyYAML not installed")
+            return {}
 
 def read_csv_file(content, delimiter=',', has_header=True, key_column='key', value_column='value'):
     """Reads CSV or XML data from a string and returns a ParsingResult."""
@@ -161,17 +205,32 @@ def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) 
     logging.debug(f"Parsing file with extension: {ext}")
     logging.debug(f"Content starts with: {content[:100]}")
     
-    # Always check content type first, regardless of extension
     content = content.lstrip()
+
+    # New parser-based handling for JSON, YAML, and .lang files.
+    if ext.lower() == '.json' and not content.startswith('<'):
+        logging.debug("Using JSON parser")
+        parser = JSONParser()
+        return parser.parse(content)
+
+    if ext.lower() in ['.yaml', '.yml'] and not content.startswith('<'):
+        logging.debug("Using YAML parser")
+        parser = YAMLParser()
+        return parser.parse(content)
+
+    if ext.lower() == '.lang' and not content.startswith('<'):
+        logging.debug("Using .lang parser")
+        parser = LangParser()
+        return parser.parse(content)
     
-    # If content looks like XML, use XML parser
+    # Fallback for XML
     if content.startswith(('<?xml', '<lang', '<string')):
         logging.debug("Content appears to be XML, using XML parser")
         translations = read_xml_lang_content(content, trim_whitespace)
         logging.debug(f"XML parser found {len(translations)} entries")
         return translations
     
-    # For true CSV files (not containing XML)
+    # Fallback for CSV
     if ext.lower() == '.csv' and not content.startswith('<'):
         logging.debug("Using CSV parser")
         result = read_csv_file(content)
@@ -179,21 +238,13 @@ def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) 
         logging.debug(f"CSV parser found {len(translations)} entries")
         return translations
     
-    # For true .lang files (not containing XML)
-    if ext.lower() == '.lang' and not content.startswith('<'):
-        logging.debug("Using .lang parser")
-        translations = read_lang_file(content, trim_whitespace)
-        logging.debug(f"Lang parser found {len(translations)} entries")
-        return translations
-    
-    # For plain text files that aren't XML
+    # Fallback for plain text
     if ext.lower() == '.txt' and not content.startswith('<'):
         logging.debug("Using plain text parser")
         translations = read_lang_file(content, trim_whitespace)
         logging.debug(f"Text parser found {len(translations)} entries")
         return translations
 
-    # For any other files, try XML first then fallback to plain text
     logging.debug("Trying XML parser as fallback")
     translations = read_xml_lang_content(content, trim_whitespace)
     if translations:
@@ -290,16 +341,44 @@ def get_file_content(repo_path, file_path, commit_id):
         print(f"An unexpected error occurred in get_file_content: {e}")
         return {}
 
-def compare_translations(old_translations, new_translations,
-                       ignore_case=False, ignore_whitespace=False,
-                       is_gui=False, compare_values=False,
-                       ignore_patterns=None):
-    """
-    Compare two translation dictionaries.
-    Only checks string names (keys) to find:
-    - Keys present in source but missing from target
-    - Keys present in target but missing from source
-    """
+def machine_translate(text: str, source_lang: str, target_lang: str, api_key: str) -> Optional[str]:
+    """Translate text using Google Cloud Translate API."""
+    if not api_key:
+        return None
+        
+    try:
+        url = "https://translation.googleapis.com/language/translate/v2"
+        payload = {
+            'q': text,
+            'source': source_lang,
+            'target': target_lang,
+            'key': api_key
+        }
+        
+        response = requests.post(url, params=payload)
+        response.raise_for_status()
+        
+        result = response.json()
+        if 'data' in result and 'translations' in result['data']:
+            translated_text = result['data']['translations'][0]['translatedText']
+            # Decode HTML entities that might be in the response
+            return html.unescape(translated_text)
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Translation API error: {str(e)}")
+    except (KeyError, IndexError) as e:
+        logging.error(f"Unexpected API response format: {str(e)}")
+    except Exception as e:
+        logging.error(f"Unexpected error during translation: {str(e)}")
+        
+    return None
+
+def compare_translations(old_translations, new_translations, ignore_case=False, 
+                       ignore_whitespace=False, is_gui=False, compare_values=False,
+                       ignore_patterns=None, log_missing_keys=False, target_locale="target",
+                       auto_fill_missing=False, mt_settings=None, include_summary=True):
+    """Compares two translation dictionaries with optional machine translation."""
+    
     # Filter ignored patterns and normalize keys
     def normalize_key(k):
         k = k.strip()  # Always strip whitespace from keys
@@ -320,16 +399,45 @@ def compare_translations(old_translations, new_translations,
     # Find what's missing and what's obsolete
     missing_in_target = source_keys - target_keys
     obsolete_in_target = target_keys - source_keys
+    invalid_placeholders = []  # Track keys with placeholder mismatches
+
+    # Check for placeholder consistency in matching keys
+    common_keys = source_keys & target_keys
+    for key in common_keys:
+        source_text = old_translations[key]
+        target_text = new_translations[key]
+        is_valid, error_msg = validate_placeholders(source_text, target_text)
+        if not is_valid:
+            invalid_placeholders.append((key, error_msg))
+            if log_missing_keys:
+                logging.warning(f"Placeholder mismatch in key '{key}': {error_msg}")
+
+    # Auto-fill missing translations if enabled
+    if auto_fill_missing:
+        for key in missing_in_target:
+            new_translations[key] = ""  # Add empty string for missing keys
+            if log_missing_keys:
+                logging.info(f"Auto-filled missing key: {key}")
 
     missing_count = len(missing_in_target)
     obsolete_count = len(obsolete_in_target)
+    placeholder_count = len(invalid_placeholders)
     output_lines = []
 
     # Calculate max key length for proper alignment
     max_key_length = max((len(key) for key in (source_keys | target_keys)), default=0)
 
-    # Report missing entries (in source but not target)
+    # Report placeholder mismatches
+    for key, error_msg in invalid_placeholders:
+        line = f"~ {key.ljust(max_key_length)} : {new_translations[key]} ({error_msg})"
+        if not is_gui:
+            line = Fore.YELLOW + line + Style.RESET_ALL
+        output_lines.append(line)
+
+    # Log a warning for each missing key if the flag is enabled
     for key in sorted(missing_in_target):
+        if log_missing_keys:
+            logging.warning(f"Missing translation key '{key}' for locale '{target_locale}'")
         line = f"+ {key.ljust(max_key_length)} : {old_translations[key]} (missing in source translation)"
         if not is_gui:
             line = Fore.GREEN + line + Style.RESET_ALL
@@ -342,11 +450,132 @@ def compare_translations(old_translations, new_translations,
             line = Fore.RED + line + Style.RESET_ALL
         output_lines.append(line)
 
-    if output_lines:
-        output_lines.append("")
-    
-    output_lines.append("--- Summary ---")
-    output_lines.append(f"Missing in target: {missing_count}")
-    output_lines.append(f"Obsolete in target: {obsolete_count}")
+    # Only add summary section if requested
+    if include_summary:
+        if output_lines:
+            output_lines.append("")
+        output_lines.append("--- Summary ---")
+        output_lines.append(f"Missing in target: {missing_count}")
+        output_lines.append(f"Obsolete in target: {obsolete_count}")
+        output_lines.append(f"Placeholder mismatches: {placeholder_count}")
 
     return "\n".join(output_lines)
+
+def translate_missing_keys(source_dict: dict, target_dict: dict, 
+                         source_lang: str, target_lang: str, 
+                         api_key: str, 
+                         progress_callback=None) -> tuple[dict, list[str]]:
+    """
+    Translate missing keys from source to target language.
+    Returns (updated_dict, errors)
+    """
+    if not api_key:
+        return target_dict, ["No API key provided"]
+
+    updated_dict = target_dict.copy()
+    errors = []
+    total = len(source_dict)
+    processed = 0
+
+    for key, text in source_dict.items():
+        if key not in target_dict:
+            try:
+                translated = machine_translate(text, source_lang, target_lang, api_key)
+                if translated:
+                    updated_dict[key] = translated
+                else:
+                    errors.append(f"Failed to translate: {key}")
+            except Exception as e:
+                errors.append(f"Error translating {key}: {str(e)}")
+
+        processed += 1
+        if progress_callback:
+            progress_callback(processed / total)
+
+    return updated_dict, errors
+
+def save_translations(translations: dict, filepath: str, format: str = "auto") -> tuple[bool, str]:
+    """Save translations to file in specified format. Returns (success, error_message)"""
+    try:
+        format = format.lower() if format != "auto" else filepath.split('.')[-1].lower()
+        content = None
+
+        if format in ['json', 'yaml', 'yml']:
+            # Sort keys for consistent output
+            sorted_translations = dict(sorted(translations.items()))
+            
+            if format == 'json':
+                content = json.dumps(sorted_translations, indent=2, ensure_ascii=False)
+            else:  # yaml format
+                if not yaml:
+                    return False, "PyYAML not installed"
+                content = yaml.dump(sorted_translations, allow_unicode=True, sort_keys=False)
+        
+        elif format == 'lang':
+            # Basic key=value format
+            lines = [f"{k}={v}" for k, v in sorted(translations.items())]
+            content = '\n'.join(lines)
+        
+        else:  # Default to XML
+            root = ET.Element("resources")
+            for key, value in sorted(translations.items()):
+                string_elem = ET.SubElement(root, "string", name=key)
+                string_elem.text = value
+            content = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding='unicode', method='xml')
+
+        if content is not None:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return True, ""
+
+        return False, "Unsupported format"
+
+    except Exception as e:
+        return False, str(e)
+
+def extract_placeholders(text: str) -> list[str]:
+    """Extract all placeholders from a text string."""
+    # Common placeholder patterns
+    patterns = [
+        r'\{[^}]+\}',          # {name}, {0}, {value}
+        r'%[ds]',              # %s, %d
+        r'%[0-9]*\.[0-9]*[fs]',# %.2f, %3.1f
+        r'%[0-9]+\$[ds]',      # %1$s, %2$d (positional)
+        r'\$[a-zA-Z_][a-zA-Z0-9_]*', # $variable
+        r'#[a-zA-Z_][a-zA-Z0-9_]*#', # #variable#
+        r'\[\[[^\]]+\]\]'      # [[variable]]
+    ]
+    
+    combined_pattern = '|'.join(patterns)
+    placeholders = re.finditer(combined_pattern, text)
+    return [p.group() for p in placeholders]
+
+def validate_placeholders(source_text: str, target_text: str) -> tuple[bool, str]:
+    """
+    Validate that placeholders match between source and target text.
+    Returns (is_valid, error_message).
+    """
+    if not source_text or not target_text:
+        return True, ""  # Consider empty strings valid
+        
+    source_placeholders = extract_placeholders(source_text)
+    target_placeholders = extract_placeholders(target_text)
+    
+    if not source_placeholders and not target_placeholders:
+        return True, ""
+    
+    # Check if lists match (including order for positional placeholders)
+    if source_placeholders == target_placeholders:
+        return True, ""
+        
+    # Check for missing or extra placeholders
+    missing = set(source_placeholders) - set(target_placeholders)
+    extra = set(target_placeholders) - set(source_placeholders)
+    
+    error_msg = []
+    if missing:
+        error_msg.append(f"Missing placeholders: {', '.join(missing)}")
+    if extra:
+        error_msg.append(f"Extra placeholders: {', '.join(extra)}")
+        
+    return False, "; ".join(error_msg)

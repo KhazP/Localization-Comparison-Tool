@@ -31,11 +31,14 @@ from flet import (
     Card,
     ClipBehavior,
     VerticalDivider,  # Added missing import
-    TextButton  # <-- Added
+    TextButton,  # <-- Added
+    Tabs,  # <-- Added
+    Tab  # <-- Added
 )
 import os
 import logic
 from pathlib import Path
+from reports.report_generator import ReportGenerator
 
 class App:
     def __init__(self, page: ft.Page):
@@ -98,34 +101,233 @@ class App:
             on_click=self.open_settings
         )
 
-        # Add a dialog for customizing theme colors
-        self.settings_dialog = ft.AlertDialog(
-            title=Text("Settings", size=20),  # Changed from "Theme Settings"
-            content=Column(
-                controls=[
-                    Text("Theme", weight=FontWeight.W_500),  # Changed from "Background Colors"
-                    # New row to select theme mode
-                    Row(
-                        controls=[
-                            Text("Theme:", size=16),
-                            ft.Dropdown(
-                                options=[
-                                    ft.dropdown.Option("dark"),
-                                    ft.dropdown.Option("light"),
-                                    ft.dropdown.Option("system"),
-                                ],
-                                value="dark",
-                                on_change=self.handle_theme_change,
-                            ),
-                        ],
-                        spacing=16,
+        self.log_missing_strings = False  # New flag for missing strings logging
+
+        # Add new configuration variables
+        self.config = {
+            "auto_fill_missing": False,
+            "log_missing_strings": False,
+            "ignore_patterns": [],
+            "preferred_format": "auto",  # auto, json, yaml, lang, xml
+            "ignore_whitespace": False,
+            "ignore_case": False,
+            "compare_values": True,
+            "group_by_namespace": True  # Add this line
+        }
+
+        # Add MT settings to config
+        self.config.update({
+            "mt_enabled": False,
+            "mt_api_key": "",
+            "mt_source_lang": "en",
+            "mt_target_lang": "tr"
+        })
+
+        # Create tabs for settings dialog
+        self.settings_tabs = Tabs(
+            selected_index=0,
+            animation_duration=300,
+            tabs=[
+                Tab(
+                    text="General",
+                    icon=Icons.SETTINGS,
+                    content=Container(
+                        content=Column(
+                            controls=[
+                                Container(
+                                    content=Column(
+                                        controls=[
+                                            Text("Theme Settings", size=16, weight="bold"),
+                                            ft.Dropdown(
+                                                label="Theme Mode",
+                                                value=page.theme_mode.value,
+                                                options=[
+                                                    ft.dropdown.Option("system", "System Default"),
+                                                    ft.dropdown.Option("dark", "Dark Theme"),
+                                                    ft.dropdown.Option("light", "Light Theme"),
+                                                ],
+                                                on_change=self.handle_theme_change,
+                                            ),
+                                        ],
+                                        spacing=8
+                                    ),
+                                    padding=10,
+                                ),
+                            ],
+                        ),
+                        padding=20,
                     ),
-                ],
-                spacing=16,
-                width=400,
+                ),
+                Tab(
+                    text="Comparison",
+                    icon=Icons.COMPARE_ARROWS,
+                    content=Container(
+                        content=Column(
+                            controls=[
+                                Container(
+                                    content=Column(
+                                        controls=[
+                                            Text("Comparison Settings", size=16, weight="bold"),
+                                            ft.Checkbox(
+                                                label="Auto-Fill Missing Keys",
+                                                value=self.config["auto_fill_missing"],
+                                                on_change=self.handle_auto_fill_change
+                                            ),
+                                            ft.Checkbox(
+                                                label="Log Missing Keys",
+                                                value=self.config["log_missing_strings"],
+                                                on_change=self.handle_log_missing_change
+                                            ),
+                                            ft.Checkbox(
+                                                label="Ignore Whitespace",
+                                                value=self.config["ignore_whitespace"],
+                                                on_change=self.handle_whitespace_change
+                                            ),
+                                            ft.Checkbox(
+                                                label="Ignore Case",
+                                                value=self.config["ignore_case"],
+                                                on_change=self.handle_case_change
+                                            ),
+                                            ft.Checkbox(
+                                                label="Group by Namespace",
+                                                value=self.config["group_by_namespace"],
+                                                on_change=self.handle_group_by_namespace_change
+                                            ),
+                                        ],
+                                        spacing=8
+                                    ),
+                                    padding=10,
+                                ),
+                            ],
+                        ),
+                        padding=20,
+                    ),
+                ),
+                Tab(
+                    text="File Format",
+                    icon=Icons.FILE_PRESENT,
+                    content=Container(
+                        content=Column(
+                            controls=[
+                                Container(
+                                    content=Column(
+                                        controls=[
+                                            Text("File Format Settings", size=16, weight="bold"),
+                                            ft.Dropdown(
+                                                label="Preferred Format",
+                                                value=self.config["preferred_format"],
+                                                options=[
+                                                    ft.dropdown.Option("auto", "Auto-Detect"),
+                                                    ft.dropdown.Option("json", "JSON"),
+                                                    ft.dropdown.Option("yaml", "YAML"),
+                                                    ft.dropdown.Option("lang", ".lang"),
+                                                    ft.dropdown.Option("xml", "XML"),
+                                                ],
+                                                on_change=self.handle_format_change,
+                                            ),
+                                        ],
+                                        spacing=8
+                                    ),
+                                    padding=10,
+                                ),
+                                Container(
+                                    content=Column(
+                                        controls=[
+                                            Text("Ignore Patterns", size=16, weight="bold"),
+                                            TextField(
+                                                value=",".join(self.config["ignore_patterns"]),
+                                                hint_text="Comma-separated patterns to ignore",
+                                                on_change=self.handle_patterns_change,
+                                                multiline=True,
+                                                min_lines=2,
+                                                max_lines=4,
+                                            ),
+                                            Text(
+                                                "Example: temp_, test_, debug_",
+                                                size=12,
+                                                color=self.COLORS["text"]["secondary"],
+                                            ),
+                                        ],
+                                        spacing=8
+                                    ),
+                                    padding=10,
+                                ),
+                            ],
+                        ),
+                        padding=20,
+                    ),
+                ),
+                Tab(
+                    text="Translation",
+                    icon=Icons.TRANSLATE,
+                    content=Container(
+                        content=Column(
+                            controls=[
+                                Container(
+                                    content=Column(
+                                        controls=[
+                                            Text("Machine Translation Settings", size=16, weight="bold"),
+                                            ft.Checkbox(
+                                                label="Enable Machine Translation",
+                                                value=self.config["mt_enabled"],
+                                                on_change=self.handle_mt_enabled_change
+                                            ),
+                                            TextField(
+                                                label="Google Cloud API Key",
+                                                value=self.config["mt_api_key"],
+                                                password=True,
+                                                can_reveal_password=True,
+                                                on_change=self.handle_mt_api_key_change
+                                            ),
+                                            ft.Dropdown(
+                                                label="Source Language",
+                                                value=self.config["mt_source_lang"],
+                                                options=[
+                                                    ft.dropdown.Option("en", "English"),
+                                                    ft.dropdown.Option("es", "Spanish"),
+                                                    ft.dropdown.Option("fr", "French"),
+                                                    ft.dropdown.Option("de", "German"),
+                                                ],
+                                                on_change=self.handle_mt_source_lang_change
+                                            ),
+                                            ft.Dropdown(
+                                                label="Target Language",
+                                                value=self.config["mt_target_lang"],
+                                                options=[
+                                                    ft.dropdown.Option("tr", "Turkish"),
+                                                    ft.dropdown.Option("es", "Spanish"),
+                                                    ft.dropdown.Option("fr", "French"),
+                                                    ft.dropdown.Option("de", "German"),
+                                                ],
+                                                on_change=self.handle_mt_target_lang_change
+                                            ),
+                                        ],
+                                        spacing=8
+                                    ),
+                                    padding=10,
+                                ),
+                            ],
+                        ),
+                        padding=20,
+                    ),
+                ),
+            ],
+            expand=1,
+        )
+
+        # Update settings dialog to use tabs
+        self.settings_dialog = ft.AlertDialog(
+            title=Text("Settings", size=20),
+            content=Container(
+                content=Column(
+                    controls=[self.settings_tabs],
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+                width=500,  # Made slightly wider to accommodate tabs
+                height=400,  # Fixed height for better appearance
             ),
             actions=[
-                TextButton("Reset to Default", on_click=self.reset_colors),
+                TextButton("Reset to Default", on_click=self.reset_settings),
                 TextButton("Close", on_click=self.close_settings),
             ],
         )
@@ -220,12 +422,12 @@ class App:
             visible=False,
         )
         # Initialize checkboxes and button
-        self.ignore_case_checkbox = self.create_checkbox("Ignore Case")
-        self.ignore_whitespace_checkbox = self.create_checkbox("Ignore Whitespace")
-        self.only_missing_checkbox = self.create_checkbox("Only Missing Keys", value=True)
-        # New: Add a text field for ignore key patterns (comma-separated)
+        # Remove these checkbox initializations since they're now in settings only
+        # self.ignore_case_checkbox = self.create_checkbox("Ignore Case")
+        # self.ignore_whitespace_checkbox = self.create_checkbox("Ignore Whitespace")
+        # self.only_missing_checkbox = self.create_checkbox("Only Missing Keys", value=True)
+        # Only keep the ignore pattern field
         self.ignore_pattern_field = TextField(
-            hint_text="Ignore keys starting with (e.g., temp_)",
             text_style=TextStyle(
                 color=self.COLORS["text"]["secondary"],
                 size=14,
@@ -308,6 +510,86 @@ class App:
         # Main content area with vertical scrolling
         self.source_file_container = create_file_input("Source File", is_source=True)
         self.target_file_container = create_file_input("Target File", is_source=False)
+
+        # Add statistics fields after other UI element initializations
+        self.stats_text_total = Text(
+            value="0",
+            size=24,
+            weight=FontWeight.BOLD,
+            color=self.COLORS["text"]["primary"],
+        )
+        self.stats_text_missing = Text(
+            value="0",
+            size=24,
+            weight=FontWeight.BOLD,
+            color=self.COLORS["changes"]["removed"],
+        )
+        self.stats_text_obsolete = Text(
+            value="0",
+            size=24,
+            weight=FontWeight.BOLD,
+            color=self.COLORS["changes"]["added"],
+        )
+
+        # Create statistics panel
+        self.stats_panel = Card(
+            content=Container(
+                content=Row(
+                    controls=[
+                        Container(
+                            content=Column(
+                                controls=[
+                                    Text("Total Keys", size=14, color=self.COLORS["text"]["secondary"]),
+                                    self.stats_text_total,
+                                ],
+                                horizontal_alignment="center",
+                                spacing=4,
+                            ),
+                            padding=padding.all(16),
+                            expand=True,
+                        ),
+                        VerticalDivider(
+                            color=self.COLORS["border"]["default"],
+                            width=1,
+                        ),
+                        Container(
+                            content=Column(
+                                controls=[
+                                    Text("Missing in Target", size=14, color=self.COLORS["text"]["secondary"]),
+                                    self.stats_text_missing,
+                                ],
+                                horizontal_alignment="center",
+                                spacing=4,
+                            ),
+                            padding=padding.all(16),
+                            expand=True,
+                        ),
+                        VerticalDivider(
+                            color=self.COLORS["border"]["default"],
+                            width=1,
+                        ),
+                        Container(
+                            content=Column(
+                                controls=[
+                                    Text("Missing in Source", size=14, color=self.COLORS["text"]["secondary"]),
+                                    self.stats_text_obsolete,
+                                ],
+                                horizontal_alignment="center",
+                                spacing=4,
+                            ),
+                            padding=padding.all(16),
+                            expand=True,
+                        ),
+                    ],
+                    alignment="center",
+                ),
+                bgcolor=self.COLORS["bg"]["secondary"],
+                border_radius=8,
+            ),
+            elevation=1,
+        )
+
+        # In the main_card_container initialization, add the stats_panel
         self.main_card_container = Container(
             expand=True,
             content=Column(
@@ -329,36 +611,15 @@ class App:
                         ),
                         height=120,
                     ),
-                    # Options (fixed height)
-                    Container(
-                        content=Column(
-                            controls=[
-                                Text(
-                                    "Comparison Options",
-                                    size=16,
-                                    weight="w500",
-                                    color=self.COLORS["text"]["secondary"],
-                                ),
-                                Row(
-                                    controls=[
-                                        self.ignore_case_checkbox,
-                                        self.ignore_whitespace_checkbox,
-                                        self.only_missing_checkbox,
-                                    ],
-                                    spacing=32,
-                                ),
-                                # New ignore pattern input
-                                self.ignore_pattern_field,
-                            ],
-                            spacing=16,
-                        ),
-                        padding=padding.symmetric(vertical=24),
-                        height=120,  # Increase height if needed
-                    ),
                     # Compare button (fixed height)
                     Container(
                         content=self.compare_button,
                         height=50,
+                    ),
+                    # NEW: Statistics panel
+                    Container(
+                        content=self.stats_panel,
+                        padding=padding.only(top=8, bottom=8),
                     ),
                     # Results area using dynamic sizing
                     Container(
@@ -494,6 +755,71 @@ class App:
         # Ensure updated colors once UI is built
         self.update_theme_colors()
 
+        # Add expand/collapse control
+        self.expand_all = True
+        self.expand_collapse_button = IconButton(
+            icon=Icons.UNFOLD_LESS,
+            icon_color=self.COLORS["text"]["secondary"],
+            tooltip="Collapse All",
+            on_click=self.toggle_expand_all,
+        )
+
+        # Modify the results header to include the expand/collapse button
+        self.results_header = Container(
+            content=Row(
+                controls=[
+                    Text(
+                        "Results",
+                        size=16,
+                        weight="w500",
+                        color=self.COLORS["text"]["secondary"],
+                    ),
+                    Row(
+                        controls=[
+                            self.expand_collapse_button,
+                            IconButton(
+                                icon=Icons.UPLOAD_FILE,
+                                icon_color=self.COLORS["text"]["secondary"],
+                                tooltip="Import Changes",
+                                on_click=self.import_changes,
+                            ),
+                            IconButton(
+                                icon=Icons.DOWNLOAD,
+                                icon_color=self.COLORS["text"]["secondary"],
+                                tooltip="Export Report",
+                                on_click=self.export_report,
+                            ),
+                            IconButton(
+                                icon=Icons.COPY,
+                                icon_color=self.COLORS["text"]["secondary"],
+                                tooltip="Copy comparison results",
+                                on_click=self.copy_results,
+                            ),
+                        ],
+                        spacing=0,
+                    ),
+                ],
+                alignment="spaceBetween",
+            ),
+            padding=padding.only(left=16, right=16, top=16),
+        )
+
+        # Add file pickers for export/import
+        self.export_picker = FilePicker(
+            on_result=self.handle_export_result
+        )
+        self.import_picker = FilePicker(
+            on_result=self.handle_import_result
+        )
+        page.overlay.extend([self.export_picker, self.import_picker])
+        
+        # Save comparison data for export
+        self.comparison_data = {
+            "missing": [],
+            "obsolete": [],
+            "modified": []
+        }
+
     def create_checkbox(self, label: str, value: bool = False):
         return Checkbox(
             label=label,
@@ -508,7 +834,8 @@ class App:
         )
 
     def create_compare_button(self):
-        compare_btn = ElevatedButton(
+        # Create a container for both buttons
+        compare_button = ElevatedButton(
             content=Row(
                 controls=[
                     Icon(Icons.REFRESH),
@@ -527,11 +854,118 @@ class App:
             height=48,
             expand=True,
         )
-        return Container(
-            content=compare_btn,
-            animate=ft.Animation(duration=200, curve="easeInOut"),
-            on_hover=lambda e, btn=compare_btn: self._on_compare_button_hover(e, btn)
+        
+        translate_button = ElevatedButton(
+            content=Row(
+                controls=[
+                    Icon(Icons.TRANSLATE),
+                    Text("Translate Missing", size=16),
+                ],
+                alignment="center",
+                spacing=8,
+            ),
+            tooltip="Translate missing keys using Google Cloud Translate",
+            on_click=self.translate_missing_keys,
+            style=ButtonStyle(
+                color=self.COLORS["text"]["primary"],
+                bgcolor=self.COLORS["bg"]["accent"],
+                shape=RoundedRectangleBorder(radius=8),
+            ),
+            height=48,
+            expand=True,
+            visible=False,  # Initially hidden
         )
+        
+        button_row = Row(
+            controls=[compare_button, translate_button],
+            alignment="center",
+            spacing=16,
+        )
+        
+        return Container(
+            content=button_row,
+            animate=ft.Animation(duration=200, curve="easeInOut"),
+            on_hover=lambda e: self._on_compare_button_hover(e, compare_button)
+        )
+
+    def translate_missing_keys(self, e):
+        if not self.config["mt_enabled"] or not self.config["mt_api_key"]:
+            self.show_snackbar("Please enable machine translation and set API key in settings")
+            return
+
+        def update_progress(value):
+            self.loading_ring.visible = True
+            self.status_label.value = f"Translating... {int(value * 100)}%"
+            self.page.update()
+
+        try:
+            # Get the current translations
+            with open(self.source_file_path, 'r', encoding='utf-8') as f:
+                source_content = f.read()
+            with open(self.target_file_path, 'r', encoding='utf-8') as f:
+                target_content = f.read()
+
+            ext_source = Path(self.source_file_path).suffix.lower()
+            ext_target = Path(self.target_file_path).suffix.lower()
+
+            source_dict = logic.parse_content_by_ext(source_content, ext_source)
+            target_dict = logic.parse_content_by_ext(target_content, ext_target)
+
+            # Show progress ring
+            self.loading_ring.visible = True
+            self.status_label.value = "Translating missing keys..."
+            self.page.update()
+
+            # Translate missing keys
+            updated_dict, errors = logic.translate_missing_keys(
+                source_dict,
+                target_dict,
+                self.config["mt_source_lang"],
+                self.config["mt_target_lang"],
+                self.config["mt_api_key"],
+                update_progress
+            )
+
+            if errors:
+                error_msg = "\n".join(errors[:5])  # Show first 5 errors
+                if len(errors) > 5:
+                    error_msg += f"\n...and {len(errors) - 5} more errors"
+                self.show_snackbar(f"Some translations failed: {error_msg}")
+
+            # Prompt for save location
+            save_dialog = FilePicker(
+                on_result=lambda e: self.save_translated_file(e, updated_dict)
+            )
+            self.page.overlay.append(save_dialog)
+            save_dialog.save_file(
+                allowed_extensions=["json", "yaml", "xml", "lang"],
+                file_name=f"new_target{ext_target}"
+            )
+
+        except Exception as e:
+            self.show_snackbar(f"Translation error: {str(e)}")
+            self.status_label.value = "Translation failed"
+        finally:
+            self.loading_ring.visible = False
+            self.page.update()
+
+    def save_translated_file(self, e: FilePickerResultEvent, translations: dict):
+        if not e.path:
+            return
+
+        success, error = logic.save_translations(
+            translations, 
+            e.path, 
+            format=self.config["preferred_format"]
+        )
+
+        if success:
+            self.show_snackbar("Translations saved successfully")
+            self.status_label.value = "Translation complete"
+        else:
+            self.show_snackbar(f"Error saving translations: {error}")
+            self.status_label.value = "Save failed"
+        self.page.update()
 
     def _on_browse_hover(self, e, button):
         hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
@@ -607,11 +1041,12 @@ class App:
     def validate_file(self, file_path: str) -> bool:
         try:
             path = Path(file_path)
+            # Allow additional file types: json, yaml, and yml
+            if path.suffix.lower()[1:] not in ["csv", "lang", "txt", "json", "yaml", "yml"]:
+                self.show_validation_error("file_type")
+                return False
             if not path.exists() or not path.is_file():
                 self.show_validation_error("file_not_found")
-                return False
-            if path.suffix.lower()[1:] not in ["csv", "lang", "txt"]:
-                self.show_validation_error("file_type")
                 return False
             if path.stat().st_size == 0:
                 self.show_validation_error("file_empty")
@@ -693,21 +1128,65 @@ class App:
             if pattern_str:
                 ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
 
-            # Compare translations
+            # Add MT settings to comparison
+            mt_settings = {
+                'enabled': self.config["mt_enabled"],
+                'api_key': self.config["mt_api_key"],
+                'source_lang': self.config["mt_source_lang"],
+                'target_lang': self.config["mt_target_lang"]
+            }
+
+            # Compare translations - modify the call to not include summary
             comparison_result = logic.compare_translations(
                 target_dict,  # target translations (old_translations)
                 source_dict,  # source translations (new_translations)
-                ignore_case=self.ignore_case_checkbox.value,
-                ignore_whitespace=self.ignore_whitespace_checkbox.value,
+                ignore_case=self.config["ignore_case"],
+                ignore_whitespace=self.config["ignore_whitespace"],
                 is_gui=True,
-                compare_values=True,
-                ignore_patterns=ignore_patterns
+                include_summary=False,  # Add this parameter
+                compare_values=self.config["compare_values"],
+                ignore_patterns=self.config["ignore_patterns"],
+                log_missing_keys=self.config["log_missing_strings"],
+                auto_fill_missing=self.config["auto_fill_missing"],
+                mt_settings=mt_settings
             )
+
+            # Calculate the sets of missing and obsolete keys
+            missing_keys_set = set(source_dict.keys()) - set(target_dict.keys())
+            obsolete_keys_set = set(target_dict.keys()) - set(source_dict.keys())
+
+            # Update statistics using the lengths
+            total_keys = len(source_dict)
+            missing_keys = len(missing_keys_set)
+            obsolete_keys = len(obsolete_keys_set)
+            self.update_statistics(total_keys, missing_keys, obsolete_keys)
+
+            # Update comparison data using the actual sets
+            self.comparison_data = {
+                "missing": [(k, source_dict[k]) for k in missing_keys_set],
+                "obsolete": [(k, target_dict[k]) for k in obsolete_keys_set],
+                "modified": [
+                    (k, (source_dict[k], target_dict[k])) 
+                    for k in source_dict.keys() & target_dict.keys()
+                    if source_dict[k] != target_dict[k]
+                ]
+            }
 
             # Update UI with results
             self.output_text.value = comparison_result
             self.build_results_table(comparison_result)
             self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
+
+            # After comparison is complete, update comparison_data
+            self.comparison_data = {
+                "missing": [(k, source_dict[k]) for k in missing_keys_set],
+                "obsolete": [(k, target_dict[k]) for k in obsolete_keys_set],
+                "modified": [
+                    (k, (source_dict[k], target_dict[k])) 
+                    for k in source_dict.keys() & target_dict.keys()
+                    if source_dict[k] != target_dict[k]
+                ]
+            }
 
         except Exception as e:
             import traceback
@@ -715,51 +1194,93 @@ class App:
             print(f"Error details: {error_details}")
             self.show_snackbar(f"Error: {str(e)}")
             self.status_label.value = "Comparison failed"
+            # Reset statistics on error
+            self.update_statistics(0, 0, 0)
+            self.comparison_data = {"missing": [], "obsolete": [], "modified": []}
         finally:
             self.loading_ring.visible = False
             self.page.update()
 
+        # Add this at the end of the method:
+        translate_button = self.compare_button.content.controls[1]
+        translate_button.visible = True
+        self.page.update()
+
     def build_results_table(self, comparison_result: str):
-        """Build and display the results table with proper styling"""
+        """Build and display the results table with optional namespace grouping"""
         lines = comparison_result.splitlines()
         table_rows = []
         
-        # Create a Container for each line with appropriate styling
-        for line in lines:
-            # Skip empty lines
-            if not line.strip():
-                continue
+        if self.config["group_by_namespace"]:
+            # Existing grouping logic
+            groups, ungrouped = self.group_keys_by_namespace(lines)
+            
+            # Create expandable sections for each namespace
+            for namespace, entries in sorted(groups.items()):
+                # Create namespace header
+                header_content = Row(
+                    controls=[
+                        IconButton(
+                            icon=Icons.EXPAND_MORE,
+                            icon_color=self.COLORS["text"]["secondary"],
+                            tooltip="Toggle section",
+                        ),
+                        Text(
+                            f"{namespace} ({len(entries)})",
+                            size=16,
+                            weight=FontWeight.BOLD,
+                            color=self.COLORS["text"]["secondary"],
+                        ),
+                    ],
+                    alignment="center",
+                )
                 
-            text_color = self.COLORS["text"]["primary"]  # default color
-            text_weight = ft.FontWeight.NORMAL
+                # Create container for namespace entries
+                entries_column = Column(
+                    controls=[self.create_result_row(line) for line, _ in entries],
+                    spacing=2,
+                    visible=self.expand_all,
+                )
+                
+                # Create expandable section
+                section = Container(
+                    content=Column(
+                        controls=[
+                            header_content,
+                            Container(
+                                content=entries_column,
+                                padding=padding.only(left=32),
+                            ),
+                        ],
+                    ),
+                    padding=padding.only(top=8, bottom=8),
+                )
+                
+                # Add click handler to header
+                header_content.controls[0].on_click = lambda e, col=entries_column: self.toggle_section(e, col)
+                
+                table_rows.append(section)
             
-            # Handle special lines
-            if line.startswith("---") or line.startswith("Added:") or line.startswith("Removed:"):
-                text_weight = ft.FontWeight.BOLD
-            else:
-                # Handle comparison lines
-                indicator = line[:1].strip()
-                if indicator == "+":
-                    text_color = self.COLORS["changes"]["added"]
-                elif indicator == "-":
-                    text_color = self.COLORS["changes"]["removed"]
-
-            # Create a row with the line
-            row_content = ft.Text(
-                value=line,
-                color=text_color,
-                weight=text_weight,
-                size=14,
-                font_family="Consolas",
-            )
-            
-            # Wrap in container for padding and styling
-            row_container = Container(
-                content=row_content,
-                padding=padding.all(8),
-            )
-            
-            table_rows.append(row_container)
+            # Add ungrouped entries at the bottom
+            if ungrouped:
+                ungrouped_header = Text(
+                    "Other",
+                    size=16,
+                    weight=FontWeight.BOLD,
+                    color=self.COLORS["text"]["secondary"],
+                )
+                table_rows.append(Container(
+                    content=ungrouped_header,
+                    padding=padding.only(top=16, bottom=8),
+                ))
+                
+                for line, _ in sorted(ungrouped, key=lambda x: x[1]):
+                    table_rows.append(self.create_result_row(line))
+        else:
+            # Simple flat list without grouping
+            for line in lines:
+                if line.strip() and not line.startswith("---"):
+                    table_rows.append(self.create_result_row(line))
 
         # Create a column containing all rows
         results_column = Column(
@@ -771,6 +1292,92 @@ class App:
         # Update the results container with the new content
         self.results_container.content = results_column
         self.page.update()
+
+    def create_result_row(self, line: str) -> Container:
+        """Create a styled row for a single comparison result"""
+        text_color = self.COLORS["text"]["primary"]  # default color
+        text_weight = ft.FontWeight.NORMAL
+        
+        # Handle comparison lines
+        indicator = line[:1].strip()
+        if indicator == "+":
+            text_color = self.COLORS["changes"]["added"]
+        elif indicator == "-":
+            text_color = self.COLORS["changes"]["removed"]
+        elif indicator == "~":
+            text_color = self.COLORS["text"]["accent"]
+        
+        # Create a row with the line
+        row_content = ft.Text(
+            value=line,
+            color=text_color,
+            weight=text_weight,
+            size=14,
+            font_family="Consolas",
+        )
+        
+        return Container(
+            content=row_content,
+            padding=padding.all(8),
+        )
+
+    def toggle_section(self, e, column):
+        """Toggle visibility of a namespace section"""
+        column.visible = not column.visible
+        e.control.icon = Icons.EXPAND_LESS if column.visible else Icons.EXPAND_MORE
+        self.page.update()
+
+    def toggle_expand_all(self, e):
+        """Toggle expand/collapse all sections"""
+        self.expand_all = not self.expand_all
+        self.expand_collapse_button.icon = (
+            Icons.UNFOLD_MORE if self.expand_all else Icons.UNFOLD_LESS
+        )
+        self.expand_collapse_button.tooltip = (
+            "Collapse All" if self.expand_all else "Expand All"
+        )
+        self.build_results_table(self.output_text.value)
+        self.page.update()
+
+    def group_keys_by_namespace(self, lines: list[str]) -> dict:
+        """Group comparison lines by their namespace"""
+        groups = {}
+        ungrouped = []
+        
+        for line in lines:
+            if not line.strip():
+                continue
+            
+            # Skip summary lines
+            if line.startswith("---") or line.startswith("Added:") or line.startswith("Removed:"):
+                continue
+                
+            # Extract the key from the line (after the +/- indicator)
+            parts = line.split(" : ", 1)
+            if len(parts) != 2:
+                ungrouped.append(line)
+                continue
+                
+            key_part = parts[0].lstrip("+-~ ").strip()
+            value_part = parts[1]
+            
+            # Split key into namespace parts
+            key_segments = key_part.split(".")
+            
+            if len(key_segments) > 1:
+                # Use first segment as namespace
+                namespace = key_segments[0]
+                if namespace not in groups:
+                    groups[namespace] = []
+                groups[namespace].append((line, key_part))
+            else:
+                ungrouped.append((line, key_part))
+        
+        # Sort each group by key
+        for namespace in groups:
+            groups[namespace].sort(key=lambda x: x[1])
+        
+        return groups, ungrouped
 
     def clear_text_field(self, text_field, clear_btn):
         # Clear the text field and hide the clear button
@@ -829,19 +1436,20 @@ class App:
         self.page.bgcolor = self.COLORS["bg"]["primary"]
         self.content.bgcolor = self.COLORS["bg"]["secondary"]
 
-        # Status & update compare button styling via the ElevatedButton in container.
+        # Status label
         self.status_label.color = self.COLORS["text"]["secondary"]
-        self.compare_button.content.style.bgcolor = self.COLORS["bg"]["accent"]
-        self.compare_button.content.style.color = self.COLORS["text"]["primary"]
+        
+        # Update the compare and translate buttons
+        for button in self.compare_button.content.controls:
+            if isinstance(button, ElevatedButton):
+                button.style = ButtonStyle(
+                    color=self.COLORS["text"]["primary"],
+                    bgcolor=self.COLORS["bg"]["accent"],
+                    shape=RoundedRectangleBorder(radius=8),
+                )
 
         # Settings button icon
         self.settings_button.icon_color = self.COLORS["text"]["secondary"]
-
-        # Checkboxes update
-        for cb in [self.ignore_case_checkbox, self.ignore_whitespace_checkbox, self.only_missing_checkbox]:
-            cb.fill_color = self.COLORS["bg"]["accent"]
-            cb.check_color = self.COLORS["text"]["primary"]
-            cb.label_style = TextStyle(color=self.COLORS["text"]["secondary"], size=14)
 
         # File picker icons and labels
         self.source_icon.color = self.COLORS["text"]["secondary"]
@@ -868,21 +1476,189 @@ class App:
 
         # Update main card container background color:
         self.main_card_container.bgcolor = self.COLORS["bg"]["secondary"]
+
+        # Update statistics panel colors
+        self.stats_text_total.color = self.COLORS["text"]["primary"]
+        self.stats_text_missing.color = self.COLORS["changes"]["removed"]
+        self.stats_text_obsolete.color = self.COLORS["changes"]["added"]
+        self.stats_panel.content.bgcolor = self.COLORS["bg"]["secondary"]
+
+    def handle_case_change(self, e):
+        self.config["ignore_case"] = e.control.value
+        self.ignore_case_checkbox.value = e.control.value  # Update main UI checkbox
+        self.page.update()
+
+    def reset_settings(self, e):
+        self.config = {
+            "auto_fill_missing": False,
+            "log_missing_strings": False,
+            "ignore_patterns": [],
+            "preferred_format": "auto",
+            "ignore_whitespace": False,
+            "ignore_case": False,
+            "compare_values": True,
+            "group_by_namespace": True  # Add default value here too
+        }
+        
+        # Reset theme to system default
+        self.page.theme_mode = ft.ThemeMode.SYSTEM
+        self.COLORS = self.THEMES["dark"]
+        
+        # Update UI controls to match reset settings
+        for container in self.settings_dialog.content.controls:
+            if isinstance(container, Container):
+                for control in container.content.controls:
+                    if isinstance(control, ft.Checkbox):
+                        control.value = False
+                    elif isinstance(control, ft.Dropdown):
+                        if hasattr(control, "label") and control.label == "Theme Mode":
+                            control.value = "system"
+                        else:
+                            control.value = "auto"
+                    elif isinstance(control, TextField):
+                        control.value = ""
+                        
+        self.update_theme_colors()
+        self.page.update()
+
+        self.config.update({
+            "mt_enabled": False,
+            "mt_api_key": "",
+            "mt_source_lang": "en",
+            "mt_target_lang": "tr"
+        })
+
+        # Update all tabs' controls to reflect reset values
+        self.settings_tabs.tabs[0].content.content.controls[0].content.controls[1].value = "system"  # Theme dropdown
+        # Update other tab controls as needed
+        
+        self.page.update()
+
+    def handle_mt_enabled_change(self, e):
+        self.config["mt_enabled"] = e.control.value
+        self.page.update()
+
+    def handle_mt_api_key_change(self, e):
+        self.config["mt_api_key"] = e.control.value
+        self.page.update()
+
+    def handle_mt_source_lang_change(self, e):
+        self.config["mt_source_lang"] = e.control.value
+        self.page.update()
+
+    def handle_mt_target_lang_change(self, e):
+        self.config["mt_target_lang"] = e.control.value
+        self.page.update()
+
+    def handle_group_by_namespace_change(self, e):
+        """Handle toggling of namespace grouping"""
+        self.config["group_by_namespace"] = e.control.value
+        # Rebuild results table if we have results
+        if self.output_text.value and self.output_text.value != "Comparison results will appear here":
+            self.build_results_table(self.output_text.value)
+        self.page.update()
+
+    def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
+        """Update the statistics panel with new values"""
+        self.stats_text_total.value = str(total_keys)
+        self.stats_text_missing.value = str(missing_keys)
+        self.stats_text_obsolete.value = str(obsolete_keys)
         self.page.update()
 
     def handle_theme_change(self, e):
+        """Handle theme mode changes"""
         selected = e.control.value
-        if selected == "dark":
-            self.COLORS = self.THEMES["dark"]
+        if (selected == "dark"):
             self.page.theme_mode = ft.ThemeMode.DARK
-        elif selected == "light":
-            self.COLORS = self.THEMES["light"]
+            self.COLORS = self.THEMES["dark"]
+        elif (selected == "light"):
             self.page.theme_mode = ft.ThemeMode.LIGHT
-        else:
+            self.COLORS = self.THEMES["light"]
+        else:  # system
             self.page.theme_mode = ft.ThemeMode.SYSTEM
-            self.COLORS = self.THEMES["dark"]  # default if system not easily detected
-
+            # Default to dark theme if system preference can't be detected
+            self.COLORS = self.THEMES["dark"]
+        
         self.update_theme_colors()
+        self.page.update()
+
+    def export_report(self, e):
+        """Export comparison results to a file"""
+        if not self.comparison_data.get("missing") and not self.comparison_data.get("obsolete"):
+            self.show_snackbar("No comparison results to export")
+            return
+        
+        # Open file picker for save location
+        self.export_picker.save_file(
+            allowed_extensions=["html", "md", "txt"],
+            file_name="comparison_report"
+        )
+
+    def handle_export_result(self, e: ft.FilePickerResultEvent):
+        """Handle export file picker result"""
+        if not e.path:
+            return
+
+        try:
+            generator = ReportGenerator()
+            success = generator.generate_report(
+                self.comparison_data,
+                e.path,
+                source_file=Path(self.source_file_path).name,
+                target_file=Path(self.target_file_path).name
+            )
+            
+            if success:
+                self.show_snackbar("Report exported successfully")
+            else:
+                self.show_snackbar("Failed to export report")
+        except Exception as ex:
+            self.show_snackbar(f"Error exporting report: {str(ex)}")
+
+    def import_changes(self, e):
+        """Import changes from a file"""
+        self.import_picker.pick_files(
+            allowed_extensions=["json", "yaml", "yml"],
+            allow_multiple=False
+        )
+
+    def handle_import_result(self, e: ft.FilePickerResultEvent):
+        """Handle import file picker result"""
+        if not e.files or not e.files[0].path:
+            return
+
+        try:
+            # Implementation will depend on your import format
+            self.show_snackbar("Import functionality not yet implemented")
+        except Exception as ex:
+            self.show_snackbar(f"Error importing changes: {str(ex)}")
+
+    def handle_auto_fill_change(self, e):
+        """Handle auto-fill settings change"""
+        self.config["auto_fill_missing"] = e.control.value
+        self.page.update()
+
+    def handle_patterns_change(self, e):
+        """Handle ignore patterns change"""
+        patterns = [p.strip() for p in e.control.value.split(",") if p.strip()]
+        self.config["ignore_patterns"] = patterns
+        self.page.update()
+
+    def handle_format_change(self, e):
+        """Handle preferred format change"""
+        self.config["preferred_format"] = e.control.value
+        self.page.update()
+
+    def handle_whitespace_change(self, e):
+        """Handle whitespace ignore setting change"""
+        self.config["ignore_whitespace"] = e.control.value
+        self.page.update()
+
+    def handle_log_missing_change(self, e):
+        """Handle log missing keys setting change"""
+        self.config["log_missing_strings"] = e.control.value
+        self.log_missing_strings = e.control.value  # Update the flag as well
+        self.page.update()
 
 def highlight_line(line: str, change_type: str) -> str:
     """Simple syntax highlighting for comparison lines."""

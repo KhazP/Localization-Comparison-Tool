@@ -1,0 +1,5 @@
+greeting: "Hello"
+farewell: "Goodbye"
+welcome: "Welcome"
+thanks: "Thank you"
+app_title: "Localization Helper App"

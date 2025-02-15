@@ -1,72 +1,56 @@
 # Localization Comparison Tool
 
-![Screenshot of Application](screenshot.png) <!-- Add actual screenshot later -->
-
-A GUI application for comparing localization files (CSV, LANG, XML) across different versions or branches, with Git integration and smart CSV handling.
+A GUI application, built with [Flet](https://flet.dev/) (which uses Flutter), for comparing localization files and identifying differences in translations.  This tool is designed to help streamline the localization process by making it easy to see what's changed between two versions of a translation file.
 
 ## Features
 
-- **File Comparison**:
-  - Detect added, removed, and modified translation keys
-  - Support for CSV, LANG (plain & XML), and TXT files
-  - Ignore case/whitespace options
-  - Multiple comparison modes
+- 🎨 Modern, responsive UI with dark/light theme support (WIP)
+- 📁 Drag & drop file support (WIP)
+- 🔄 Automatic file format detection (XML/CSV)
+- 🔍 Advanced comparison options:
+  - Ignore case sensitivity
+  - Ignore whitespace
+  - Show only missing keys
+- 📊 Detailed comparison results with syntax highlighting
+- 📋 One-click results copying
 
-- **Git Integration**:
-  - Compare files from specific commits/branches
-  - Support for working tree changes
-  - Repository browser
+## Supported File Formats
 
-- **Smart CSV Handling**:
-  - Automatic delimiter detection
-  - Custom column mapping
-  - Header row detection
-  - Real-time preview
+- XML (`.lang`, `.xml`)
+- CSV files
+- Text files (`.txt`)
 
-- **User Interface**:
-  - Tabbed interface for different settings
-  - Modern theme support
-  - Drag-and-drop file loading
-  - Progress indicators
-  - Exportable results
+## Usage
 
-- **Advanced Features**:
-  - Translation memory suggestions
-  - Machine translation integration
-  - Dark/Light theme toggle
-  - Session history
+1. Run the application:
+```bash
+python GUI/flet_gui.py
+```
 
-Development
-Technologies Used
-Python 3.8
-Tkinter (GUI)
-GitPython (Git integration)
-colorama (CLI colors)
-csv/xml modules (file parsing)
+2. Select source and target files using either:
+   - Browse buttons
+   - Drag and drop files into the input areas (WIP)
 
-- **Contributing**
-  -Fork the repository
+3. Configure comparison options:
+   - Ignore Case: Ignore letter casing differences
+   - Ignore Whitespace: Ignore spacing differences
+   - Only Missing Keys: Show only keys missing from target
 
-  -Create a feature branch (git checkout -b feature/your-feature)
+4. Click "Compare Files" to see the results
 
-  -Commit changes (git commit -m 'Add some feature')
+## Sample Files
 
-  -Push to branch (git push origin feature/your-feature)
+The repository includes sample files in the `Sample Translation` folder to help you get started:
+- `old.csv`: Example source file
+- `new.csv`: Example target file with differences
 
-  -Open a Pull Request
+## Contributing
 
-**Please follow these guidelines:**
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- Report bugs using GitHub Issues
+## License
 
-- Suggest features via Discussions
-
-- Follow PEP8 coding standards
-
-- Include tests for new features
-
-**License**
-MIT License
+This project is licensed under the MIT License
 
 Copyright (c) 2023 Alp Yalay
 

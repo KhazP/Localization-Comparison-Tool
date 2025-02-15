@@ -6,7 +6,6 @@ A GUI application, built with [Flet](https://flet.dev/) (which uses Flutter), fo
 ## Features
 
 - 🐞 Modern, responsive UI with dark/light theme support
-- 🐞 Drag & drop file support
 - 🐞 Automatic file format detection (XML/CSV)
 - 🐞 Advanced comparison options:
   - Ignore case sensitivity

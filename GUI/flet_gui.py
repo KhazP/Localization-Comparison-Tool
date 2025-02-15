@@ -57,6 +57,10 @@ class App:
                 "border": {
                     "default": "#4B5563",
                     "accent": "#3B82F6",
+                },
+                "changes": {
+                    "added": "#4ADE80",    # green
+                    "removed": "#F87171",  # red
                 }
             },
             "light": {
@@ -75,6 +79,10 @@ class App:
                 "border": {
                     "default": "#E5E7EB",
                     "accent": "#3B82F6",
+                },
+                "changes": {
+                    "added": "#22C55E",    # green
+                    "removed": "#EF4444",  # red
                 }
             }
         }
@@ -82,50 +90,36 @@ class App:
         # Use dark theme colors
         self.COLORS = self.THEMES["dark"]
 
-        # Define COLORS completely with change colors
-        self.COLORS = {
-            "bg": {
-                "primary": "#111827",
-                "secondary": "#1F2937",
-                "input": "#374151",
-                "accent": "#3B82F6",
-            },
-            "text": {
-                "primary": "#F9FAFB",
-                "secondary": "#9CA3AF",
-                "accent": "#60A5FA",
-            },
-            "border": {
-                "default": "#4B5563",
-                "accent": "#3B82F6",
-            },
-            "changes": {  # Updated block to define change colors
-                "added": "#4ADE80",    # green
-                "removed": "#F87171",  # red
-            }
-        }
-
-        # Add theme toggle button
-        self.theme_toggle = IconButton(
-            icon=Icons.LIGHT_MODE,
-            icon_color=self.COLORS["text"]["secondary"],
-            tooltip="Toggle theme",
-            on_click=self.toggle_theme
-        )
-
+        # Remove theme toggle button initialization and keep only settings button
         self.settings_button = IconButton(
             icon=Icons.SETTINGS,
             icon_color=self.COLORS["text"]["secondary"],
-            tooltip="Theme Settings",
+            tooltip="Settings",  # Changed from "Theme Settings"
             on_click=self.open_settings
         )
 
         # Add a dialog for customizing theme colors
         self.settings_dialog = ft.AlertDialog(
-            title=Text("Theme Settings", size=20),
+            title=Text("Settings", size=20),  # Changed from "Theme Settings"
             content=Column(
                 controls=[
-                    Text("Background Colors", weight=FontWeight.W_500),
+                    Text("Theme", weight=FontWeight.W_500),  # Changed from "Background Colors"
+                    # New row to select theme mode
+                    Row(
+                        controls=[
+                            Text("Theme:", size=16),
+                            ft.Dropdown(
+                                options=[
+                                    ft.dropdown.Option("dark"),
+                                    ft.dropdown.Option("light"),
+                                    ft.dropdown.Option("system"),
+                                ],
+                                value="dark",
+                                on_change=self.handle_theme_change,
+                            ),
+                        ],
+                        spacing=16,
+                    ),
                 ],
                 spacing=16,
                 width=400,
@@ -255,8 +249,8 @@ class App:
         
         page.overlay.extend([self.source_picker, self.target_picker])
         # Page setup
-        page.title = "Localization Comparison Tool"
-        page.theme_mode = "dark"
+        page.title = "Localization Helper"
+        page.theme_mode = ft.ThemeMode.SYSTEM
         page.padding = 0  # We'll handle padding in the main container
         page.bgcolor = "#111827"  # Matches Tailwind's gray-900
         page.snack_bar = SnackBar(
@@ -264,6 +258,10 @@ class App:
             bgcolor="#374151",  # Tailwind gray-700
         )
         
+        # Configure default and dark themes
+        page.theme = ft.Theme(color_scheme_seed=Colors.GREEN)
+        page.dark_theme = ft.Theme(color_scheme_seed=Colors.BLUE)
+
         # Create modern file input
         def create_file_input(label: str, is_source=True):
             # Create a Browse button and wrap it in an AnimatedContainer for hover effects.
@@ -308,6 +306,125 @@ class App:
             )
 
         # Main content area with vertical scrolling
+        self.source_file_container = create_file_input("Source File", is_source=True)
+        self.target_file_container = create_file_input("Target File", is_source=False)
+        self.main_card_container = Container(
+            expand=True,
+            content=Column(
+                expand=True,
+                controls=[
+                    # File inputs (fixed height remains)
+                    Container(
+                        content=ResponsiveRow(
+                            controls=[
+                                Container(
+                                    content=self.source_file_container,
+                                    col={"sm": 12, "md": 6},
+                                ),
+                                Container(
+                                    content=self.target_file_container,
+                                    col={"sm": 12, "md": 6},
+                                ),
+                            ],
+                        ),
+                        height=120,
+                    ),
+                    # Options (fixed height)
+                    Container(
+                        content=Column(
+                            controls=[
+                                Text(
+                                    "Comparison Options",
+                                    size=16,
+                                    weight="w500",
+                                    color=self.COLORS["text"]["secondary"],
+                                ),
+                                Row(
+                                    controls=[
+                                        self.ignore_case_checkbox,
+                                        self.ignore_whitespace_checkbox,
+                                        self.only_missing_checkbox,
+                                    ],
+                                    spacing=32,
+                                ),
+                                # New ignore pattern input
+                                self.ignore_pattern_field,
+                            ],
+                            spacing=16,
+                        ),
+                        padding=padding.symmetric(vertical=24),
+                        height=120,  # Increase height if needed
+                    ),
+                    # Compare button (fixed height)
+                    Container(
+                        content=self.compare_button,
+                        height=50,
+                    ),
+                    # Results area using dynamic sizing
+                    Container(
+                        content=Card(
+                            content=Column(
+                                expand=True,
+                                controls=[
+                                    # Results header (unchanged)
+                                    Container(
+                                        content=Row(
+                                            controls=[
+                                                Text(
+                                                    "Results",
+                                                    size=16,
+                                                    weight="w500",
+                                                    color=self.COLORS["text"]["secondary"],
+                                                ),
+                                                IconButton(
+                                                    icon=Icons.COPY,
+                                                    icon_color=self.COLORS["text"]["secondary"],
+                                                    tooltip="Copy comparison results",
+                                                    on_click=self.copy_results,
+                                                ),
+                                            ],
+                                            alignment="spaceBetween",
+                                        ),
+                                        padding=padding.only(left=16, right=16, top=16),
+                                    ),
+                                    Divider(
+                                        color=self.COLORS["border"]["default"],
+                                        height=1,
+                                    ),
+                                    # Removed: Split view container of source_text and target_text
+                                    # NEW: Container for output summary only
+                                    Container(
+                                        content=self.results_container,
+                                        padding=padding.all(16),
+                                        expand=True,
+                                    ),
+                                    # Status indicators in footer (unchanged)
+                                    Container(
+                                        content=Row(
+                                            controls=[
+                                                self.loading_ring,
+                                                self.status_label,
+                                            ],
+                                            spacing=8,
+                                            vertical_alignment="center",
+                                        ),
+                                        padding=padding.only(left=16, right=16, top=8, bottom=16),
+                                        expand=True,
+                                    ),
+                                ],
+                                spacing=32,
+                            ),
+                            elevation=1,
+                        ),
+                        expand=True,
+                    ),
+                ],
+                spacing=24,
+            ),
+            bgcolor=self.COLORS["bg"]["secondary"],
+            padding=24,
+            border_radius=12,
+        )
         self.content = Container(
             expand=True,
             height=page.height,
@@ -322,6 +439,8 @@ class App:
                             controls=[
                                 Row(
                                     controls=[
+                                        # Add a placeholder container on the left with width for one button
+                                        Container(width=48),  # Width of one IconButton
                                         Text(
                                             "Localization Comparison Tool",
                                             size=32,
@@ -329,13 +448,21 @@ class App:
                                             text_align="center",
                                             expand=True,
                                         ),
-                                        self.settings_button,
-                                        self.theme_toggle,
+                                        # Right-side container with single button
+                                        Container(
+                                            content=Row(
+                                                controls=[
+                                                    self.settings_button,
+                                                ],
+                                                spacing=0,
+                                            ),
+                                            width=48,  # Match left placeholder width
+                                        ),
                                     ],
                                     alignment="spaceBetween",
                                 ),
                                 Text(
-                                    "Compare and analyze your localization files with ease",
+                                    "Compare Source and Target Localization Files",
                                     size=16,
                                     color=self.COLORS["text"]["secondary"],
                                     text_align="center",
@@ -348,123 +475,7 @@ class App:
                         height=100,  # Fixed height for header
                     ),
                     # Main card with scrollable content (updated layout)
-                    Container(
-                        expand=True,
-                        content=Column(
-                            expand=True,
-                            controls=[
-                                # File inputs (fixed height remains)
-                                Container(
-                                    content=ResponsiveRow(
-                                        controls=[
-                                            Container(
-                                                content=create_file_input("Source File", is_source=True),
-                                                col={"sm": 12, "md": 6},
-                                            ),
-                                            Container(
-                                                content=create_file_input("Target File", is_source=False),
-                                                col={"sm": 12, "md": 6},
-                                            ),
-                                        ],
-                                    ),
-                                    height=120,
-                                ),
-                                # Options (fixed height)
-                                Container(
-                                    content=Column(
-                                        controls=[
-                                            Text(
-                                                "Comparison Options",
-                                                size=16,
-                                                weight="w500",
-                                                color=self.COLORS["text"]["secondary"],
-                                            ),
-                                            Row(
-                                                controls=[
-                                                    self.ignore_case_checkbox,
-                                                    self.ignore_whitespace_checkbox,
-                                                    self.only_missing_checkbox,
-                                                ],
-                                                spacing=32,
-                                            ),
-                                            # New ignore pattern input
-                                            self.ignore_pattern_field,
-                                        ],
-                                        spacing=16,
-                                    ),
-                                    padding=padding.symmetric(vertical=24),
-                                    height=120,  # Increase height if needed
-                                ),
-                                # Compare button (fixed height)
-                                Container(
-                                    content=self.compare_button,
-                                    height=50,
-                                ),
-                                # Results area using dynamic sizing
-                                Container(
-                                    content=Card(
-                                        content=Column(
-                                            expand=True,
-                                            controls=[
-                                                # Results header (unchanged)
-                                                Container(
-                                                    content=Row(
-                                                        controls=[
-                                                            Text(
-                                                                "Results",
-                                                                size=16,
-                                                                weight="w500",
-                                                                color=self.COLORS["text"]["secondary"],
-                                                            ),
-                                                            IconButton(
-                                                                icon=Icons.COPY,
-                                                                icon_color=self.COLORS["text"]["secondary"],
-                                                                tooltip="Copy comparison results",
-                                                                on_click=self.copy_results,
-                                                            ),
-                                                        ],
-                                                        alignment="spaceBetween",
-                                                    ),
-                                                    padding=padding.only(left=16, right=16, top=16),
-                                                ),
-                                                Divider(
-                                                    color=self.COLORS["border"]["default"],
-                                                    height=1,
-                                                ),
-                                                # Removed: Split view container of source_text and target_text
-                                                # NEW: Container for output summary only
-                                                Container(
-                                                    content=self.results_container,
-                                                    padding=padding.all(16),
-                                                    expand=True,
-                                                ),
-                                                # Status indicators in footer (unchanged)
-                                                Container(
-                                                    content=Row(
-                                                        controls=[
-                                                            self.loading_ring,
-                                                            self.status_label,
-                                                        ],
-                                                        spacing=8,
-                                                        vertical_alignment="center",
-                                                    ),
-                                                    padding=padding.only(left=16, right=16, top=8, bottom=16),
-                                                    expand=True,
-                                                ),
-                                            ],
-                                            spacing=32,
-                                        ),
-                                        elevation=1,
-                                    ),
-                                    expand=True,
-                                ),
-                            ],
-                            spacing=24,
-                        ),
-                        bgcolor=self.COLORS["bg"]["secondary"],
-                        padding=24,
-                        border_radius=12,
-                    ),
+                    self.main_card_container,
                 ],
                 spacing=32,
             ),
@@ -479,6 +490,9 @@ class App:
         }
 
         page.overlay.append(self.settings_dialog)
+
+        # Ensure updated colors once UI is built
+        self.update_theme_colors()
 
     def create_checkbox(self, label: str, value: bool = False):
         return Checkbox(
@@ -521,12 +535,18 @@ class App:
 
     def _on_browse_hover(self, e, button):
         hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        button.bgcolor = hover_color if e.data else self.COLORS["bg"]["accent"]
+        if e.data == "true":
+            button.bgcolor = hover_color
+        else:
+            button.bgcolor = self.COLORS["bg"]["accent"]
         button.update()
 
     def _on_compare_button_hover(self, e, button):
         hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        button.bgcolor = hover_color if e.data else self.COLORS["bg"]["accent"]
+        if e.data == "true":
+            button.bgcolor = hover_color
+        else:
+            button.bgcolor = self.COLORS["bg"]["accent"]
         button.update()
 
     def get_file_lines(self, file_path):
@@ -625,7 +645,7 @@ class App:
 
     def update_compare_button(self):
         """Enable/disable compare button based on file selection"""
-        self.compare_button.disabled = not (self.source_file_path and self.target_file_path)
+        self.compare_button.content.disabled = not (self.source_file_path and self.target_file_path)
         self.page.update()
 
     def show_snackbar(self, message):
@@ -764,18 +784,6 @@ class App:
         self.page.set_clipboard(self.output_text.value)
         self.show_snackbar("Results copied to clipboard")
 
-    def toggle_theme(self, e):
-        # Toggle between dark and light themes
-        if self.page.theme_mode == "dark":
-            self.page.theme_mode = "light"
-            self.theme_toggle.icon = Icons.DARK_MODE
-            self.theme_toggle.tooltip = "Switch to dark theme"
-        else:
-            self.page.theme_mode = "dark"
-            self.theme_toggle.icon = Icons.LIGHT_MODE
-            self.theme_toggle.tooltip = "Switch to light theme"
-        self.page.update()
-
     def open_source_picker(self, e):
         self.source_picker.pick_files()
 
@@ -816,23 +824,65 @@ class App:
         self.page.update()
 
     def update_theme_colors(self):
-        """Apply updated colors throughout the UI."""
-        # Update primary background
+        """Update colors of all UI elements from self.COLORS."""
+        # Page and main container
         self.page.bgcolor = self.COLORS["bg"]["primary"]
-        
-        # Update text colors on icons and labels
-        self.theme_toggle.icon_color = self.COLORS["text"]["secondary"]
-        self.settings_button.icon_color = self.COLORS["text"]["secondary"]
+        self.content.bgcolor = self.COLORS["bg"]["secondary"]
+
+        # Status & update compare button styling via the ElevatedButton in container.
         self.status_label.color = self.COLORS["text"]["secondary"]
+        self.compare_button.content.style.bgcolor = self.COLORS["bg"]["accent"]
+        self.compare_button.content.style.color = self.COLORS["text"]["primary"]
+
+        # Settings button icon
+        self.settings_button.icon_color = self.COLORS["text"]["secondary"]
+
+        # Checkboxes update
+        for cb in [self.ignore_case_checkbox, self.ignore_whitespace_checkbox, self.only_missing_checkbox]:
+            cb.fill_color = self.COLORS["bg"]["accent"]
+            cb.check_color = self.COLORS["text"]["primary"]
+            cb.label_style = TextStyle(color=self.COLORS["text"]["secondary"], size=14)
+
+        # File picker icons and labels
+        self.source_icon.color = self.COLORS["text"]["secondary"]
+        self.target_icon.color = self.COLORS["text"]["secondary"]
         self.source_label.color = self.COLORS["text"]["secondary"]
         self.target_label.color = self.COLORS["text"]["secondary"]
-        
-        # Update accent color on buttons
-        self.compare_button.content.controls[0].icon_color = self.COLORS["text"]["primary"]
-        self.compare_button.content.controls[1].color = self.COLORS["text"]["primary"]
-        self.compare_button.style.bgcolor = self.COLORS["bg"]["accent"]
-        
+
+        # Update file input containers (assumes create_file_input returns a Column)
+        for container in [self.source_file_container, self.target_file_container]:
+            if isinstance(container.content, Column):
+                file_input_col = container.content
+                file_input_col.controls[0].color = self.COLORS["text"]["secondary"]  # Label text
+                inner = file_input_col.controls[1]  # Row container holding file icon/label and browse button
+                inner.bgcolor = self.COLORS["bg"]["input"]
+                inner.border = border.all(2, self.COLORS["border"]["default"])
+
+        # Text fields update
+        for tf in [self.output_text, self.source_text, self.target_text, self.summary_text]:
+            tf.text_style = TextStyle(color=self.COLORS["text"]["secondary"], size=14, font_family="Consolas", weight=FontWeight.W_400)
+            tf.bgcolor = "transparent"
+
+        # Update progress ring color
+        self.loading_ring.color = self.COLORS["bg"]["accent"]
+
+        # Update main card container background color:
+        self.main_card_container.bgcolor = self.COLORS["bg"]["secondary"]
         self.page.update()
+
+    def handle_theme_change(self, e):
+        selected = e.control.value
+        if selected == "dark":
+            self.COLORS = self.THEMES["dark"]
+            self.page.theme_mode = ft.ThemeMode.DARK
+        elif selected == "light":
+            self.COLORS = self.THEMES["light"]
+            self.page.theme_mode = ft.ThemeMode.LIGHT
+        else:
+            self.page.theme_mode = ft.ThemeMode.SYSTEM
+            self.COLORS = self.THEMES["dark"]  # default if system not easily detected
+
+        self.update_theme_colors()
 
 def highlight_line(line: str, change_type: str) -> str:
     """Simple syntax highlighting for comparison lines."""

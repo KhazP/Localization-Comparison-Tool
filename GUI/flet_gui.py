@@ -30,7 +30,8 @@ from flet import (
     Divider,
     Card,
     ClipBehavior,
-    VerticalDivider  # Added missing import
+    VerticalDivider,  # Added missing import
+    TextButton  # <-- Added
 )
 import os
 import logic
@@ -98,10 +99,9 @@ class App:
                 "default": "#4B5563",
                 "accent": "#3B82F6",
             },
-            "changes": {  # New block to define change colors
+            "changes": {  # Updated block to define change colors
                 "added": "#4ADE80",    # green
                 "removed": "#F87171",  # red
-                "modified": "#60A5FA", # blue
             }
         }
 
@@ -112,7 +112,30 @@ class App:
             tooltip="Toggle theme",
             on_click=self.toggle_theme
         )
-        
+
+        self.settings_button = IconButton(
+            icon=Icons.SETTINGS,
+            icon_color=self.COLORS["text"]["secondary"],
+            tooltip="Theme Settings",
+            on_click=self.open_settings
+        )
+
+        # Add a dialog for customizing theme colors
+        self.settings_dialog = ft.AlertDialog(
+            title=Text("Theme Settings", size=20),
+            content=Column(
+                controls=[
+                    Text("Background Colors", weight=FontWeight.W_500),
+                ],
+                spacing=16,
+                width=400,
+            ),
+            actions=[
+                TextButton("Reset to Default", on_click=self.reset_colors),
+                TextButton("Close", on_click=self.close_settings),
+            ],
+        )
+
         # Initialize file paths
         self.source_file_path = ""
         self.target_file_path = ""
@@ -185,6 +208,11 @@ class App:
             bgcolor="transparent",
             expand=True,
         )
+        self.results_container = Container(
+            content=self.summary_text,
+            padding=padding.all(16),
+            expand=True,
+        )
         self.status_label = Text(
             value="Ready",
             color=self.COLORS["text"]["secondary"],
@@ -201,6 +229,20 @@ class App:
         self.ignore_case_checkbox = self.create_checkbox("Ignore Case")
         self.ignore_whitespace_checkbox = self.create_checkbox("Ignore Whitespace")
         self.only_missing_checkbox = self.create_checkbox("Only Missing Keys", value=True)
+        # New: Add a text field for ignore key patterns (comma-separated)
+        self.ignore_pattern_field = TextField(
+            hint_text="Ignore keys starting with (e.g., temp_)",
+            text_style=TextStyle(
+                color=self.COLORS["text"]["secondary"],
+                size=14,
+                font_family="Consolas",
+                weight=FontWeight.W_400,
+            ),
+            border=None,
+            cursor_color="transparent",
+            bgcolor="transparent",
+            expand=True,
+        )
         self.compare_button = self.create_compare_button()
         
         self.source_label = Text("No file selected", color=self.COLORS["text"]["secondary"], expand=True)
@@ -228,6 +270,7 @@ class App:
             browse_button = ElevatedButton(
                 "Browse",
                 icon=Icons.UPLOAD,
+                tooltip=f"Select a {label}",
                 on_click=self.open_source_picker if is_source else self.open_target_picker,
                 bgcolor=self.COLORS["bg"]["accent"],
                 color=self.COLORS["text"]["primary"],
@@ -286,6 +329,7 @@ class App:
                                             text_align="center",
                                             expand=True,
                                         ),
+                                        self.settings_button,
                                         self.theme_toggle,
                                     ],
                                     alignment="spaceBetween",
@@ -343,11 +387,13 @@ class App:
                                                 ],
                                                 spacing=32,
                                             ),
+                                            # New ignore pattern input
+                                            self.ignore_pattern_field,
                                         ],
                                         spacing=16,
                                     ),
                                     padding=padding.symmetric(vertical=24),
-                                    height=100,
+                                    height=120,  # Increase height if needed
                                 ),
                                 # Compare button (fixed height)
                                 Container(
@@ -373,7 +419,7 @@ class App:
                                                             IconButton(
                                                                 icon=Icons.COPY,
                                                                 icon_color=self.COLORS["text"]["secondary"],
-                                                                tooltip="Copy results",
+                                                                tooltip="Copy comparison results",
                                                                 on_click=self.copy_results,
                                                             ),
                                                         ],
@@ -388,7 +434,7 @@ class App:
                                                 # Removed: Split view container of source_text and target_text
                                                 # NEW: Container for output summary only
                                                 Container(
-                                                    content=self.summary_text,
+                                                    content=self.results_container,
                                                     padding=padding.all(16),
                                                     expand=True,
                                                 ),
@@ -426,9 +472,18 @@ class App:
         page.add(self.content)
         self.page.on_window_event = self.handle_window_event
 
+        self.user_friendly_errors = {
+            "file_not_found": "File does not exist or is not valid. Please check the path.",
+            "file_type": "Unsupported file type. Please select a CSV, .lang, or .txt file.",
+            "file_empty": "The selected file is empty. Please choose another file.",
+        }
+
+        page.overlay.append(self.settings_dialog)
+
     def create_checkbox(self, label: str, value: bool = False):
         return Checkbox(
             label=label,
+            tooltip=f"Toggle option: {label}",
             value=value,
             fill_color=self.COLORS["bg"]["accent"],
             check_color=self.COLORS["text"]["primary"],
@@ -448,6 +503,7 @@ class App:
                 alignment="center",
                 spacing=8,
             ),
+            tooltip="Click to compare the source and target files",
             on_click=self.compare_files_gui,
             style=ButtonStyle(
                 color=self.COLORS["text"]["primary"],
@@ -532,17 +588,24 @@ class App:
         try:
             path = Path(file_path)
             if not path.exists() or not path.is_file():
-                raise ValueError("File does not exist or is not a valid file")
+                self.show_validation_error("file_not_found")
+                return False
             if path.suffix.lower()[1:] not in ["csv", "lang", "txt"]:
-                raise ValueError("Invalid file type")
+                self.show_validation_error("file_type")
+                return False
             if path.stat().st_size == 0:
-                raise ValueError("File is empty")
+                self.show_validation_error("file_empty")
+                return False
             with open(file_path, 'r', encoding='utf-8') as f:
                 f.read(1024)
             return True
         except Exception as e:
-            self.show_snackbar(f"Error: {str(e)}")
+            self.show_snackbar(f"Unexpected error: {str(e)}")
             return False
+
+    def show_validation_error(self, error_key: str):
+        message = self.user_friendly_errors.get(error_key, "An unknown error occurred.")
+        self.show_snackbar(message)
 
     def handle_source_selected(self, file_path: str):
         self.source_file_path = file_path
@@ -576,69 +639,118 @@ class App:
         self.page.update()
 
         try:
-            with open(self.source_file_path, 'r', encoding='utf-8') as f:
-                source_content = f.read()
-            with open(self.target_file_path, 'r', encoding='utf-8') as f:
-                target_content = f.read()
-            
-            # Determine parser based on file extension
+            # Read files with explicit encoding and error handling
+            try:
+                with open(self.source_file_path, 'r', encoding='utf-8') as f:
+                    source_content = f.read()
+            except UnicodeDecodeError:
+                with open(self.source_file_path, 'r', encoding='latin-1') as f:
+                    source_content = f.read()
+
+            try:
+                with open(self.target_file_path, 'r', encoding='utf-8') as f:
+                    target_content = f.read()
+            except UnicodeDecodeError:
+                with open(self.target_file_path, 'r', encoding='latin-1') as f:
+                    target_content = f.read()
+
             ext_source = Path(self.source_file_path).suffix.lower()
             ext_target = Path(self.target_file_path).suffix.lower()
-            
-            if ext_source in [".lang", ".txt"]:
-                source_dict = logic.read_lang_file(source_content)
-                source_result = logic.ParsingResult(success=bool(source_dict), translations=source_dict,
-                                                    error=None if source_dict else "Empty or invalid file",
-                                                    details="Parsed using read_lang_file")
-            else:
-                source_result = logic.read_csv_file(source_content)
-            
-            if ext_target in [".lang", ".txt"]:
-                target_dict = logic.read_lang_file(target_content)
-                target_result = logic.ParsingResult(success=bool(target_dict), translations=target_dict,
-                                                    error=None if target_dict else "Empty or invalid file",
-                                                    details="Parsed using read_lang_file")
-            else:
-                target_result = logic.read_csv_file(target_content)
-            
-            if not source_result:
-                error_msg = f"Source file error: {source_result.error}"
-                if source_result.details:
-                    error_msg += f"\n{source_result.details}"
-                self.show_snackbar(error_msg)
-                self.status_label.value = "Error: Source file parsing failed"
-                return
-            if not target_result:
-                error_msg = f"Target file error: {target_result.error}"
-                if target_result.details:
-                    error_msg += f"\n{target_result.details}"
-                self.show_snackbar(error_msg)
-                self.status_label.value = "Error: Target file parsing failed"
-                return
 
-            comparison_result = logic.compare_translations(source_result.translations,
-                                                           target_result.translations,
-                                                           ignore_case=self.ignore_case_checkbox.value,
-                                                           ignore_whitespace=self.ignore_whitespace_checkbox.value,
-                                                           is_gui=True,
-                                                           compare_values=True)
-            print("Comparison result:")
-            print(comparison_result)
-            
-            # Update the output fields in a nested try to isolate errors here
-            try:
-                self.output_text.value = comparison_result
-                self.summary_text.value = comparison_result  # adjust as needed
-                self.status_label.value = "Comparison successful"
-            except Exception as update_error:
-                self.show_snackbar(f"Update error: {str(update_error)}")
-                self.status_label.value = "Partial success: update failed"
+            # Parse both files
+            source_dict = logic.parse_content_by_ext(source_content, ext_source)
+            target_dict = logic.parse_content_by_ext(target_content, ext_target)
+
+            # Debug logging
+            print(f"Source file entries: {len(source_dict)}")
+            print(f"Target file entries: {len(target_dict)}")
+            print("Sample source entries:", dict(list(source_dict.items())[:3]))
+            print("Sample target entries:", dict(list(target_dict.items())[:3]))
+
+            # Get ignore patterns
+            ignore_patterns = []
+            pattern_str = self.ignore_pattern_field.value.strip()
+            if pattern_str:
+                ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
+
+            # Compare translations
+            comparison_result = logic.compare_translations(
+                target_dict,  # target translations (old_translations)
+                source_dict,  # source translations (new_translations)
+                ignore_case=self.ignore_case_checkbox.value,
+                ignore_whitespace=self.ignore_whitespace_checkbox.value,
+                is_gui=True,
+                compare_values=True,
+                ignore_patterns=ignore_patterns
+            )
+
+            # Update UI with results
+            self.output_text.value = comparison_result
+            self.build_results_table(comparison_result)
+            self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
+
         except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"Error details: {error_details}")
             self.show_snackbar(f"Error: {str(e)}")
             self.status_label.value = "Comparison failed"
         finally:
             self.loading_ring.visible = False
             self.page.update()
+
+    def build_results_table(self, comparison_result: str):
+        """Build and display the results table with proper styling"""
+        lines = comparison_result.splitlines()
+        table_rows = []
+        
+        # Create a Container for each line with appropriate styling
+        for line in lines:
+            # Skip empty lines
+            if not line.strip():
+                continue
+                
+            text_color = self.COLORS["text"]["primary"]  # default color
+            text_weight = ft.FontWeight.NORMAL
+            
+            # Handle special lines
+            if line.startswith("---") or line.startswith("Added:") or line.startswith("Removed:"):
+                text_weight = ft.FontWeight.BOLD
+            else:
+                # Handle comparison lines
+                indicator = line[:1].strip()
+                if indicator == "+":
+                    text_color = self.COLORS["changes"]["added"]
+                elif indicator == "-":
+                    text_color = self.COLORS["changes"]["removed"]
+
+            # Create a row with the line
+            row_content = ft.Text(
+                value=line,
+                color=text_color,
+                weight=text_weight,
+                size=14,
+                font_family="Consolas",
+            )
+            
+            # Wrap in container for padding and styling
+            row_container = Container(
+                content=row_content,
+                padding=padding.all(8),
+            )
+            
+            table_rows.append(row_container)
+
+        # Create a column containing all rows
+        results_column = Column(
+            controls=table_rows,
+            scroll=ft.ScrollMode.AUTO,
+            spacing=2,
+        )
+        
+        # Update the results container with the new content
+        self.results_container.content = results_column
+        self.page.update()
 
     def clear_text_field(self, text_field, clear_btn):
         # Clear the text field and hide the clear button
@@ -657,9 +769,11 @@ class App:
         if self.page.theme_mode == "dark":
             self.page.theme_mode = "light"
             self.theme_toggle.icon = Icons.DARK_MODE
+            self.theme_toggle.tooltip = "Switch to dark theme"
         else:
             self.page.theme_mode = "dark"
             self.theme_toggle.icon = Icons.LIGHT_MODE
+            self.theme_toggle.tooltip = "Switch to light theme"
         self.page.update()
 
     def open_source_picker(self, e):
@@ -672,16 +786,11 @@ class App:
         # Add window event handling as needed
         pass
 
-    # New method: format_comparison_line
     def format_comparison_line(self, key: str, value: str, change_type: str, max_key_length: int):
-        # Build a basic formatted line with a change indicator and aligned key.
-        # For indicator: use first letter of change_type (e.g., "+" for added, "-" for removed, "M" for modified)
         if change_type == "added":
             indicator = "+ "
         elif change_type == "removed":
             indicator = "- "
-        elif change_type == "modified":
-            indicator = "M "
         else:
             indicator = "  "
         line = f"{indicator}{key.ljust(max_key_length)} : {value}"
@@ -689,13 +798,49 @@ class App:
         import syntax_highlighter
         return syntax_highlighter.highlight_line(line, change_type)
 
-    # New method: format_summary
-    def format_summary(self, added: int, removed: int, modified: int) -> str:
-        return f"--- Summary ---\nAdded: {added}\nRemoved: {removed}\nModified: {modified}"
+    # Update format_summary method
+    def format_summary(self, added: int, removed: int) -> str:
+        return f"--- Summary ---\nAdded: {added}\nRemoved: {removed}"
 
-def main(page: Page):
-    my_app = App(page)
-    page.update()
+    def open_settings(self, e):
+        self.settings_dialog.open = True
+        self.page.update()
+
+    def close_settings(self, e):
+        self.settings_dialog.open = False
+        self.page.update()
+
+    def reset_colors(self, e):
+        self.COLORS = self.THEMES["dark"]
+        self.update_theme_colors()
+        self.page.update()
+
+    def update_theme_colors(self):
+        """Apply updated colors throughout the UI."""
+        # Update primary background
+        self.page.bgcolor = self.COLORS["bg"]["primary"]
+        
+        # Update text colors on icons and labels
+        self.theme_toggle.icon_color = self.COLORS["text"]["secondary"]
+        self.settings_button.icon_color = self.COLORS["text"]["secondary"]
+        self.status_label.color = self.COLORS["text"]["secondary"]
+        self.source_label.color = self.COLORS["text"]["secondary"]
+        self.target_label.color = self.COLORS["text"]["secondary"]
+        
+        # Update accent color on buttons
+        self.compare_button.content.controls[0].icon_color = self.COLORS["text"]["primary"]
+        self.compare_button.content.controls[1].color = self.COLORS["text"]["primary"]
+        self.compare_button.style.bgcolor = self.COLORS["bg"]["accent"]
+        
+        self.page.update()
+
+def highlight_line(line: str, change_type: str) -> str:
+    """Simple syntax highlighting for comparison lines."""
+    # No highlighting needed for GUI as we handle colors in the UI
+    return line
+
+def main(page: ft.Page):
+    App(page)
 
 if __name__ == "__main__":
     ft.app(target=main)

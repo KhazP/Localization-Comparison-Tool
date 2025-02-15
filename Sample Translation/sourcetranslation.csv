@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lang>
+    <!-- Main Menu -->
+    <string name="menu.main.play">Play</string>
+    <string name="menu.main.options">Options</string>
+    <string name="menu.main.quit">Quit</string>
+    
+    <!-- Options Menu -->
+    <string name="menu.options.graphics">Graphics Quality</string>
+    <string name="menu.options.sound">Sound Volume</string>
+    <string name="menu.options.language">Language</string>
+    
+    <!-- Lobby -->
+    <string name="menu.lobby.info.maxplayers.server">Server Max Players:</string>
+    <string name="menu.lobby.info.status">Server Status</string>
+    <string name="menu.lobby.wait">Waiting for Players...</string>
+    
+    <!-- Navigation -->
+    <string name="menu.nav.back">Back</string>
+    <string name="menu.nav.select">Select</string>
+    
+    <!-- Error Messages -->
+    <string name="error.connection">Connection Failed</string>
+    <string name="error.timeout">Server Timeout</string>
+</lang>

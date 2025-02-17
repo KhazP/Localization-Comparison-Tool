@@ -1,4 +1,5 @@
-# ![image](https://github.com/user-attachments/assets/2a19bfb0-9ecf-40b4-9286-02ac368618b9)
+# Localization Comparison Tool
+![image](https://github.com/user-attachments/assets/2a19bfb0-9ecf-40b4-9286-02ac368618b9)
 
 A modern GUI application built with [Flet](https://flet.dev/) for comparing and analyzing localization files. This tool helps streamline the localization process by making it easy to identify differences between translation files.
 

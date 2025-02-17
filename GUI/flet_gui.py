@@ -38,11 +38,38 @@ from flet import (
 import os
 import logic
 from pathlib import Path
-from reports.report_generator import ReportGenerator
+from constants import SUPPORTED_FORMATS, USER_MESSAGES
+import json
+import re
+
+# New configuration manager class
+class ConfigManager:
+    CONFIG_FILE = r"E:/ProgramTests/LocalizerAppMain/config.json"
+    
+    @staticmethod
+    def load():
+        if os.path.exists(ConfigManager.CONFIG_FILE):
+            try:
+                with open(ConfigManager.CONFIG_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Error loading config: {e}")
+        return {}
+    
+    @staticmethod
+    def save(config: dict):
+        try:
+            with open(ConfigManager.CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=4)
+        except Exception as e:
+            print(f"Error saving config: {e}")
 
 class App:
     def __init__(self, page: ft.Page):
         self.page = page
+        # Add color cache
+        self._cached_colors = {}
+        
         # Theme colors (unchanged)
         self.THEMES = {
             "dark": {
@@ -92,6 +119,8 @@ class App:
 
         # Use dark theme colors
         self.COLORS = self.THEMES["dark"]
+        # Cache initial colors
+        self._cached_colors[page.theme_mode.value] = self.COLORS
 
         # Remove theme toggle button initialization and keep only settings button
         self.settings_button = IconButton(
@@ -99,6 +128,13 @@ class App:
             icon_color=self.COLORS["text"]["secondary"],
             tooltip="Settings",  # Changed from "Theme Settings"
             on_click=self.open_settings
+        )
+        # New Feedback button next to settings button
+        self.feedback_button = IconButton(
+            icon=Icons.FEEDBACK,
+            tooltip="Send Feedback",
+            icon_color=self.COLORS["text"]["secondary"],
+            on_click=self.open_feedback_dialog
         )
 
         self.log_missing_strings = False  # New flag for missing strings logging
@@ -122,6 +158,11 @@ class App:
             "mt_source_lang": "en",
             "mt_target_lang": "tr"
         })
+
+        # Initialize configuration from defaults then merge saved settings
+        saved_config = ConfigManager.load()
+        if saved_config:
+            self.config.update(saved_config)
 
         # Create tabs for settings dialog
         self.settings_tabs = Tabs(
@@ -236,7 +277,7 @@ class App:
                                             Text("Ignore Patterns", size=16, weight="bold"),
                                             TextField(
                                                 value=",".join(self.config["ignore_patterns"]),
-                                                hint_text="Comma-separated patterns to ignore",
+                                                hint_text="Enter regex patterns (comma-separated)",
                                                 on_change=self.handle_patterns_change,
                                                 multiline=True,
                                                 min_lines=2,
@@ -330,6 +371,25 @@ class App:
                 TextButton("Reset to Default", on_click=self.reset_settings),
                 TextButton("Close", on_click=self.close_settings),
             ],
+        )
+
+        # Define feedback dialog
+        self.feedback_dialog = ft.AlertDialog(
+            title=Text("Feedback"),
+            content=Container(
+                content=Column(
+                    controls=[
+                        TextField(label="Your Email (optional)"),
+                        TextField(label="Feedback", multiline=True, min_lines=4),
+                    ],
+                    spacing=8,
+                ),
+                width=500, height=300,
+            ),
+            actions=[
+                TextButton("Send", on_click=self.send_feedback),
+                TextButton("Cancel", on_click=self.close_feedback_dialog),
+            ]
         )
 
         # Initialize file paths
@@ -434,6 +494,7 @@ class App:
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
+            hint_text="Enter regex patterns (comma-separated)",
             border=None,
             cursor_color="transparent",
             bgcolor="transparent",
@@ -686,76 +747,7 @@ class App:
             padding=24,
             border_radius=12,
         )
-        self.content = Container(
-            expand=True,
-            height=page.height,
-            padding=32,
-            content=Column(
-                expand=True,
-                scroll=ScrollMode.AUTO,
-                controls=[
-                    # Header (fixed height)
-                    Container(
-                        content=Column(
-                            controls=[
-                                Row(
-                                    controls=[
-                                        # Add a placeholder container on the left with width for one button
-                                        Container(width=48),  # Width of one IconButton
-                                        Text(
-                                            "Localization Comparison Tool",
-                                            size=32,
-                                            weight="bold",
-                                            text_align="center",
-                                            expand=True,
-                                        ),
-                                        # Right-side container with single button
-                                        Container(
-                                            content=Row(
-                                                controls=[
-                                                    self.settings_button,
-                                                ],
-                                                spacing=0,
-                                            ),
-                                            width=48,  # Match left placeholder width
-                                        ),
-                                    ],
-                                    alignment="spaceBetween",
-                                ),
-                                Text(
-                                    "Compare Source and Target Localization Files",
-                                    size=16,
-                                    color=self.COLORS["text"]["secondary"],
-                                    text_align="center",
-                                ),
-                            ],
-                            horizontal_alignment="center",
-                            spacing=8,
-                        ),
-                        padding=padding.only(bottom=24),
-                        height=100,  # Fixed height for header
-                    ),
-                    # Main card with scrollable content (updated layout)
-                    self.main_card_container,
-                ],
-                spacing=32,
-            ),
-        )
-        page.add(self.content)
-        self.page.on_window_event = self.handle_window_event
-
-        self.user_friendly_errors = {
-            "file_not_found": "File does not exist or is not valid. Please check the path.",
-            "file_type": "Unsupported file type. Please select a CSV, .lang, or .txt file.",
-            "file_empty": "The selected file is empty. Please choose another file.",
-        }
-
-        page.overlay.append(self.settings_dialog)
-
-        # Ensure updated colors once UI is built
-        self.update_theme_colors()
-
-        # Add expand/collapse control
+        # Initialize expand/collapse control first
         self.expand_all = True
         self.expand_collapse_button = IconButton(
             icon=Icons.UNFOLD_LESS,
@@ -764,7 +756,7 @@ class App:
             on_click=self.toggle_expand_all,
         )
 
-        # Modify the results header to include the expand/collapse button
+        # Create results header with expand/collapse button
         self.results_header = Container(
             content=Row(
                 controls=[
@@ -777,18 +769,6 @@ class App:
                     Row(
                         controls=[
                             self.expand_collapse_button,
-                            IconButton(
-                                icon=Icons.UPLOAD_FILE,
-                                icon_color=self.COLORS["text"]["secondary"],
-                                tooltip="Import Changes",
-                                on_click=self.import_changes,
-                            ),
-                            IconButton(
-                                icon=Icons.DOWNLOAD,
-                                icon_color=self.COLORS["text"]["secondary"],
-                                tooltip="Export Report",
-                                on_click=self.export_report,
-                            ),
                             IconButton(
                                 icon=Icons.COPY,
                                 icon_color=self.COLORS["text"]["secondary"],
@@ -804,21 +784,60 @@ class App:
             padding=padding.only(left=16, right=16, top=16),
         )
 
-        # Add file pickers for export/import
-        self.export_picker = FilePicker(
-            on_result=self.handle_export_result
+        # Then in the content initialization
+        self.content = Container(
+            expand=True,
+            height=page.height,
+            padding=32,
+            content=Column(
+                expand=True,
+                scroll=ScrollMode.AUTO,
+                controls=[
+                    # Header container
+                    Container(
+                        content=Column(
+                            controls=[
+                                Row(
+                                    controls=[
+                                        Container(width=48),
+                                        Text(
+                                            "Localization Comparison Tool",
+                                            size=32,
+                                            weight="bold",
+                                            text_align="center",
+                                            expand=True,
+                                        ),
+                                        Container(
+                                            content=Row(
+                                                controls=[
+                                                    self.settings_button,
+                                                    self.feedback_button,
+                                                ],
+                                                spacing=8,
+                                            ),
+                                            width=96,
+                                        ),
+                                    ],
+                                    alignment="spaceBetween",
+                                ),
+                                Text(
+                                    "Compare Source and Target Localization Files",
+                                    size=16,
+                                    color=self.COLORS["text"]["secondary"],
+                                    text_align="center",
+                                ),
+                            ],
+                            horizontal_alignment="center",
+                            spacing=8,
+                        ),
+                        padding=padding.only(bottom=24),
+                        height=100,
+                    ),
+                    self.main_card_container,
+                ],
+                spacing=32,
+            ),
         )
-        self.import_picker = FilePicker(
-            on_result=self.handle_import_result
-        )
-        page.overlay.extend([self.export_picker, self.import_picker])
-        
-        # Save comparison data for export
-        self.comparison_data = {
-            "missing": [],
-            "obsolete": [],
-            "modified": []
-        }
 
     def create_checkbox(self, label: str, value: bool = False):
         return Checkbox(
@@ -1017,6 +1036,11 @@ class App:
                 icon.color = Colors.BLUE_400
                 self.update_compare_button()
                 self.page.update()
+            else:
+                field.value = ""
+                icon.color = "red"  # visually indicate error
+                field.update()
+                icon.update()
 
     def get_readable_file_size(self, size_in_bytes):
         """Convert file size in bytes to human readable format"""
@@ -1039,24 +1063,18 @@ class App:
         self.page.update()
 
     def validate_file(self, file_path: str) -> bool:
-        try:
-            path = Path(file_path)
-            # Allow additional file types: json, yaml, and yml
-            if path.suffix.lower()[1:] not in ["csv", "lang", "txt", "json", "yaml", "yml"]:
-                self.show_validation_error("file_type")
-                return False
-            if not path.exists() or not path.is_file():
-                self.show_validation_error("file_not_found")
-                return False
-            if path.stat().st_size == 0:
-                self.show_validation_error("file_empty")
-                return False
-            with open(file_path, 'r', encoding='utf-8') as f:
-                f.read(1024)
-            return True
-        except Exception as e:
-            self.show_snackbar(f"Unexpected error: {str(e)}")
+        import os
+        if not file_path or not file_path.strip():
+            self.show_validation_error("file_empty")
             return False
+        if not os.path.isfile(file_path):
+            self.show_validation_error("file_not_found")
+            return False
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext not in SUPPORTED_FORMATS:
+            self.show_validation_error("file_type")
+            return False
+        return True
 
     def show_validation_error(self, error_key: str):
         message = self.user_friendly_errors.get(error_key, "An unknown error occurred.")
@@ -1161,32 +1179,10 @@ class App:
             obsolete_keys = len(obsolete_keys_set)
             self.update_statistics(total_keys, missing_keys, obsolete_keys)
 
-            # Update comparison data using the actual sets
-            self.comparison_data = {
-                "missing": [(k, source_dict[k]) for k in missing_keys_set],
-                "obsolete": [(k, target_dict[k]) for k in obsolete_keys_set],
-                "modified": [
-                    (k, (source_dict[k], target_dict[k])) 
-                    for k in source_dict.keys() & target_dict.keys()
-                    if source_dict[k] != target_dict[k]
-                ]
-            }
-
             # Update UI with results
             self.output_text.value = comparison_result
             self.build_results_table(comparison_result)
             self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
-
-            # After comparison is complete, update comparison_data
-            self.comparison_data = {
-                "missing": [(k, source_dict[k]) for k in missing_keys_set],
-                "obsolete": [(k, target_dict[k]) for k in obsolete_keys_set],
-                "modified": [
-                    (k, (source_dict[k], target_dict[k])) 
-                    for k in source_dict.keys() & target_dict.keys()
-                    if source_dict[k] != target_dict[k]
-                ]
-            }
 
         except Exception as e:
             import traceback
@@ -1196,130 +1192,113 @@ class App:
             self.status_label.value = "Comparison failed"
             # Reset statistics on error
             self.update_statistics(0, 0, 0)
-            self.comparison_data = {"missing": [], "obsolete": [], "modified": []}
         finally:
             self.loading_ring.visible = False
             self.page.update()
 
         # Add this at the end of the method:
         translate_button = self.compare_button.content.controls[1]
-        translate_button.visible = True
+        translate_button.visible = self.config["mt_enabled"]
         self.page.update()
+
+    def group_keys_by_namespace(self, lines: list[str]) -> dict:
+        groups = {}
+        for line in lines:
+            # Assume lines are in format: "+ key : value ..." (or "-" or "~")
+            # Remove indicator and split by ":" to isolate key.
+            try:
+                indicator, rest = line.split(" ", 1)
+                key_part = rest.split(":", 1)[0].strip()
+            except ValueError:
+                key_part = "General"
+            namespace = key_part.split(".")[0] if "." in key_part else "General"
+            groups.setdefault(namespace, []).append(line)
+        return groups
 
     def build_results_table(self, comparison_result: str):
-        """Build and display the results table with optional namespace grouping"""
+        from flet import Icon, Column, Row, Text, TextField
         lines = comparison_result.splitlines()
-        table_rows = []
-        
-        if self.config["group_by_namespace"]:
-            # Existing grouping logic
-            groups, ungrouped = self.group_keys_by_namespace(lines)
-            
-            # Create expandable sections for each namespace
-            for namespace, entries in sorted(groups.items()):
-                # Create namespace header
-                header_content = Row(
-                    controls=[
-                        IconButton(
-                            icon=Icons.EXPAND_MORE,
-                            icon_color=self.COLORS["text"]["secondary"],
-                            tooltip="Toggle section",
-                        ),
-                        Text(
-                            f"{namespace} ({len(entries)})",
-                            size=16,
-                            weight=FontWeight.BOLD,
-                            color=self.COLORS["text"]["secondary"],
-                        ),
-                    ],
-                    alignment="center",
-                )
-                
-                # Create container for namespace entries
-                entries_column = Column(
-                    controls=[self.create_result_row(line) for line, _ in entries],
-                    spacing=2,
-                    visible=self.expand_all,
-                )
-                
-                # Create expandable section
-                section = Container(
-                    content=Column(
-                        controls=[
-                            header_content,
-                            Container(
-                                content=entries_column,
-                                padding=padding.only(left=32),
-                            ),
-                        ],
-                    ),
-                    padding=padding.only(top=8, bottom=8),
-                )
-                
-                # Add click handler to header
-                header_content.controls[0].on_click = lambda e, col=entries_column: self.toggle_section(e, col)
-                
-                table_rows.append(section)
-            
-            # Add ungrouped entries at the bottom
-            if ungrouped:
-                ungrouped_header = Text(
-                    "Other",
-                    size=16,
-                    weight=FontWeight.BOLD,
-                    color=self.COLORS["text"]["secondary"],
-                )
-                table_rows.append(Container(
-                    content=ungrouped_header,
-                    padding=padding.only(top=16, bottom=8),
-                ))
-                
-                for line, _ in sorted(ungrouped, key=lambda x: x[1]):
-                    table_rows.append(self.create_result_row(line))
+        # Sort lines by prefix priority: removed ('-'), mismatched ('~'), added ('+')
+        sorted_lines = sorted(lines, key=lambda l: {'-': 0, '~': 1, '+': 2}.get(l[0], 3))
+        result_rows = []
+        if self.config.get("group_by_namespace"):
+            groups = self.group_keys_by_namespace(sorted_lines)
+            for namespace, group_lines in groups.items():
+                # Header row for namespace
+                header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
+                result_rows.append(header)
+                for line in group_lines:
+                    if line.startswith("+"):
+                        icon = Icon(Icons.ADD, color="green")
+                    elif line.startswith("-"):
+                        icon = Icon(Icons.REMOVE, color="red")
+                    elif line.startswith("~"):
+                        icon = Icon(Icons.WARNING, color="yellow")
+                    else:
+                        icon = Icon(Icons.HELP, color="grey")
+                    result_rows.append(Row(controls=[icon, Text(line)], spacing=8))
         else:
-            # Simple flat list without grouping
-            for line in lines:
-                if line.strip() and not line.startswith("---"):
-                    table_rows.append(self.create_result_row(line))
-
-        # Create a column containing all rows
-        results_column = Column(
-            controls=table_rows,
-            scroll=ft.ScrollMode.AUTO,
-            spacing=2,
+            for line in sorted_lines:
+                if line.startswith("+"):
+                    icon = Icon(Icons.ADD, color="green")
+                elif line.startswith("-"):
+                    icon = Icon(Icons.REMOVE, color="red")
+                elif line.startswith("~"):
+                    icon = Icon(Icons.WARNING, color="yellow")
+                else:
+                    icon = Icon(Icons.HELP, color="grey")
+                result_rows.append(Row(controls=[icon, Text(line)], spacing=8))
+        # Prepend a search bar for filtering results
+        search_field = TextField(
+            hint_text="Search results...",
+            on_change=lambda e: self.filter_results(e, sorted_lines)
         )
-        
-        # Update the results container with the new content
-        self.results_container.content = results_column
+        self.results_container.content = Column(controls=[search_field] + result_rows)
         self.page.update()
 
-    def create_result_row(self, line: str) -> Container:
-        """Create a styled row for a single comparison result"""
-        text_color = self.COLORS["text"]["primary"]  # default color
-        text_weight = ft.FontWeight.NORMAL
-        
-        # Handle comparison lines
-        indicator = line[:1].strip()
-        if indicator == "+":
-            text_color = self.COLORS["changes"]["added"]
-        elif indicator == "-":
-            text_color = self.COLORS["changes"]["removed"]
-        elif indicator == "~":
-            text_color = self.COLORS["text"]["accent"]
-        
-        # Create a row with the line
-        row_content = ft.Text(
-            value=line,
-            color=text_color,
-            weight=text_weight,
-            size=14,
-            font_family="Consolas",
+    def filter_results(self, e):
+        query = e.control.value.lower()
+        filtered_rows = [row for row in self.all_result_rows if query in row.controls[1].value.lower()]
+        from flet import Column, TextField
+        self.results_container.content = Column(
+            controls=[TextField(
+                        hint_text="Search results...",
+                        value=query,
+                        on_change=lambda e: self.filter_results(e)
+                     )] + filtered_rows
         )
-        
-        return Container(
-            content=row_content,
-            padding=padding.all(8),
-        )
+        self.page.update()
+
+    def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
+        from flet import Container, Column, Text
+        translated_keys = total_keys - missing_keys
+        translation_percentage = (translated_keys / total_keys * 100) if total_keys else 0
+        self.stats_text_total.value = str(total_keys)
+        self.stats_text_missing.value = str(missing_keys)
+        self.stats_text_obsolete.value = str(obsolete_keys)
+        if not hasattr(self, "stats_text_percentage"):
+            self.stats_text_percentage = Text(
+                value="0%",
+                size=24,
+                weight=FontWeight.BOLD,
+                color="lightblue"
+            )
+            self.stats_panel.content.content.controls.append(
+                Container(
+                    content=Column(
+                        controls=[
+                            Text("Translated %", size=14, color=self.COLORS["text"]["secondary"]),
+                            self.stats_text_percentage,
+                        ],
+                        horizontal_alignment="center",
+                        spacing=4,
+                    ),
+                    padding=padding.all(16),
+                    expand=True,
+                )
+            )
+        self.stats_text_percentage.value = f"{translation_percentage:.1f}%"
+        self.page.update()
 
     def toggle_section(self, e, column):
         """Toggle visibility of a namespace section"""
@@ -1328,56 +1307,11 @@ class App:
         self.page.update()
 
     def toggle_expand_all(self, e):
-        """Toggle expand/collapse all sections"""
+        # Toggle expand/collapse functionality.
         self.expand_all = not self.expand_all
-        self.expand_collapse_button.icon = (
-            Icons.UNFOLD_MORE if self.expand_all else Icons.UNFOLD_LESS
-        )
-        self.expand_collapse_button.tooltip = (
-            "Collapse All" if self.expand_all else "Expand All"
-        )
-        self.build_results_table(self.output_text.value)
+        # Dummy implementation: update the status_label based on expand_all state.
+        self.status_label.value = "Expanded" if self.expand_all else "Collapsed"
         self.page.update()
-
-    def group_keys_by_namespace(self, lines: list[str]) -> dict:
-        """Group comparison lines by their namespace"""
-        groups = {}
-        ungrouped = []
-        
-        for line in lines:
-            if not line.strip():
-                continue
-            
-            # Skip summary lines
-            if line.startswith("---") or line.startswith("Added:") or line.startswith("Removed:"):
-                continue
-                
-            # Extract the key from the line (after the +/- indicator)
-            parts = line.split(" : ", 1)
-            if len(parts) != 2:
-                ungrouped.append(line)
-                continue
-                
-            key_part = parts[0].lstrip("+-~ ").strip()
-            value_part = parts[1]
-            
-            # Split key into namespace parts
-            key_segments = key_part.split(".")
-            
-            if len(key_segments) > 1:
-                # Use first segment as namespace
-                namespace = key_segments[0]
-                if namespace not in groups:
-                    groups[namespace] = []
-                groups[namespace].append((line, key_part))
-            else:
-                ungrouped.append((line, key_part))
-        
-        # Sort each group by key
-        for namespace in groups:
-            groups[namespace].sort(key=lambda x: x[1])
-        
-        return groups, ungrouped
 
     def clear_text_field(self, text_field, clear_btn):
         # Clear the text field and hide the clear button
@@ -1431,11 +1365,20 @@ class App:
         self.page.update()
 
     def update_theme_colors(self):
-        """Update colors of all UI elements from self.COLORS."""
-        # Page and main container
+        """Update colors of all UI elements with caching"""
+        theme_key = self.page.theme_mode.value
+        if theme_key in self._cached_colors:
+            self.COLORS = self._cached_colors[theme_key]
+        else:
+            # Calculate colors based on theme mode
+            selected = theme_key.lower()
+            self.COLORS = self.THEMES[selected if selected != "system" else "dark"]
+            # Cache the calculated colors
+            self._cached_colors[theme_key] = self.COLORS
+
+        # Update UI elements with cached colors
         self.page.bgcolor = self.COLORS["bg"]["primary"]
         self.content.bgcolor = self.COLORS["bg"]["secondary"]
-
         # Status label
         self.status_label.color = self.COLORS["text"]["secondary"]
         
@@ -1485,6 +1428,7 @@ class App:
 
     def handle_case_change(self, e):
         self.config["ignore_case"] = e.control.value
+        ConfigManager.save(self.config)
         self.ignore_case_checkbox.value = e.control.value  # Update main UI checkbox
         self.page.update()
 
@@ -1532,132 +1476,166 @@ class App:
         self.settings_tabs.tabs[0].content.content.controls[0].content.controls[1].value = "system"  # Theme dropdown
         # Update other tab controls as needed
         
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_mt_enabled_change(self, e):
         self.config["mt_enabled"] = e.control.value
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_mt_api_key_change(self, e):
-        self.config["mt_api_key"] = e.control.value
+        new_key = e.control.value.strip() if e.control.value else ""
+        if not new_key:
+            self.show_snackbar("API key cannot be empty.")
+            self.config["mt_api_key"] = ""
+        else:
+            self.config["mt_api_key"] = new_key
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_mt_source_lang_change(self, e):
         self.config["mt_source_lang"] = e.control.value
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_mt_target_lang_change(self, e):
         self.config["mt_target_lang"] = e.control.value
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_group_by_namespace_change(self, e):
         """Handle toggling of namespace grouping"""
         self.config["group_by_namespace"] = e.control.value
+        ConfigManager.save(self.config)
         # Rebuild results table if we have results
         if self.output_text.value and self.output_text.value != "Comparison results will appear here":
             self.build_results_table(self.output_text.value)
         self.page.update()
 
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
-        """Update the statistics panel with new values"""
+        from flet import Container, Column, Text
+        translated_keys = total_keys - missing_keys
+        translation_percentage = (translated_keys / total_keys * 100) if total_keys else 0
         self.stats_text_total.value = str(total_keys)
         self.stats_text_missing.value = str(missing_keys)
         self.stats_text_obsolete.value = str(obsolete_keys)
+        if not hasattr(self, "stats_text_percentage"):
+            self.stats_text_percentage = Text(
+                value="0%",
+                size=24,
+                weight=FontWeight.BOLD,
+                color="lightblue"
+            )
+            self.stats_panel.content.content.controls.append(
+                Container(
+                    content=Column(
+                        controls=[
+                            Text("Translated %", size=14, color=self.COLORS["text"]["secondary"]),
+                            self.stats_text_percentage,
+                        ],
+                        horizontal_alignment="center",
+                        spacing=4,
+                    ),
+                    padding=padding.all(16),
+                    expand=True,
+                )
+            )
+        self.stats_text_percentage.value = f"{translation_percentage:.1f}%"
         self.page.update()
 
     def handle_theme_change(self, e):
-        """Handle theme mode changes"""
+        """Handle theme mode changes using simplified logic"""
         selected = e.control.value
-        if (selected == "dark"):
-            self.page.theme_mode = ft.ThemeMode.DARK
-            self.COLORS = self.THEMES["dark"]
-        elif (selected == "light"):
-            self.page.theme_mode = ft.ThemeMode.LIGHT
-            self.COLORS = self.THEMES["light"]
-        else:  # system
-            self.page.theme_mode = ft.ThemeMode.SYSTEM
-            # Default to dark theme if system preference can't be detected
-            self.COLORS = self.THEMES["dark"]
-        
+        self.page.theme_mode = getattr(ft.ThemeMode, selected.upper())
+        self.COLORS = self.THEMES[selected if selected != "system" else "dark"]
+        ConfigManager.save(self.config)
         self.update_theme_colors()
         self.page.update()
-
-    def export_report(self, e):
-        """Export comparison results to a file"""
-        if not self.comparison_data.get("missing") and not self.comparison_data.get("obsolete"):
-            self.show_snackbar("No comparison results to export")
-            return
-        
-        # Open file picker for save location
-        self.export_picker.save_file(
-            allowed_extensions=["html", "md", "txt"],
-            file_name="comparison_report"
-        )
-
-    def handle_export_result(self, e: ft.FilePickerResultEvent):
-        """Handle export file picker result"""
-        if not e.path:
-            return
-
-        try:
-            generator = ReportGenerator()
-            success = generator.generate_report(
-                self.comparison_data,
-                e.path,
-                source_file=Path(self.source_file_path).name,
-                target_file=Path(self.target_file_path).name
-            )
-            
-            if success:
-                self.show_snackbar("Report exported successfully")
-            else:
-                self.show_snackbar("Failed to export report")
-        except Exception as ex:
-            self.show_snackbar(f"Error exporting report: {str(ex)}")
-
-    def import_changes(self, e):
-        """Import changes from a file"""
-        self.import_picker.pick_files(
-            allowed_extensions=["json", "yaml", "yml"],
-            allow_multiple=False
-        )
-
-    def handle_import_result(self, e: ft.FilePickerResultEvent):
-        """Handle import file picker result"""
-        if not e.files or not e.files[0].path:
-            return
-
-        try:
-            # Implementation will depend on your import format
-            self.show_snackbar("Import functionality not yet implemented")
-        except Exception as ex:
-            self.show_snackbar(f"Error importing changes: {str(ex)}")
 
     def handle_auto_fill_change(self, e):
         """Handle auto-fill settings change"""
         self.config["auto_fill_missing"] = e.control.value
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_patterns_change(self, e):
         """Handle ignore patterns change"""
         patterns = [p.strip() for p in e.control.value.split(",") if p.strip()]
         self.config["ignore_patterns"] = patterns
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_format_change(self, e):
         """Handle preferred format change"""
         self.config["preferred_format"] = e.control.value
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_whitespace_change(self, e):
         """Handle whitespace ignore setting change"""
         self.config["ignore_whitespace"] = e.control.value
+        ConfigManager.save(self.config)
         self.page.update()
 
     def handle_log_missing_change(self, e):
         """Handle log missing keys setting change"""
         self.config["log_missing_strings"] = e.control.value
-        self.log_missing_strings = e.control.value  # Update the flag as well
+        ConfigManager.save(self.config)
+        self.log_missing_strings = e.control.value
+        self.page.update()
+
+    def open_feedback_dialog(self, e):
+        if not hasattr(self, "feedback_dialog"):
+            self.feedback_dialog = ft.AlertDialog(
+                title=Text("Feedback"),
+                content=Container(
+                    content=Column(
+                        controls=[
+                            TextField(label="Your Email (optional)"),
+                            TextField(label="Feedback", multiline=True, min_lines=4)
+                        ],
+                        spacing=8
+                    ),
+                    width=500, height=300
+                ),
+                actions=[
+                    TextButton("Send", on_click=self.send_feedback),
+                    TextButton("Cancel", on_click=self.close_feedback_dialog)
+                ]
+            )
+        if self.feedback_dialog not in self.page.overlay:
+            self.page.overlay.append(self.feedback_dialog)
+        self.feedback_dialog.open = True
+        self.page.update()
+
+    def send_feedback(self, e):
+        import requests
+        email = self.feedback_dialog.content.content.controls[0].value
+        message = self.feedback_dialog.content.content.controls[1].value
+
+        if not message:
+            self.show_snackbar("Please enter your feedback message")
+            return
+
+        try:
+            response = requests.post(
+                "https://formspree.io/f/your-formspree-id",
+                data={
+                    "email": email if email else "Anonymous",
+                    "message": message,
+                }
+            )
+            if response.ok:
+                self.show_snackbar("Thank you for your feedback!")
+                self.close_feedback_dialog(None)
+            else:
+                self.show_snackbar("Error sending feedback")
+        except Exception as e:
+            self.show_snackbar(f"Error sending feedback: {str(e)}")
+
+    def close_feedback_dialog(self, e):
+        self.feedback_dialog.open = False
         self.page.update()
 
 def highlight_line(line: str, change_type: str) -> str:

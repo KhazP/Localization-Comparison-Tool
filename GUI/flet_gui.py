@@ -37,10 +37,14 @@ from flet import (
 )
 import os
 import logic
+import logging  # Add this import
 from pathlib import Path
 from constants import SUPPORTED_FORMATS, USER_MESSAGES
 import json
 import re
+from themes import THEMES  # Add this import
+from components.file_input import FileInputComponent
+from components.results_view import ResultsViewComponent
 
 # New configuration manager class
 class ConfigManager:
@@ -70,57 +74,40 @@ class App:
         # Add color cache
         self._cached_colors = {}
         
-        # Theme colors (unchanged)
-        self.THEMES = {
-            "dark": {
-                "bg": {
-                    "primary": "#111827",
-                    "secondary": "#1F2937",
-                    "input": "#374151",
-                    "accent": "#3B82F6",
-                },
-                "text": {
-                    "primary": "#F9FAFB",
-                    "secondary": "#9CA3AF",
-                    "accent": "#60A5FA",
-                },
-                "border": {
-                    "default": "#4B5563",
-                    "accent": "#3B82F6",
-                },
-                "changes": {
-                    "added": "#4ADE80",    # green
-                    "removed": "#F87171",  # red
-                }
-            },
-            "light": {
-                "bg": {
-                    "primary": "#FFFFFF",
-                    "secondary": "#F3F4F6",
-                    "input": "#F9FAFB",
-                    "accent": "#3B82F6",
-                },
-                "text": {
-                    "primary": "#111827",
-                    "secondary": "#374151",
-                    "accent": "#2563EB",
-                    "muted": "#6B7280",
-                },
-                "border": {
-                    "default": "#E5E7EB",
-                    "accent": "#3B82F6",
-                },
-                "changes": {
-                    "added": "#22C55E",    # green
-                    "removed": "#EF4444",  # red
-                }
-            }
-        }
+        # Replace the existing THEMES with the imported one
+        self.THEMES = THEMES
 
-        # Use dark theme colors
-        self.COLORS = self.THEMES["dark"]
+        # Initialize configuration from defaults then merge saved settings
+        saved_config = ConfigManager.load()
+        if saved_config:
+            self.config = saved_config
+        else:
+            self.config = {
+                # ...existing config defaults...
+                "theme": "system",
+            }
+
+        # Set initial theme and colors - UPDATED
+        self.current_theme = self.config.get("theme", "system")
+        
+        # Set theme mode first
+        if self.current_theme == "system":
+            self.page.theme_mode = ft.ThemeMode.SYSTEM
+            # Detect system theme
+            import darkdetect
+            system_theme = "dark" if darkdetect.isDark() else "light"
+            self.COLORS = self.THEMES[system_theme]
+        else:
+            # Set explicit theme mode
+            if self.current_theme in ["dark", "amoled"]:
+                self.page.theme_mode = ft.ThemeMode.DARK
+            else:
+                self.page.theme_mode = ft.ThemeMode.LIGHT
+            # Use selected theme colors
+            self.COLORS = self.THEMES[self.current_theme]
+        
         # Cache initial colors
-        self._cached_colors[page.theme_mode.value] = self.COLORS
+        self._cached_colors[self.current_theme] = self.COLORS
 
         # Remove theme toggle button initialization and keep only settings button
         self.settings_button = IconButton(
@@ -128,13 +115,6 @@ class App:
             icon_color=self.COLORS["text"]["secondary"],
             tooltip="Settings",  # Changed from "Theme Settings"
             on_click=self.open_settings
-        )
-        # New Feedback button next to settings button
-        self.feedback_button = IconButton(
-            icon=Icons.FEEDBACK,
-            tooltip="Send Feedback",
-            icon_color=self.COLORS["text"]["secondary"],
-            on_click=self.open_feedback_dialog
         )
 
         self.log_missing_strings = False  # New flag for missing strings logging
@@ -148,7 +128,8 @@ class App:
             "ignore_whitespace": False,
             "ignore_case": False,
             "compare_values": True,
-            "group_by_namespace": True  # Add this line
+            "group_by_namespace": True,  # Add this line
+            "show_preview": False  # Add this line
         }
 
         # Add MT settings to config
@@ -163,42 +144,64 @@ class App:
         saved_config = ConfigManager.load()
         if saved_config:
             self.config.update(saved_config)
+        
+        # Set initial theme from config
+        self.current_theme = self.config.get("theme", "system")
+        self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
+        self._cached_colors[self.current_theme] = self.COLORS
+
+        # Update page theme mode based on saved theme
+        if self.current_theme == "system":
+            page.theme_mode = ft.ThemeMode.SYSTEM
+        elif self.current_theme in ["dark", "amoled"]:
+            page.theme_mode = ft.ThemeMode.DARK
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
 
         # Create tabs for settings dialog
+        general_tab = Tab(
+            text="General",
+            icon=Icons.SETTINGS,
+            content=Container(
+                content=Column(
+                    controls=[
+                        Container(
+                            content=Column(
+                                controls=[
+                                    Text("Theme Settings", size=16, weight="bold"),
+                                    ft.Dropdown(
+                                        label="Theme Mode",
+                                        value=self.current_theme,  # Use saved theme
+                                        options=[
+                                            ft.dropdown.Option("system", "System Default"),
+                                            ft.dropdown.Option("dark", "Dark Theme"),
+                                            ft.dropdown.Option("light", "Light Theme"),
+                                            ft.dropdown.Option("amoled", "AMOLED Dark"),
+                                            ft.dropdown.Option("high_contrast", "High Contrast"),
+                                            ft.dropdown.Option("minimalist", "Minimalist"),
+                                            ft.dropdown.Option("earth_tones", "Earth Tones"),
+                                            ft.dropdown.Option("pastel", "Pastel"),
+                                        ],
+                                        on_change=self.handle_theme_change,
+                                    ),
+                                    TextButton("Custom Themes", on_click=self.open_custom_theme_settings),
+                                ],
+                                spacing=8
+                            ),
+                            padding=10,
+                        ),
+                    ],
+                ),
+                padding=20,
+            ),
+        )
+
+        # Create tabs for settings dialog with the updated general tab
         self.settings_tabs = Tabs(
             selected_index=0,
             animation_duration=300,
             tabs=[
-                Tab(
-                    text="General",
-                    icon=Icons.SETTINGS,
-                    content=Container(
-                        content=Column(
-                            controls=[
-                                Container(
-                                    content=Column(
-                                        controls=[
-                                            Text("Theme Settings", size=16, weight="bold"),
-                                            ft.Dropdown(
-                                                label="Theme Mode",
-                                                value=page.theme_mode.value,
-                                                options=[
-                                                    ft.dropdown.Option("system", "System Default"),
-                                                    ft.dropdown.Option("dark", "Dark Theme"),
-                                                    ft.dropdown.Option("light", "Light Theme"),
-                                                ],
-                                                on_change=self.handle_theme_change,
-                                            ),
-                                        ],
-                                        spacing=8
-                                    ),
-                                    padding=10,
-                                ),
-                            ],
-                        ),
-                        padding=20,
-                    ),
-                ),
+                general_tab,
                 Tab(
                     text="Comparison",
                     icon=Icons.COMPARE_ARROWS,
@@ -209,6 +212,11 @@ class App:
                                     content=Column(
                                         controls=[
                                             Text("Comparison Settings", size=16, weight="bold"),
+                                            ft.Checkbox(
+                                                label="Show File Preview",
+                                                value=self.config["show_preview"],
+                                                on_change=self.handle_preview_toggle
+                                            ),
                                             ft.Checkbox(
                                                 label="Auto-Fill Missing Keys",
                                                 value=self.config["auto_fill_missing"],
@@ -356,6 +364,85 @@ class App:
             expand=1,
         )
 
+        # Add keyboard navigation settings to config
+        self.config.update({
+            "enable_keyboard_nav": True,
+            "high_contrast": False,
+            "large_text": False,
+            "font_size_scale": 1.0
+        })
+
+        # Add accessibility section to settings dialog
+        accessibility_tab = Tab(
+            text="Accessibility",
+            icon=Icons.ACCESSIBILITY,
+            content=Container(
+                content=Column(
+                    controls=[
+                        Text("Accessibility Settings", size=16, weight="bold"),
+                        ft.Checkbox(
+                            label="Enable Keyboard Navigation",
+                            value=self.config["enable_keyboard_nav"],
+                            on_change=self.handle_keyboard_nav_change,
+                            tooltip="Toggle keyboard navigation support"
+                        ),
+                        ft.Checkbox(
+                            label="High Contrast Mode",
+                            value=self.config["high_contrast"],
+                            on_change=self.handle_contrast_change,
+                            tooltip="Enable high contrast colors"
+                        ),
+                        ft.Checkbox(
+                            label="Large Text",
+                            value=self.config["large_text"],
+                            on_change=self.handle_text_size_change,
+                            tooltip="Increase text size"
+                        ),
+                        ft.Slider(
+                            min=1.0,
+                            max=2.0,
+                            divisions=4,
+                            value=self.config["font_size_scale"],
+                            label="Text Size Scale",
+                            on_change=self.handle_font_scale_change,
+                            tooltip="Adjust overall text size"
+                        ),
+                    ],
+                    spacing=20,
+                ),
+                padding=20,
+            ),
+        )
+        
+        # Add accessibility tab to settings
+        self.settings_tabs.tabs.append(accessibility_tab)
+
+        # Update button creation with accessibility improvements
+        def create_accessible_button(text, icon, tooltip, on_click, tab_index):
+            return ElevatedButton(
+                text=text,
+                icon=icon,
+                tooltip=tooltip,
+                on_click=on_click,
+                focusable=True,
+                data={"tab_index": tab_index},
+                style=ButtonStyle(
+                    color=self.COLORS["text"]["primary"],
+                    bgcolor=self.COLORS["bg"]["accent"],
+                    shape=RoundedRectangleBorder(radius=8),
+                ),
+            )
+
+        # Update text field creation with accessibility improvements
+        def create_accessible_textfield(hint_text, label, tooltip, tab_index):
+            return TextField(
+                hint_text=hint_text,
+                label=label,
+                tooltip=tooltip,
+                focusable=True,
+                data={"tab_index": tab_index},
+            )
+
         # Update settings dialog to use tabs
         self.settings_dialog = ft.AlertDialog(
             title=Text("Settings", size=20),
@@ -371,25 +458,6 @@ class App:
                 TextButton("Reset to Default", on_click=self.reset_settings),
                 TextButton("Close", on_click=self.close_settings),
             ],
-        )
-
-        # Define feedback dialog
-        self.feedback_dialog = ft.AlertDialog(
-            title=Text("Feedback"),
-            content=Container(
-                content=Column(
-                    controls=[
-                        TextField(label="Your Email (optional)"),
-                        TextField(label="Feedback", multiline=True, min_lines=4),
-                    ],
-                    spacing=8,
-                ),
-                width=500, height=300,
-            ),
-            actions=[
-                TextButton("Send", on_click=self.send_feedback),
-                TextButton("Cancel", on_click=self.close_feedback_dialog),
-            ]
         )
 
         # Initialize file paths
@@ -569,8 +637,9 @@ class App:
             )
 
         # Main content area with vertical scrolling
-        self.source_file_container = create_file_input("Source File", is_source=True)
-        self.target_file_container = create_file_input("Target File", is_source=False)
+        self.file_input = FileInputComponent(page, self)
+        self.source_file_container = self.file_input.source_file_container
+        self.target_file_container = self.file_input.target_file_container
 
         # Add statistics fields after other UI element initializations
         self.stats_text_total = Text(
@@ -650,6 +719,78 @@ class App:
             elevation=1,
         )
 
+        # Add preview containers after file input initialization
+        self.preview_section = Container(
+            visible=False,
+            content=Row(
+                controls=[
+                    Container(
+                        content=Column(
+                            controls=[
+                                Text("Source File Preview", 
+                                     size=14, 
+                                     weight=FontWeight.W_500,
+                                     color=self.COLORS["text"]["secondary"]),
+                                Container(
+                                    content=TextField(
+                                        value="No file selected",
+                                        multiline=True,
+                                        read_only=True,
+                                        min_lines=3,
+                                        max_lines=5,
+                                        text_style=TextStyle(
+                                            color=self.COLORS["text"]["secondary"],
+                                            size=14,
+                                            font_family="Consolas",
+                                        ),
+                                    ),
+                                    border=border.all(color=self.COLORS["border"]["default"]),
+                                    border_radius=8,
+                                    padding=8,
+                                    bgcolor=self.COLORS["bg"]["input"],
+                                ),
+                            ],
+                            spacing=8,
+                        ),
+                        expand=True,
+                    ),
+                    Container(width=16),  # Spacer
+                    Container(
+                        content=Column(
+                            controls=[
+                                Text("Target File Preview", 
+                                     size=14, 
+                                     weight=FontWeight.W_500,
+                                     color=self.COLORS["text"]["secondary"]),
+                                Container(
+                                    content=TextField(
+                                        value="No file selected",
+                                        multiline=True,
+                                        read_only=True,
+                                        min_lines=3,
+                                        max_lines=5,
+                                        text_style=TextStyle(
+                                            color=self.COLORS["text"]["secondary"],
+                                            size=14,
+                                            font_family="Consolas",
+                                        ),
+                                    ),
+                                    border=border.all(color=self.COLORS["border"]["default"]),
+                                    border_radius=8,
+                                    padding=8,
+                                    bgcolor=self.COLORS["bg"]["input"],
+                                ),
+                            ],
+                            spacing=8,
+                        ),
+                        expand=True,
+                    ),
+                ],
+                alignment="start",
+            ),
+            padding=padding.only(top=16, bottom=16),
+        )
+
         # In the main_card_container initialization, add the stats_panel
         self.main_card_container = Container(
             expand=True,
@@ -661,17 +802,19 @@ class App:
                         content=ResponsiveRow(
                             controls=[
                                 Container(
-                                    content=self.source_file_container,
+                                    content=self.file_input.source_file_container,
                                     col={"sm": 12, "md": 6},
                                 ),
                                 Container(
-                                    content=self.target_file_container,
+                                    content=self.file_input.target_file_container,
                                     col={"sm": 12, "md": 6},
                                 ),
                             ],
                         ),
                         height=120,
                     ),
+                    # NEW: Preview section
+                    self.preview_section,
                     # Compare button (fixed height)
                     Container(
                         content=self.compare_button,
@@ -747,7 +890,72 @@ class App:
             padding=24,
             border_radius=12,
         )
-        # Initialize expand/collapse control first
+        self.content = Container(
+            expand=True,
+            height=page.height,
+            padding=32,
+            content=Column(
+                expand=True,
+                scroll=ScrollMode.AUTO,
+                controls=[
+                    # Header (fixed height)
+                    Container(
+                        content=Column(
+                            controls=[
+                                Row(
+                                    controls=[
+                                        # Add a placeholder container on the left with width for one button
+                                        Container(width=48),  # Width of one IconButton
+                                        Text(
+                                            "Localization Comparison Tool",
+                                            size=32,
+                                            weight="bold",
+                                            text_align="center",
+                                            expand=True,
+                                        ),
+                                        # Right-side container with single button
+                                        Container(
+                                            content=Row(
+                                                controls=[
+                                                    self.settings_button,
+                                                ],
+                                                spacing=0,
+                                            ),
+                                            width=48,  # Match left placeholder width
+                                        ),
+                                    ],
+                                    alignment="spaceBetween",
+                                ),
+                                Text(
+                                    "Compare Source and Target Localization Files",
+                                    size=16,
+                                    color=self.COLORS["text"]["secondary"],
+                                    text_align="center",
+                                ),
+                            ],
+                            horizontal_alignment="center",
+                            spacing=8,
+                        ),
+                        padding=padding.only(bottom=24),
+                        height=100,  # Fixed height for header
+                    ),
+                    # Main card with scrollable content (updated layout)
+                    self.main_card_container,
+                ],
+                spacing=32,
+            ),
+        )
+        page.add(self.content)
+        self.page.on_window_event = self.handle_window_event
+
+        self.user_friendly_errors = USER_MESSAGES
+
+        page.overlay.append(self.settings_dialog)
+
+        # Ensure updated colors once UI is built
+        self.update_theme_colors()
+
+        # Add expand/collapse control
         self.expand_all = True
         self.expand_collapse_button = IconButton(
             icon=Icons.UNFOLD_LESS,
@@ -756,7 +964,7 @@ class App:
             on_click=self.toggle_expand_all,
         )
 
-        # Create results header with expand/collapse button
+        # Modify the results header to include the expand/collapse button
         self.results_header = Container(
             content=Row(
                 controls=[
@@ -784,59 +992,54 @@ class App:
             padding=padding.only(left=16, right=16, top=16),
         )
 
-        # Then in the content initialization
-        self.content = Container(
+        # Add directory picker support
+        self.source_dir_path = ""
+        self.target_dir_path = ""
+        
+        # Initialize directory pickers - FIXED
+        self.source_dir_picker = FilePicker(
+            on_result=lambda e: self.handle_dir_picked(e, "source")
+        )
+        self.target_dir_picker = FilePicker(
+            on_result=lambda e: self.handle_dir_picked(e, "target")
+        )
+        
+        page.overlay.extend([self.source_dir_picker, self.target_dir_picker])
+
+        # Add tabbed results view
+        self.results_tabs = Tabs(
+            selected_index=0,
+            animation_duration=300,
+            tabs=[],  # Will be populated dynamically
+            visible=False,
             expand=True,
-            height=page.height,
-            padding=32,
-            content=Column(
-                expand=True,
-                scroll=ScrollMode.AUTO,
-                controls=[
-                    # Header container
-                    Container(
-                        content=Column(
-                            controls=[
-                                Row(
-                                    controls=[
-                                        Container(width=48),
-                                        Text(
-                                            "Localization Comparison Tool",
-                                            size=32,
-                                            weight="bold",
-                                            text_align="center",
-                                            expand=True,
-                                        ),
-                                        Container(
-                                            content=Row(
-                                                controls=[
-                                                    self.settings_button,
-                                                    self.feedback_button,
-                                                ],
-                                                spacing=8,
-                                            ),
-                                            width=96,
-                                        ),
-                                    ],
-                                    alignment="spaceBetween",
-                                ),
-                                Text(
-                                    "Compare Source and Target Localization Files",
-                                    size=16,
-                                    color=self.COLORS["text"]["secondary"],
-                                    text_align="center",
-                                ),
-                            ],
-                            horizontal_alignment="center",
-                            spacing=8,
+        )
+
+        # Initialize results view component
+        self.results_view = ResultsViewComponent(page, self, self.COLORS)
+        
+        # Create results area with header
+        self.results_area = Container(
+            content=Card(
+                content=Column(
+                    expand=True,
+                    controls=[
+                        self.results_view.results_header,
+                        Divider(
+                            color=self.COLORS["border"]["default"],
+                            height=1,
                         ),
-                        padding=padding.only(bottom=24),
-                        height=100,
-                    ),
-                    self.main_card_container,
-                ],
-                spacing=32,
+                        Container(
+                            content=self.results_view.results_container,
+                            padding=padding.all(16),
+                            expand=True,
+                        ),
+                    ],
+                    spacing=0,
+                ),
+                elevation=1,
             ),
+            expand=True,
         )
 
     def create_checkbox(self, label: str, value: bool = False):
@@ -1029,6 +1232,11 @@ class App:
                 else:
                     # ...set a default icon...
                     pass
+                # Update preview only if enabled
+                if self.config["show_preview"]:
+                    self.update_file_preview(file_path, field_type)
+                    self.preview_section.visible = True
+                
                 if field_type == "source":
                     self.source_file_path = file_path
                 else:
@@ -1041,6 +1249,30 @@ class App:
                 icon.color = "red"  # visually indicate error
                 field.update()
                 icon.update()
+
+    def update_file_preview(self, file_path: str, field_type: str):
+        """Update the preview text field with the first few lines of the file"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                # Read first 5 lines
+                preview_lines = []
+                for i, line in enumerate(f):
+                    if i >= 5:
+                        break
+                    preview_lines.append(line.rstrip())
+                
+                preview_text = '\n'.join(preview_lines)
+                if len(preview_lines) == 5:
+                    preview_text += "\n..."
+                
+                # Get the appropriate preview TextField
+                preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
+                preview_field.value = preview_text
+                
+        except Exception as e:
+            logging.error(f"Error reading preview: {str(e)}")
+            preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
+            preview_field.value = "Error reading file preview"
 
     def get_readable_file_size(self, size_in_bytes):
         """Convert file size in bytes to human readable format"""
@@ -1107,99 +1339,103 @@ class App:
         self.page.update()
 
     def compare_files_gui(self, e):
-        self.loading_ring.visible = True
-        self.status_label.value = "Comparing files..."
-        self.page.update()
-
-        try:
-            # Read files with explicit encoding and error handling
-            try:
-                with open(self.source_file_path, 'r', encoding='utf-8') as f:
-                    source_content = f.read()
-            except UnicodeDecodeError:
-                with open(self.source_file_path, 'r', encoding='latin-1') as f:
-                    source_content = f.read()
-
-            try:
-                with open(self.target_file_path, 'r', encoding='utf-8') as f:
-                    target_content = f.read()
-            except UnicodeDecodeError:
-                with open(self.target_file_path, 'r', encoding='latin-1') as f:
-                    target_content = f.read()
-
-            ext_source = Path(self.source_file_path).suffix.lower()
-            ext_target = Path(self.target_file_path).suffix.lower()
-
-            # Parse both files
-            source_dict = logic.parse_content_by_ext(source_content, ext_source)
-            target_dict = logic.parse_content_by_ext(target_content, ext_target)
-
-            # Debug logging
-            print(f"Source file entries: {len(source_dict)}")
-            print(f"Target file entries: {len(target_dict)}")
-            print("Sample source entries:", dict(list(source_dict.items())[:3]))
-            print("Sample target entries:", dict(list(target_dict.items())[:3]))
-
-            # Get ignore patterns
-            ignore_patterns = []
-            pattern_str = self.ignore_pattern_field.value.strip()
-            if pattern_str:
-                ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
-
-            # Add MT settings to comparison
-            mt_settings = {
-                'enabled': self.config["mt_enabled"],
-                'api_key': self.config["mt_api_key"],
-                'source_lang': self.config["mt_source_lang"],
-                'target_lang': self.config["mt_target_lang"]
-            }
-
-            # Compare translations - modify the call to not include summary
-            comparison_result = logic.compare_translations(
-                target_dict,  # target translations (old_translations)
-                source_dict,  # source translations (new_translations)
-                ignore_case=self.config["ignore_case"],
-                ignore_whitespace=self.config["ignore_whitespace"],
-                is_gui=True,
-                include_summary=False,  # Add this parameter
-                compare_values=self.config["compare_values"],
-                ignore_patterns=self.config["ignore_patterns"],
-                log_missing_keys=self.config["log_missing_strings"],
-                auto_fill_missing=self.config["auto_fill_missing"],
-                mt_settings=mt_settings
-            )
-
-            # Calculate the sets of missing and obsolete keys
-            missing_keys_set = set(source_dict.keys()) - set(target_dict.keys())
-            obsolete_keys_set = set(target_dict.keys()) - set(source_dict.keys())
-
-            # Update statistics using the lengths
-            total_keys = len(source_dict)
-            missing_keys = len(missing_keys_set)
-            obsolete_keys = len(obsolete_keys_set)
-            self.update_statistics(total_keys, missing_keys, obsolete_keys)
-
-            # Update UI with results
-            self.output_text.value = comparison_result
-            self.build_results_table(comparison_result)
-            self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
-
-        except Exception as e:
-            import traceback
-            error_details = traceback.format_exc()
-            print(f"Error details: {error_details}")
-            self.show_snackbar(f"Error: {str(e)}")
-            self.status_label.value = "Comparison failed"
-            # Reset statistics on error
-            self.update_statistics(0, 0, 0)
-        finally:
-            self.loading_ring.visible = False
+        """Updated to handle both file and directory comparisons"""
+        if self.source_dir_path and self.target_dir_path:
+            self.compare_directories()
+        else:
+            self.loading_ring.visible = True
+            self.status_label.value = "Comparing files..."
             self.page.update()
 
-        # Add this at the end of the method:
-        translate_button = self.compare_button.content.controls[1]
-        translate_button.visible = self.config["mt_enabled"]
-        self.page.update()
+            try:
+                # Read files with explicit encoding and error handling
+                try:
+                    with open(self.source_file_path, 'r', encoding='utf-8') as f:
+                        source_content = f.read()
+                except UnicodeDecodeError:
+                    with open(self.source_file_path, 'r', encoding='latin-1') as f:
+                        source_content = f.read()
+
+                try:
+                    with open(self.target_file_path, 'r', encoding='utf-8') as f:
+                        target_content = f.read()
+                except UnicodeDecodeError:
+                    with open(self.target_file_path, 'r', encoding='latin-1') as f:
+                        target_content = f.read()
+
+                ext_source = Path(self.source_file_path).suffix.lower()
+                ext_target = Path(self.target_file_path).suffix.lower()
+
+                # Parse both files
+                source_dict = logic.parse_content_by_ext(source_content, ext_source)
+                target_dict = logic.parse_content_by_ext(target_content, ext_target)
+
+                # Debug logging
+                print(f"Source file entries: {len(source_dict)}")
+                print(f"Target file entries: {len(target_dict)}")
+                print("Sample source entries:", dict(list(source_dict.items())[:3]))
+                print("Sample target entries:", dict(list(target_dict.items())[:3]))
+
+                # Get ignore patterns
+                ignore_patterns = []
+                pattern_str = self.ignore_pattern_field.value.strip()
+                if pattern_str:
+                    ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
+
+                # Add MT settings to comparison
+                mt_settings = {
+                    'enabled': self.config["mt_enabled"],
+                    'api_key': self.config["mt_api_key"],
+                    'source_lang': self.config["mt_source_lang"],
+                    'target_lang': self.config["mt_target_lang"]
+                }
+
+                # Compare translations - modify the call to not include summary
+                comparison_result = logic.compare_translations(
+                    target_dict,  # target translations (old_translations)
+                    source_dict,  # source translations (new_translations)
+                    ignore_case=self.config["ignore_case"],
+                    ignore_whitespace=self.config["ignore_whitespace"],
+                    is_gui=True,
+                    include_summary=False,  # Add this parameter
+                    compare_values=self.config["compare_values"],
+                    ignore_patterns=self.config["ignore_patterns"],
+                    log_missing_keys=self.config["log_missing_strings"],
+                    auto_fill_missing=self.config["auto_fill_missing"],
+                    mt_settings=mt_settings
+                )
+
+                # Calculate the sets of missing and obsolete keys
+                missing_keys_set = set(source_dict.keys()) - set(target_dict.keys())
+                obsolete_keys_set = set(target_dict.keys()) - set(source_dict.keys())
+
+                # Update statistics using the lengths
+                total_keys = len(source_dict)
+                missing_keys = len(missing_keys_set)
+                obsolete_keys = len(obsolete_keys_set)
+                self.update_statistics(total_keys, missing_keys, obsolete_keys)
+
+                # Update UI with results
+                self.output_text.value = comparison_result
+                self.build_results_table(comparison_result)
+                self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
+
+            except Exception as e:
+                import traceback
+                error_details = traceback.format_exc()
+                print(f"Error details: {error_details}")
+                self.show_snackbar(f"Error: {str(e)}")
+                self.status_label.value = "Comparison failed"
+                # Reset statistics on error
+                self.update_statistics(0, 0, 0)
+            finally:
+                self.loading_ring.visible = False
+                self.page.update()
+
+            # Add this at the end of the method:
+            translate_button = self.compare_button.content.controls[1]
+            translate_button.visible = self.config["mt_enabled"]
+            self.page.update()
 
     def group_keys_by_namespace(self, lines: list[str]) -> dict:
         groups = {}
@@ -1216,58 +1452,106 @@ class App:
         return groups
 
     def build_results_table(self, comparison_result: str):
+        """Initialize the results table with search field and content"""
         from flet import Icon, Column, Row, Text, TextField
         lines = comparison_result.splitlines()
-        # Sort lines by prefix priority: removed ('-'), mismatched ('~'), added ('+')
         sorted_lines = sorted(lines, key=lambda l: {'-': 0, '~': 1, '+': 2}.get(l[0], 3))
         result_rows = []
+        
         if self.config.get("group_by_namespace"):
             groups = self.group_keys_by_namespace(sorted_lines)
             for namespace, group_lines in groups.items():
-                # Header row for namespace
                 header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
                 result_rows.append(header)
                 for line in group_lines:
-                    if line.startswith("+"):
-                        icon = Icon(Icons.ADD, color="green")
-                    elif line.startswith("-"):
-                        icon = Icon(Icons.REMOVE, color="red")
-                    elif line.startswith("~"):
-                        icon = Icon(Icons.WARNING, color="yellow")
-                    else:
-                        icon = Icon(Icons.HELP, color="grey")
-                    result_rows.append(Row(controls=[icon, Text(line)], spacing=8))
+                    row = self.create_result_row(line)
+                    result_rows.append(row)
         else:
             for line in sorted_lines:
-                if line.startswith("+"):
-                    icon = Icon(Icons.ADD, color="green")
-                elif line.startswith("-"):
-                    icon = Icon(Icons.REMOVE, color="red")
-                elif line.startswith("~"):
-                    icon = Icon(Icons.WARNING, color="yellow")
-                else:
-                    icon = Icon(Icons.HELP, color="grey")
-                result_rows.append(Row(controls=[icon, Text(line)], spacing=8))
-        # Prepend a search bar for filtering results
-        search_field = TextField(
-            hint_text="Search results...",
-            on_change=lambda e: self.filter_results(e, sorted_lines)
+                row = self.create_result_row(line)
+                result_rows.append(row)
+
+        # Store the original rows for filtering
+        self.original_result_rows = result_rows
+
+        # Create results column with fixed search field
+        self.results_column = Column(
+            controls=[
+                TextField(
+                    hint_text="Search results...",
+                    on_change=lambda e: self.filter_results(e.control.value),
+                    border=border.all(color=self.COLORS["border"]["default"]),
+                    content_padding=padding.all(10),
+                ),
+                Column(  # Wrapper for filtered results
+                    controls=result_rows,
+                    scroll=ft.ScrollMode.AUTO,
+                    spacing=2,
+                    expand=True,
+                )
+            ],
+            spacing=10,
+            scroll=ft.ScrollMode.AUTO,
         )
-        self.results_container.content = Column(controls=[search_field] + result_rows)
+        
+        # Update the container content
+        self.results_container.content = self.results_column
         self.page.update()
 
-    def filter_results(self, e):
-        query = e.control.value.lower()
-        filtered_rows = [row for row in self.all_result_rows if query in row.controls[1].value.lower()]
-        from flet import Column, TextField
-        self.results_container.content = Column(
-            controls=[TextField(
-                        hint_text="Search results...",
-                        value=query,
-                        on_change=lambda e: self.filter_results(e)
-                     )] + filtered_rows
-        )
+    def filter_results(self, query: str):
+        """Filter results based on search query"""
+        query = query.lower()
+        
+        # Start with namespace headers and their content
+        filtered_rows = []
+        current_namespace = None
+        namespace_has_matches = False
+        namespace_content = []
+        
+        for row in self.original_result_rows:
+            # Check if this is a namespace header
+            if len(row.controls) == 1 and isinstance(row.controls[0], Text) and row.controls[0].weight == "bold":
+                # If we had a previous namespace and it had matches, add it
+                if current_namespace and namespace_has_matches:
+                    filtered_rows.append(current_namespace)
+                    filtered_rows.extend(namespace_content)
+                
+                # Store new namespace header
+                current_namespace = row
+                namespace_content = []
+                namespace_has_matches = False
+                continue
+            
+            # For content rows, check if they match the query
+            if len(row.controls) > 1 and isinstance(row.controls[1], Text):
+                text = row.controls[1].value.lower()
+                if query in text:
+                    if current_namespace:
+                        namespace_content.append(row)
+                        namespace_has_matches = True
+                    else:
+                        filtered_rows.append(row)
+        
+        # Add last namespace if it had matches
+        if current_namespace and namespace_has_matches:
+            filtered_rows.append(current_namespace)
+            filtered_rows.extend(namespace_content)
+        
+        # Update only the results portion while keeping the search field
+        self.results_column.controls[1].controls = filtered_rows
         self.page.update()
+
+    def create_result_row(self, line: str) -> Row:
+        """Helper method to create a result row with proper icon and text"""
+        if line.startswith("+"):
+            icon = Icon(Icons.ADD, color="green")
+        elif line.startswith("-"):
+            icon = Icon(Icons.REMOVE, color="red")
+        elif line.startswith("~"):
+            icon = Icon(Icons.WARNING, color="yellow")
+        else:
+            icon = Icon(Icons.HELP, color="grey")
+        return Row(controls=[icon, Text(line)], spacing=8)
 
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
         from flet import Container, Column, Text
@@ -1366,15 +1650,38 @@ class App:
 
     def update_theme_colors(self):
         """Update colors of all UI elements with caching"""
-        theme_key = self.page.theme_mode.value
-        if theme_key in self._cached_colors:
-            self.COLORS = self._cached_colors[theme_key]
+        # Get current theme and handle system theme - UPDATED
+        theme_key = self.config.get("theme", "system")
+        
+        if theme_key == "system":
+            import darkdetect
+            system_theme = "dark" if darkdetect.isDark() else "light"
+            self.COLORS = self.THEMES[system_theme]
         else:
-            # Calculate colors based on theme mode
-            selected = theme_key.lower()
-            self.COLORS = self.THEMES[selected if selected != "system" else "dark"]
-            # Cache the calculated colors
-            self._cached_colors[theme_key] = self.COLORS
+            self.COLORS = self.THEMES[theme_key]
+            
+        # Cache the colors
+        self._cached_colors[theme_key] = self.COLORS
+
+        # Update page theme colors
+        self.page.bgcolor = self.COLORS["bg"]["primary"]
+        self.page.theme = ft.Theme(color_scheme_seed=Colors.GREEN)
+        self.page.dark_theme = ft.Theme(color_scheme_seed=Colors.BLUE)
+
+        # Rest of UI updates...
+        # ...existing code...
+
+        # Merge custom theme if available
+        custom_theme = self.config.get("custom_theme", {})
+        if isinstance(custom_theme, dict):
+            if "main" in custom_theme:
+                self.COLORS["bg"]["primary"] = custom_theme["main"]
+            if "accent" in custom_theme:
+                self.COLORS["bg"]["accent"] = custom_theme["accent"]
+            if "background" in custom_theme:
+                self.COLORS["bg"]["secondary"] = custom_theme["background"]
+            if "text" in custom_theme:
+                self.COLORS["text"]["primary"] = custom_theme["text"]
 
         # Update UI elements with cached colors
         self.page.bgcolor = self.COLORS["bg"]["primary"]
@@ -1426,6 +1733,20 @@ class App:
         self.stats_text_obsolete.color = self.COLORS["changes"]["added"]
         self.stats_panel.content.bgcolor = self.COLORS["bg"]["secondary"]
 
+        # Update preview section colors
+        if hasattr(self, 'preview_section'):
+            for container in self.preview_section.content.controls:
+                if isinstance(container, Container) and container.content:
+                    # Update text colors
+                    container.content.controls[0].color = self.COLORS["text"]["secondary"]
+                    # Update preview container colors
+                    preview_container = container.content.controls[1]
+                    preview_container.bgcolor = self.COLORS["bg"]["input"]
+                    preview_container.border = border.all(color=self.COLORS["border"]["default"])
+
+        if hasattr(self, 'file_input'):
+            self.file_input.update_colors(self.COLORS)
+
     def handle_case_change(self, e):
         self.config["ignore_case"] = e.control.value
         ConfigManager.save(self.config)
@@ -1433,6 +1754,11 @@ class App:
         self.page.update()
 
     def reset_settings(self, e):
+        # Update theme reset
+        self.current_theme = "system"
+        self.page.theme_mode = ft.ThemeMode.SYSTEM
+        self.COLORS = self.THEMES["dark"]
+
         self.config = {
             "auto_fill_missing": False,
             "log_missing_strings": False,
@@ -1441,7 +1767,9 @@ class App:
             "ignore_whitespace": False,
             "ignore_case": False,
             "compare_values": True,
-            "group_by_namespace": True  # Add default value here too
+            "group_by_namespace": True,  # Add default value here too
+            "show_preview": False,  # Add this line
+            "theme": "system",  # Add theme reset
         }
         
         # Reset theme to system default
@@ -1545,11 +1873,30 @@ class App:
         self.page.update()
 
     def handle_theme_change(self, e):
-        """Handle theme mode changes using simplified logic"""
+        """Handle theme mode changes using themes from themes.py"""
         selected = e.control.value
-        self.page.theme_mode = getattr(ft.ThemeMode, selected.upper())
-        self.COLORS = self.THEMES[selected if selected != "system" else "dark"]
+        self.current_theme = selected
+        
+        # Set theme mode and colors based on selection
+        if selected == "system":
+            self.page.theme_mode = ft.ThemeMode.SYSTEM
+            import darkdetect
+            system_theme = "dark" if darkdetect.isDark() else "light"
+            self.COLORS = self.THEMES[system_theme]
+        else:
+            # Set explicit theme mode
+            if selected in ["dark", "amoled"]:
+                self.page.theme_mode = ft.ThemeMode.DARK
+            else:
+                self.page.theme_mode = ft.ThemeMode.LIGHT
+            self.COLORS = self.THEMES[selected]
+        
+        # Cache and save theme
+        self._cached_colors[selected] = self.COLORS
+        self.config["theme"] = selected
         ConfigManager.save(self.config)
+        
+        # Update UI with new colors
         self.update_theme_colors()
         self.page.update()
 
@@ -1582,66 +1929,382 @@ class App:
         """Handle log missing keys setting change"""
         self.config["log_missing_strings"] = e.control.value
         ConfigManager.save(self.config)
-        self.log_missing_strings = e.control.value
+        self.log_missing_strings = e.control.value  # Update the flag as well
         self.page.update()
 
-    def open_feedback_dialog(self, e):
-        if not hasattr(self, "feedback_dialog"):
-            self.feedback_dialog = ft.AlertDialog(
-                title=Text("Feedback"),
-                content=Container(
-                    content=Column(
-                        controls=[
-                            TextField(label="Your Email (optional)"),
-                            TextField(label="Feedback", multiline=True, min_lines=4)
-                        ],
-                        spacing=8
-                    ),
-                    width=500, height=300
-                ),
-                actions=[
-                    TextButton("Send", on_click=self.send_feedback),
-                    TextButton("Cancel", on_click=self.close_feedback_dialog)
-                ]
-            )
-        if self.feedback_dialog not in self.page.overlay:
-            self.page.overlay.append(self.feedback_dialog)
-        self.feedback_dialog.open = True
+    def open_custom_theme_settings(self, e):
+        # Remove old dialog_open check
+        if self.custom_theme_dialog not in self.page.overlay:
+            self.page.overlay.append(self.custom_theme_dialog)
+        self.custom_theme_dialog.open = True
         self.page.update()
 
-    def send_feedback(self, e):
-        import requests
-        email = self.feedback_dialog.content.content.controls[0].value
-        message = self.feedback_dialog.content.content.controls[1].value
+    def save_custom_theme(self, e):
+        # ...existing code or placeholder...
+        self.custom_theme_dialog.open = False
+        self.page.update()
 
-        if not message:
-            self.show_snackbar("Please enter your feedback message")
-            return
+    def close_custom_theme_settings(self, e):
+        self.custom_theme_dialog.open = False
+        self.page.update()
+
+    def handle_preview_toggle(self, e):
+        """Handle toggling of file preview feature"""
+        self.config["show_preview"] = e.control.value
+        ConfigManager.save(self.config)
+        self.preview_section.visible = e.control.value and (self.source_file_path or self.target_file_path)
+        self.page.update()
+
+    def open_source_dir_picker(self, e):
+        self.source_dir_picker.get_directory_path()
+        
+    def open_target_dir_picker(self, e):
+        self.target_dir_picker.get_directory_path()
+        
+    def handle_dir_picked(self, e: FilePickerResultEvent, dir_type: str):
+        if e.path:
+            if dir_type == "source":
+                self.source_dir_path = e.path
+                self.source_label.value = f"Directory: {Path(e.path).name}"
+            else:
+                self.target_dir_path = e.path
+                self.target_label.value = f"Directory: {Path(e.path).name}"
+            
+            self.update_compare_button()
+            self.page.update()
+
+    def compare_directories(self):
+        """Compare all matching files in source and target directories"""
+        self.loading_ring.visible = True
+        self.status_label.value = "Comparing directories..."
+        self.page.update()
 
         try:
-            response = requests.post(
-                "https://formspree.io/f/your-formspree-id",
-                data={
-                    "email": email if email else "Anonymous",
-                    "message": message,
-                }
-            )
-            if response.ok:
-                self.show_snackbar("Thank you for your feedback!")
-                self.close_feedback_dialog(None)
-            else:
-                self.show_snackbar("Error sending feedback")
+            source_files = {f.name: f for f in Path(self.source_dir_path).glob("*") 
+                          if f.suffix.lower() in SUPPORTED_FORMATS}
+            target_files = {f.name: f for f in Path(self.target_dir_path).glob("*") 
+                          if f.suffix.lower() in SUPPORTED_FORMATS}
+            
+            # Find matching files
+            common_files = set(source_files.keys()) & set(target_files.keys())
+            
+            # Clear existing tabs
+            self.results_tabs.tabs.clear()
+            
+            total_missing = 0
+            total_obsolete = 0
+            
+            # Compare each matching pair
+            for filename in sorted(common_files):
+                source_path = source_files[filename]
+                target_path = target_files[filename]
+                
+                # Read and compare files
+                with open(source_path, 'r', encoding='utf-8') as f:
+                    source_content = f.read()
+                with open(target_path, 'r', encoding='utf-8') as f:
+                    target_content = f.read()
+                    
+                source_dict = logic.parse_content_by_ext(source_content, source_path.suffix)
+                target_dict = logic.parse_content_by_ext(target_content, target_path.suffix)
+                
+                # Compare translations
+                comparison_result = logic.compare_translations(
+                    target_dict,
+                    source_dict,
+                    ignore_case=self.config["ignore_case"],
+                    ignore_whitespace=self.config["ignore_whitespace"],
+                    is_gui=True,
+                    include_summary=True,
+                    compare_values=self.config["compare_values"],
+                    ignore_patterns=self.config["ignore_patterns"],
+                    log_missing_keys=self.config["log_missing_strings"],
+                    auto_fill_missing=self.config["auto_fill_missing"],
+                )
+                
+                # Calculate statistics for this file
+                missing = len(set(source_dict.keys()) - set(target_dict.keys()))
+                obsolete = len(set(target_dict.keys()) - set(source_dict.keys()))
+                total_missing += missing
+                total_obsolete += obsolete
+                
+                # Create tab for this file
+                self.results_tabs.tabs.append(
+                    Tab(
+                        text=filename,
+                        content=Container(
+                            content=Column(
+                                controls=[
+                                    Text(
+                                        f"Missing: {missing}, Obsolete: {obsolete}",
+                                        color=self.COLORS["text"]["secondary"],
+                                        size=14,
+                                    ),
+                                    TextField(
+                                        value=comparison_result,
+                                        multiline=True,
+                                        read_only=True,
+                                        min_lines=10,
+                                        max_lines=None,
+                                        text_style=TextStyle(
+                                            color=self.COLORS["text"]["secondary"],
+                                            size=14,
+                                            font_family="Consolas",
+                                        ),
+                                    ),
+                                ],
+                                scroll=ft.ScrollMode.AUTO,
+                                spacing=8,
+                            ),
+                            padding=10,
+                        ),
+                    )
+                )
+            
+            # Update statistics
+            self.update_statistics(len(common_files), total_missing, total_obsolete)
+            
+            # Show tabbed results
+            self.results_tabs.visible = True
+            self.results_container.content = self.results_tabs
+            
+            self.status_label.value = f"Compared {len(common_files)} files"
+            
         except Exception as e:
-            self.show_snackbar(f"Error sending feedback: {str(e)}")
+            self.show_snackbar(f"Error comparing directories: {str(e)}")
+            self.status_label.value = "Comparison failed"
+        finally:
+            self.loading_ring.visible = False
+            self.page.update()
 
-    def close_feedback_dialog(self, e):
-        self.feedback_dialog.open = False
+    def highlight_line(line: str, change_type: str) -> str:
+        """Simple syntax highlighting for comparison lines."""
+        # No highlighting needed for GUI as we handle colors in the UI
+        return line
+
+    def handle_keyboard_nav_change(self, e):
+        """Handle keyboard navigation toggle"""
+        self.config["enable_keyboard_nav"] = e.control.value
+        ConfigManager.save(self.config)
+        self.update_keyboard_navigation()
         self.page.update()
 
-def highlight_line(line: str, change_type: str) -> str:
-    """Simple syntax highlighting for comparison lines."""
-    # No highlighting needed for GUI as we handle colors in the UI
-    return line
+    def handle_contrast_change(self, e):
+        """Handle high contrast mode toggle"""
+        self.config["high_contrast"] = e.control.value
+        if e.control.value:
+            self.COLORS = self.THEMES["high_contrast"]
+            # Force update all text colors for high contrast
+            self.page.theme = ft.Theme(
+                color_scheme_seed=Colors.BLUE_GREY,
+                font_family="Roboto",
+                visual_density=ft.ThemeVisualDensity.COMFORTABLE,
+            )
+        else:
+            self.COLORS = self.THEMES[self.current_theme]
+        
+        self.update_theme_colors()
+        self.update_text_sizes()  # Also update text sizes to maintain accessibility
+        self.page.update()
+
+    def handle_text_size_change(self, e):
+        """Handle large text mode toggle"""
+        self.config["large_text"] = e.control.value
+        self.update_all_text_sizes()
+        self.page.update()
+
+    def handle_font_scale_change(self, e):
+        """Handle font size scale adjustment"""
+        self.config["font_size_scale"] = e.control.value
+        self.update_all_text_sizes()
+        self.page.update()
+
+    def update_all_text_sizes(self):
+        """Update text sizes throughout the application"""
+        scale = self.config["font_size_scale"]
+        if self.config["large_text"]:
+            scale *= 1.25
+
+        # Base sizes for different text types
+        base_sizes = {
+            "small": 12,
+            "normal": 14,
+            "large": 16,
+            "header": 32,
+            "title": 24
+        }
+
+        def update_control_text_size(control):
+            """Recursively update text sizes in controls"""
+            if isinstance(control, Text):
+                # Determine the base size category for this text
+                if control.weight == "bold" and control.size >= 24:
+                    base_size = base_sizes["title"]
+                elif control.weight == "bold":
+                    base_size = base_sizes["large"]
+                else:
+                    base_size = base_sizes["normal"]
+                
+                # Apply scaling
+                control.size = int(base_size * scale)
+                control.update()
+            
+            # Update text style for TextFields
+            elif isinstance(control, TextField):
+                current_style = control.text_style or TextStyle()
+                current_size = current_style.size or base_sizes["normal"]
+                control.text_style = TextStyle(
+                    size=int(current_size * scale),
+                    color=current_style.color,
+                    font_family=current_style.font_family,
+                    weight=current_style.weight
+                )
+                control.update()
+
+            # Recursively process containers and their children
+            if hasattr(control, "content") and control.content:
+                if isinstance(control.content, (Column, Row)):
+                    for child in control.content.controls:
+                        update_control_text_size(child)
+                else:
+                    update_control_text_size(control.content)
+            
+            elif hasattr(control, "controls"):
+                for child in control.controls:
+                    update_control_text_size(child)
+
+        # Update main content
+        update_control_text_size(self.content)
+        
+        # Update specific sections
+        update_control_text_size(self.settings_dialog)
+        update_control_text_size(self.preview_section)
+        update_control_text_size(self.results_container)
+        update_control_text_size(self.stats_panel)
+
+        # Update text field sizes
+        text_fields = [
+            self.output_text,
+            self.source_text,
+            self.target_text,
+            self.summary_text
+        ]
+        
+        for tf in text_fields:
+            tf.text_style = TextStyle(
+                color=self.COLORS["text"]["secondary"],
+                size=int(14 * scale),  # Scale the default size
+                font_family="Consolas",
+                weight=FontWeight.W_400,
+            )
+            tf.update()
+
+        # Update statistics text
+        stats_texts = [
+            self.stats_text_total,
+            self.stats_text_missing,
+            self.stats_text_obsolete
+        ]
+        
+        for stat in stats_texts:
+            stat.size = int(24 * scale)  # Scale the statistics text size
+            stat.update()
+
+        if hasattr(self, "stats_text_percentage"):
+            self.stats_text_percentage.size = int(24 * scale)
+            self.stats_text_percentage.update()
+
+        self.page.update()
+
+    def update_keyboard_navigation(self):
+        """Update keyboard navigation settings"""
+        if self.config["enable_keyboard_nav"]:
+            self.page.on_keyboard_event = self.handle_keyboard_event
+        else:
+            self.page.on_keyboard_event = None
+        self.page.update()
+
+    def handle_keyboard_event(self, e: ft.KeyboardEvent):
+        """Handle keyboard navigation events"""
+        if not self.config["enable_keyboard_nav"]:
+            return
+
+        if e.key == "Tab":
+            self.handle_tab_navigation(e.shift)
+        elif e.key == "Enter":
+            self.handle_enter_key()
+        elif e.key in ["ArrowUp", "ArrowDown"]:
+            self.handle_arrow_navigation(e.key)
+
+    def handle_tab_navigation(self, shift: bool):
+        """Handle Tab key navigation"""
+        focusable_controls = [
+            control for control in self.page.controls 
+            if getattr(control, "focusable", False)
+        ]
+        
+        if not focusable_controls:
+            return
+
+        current_index = -1
+        for i, control in enumerate(focusable_controls):
+            if control.focused:
+                current_index = i
+                break
+
+        # Calculate next focus index
+        if shift:
+            next_index = (current_index - 1) if current_index > 0 else len(focusable_controls) - 1
+        else:
+            next_index = (current_index + 1) if current_index < len(focusable_controls) - 1 else 0
+
+        # Focus next control
+        focusable_controls[next_index].focus()
+        self.page.update()
+
+    def handle_enter_key(self):
+        """Handle Enter key press on focused element"""
+        for control in self.page.controls:
+            if getattr(control, "focused", False) and hasattr(control, "on_click"):
+                control.on_click(None)
+                break
+
+    def handle_arrow_navigation(self, key: str):
+        """Handle arrow key navigation"""
+        if not hasattr(self, "results_tabs") or not self.results_tabs.visible:
+            return
+
+        current_tab = self.results_tabs.selected_index
+        if key == "ArrowUp" and current_tab > 0:
+            self.results_tabs.selected_index -= 1
+        elif key == "ArrowDown" and current_tab < len(self.results_tabs.tabs) - 1:
+            self.results_tabs.selected_index += 1
+        self.page.update()
+
+    # Update create_file_input method to include accessibility features
+    def create_file_input(self, label: str, is_source=True):
+        browse_button = ElevatedButton(
+            "Browse",
+            icon=Icons.UPLOAD,
+            tooltip=f"Select a {label} file",
+            on_click=self.open_source_picker if is_source else self.open_target_picker,
+            bgcolor=self.COLORS["bg"]["accent"],
+            color=self.COLORS["text"]["primary"],
+            height=36,
+            style=ButtonStyle(shape=RoundedRectangleBorder(radius=8)),
+            focusable=True,
+            data={"tab_index": 1 if is_source else 2}
+        )
+
+        folder_button = IconButton(
+            icon=Icons.FOLDER,
+            icon_size=20,
+            tooltip=f"Select {label} folder",
+            on_click=self.open_source_dir_picker if is_source else self.open_target_dir_picker,
+            icon_color=self.COLORS["text"]["secondary"],
+            focusable=True,
+            data={"tab_index": 3 if is_source else 4}
+        )
 
 def main(page: ft.Page):
     App(page)

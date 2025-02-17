@@ -3,6 +3,7 @@
 
 A modern GUI application built with [Flet](https://flet.dev/) for comparing and analyzing localization files. This tool helps streamline the localization process by making it easy to identify differences between translation files.
 
+
 ## Prerequisites
 
 ### Required:
@@ -24,3 +25,6 @@ A modern GUI application built with [Flet](https://flet.dev/) for comparing and 
 ```bash
 git clone https://github.com/KhazP/LocalizerAppMain.git
 cd localization-comparison-tool
+```
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/alpyalayg)

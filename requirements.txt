@@ -1,0 +1,9 @@
+flet>=0.21.0
+colorama
+ruamel.yaml
+tomlkit
+GitPython
+requests
+PyYAML
+lxml
+darkdetect==0.8.0

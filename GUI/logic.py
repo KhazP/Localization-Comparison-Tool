@@ -16,10 +16,14 @@ import requests
 import html
 from typing import Optional
 import re
+from functools import lru_cache  # ensure regex module is imported
 try:
     import yaml
 except ImportError:
     yaml = None
+
+# Precompile regex pattern for XML fallback parsing
+_xml_string_pattern = re.compile(r'<string\s+name="([^"]+)">(.*?)</string>', flags=re.DOTALL)
 
 # Setup logging at the top of the file
 logging.basicConfig(level=logging.DEBUG,
@@ -97,6 +101,19 @@ class YAMLParser(TranslationParser):
             logging.error("PyYAML not installed")
             return {}
 
+class FileParsingError(Exception):
+    """Base exception for file parsing issues."""
+    pass
+
+class CSVParsingError(FileParsingError):
+    """Raised when CSV parsing fails."""
+    pass
+
+class UnknownFormatError(FileParsingError):
+    """Raised when file format is not recognized."""
+    pass
+
+@lru_cache(maxsize=32)
 def read_csv_file(content, delimiter=',', has_header=True, key_column='key', value_column='value'):
     """Reads CSV or XML data from a string and returns a ParsingResult."""
     logging.debug("Forcing CSV parse, ignoring XML markers.")
@@ -152,15 +169,9 @@ def read_csv_file(content, delimiter=',', has_header=True, key_column='key', val
         return ParsingResult(True, translations)
         
     except csv.Error as e:
-        return ParsingResult(
-            error=FileError.INVALID_CSV_FORMAT,
-            details=f"CSV parsing error: {str(e)}"
-        )
+        raise CSVParsingError(f"CSV parsing error: {str(e)}")
     except Exception as e:
-        return ParsingResult(
-            error=FileError.UNKNOWN_FORMAT,
-            details=f"Unexpected error: {str(e)}"
-        )
+        raise UnknownFormatError(f"Unexpected CSV error: {str(e)}")
 
 def read_xml_lang_content(content: str, trim_whitespace: bool = False) -> dict:
     """Parse XML content and extract string elements with their name attributes,
@@ -189,10 +200,8 @@ def read_xml_lang_content(content: str, trim_whitespace: bool = False) -> dict:
         logging.error(f"XML parsing error: {str(e)}\nContent: {content[:200]}")
     # Fallback: If no translations found and content appears to contain <string> tags, use regex.
     if not translations and "<string" in content:
-        import re
         logging.debug("No translations found via XML parsing; using regex fallback.")
-        pattern = r'<string\s+name="([^"]+)">(.*?)</string>'
-        for match in re.findall(pattern, content, flags=re.DOTALL):
+        for match in _xml_string_pattern.findall(content):
             key = match[0].strip()
             value = match[1].strip() if trim_whitespace else match[1]
             translations[key] = value
@@ -207,51 +216,55 @@ def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) 
     
     content = content.lstrip()
 
-    # New parser-based handling for JSON, YAML, and .lang files.
-    if ext.lower() == '.json' and not content.startswith('<'):
-        logging.debug("Using JSON parser")
-        parser = JSONParser()
-        return parser.parse(content)
+    try:
+        # New parser-based handling for JSON, YAML, and .lang files.
+        if ext.lower() == '.json' and not content.startswith('<'):
+            logging.debug("Using JSON parser")
+            parser = JSONParser()
+            return parser.parse(content)
 
-    if ext.lower() in ['.yaml', '.yml'] and not content.startswith('<'):
-        logging.debug("Using YAML parser")
-        parser = YAMLParser()
-        return parser.parse(content)
+        if ext.lower() in ['.yaml', '.yml'] and not content.startswith('<'):
+            logging.debug("Using YAML parser")
+            parser = YAMLParser()
+            return parser.parse(content)
 
-    if ext.lower() == '.lang' and not content.startswith('<'):
-        logging.debug("Using .lang parser")
-        parser = LangParser()
-        return parser.parse(content)
-    
-    # Fallback for XML
-    if content.startswith(('<?xml', '<lang', '<string')):
-        logging.debug("Content appears to be XML, using XML parser")
-        translations = read_xml_lang_content(content, trim_whitespace)
-        logging.debug(f"XML parser found {len(translations)} entries")
-        return translations
-    
-    # Fallback for CSV
-    if ext.lower() == '.csv' and not content.startswith('<'):
-        logging.debug("Using CSV parser")
-        result = read_csv_file(content)
-        translations = result.translations if result.success else {}
-        logging.debug(f"CSV parser found {len(translations)} entries")
-        return translations
-    
-    # Fallback for plain text
-    if ext.lower() == '.txt' and not content.startswith('<'):
-        logging.debug("Using plain text parser")
-        translations = read_lang_file(content, trim_whitespace)
-        logging.debug(f"Text parser found {len(translations)} entries")
-        return translations
-
-    logging.debug("Trying XML parser as fallback")
-    translations = read_xml_lang_content(content, trim_whitespace)
-    if translations:
-        return translations
+        if ext.lower() == '.lang' and not content.startswith('<'):
+            logging.debug("Using .lang parser")
+            parser = LangParser()
+            return parser.parse(content)
         
-    logging.debug("Falling back to plain text parser")
-    return read_lang_file(content, trim_whitespace)
+        # Fallback for XML
+        if content.startswith(('<?xml', '<lang', '<string')):
+            logging.debug("Content appears to be XML, using XML parser")
+            translations = read_xml_lang_content(content, trim_whitespace)
+            logging.debug(f"XML parser found {len(translations)} entries")
+            return translations
+        
+        # Fallback for CSV
+        if ext.lower() == '.csv' and not content.startswith('<'):
+            logging.debug("Using CSV parser")
+            result = read_csv_file(content)
+            translations = result.translations if result.success else {}
+            logging.debug(f"CSV parser found {len(translations)} entries")
+            return translations
+        
+        # Fallback for plain text
+        if ext.lower() == '.txt' and not content.startswith('<'):
+            logging.debug("Using plain text parser")
+            translations = read_lang_file(content, trim_whitespace)
+            logging.debug(f"Text parser found {len(translations)} entries")
+            return translations
+
+        logging.debug("Trying XML parser as fallback")
+        translations = read_xml_lang_content(content, trim_whitespace)
+        if translations:
+            return translations
+            
+        logging.debug("Falling back to plain text parser")
+        return read_lang_file(content, trim_whitespace)
+    except FileParsingError as e:
+        logging.error(f"ParsingError: {str(e)}")
+        return {}
 
 def read_lang_file(content, trim_whitespace=False):
     """Reads a plain text .lang file (key=value format) and returns a dictionary."""
@@ -276,8 +289,7 @@ def read_lang_file(content, trim_whitespace=False):
                     continue
                     
     except Exception as e:
-        logging.error(f"Error in read_lang_file: {str(e)}")
-        return {}
+        raise FileParsingError(f"Error in read_lang_file: {str(e)}")
         
     return translations
 
@@ -579,3 +591,5 @@ def validate_placeholders(source_text: str, target_text: str) -> tuple[bool, str
         error_msg.append(f"Extra placeholders: {', '.join(extra)}")
         
     return False, "; ".join(error_msg)
+
+from constants import SUPPORTED_FORMATS, USER_MESSAGES

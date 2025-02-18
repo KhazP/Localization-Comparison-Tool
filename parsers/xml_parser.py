@@ -1,9 +1,10 @@
 import xml.etree.ElementTree as ET
 import logging
+from typing import Dict
 from .base_parser import TranslationParser
 
 class XMLParser(TranslationParser):
-    def parse(self, content: str) -> dict:
+    def parse(self, content: str) -> Dict[str, str]:
         translations = {}
         
         try:
@@ -14,7 +15,6 @@ class XMLParser(TranslationParser):
                     logging.warning("Found <string> element without 'name' attribute")
                     continue
                     
-                # Handle None text content
                 text = string_elem.text
                 if text is None:
                     logging.debug(f"Empty string element for key: {key}")
@@ -27,3 +27,6 @@ class XMLParser(TranslationParser):
         except ET.ParseError as e:
             logging.error(f"XML parse error: {str(e)}")
             raise ValueError(f"Invalid XML content: {e}")
+        except (TypeError, AttributeError) as e:
+            logging.error(f"XML structure error: {str(e)}")
+            raise ValueError(f"Invalid XML structure: {e}")

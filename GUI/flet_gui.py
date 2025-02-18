@@ -43,8 +43,12 @@ from constants import SUPPORTED_FORMATS, USER_MESSAGES, GOOGLE_CLOUD_LANGUAGES
 import json
 import re
 from themes import THEMES  # Add this import
-from components.file_input import FileInputComponent
-from components.results_view import ResultsViewComponent
+from components import (
+    FileInputComponent,
+    ResultsViewComponent,
+    SettingsDialogComponent,
+    StatsPanelComponent
+)
 import threading  # Add at top if not already imported
 
 # New configuration manager class

@@ -4,15 +4,29 @@ from datetime import datetime
 from pathlib import Path
 
 class LoggerService:
+    """Singleton logger service for the Localizer application.
+    
+    This class implements the singleton pattern to provide a centralized logging
+    service. It configures both file and console logging handlers with appropriate
+    formatting and log levels.
+    """
+    
     _instance = None
     
     def __new__(cls):
+        """Create or return the singleton instance."""
         if cls._instance is None:
             cls._instance = super(LoggerService, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
     
     def __init__(self):
+        """Initialize the logger service with file and console handlers.
+        
+        Creates log directory if needed and configures handlers with appropriate
+        formatters and log levels. File handler captures all levels (DEBUG+) while
+        console handler shows only warnings and above.
+        """
         if self._initialized:
             return
             
@@ -49,6 +63,11 @@ class LoggerService:
         self.logger.addHandler(console_handler)
 
     def get_logger(self):
+        """Get the configured logger instance.
+        
+        Returns:
+            logging.Logger: The configured logger instance for the application
+        """
         return self.logger
 
 logger_service = LoggerService()

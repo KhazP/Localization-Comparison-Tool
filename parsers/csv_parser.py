@@ -104,8 +104,8 @@ class CSVParser(TranslationParser):
                         f"Provided delimiter '{self.delimiter}' differs from detected "
                         f"delimiter '{dialect.delimiter}'"
                     )
-            except csv.Error:
-                logger.debug("Could not detect CSV dialect, using specified settings")
+            except csv.Error as e:
+                logger.debug(f"Could not detect CSV dialect: {e}")
                 dialect = None
 
             if self.has_header:
@@ -168,6 +168,21 @@ class CSVParser(TranslationParser):
 
         except csv.Error as e:
             error_msg = f"CSV parsing error: {str(e)}"
+            logger.error(error_msg)
+            raise CSVParsingError(error_msg)
+            
+        except (KeyError, IndexError) as e:
+            error_msg = f"CSV column error: {str(e)}"
+            logger.error(error_msg)
+            raise CSVParsingError(error_msg)
+            
+        except (UnicodeDecodeError, UnicodeError) as e:
+            error_msg = f"CSV encoding error: {str(e)}"
+            logger.error(error_msg)
+            raise CSVParsingError(error_msg)
+            
+        except OSError as e:
+            error_msg = f"File system error: {str(e)}"
             logger.error(error_msg)
             raise CSVParsingError(error_msg)
             

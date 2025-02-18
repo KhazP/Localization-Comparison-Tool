@@ -50,6 +50,10 @@ from components import (
     StatsPanelComponent
 )
 import threading  # Add at top if not already imported
+from utils.logger_service import logger_service
+
+# Get logger from service
+logger = logger_service.get_logger()
 
 # New configuration manager class
 class ConfigManager:
@@ -1065,7 +1069,7 @@ class App:
         """
         Force a UI refresh.
         """
-        logging.info("Forced UI refresh: applied theme '%s' with colors: %s", self.current_theme, self.COLORS)
+        logger.info("Forced UI refresh: applied theme '%s' with colors: %s", self.current_theme, self.COLORS)
         self.page.update()
 
     def create_checkbox(self, label: str, value: bool = False):

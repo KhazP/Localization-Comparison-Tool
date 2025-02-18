@@ -1,5 +1,7 @@
 import os
 import sys
+import logging
+from utils.logger_service import logger_service
 
 # Add parent directory to Python path to find modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -8,7 +10,6 @@ import csv
 import xml.etree.ElementTree as ET
 import git  # If you plan on adding git functionality to this module later
 from colorama import init, Fore, Style
-import logging
 from enum import Enum, auto
 import xml_parser  # New import added at top
 import json
@@ -26,15 +27,8 @@ except ImportError:
 # Precompile regex pattern for XML fallback parsing
 _xml_string_pattern = re.compile(r'<string\s+name="([^"]+)">(.*?)</string>', flags=re.DOTALL)
 
-# Setup logging at the top of the file
-logging.basicConfig(
-    level=logging.WARNING,  # Set default level to WARNING
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filename='localizer_debug.log',
-    filemode='w'  # Overwrite log file on each run
-)
-logger = logging.getLogger(__name__)
-logger.disabled = True  # Disable logging by default
+# Get logger from service instead of basic config
+logger = logger_service.get_logger()
 
 init()  # Initialize colorama
 
@@ -47,7 +41,7 @@ VALID_COLORS = [  # Keep for potential future use with command line
 def get_color(color_name):
     """Gets the colorama Fore color object from a color name (case-insensitive)."""
     color_name = color_name.lower()
-    if color_name not in VALID_COLORS:
+    if (color_name not in VALID_COLORS):
         return None
     return getattr(Fore, color_name.upper())
 

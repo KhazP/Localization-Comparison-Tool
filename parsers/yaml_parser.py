@@ -1,6 +1,7 @@
 import logging
 try:
     import yaml
+    from yaml.error import YAMLError
 except ImportError:
     yaml = None
 
@@ -19,6 +20,6 @@ class YAMLParser(TranslationParser):
                 logging.error(f"YAML content is not a dictionary, got {type(data)}")
                 return {}
             return data
-        except yaml.YAMLError as e:
+        except YAMLError as e:
             logging.error(f"YAML parse error: {str(e)}")
             raise ValueError(f"Invalid YAML content: {e}")

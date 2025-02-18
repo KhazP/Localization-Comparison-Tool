@@ -1,22 +1,23 @@
-# logic.py (All the logic functions)
+import os
+import sys
+
+# Add parent directory to Python path to find modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import csv
 import xml.etree.ElementTree as ET
 import git  # If you plan on adding git functionality to this module later
-import os
-import sys
 from colorama import init, Fore, Style
 import logging
 from enum import Enum, auto
 import xml_parser  # New import added at top
-# New import for mixed parser
-sys.path.append("E:/ProgramTests/LocalizerAppMain")
-from MixedParser import mixed_parser
 import json
 import requests
 import html
 from typing import Optional
 import re
-from functools import lru_cache  # ensure regex module is imported
+from functools import lru_cache
+from constants import SUPPORTED_FORMATS, USER_MESSAGES
 try:
     import yaml
 except ImportError:
@@ -26,9 +27,14 @@ except ImportError:
 _xml_string_pattern = re.compile(r'<string\s+name="([^"]+)">(.*?)</string>', flags=re.DOTALL)
 
 # Setup logging at the top of the file
-logging.basicConfig(level=logging.DEBUG,
-                   format='%(asctime)s - %(levelname)s - %(message)s',
-                   filename='localizer_debug.log')
+logging.basicConfig(
+    level=logging.WARNING,  # Set default level to WARNING
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='localizer_debug.log',
+    filemode='w'  # Overwrite log file on each run
+)
+logger = logging.getLogger(__name__)
+logger.disabled = True  # Disable logging by default
 
 init()  # Initialize colorama
 
@@ -57,9 +63,10 @@ class FileError(Enum):
     PERMISSION_ERROR = auto()
 
 class ParsingResult:
-    def __init__(self, success=False, translations=None, error=None, details=None):
+    def __init__(self, success=False, translations=None, line_numbers=None, error=None, details=None):
         self.success = success
         self.translations = translations or {}
+        self.line_numbers = line_numbers or {}  # Added line_numbers
         self.error = error
         self.details = details
     
@@ -115,8 +122,7 @@ class UnknownFormatError(FileParsingError):
 
 @lru_cache(maxsize=32)
 def read_csv_file(content, delimiter=',', has_header=True, key_column='key', value_column='value'):
-    """Reads CSV or XML data from a string and returns a ParsingResult."""
-    logging.debug("Forcing CSV parse, ignoring XML markers.")
+    """Reads CSV data and returns a ParsingResult with translations and line numbers."""
     
     if not content.strip():
         return ParsingResult(error=FileError.EMPTY_FILE)
@@ -135,9 +141,10 @@ def read_csv_file(content, delimiter=',', has_header=True, key_column='key', val
                 has_header = False
         
         translations = {}
+        line_numbers = {}  # Track line numbers for each key
+        
         if has_header:
             reader = csv.DictReader(lines, delimiter=delimiter)
-            logging.debug(f"CSV header: {reader.fieldnames}")
             if not reader.fieldnames:
                 return ParsingResult(
                     error=FileError.MISSING_CSV_COLUMNS,
@@ -148,17 +155,21 @@ def read_csv_file(content, delimiter=',', has_header=True, key_column='key', val
                     error=FileError.MISSING_CSV_COLUMNS,
                     details=f"Missing required columns. Found: {', '.join(reader.fieldnames)}"
                 )
-            for row in reader:
-                translations[row[key_column]] = row[value_column]
+            for row_num, row in enumerate(reader, start=2):  # Start from line 2 if header is present
+                key = row[key_column]
+                translations[key] = row[value_column]
+                line_numbers[key] = row_num
         else:
             reader = csv.reader(lines, delimiter=delimiter)
-            for row in reader:
+            for row_num, row in enumerate(reader, start=1):
                 if len(row) < 2:
                     return ParsingResult(
                         error=FileError.INVALID_CSV_FORMAT,
                         details=f"Row has insufficient columns: {row}"
                     )
-                translations[row[0]] = row[1]
+                key = row[0]
+                translations[key] = row[1]
+                line_numbers[key] = row_num
         
         if not translations:
             return ParsingResult(
@@ -166,7 +177,7 @@ def read_csv_file(content, delimiter=',', has_header=True, key_column='key', val
                 details="No translations found in file"
             )
         
-        return ParsingResult(True, translations)
+        return ParsingResult(True, translations, line_numbers)
         
     except csv.Error as e:
         raise CSVParsingError(f"CSV parsing error: {str(e)}")
@@ -174,40 +185,145 @@ def read_csv_file(content, delimiter=',', has_header=True, key_column='key', val
         raise UnknownFormatError(f"Unexpected CSV error: {str(e)}")
 
 def read_xml_lang_content(content: str, trim_whitespace: bool = False) -> dict:
-    """Parse XML content and extract string elements with their name attributes,
-    with a fallback regex extraction if no strings are found."""
+    """Parse XML content and extract string elements with their line numbers."""
+    translations = {}
+    line_numbers = {}  # Track line numbers
+    
+    try:
+        # Process content line by line to track line numbers
+        lines = content.splitlines()
+        current_key = None
+        current_line = 0
+        
+        for i, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line or line.startswith('<!--') or line.startswith('//'):
+                continue
+                
+            # Look for string element start
+            key_match = re.search(r'<string\s+name="([^"]+)">', line)
+            if key_match:
+                current_key = key_match.group(1)
+                current_line = i
+                # If the value is on the same line
+                value_match = re.search(r'>([^<]+)</string>', line)
+                if value_match:
+                    translations[current_key] = value_match.group(1)
+                    line_numbers[current_key] = current_line
+                    current_key = None
+            
+            # Handle multi-line values
+            elif current_key and '</string>' in line:
+                value = re.search(r'([^<]+)</string>', line)
+                if value:
+                    translations[current_key] = value.group(1)
+                    line_numbers[current_key] = current_line
+                current_key = None
+
+        # Fallback to regex parsing if needed
+        if not translations and "<string" in content:
+            for match in re.finditer(r'<string\s+name="([^"]+)"[^>]*>([^<]*)', content):
+                key = match.group(1)
+                value = match.group(2)
+                translations[key] = value
+                # Approximate line number by counting newlines before match
+                line_number = content[:match.start()].count('\n') + 1
+                line_numbers[key] = line_number
+
+    except Exception as e:
+        logging.error(f"Error parsing XML content: {str(e)}")
+        
+    return {
+        "translations": translations,
+        "line_numbers": line_numbers
+    }
+
+def parse_xliff(content: str) -> dict:
+    """
+    Parse XLIFF (XML-based) to extract translation units.
+    Returns a {key: value} dict.
+    """
     translations = {}
     try:
-        # Strip comments and blank lines
-        lines = [line.strip() for line in content.splitlines() if line.strip() 
-                 and not line.strip().startswith('<!--') 
-                 and not line.strip().startswith('//')]
-        content = '\n'.join(lines)
-        if not content.startswith('<?xml'):
-            content = '<?xml version="1.0" encoding="UTF-8"?>\n' + content
-        logging.debug(f"Parsing XML content: {content[:200]}")
+        root = ET.fromstring(content)
+        # Typical XLIFF structure uses <trans-unit id="..."><target>...</target>
+        for unit in root.findall('.//trans-unit'):
+            key = unit.get('id')
+            if key:
+                target_elem = unit.find('target')
+                translations[key] = target_elem.text if target_elem is not None else ''
+    except ET.ParseError as e:
+        logging.error(f"XLIFF parse error: {str(e)}")
+    return translations
+
+def parse_properties_file(content: str) -> dict:
+    """
+    Parse Java .properties format (key=value pairs, supporting backslash escapes).
+    Returns a {key: value} dict.
+    """
+    translations = {}
+    for line in content.splitlines():
+        line = line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        translations[key.strip()] = value.strip()
+    return translations
+
+def parse_resx(content: str) -> dict:
+    """
+    Parse .resx file (XML for .NET resources).
+    Returns a {key: value} dict based on <data name="..."><value>...</value>
+    """
+    translations = {}
+    try:
+        root = ET.fromstring(content)
+        for data_elem in root.findall('.//data'):
+            key = data_elem.get('name')
+            if key:
+                value_elem = data_elem.find('value')
+                translations[key] = value_elem.text if value_elem is not None else ''
+    except ET.ParseError as e:
+        logging.error(f"RESX parse error: {str(e)}")
+    return translations
+
+def parse_android_xml(content: str) -> dict:
+    """
+    Parse Android XML format (<string name="...">...</string>).
+    Returns a {key: value} dict.
+    """
+    translations = {}
+    try:
         root = ET.fromstring(content)
         for string_elem in root.findall('.//string'):
             key = string_elem.get('name')
-            value = string_elem.text if string_elem.text is not None else ""
             if key:
-                key = key.strip()
-                if trim_whitespace:
-                    value = value.strip()
-                translations[key] = value
-                logging.debug(f"Found key: {key} = {value}")
+                translations[key] = string_elem.text or ''
     except ET.ParseError as e:
-        logging.error(f"XML parsing error: {str(e)}\nContent: {content[:200]}")
-    # Fallback: If no translations found and content appears to contain <string> tags, use regex.
-    if not translations and "<string" in content:
-        logging.debug("No translations found via XML parsing; using regex fallback.")
-        for match in _xml_string_pattern.findall(content):
-            key = match[0].strip()
-            value = match[1].strip() if trim_whitespace else match[1]
-            translations[key] = value
-            logging.debug(f"(Regex) Found key: {key} = {value}")
-    logging.info(f"Total translations found: {len(translations)}")
+        logging.error(f"Android XML parse error: {str(e)}")
     return translations
+
+def parse_angular_translate_json(content: str) -> dict:
+    """
+    Parse Angular Translate JSON or similar JSON-based i18n.
+    Returns a {key: value} dict.
+    """
+    try:
+        data = json.loads(content)
+        # Usually a nested structure, flatten if needed
+        translations = {}
+        def flatten(d, prefix=''):
+            for k, v in d.items():
+                full_key = f"{prefix}.{k}" if prefix else k
+                if isinstance(v, dict):
+                    flatten(v, full_key)
+                else:
+                    translations[full_key] = v
+        flatten(data)
+        return translations
+    except json.JSONDecodeError as e:
+        logging.error(f"Angular JSON parse error: {str(e)}")
+        return {}
 
 def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) -> dict:
     """Parse content based on file extension and content type."""
@@ -231,8 +347,21 @@ def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) 
         if ext.lower() == '.lang' and not content.startswith('<'):
             logging.debug("Using .lang parser")
             parser = LangParser()
+            # This returns {"translations": {...}, "line_numbers": {...}}
             return parser.parse(content)
         
+        if ext.lower() == '.xliff':
+            return parse_xliff(content)
+        elif ext.lower() == '.properties':
+            return parse_properties_file(content)
+        elif ext.lower() == '.resx':
+            return parse_resx(content)
+        elif ext.lower() == '.xml' and 'resources' in content:
+            # Heuristic for Android XML
+            return parse_android_xml(content)
+        elif ext.lower() in ['.angular.json', '.ngjson']:
+            return parse_angular_translate_json(content)
+
         # Fallback for XML
         if content.startswith(('<?xml', '<lang', '<string')):
             logging.debug("Content appears to be XML, using XML parser")
@@ -264,11 +393,13 @@ def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) 
         return read_lang_file(content, trim_whitespace)
     except FileParsingError as e:
         logging.error(f"ParsingError: {str(e)}")
-        return {}
+        return {"translations": {}, "line_numbers": {}}
 
 def read_lang_file(content, trim_whitespace=False):
-    """Reads a plain text .lang file (key=value format) and returns a dictionary."""
+    """Reads a plain text .lang file (key=value format) and returns translations and line numbers."""
     translations = {}
+    line_numbers = {}  # Track line numbers
+    
     try:
         for line_number, line in enumerate(content.splitlines(), start=1):
             line = line.strip()
@@ -284,6 +415,7 @@ def read_lang_file(content, trim_whitespace=False):
                         key = key.strip()
                         value = value.strip()
                     translations[key] = value
+                    line_numbers[key] = line_number  # Store line number for this key
                 except ValueError:
                     logging.warning(f"Invalid key-value pair at line {line_number}: {line}")
                     continue
@@ -291,7 +423,10 @@ def read_lang_file(content, trim_whitespace=False):
     except Exception as e:
         raise FileParsingError(f"Error in read_lang_file: {str(e)}")
         
-    return translations
+    return {
+        "translations": translations,
+        "line_numbers": line_numbers
+    }
 
 def read_xml_lang_file(filepath, trim_whitespace=False):
     """Reads a .lang file (XML format), preprocesses it, and returns a dictionary."""
@@ -299,7 +434,7 @@ def read_xml_lang_file(filepath, trim_whitespace=False):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
-        # --- Pre-processing ---
+        # --- Pre-processing --- 
         # Replace any '&' that is not already part of a valid entity
         import re
         content = re.sub(r'&(?!amp;|lt;|gt;|quot;|apos;)', '&', content)

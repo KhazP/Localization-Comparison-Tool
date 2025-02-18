@@ -39,12 +39,13 @@ import os
 import logic
 import logging  # Add this import
 from pathlib import Path
-from constants import SUPPORTED_FORMATS, USER_MESSAGES
+from constants import SUPPORTED_FORMATS, USER_MESSAGES, GOOGLE_CLOUD_LANGUAGES
 import json
 import re
 from themes import THEMES  # Add this import
 from components.file_input import FileInputComponent
 from components.results_view import ResultsViewComponent
+import threading  # Add at top if not already imported
 
 # New configuration manager class
 class ConfigManager:
@@ -86,6 +87,8 @@ class App:
                 # ...existing config defaults...
                 "theme": "system",
             }
+        # Clear cached themes before applying the chosen theme
+        self._cached_colors.clear() 
 
         # Set initial theme and colors - UPDATED
         self.current_theme = self.config.get("theme", "system")
@@ -129,7 +132,8 @@ class App:
             "ignore_case": False,
             "compare_values": True,
             "group_by_namespace": True,  # Add this line
-            "show_preview": False  # Add this line
+            "show_preview": False,  # Add this line
+            "show_line_numbers": False,  # Add this line
         }
 
         # Add MT settings to config
@@ -216,6 +220,11 @@ class App:
                                                 label="Show File Preview",
                                                 value=self.config["show_preview"],
                                                 on_change=self.handle_preview_toggle
+                                            ),
+                                            ft.Checkbox(
+                                                label="Show Line Numbers",  # Add this checkbox
+                                                value=self.config["show_line_numbers"],
+                                                on_change=self.handle_line_numbers_toggle
                                             ),
                                             ft.Checkbox(
                                                 label="Auto-Fill Missing Keys",
@@ -332,10 +341,8 @@ class App:
                                                 label="Source Language",
                                                 value=self.config["mt_source_lang"],
                                                 options=[
-                                                    ft.dropdown.Option("en", "English"),
-                                                    ft.dropdown.Option("es", "Spanish"),
-                                                    ft.dropdown.Option("fr", "French"),
-                                                    ft.dropdown.Option("de", "German"),
+                                                    ft.dropdown.Option(code, name)
+                                                    for code, name in sorted(GOOGLE_CLOUD_LANGUAGES.items(), key=lambda x: x[1])
                                                 ],
                                                 on_change=self.handle_mt_source_lang_change
                                             ),
@@ -343,10 +350,8 @@ class App:
                                                 label="Target Language",
                                                 value=self.config["mt_target_lang"],
                                                 options=[
-                                                    ft.dropdown.Option("tr", "Turkish"),
-                                                    ft.dropdown.Option("es", "Spanish"),
-                                                    ft.dropdown.Option("fr", "French"),
-                                                    ft.dropdown.Option("de", "German"),
+                                                    ft.dropdown.Option(code, name)
+                                                    for code, name in sorted(GOOGLE_CLOUD_LANGUAGES.items(), key=lambda x: x[1])
                                                 ],
                                                 on_change=self.handle_mt_target_lang_change
                                             ),
@@ -1042,6 +1047,13 @@ class App:
             expand=True,
         )
 
+        # Force a UI refresh after app loads to ensure theme consistency
+        threading.Timer(0.1, self.force_refresh_ui).start()
+
+    def force_refresh_ui(self):
+        logging.info(f"Forced UI refresh: applied theme '{self.current_theme}' with colors: {self.COLORS}")
+        self.page.update()
+
     def create_checkbox(self, label: str, value: bool = False):
         return Checkbox(
             label=label,
@@ -1367,8 +1379,26 @@ class App:
                 ext_target = Path(self.target_file_path).suffix.lower()
 
                 # Parse both files
-                source_dict = logic.parse_content_by_ext(source_content, ext_source)
-                target_dict = logic.parse_content_by_ext(target_content, ext_target)
+                source_result = logic.parse_content_by_ext(source_content, ext_source)
+                target_result = logic.parse_content_by_ext(target_content, ext_target)
+                
+                # Updated extraction: if output has no 'translations' key, assume result is the dict
+                if isinstance(source_result, dict) and "translations" in source_result:
+                    source_dict = source_result["translations"]
+                    source_lines = source_result.get("line_numbers", {})
+                else:
+                    source_dict = source_result
+                    source_lines = {}
+                if isinstance(target_result, dict) and "translations" in target_result:
+                    target_dict = target_result["translations"]
+                    target_lines = target_result.get("line_numbers", {})
+                else:
+                    target_dict = target_result
+                    target_lines = {}
+
+                # Store line numbers for use in results display
+                self.source_line_numbers = source_lines
+                self.target_line_numbers = target_lines
 
                 # Debug logging
                 print(f"Source file entries: {len(source_dict)}")
@@ -1458,18 +1488,22 @@ class App:
         sorted_lines = sorted(lines, key=lambda l: {'-': 0, '~': 1, '+': 2}.get(l[0], 3))
         result_rows = []
         
+        line_number = 1  # Initialize line counter
+        
         if self.config.get("group_by_namespace"):
             groups = self.group_keys_by_namespace(sorted_lines)
             for namespace, group_lines in groups.items():
                 header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
                 result_rows.append(header)
                 for line in group_lines:
-                    row = self.create_result_row(line)
+                    row = self.create_result_row(line, line_number if self.config["show_line_numbers"] else None)
                     result_rows.append(row)
+                    line_number += 1
         else:
             for line in sorted_lines:
-                row = self.create_result_row(line)
+                row = self.create_result_row(line, line_number if self.config["show_line_numbers"] else None)
                 result_rows.append(row)
+                line_number += 1
 
         # Store the original rows for filtering
         self.original_result_rows = result_rows
@@ -1541,8 +1575,37 @@ class App:
         self.results_column.controls[1].controls = filtered_rows
         self.page.update()
 
-    def create_result_row(self, line: str) -> Row:
+    def create_result_row(self, line: str, line_number: int = None) -> Row:
         """Helper method to create a result row with proper icon and text"""
+        controls = []
+        
+        # Extract key using improved regex to match keys with letters,dots or dashes
+        key_match = re.search(r'^[+-~]\s*([\w\.\-]+)\s*:', line)
+        if key_match:
+            key = key_match.group(1).strip()
+            # Look up the original line number using the key from the parser
+            if line.startswith("+"):
+                actual_line = self.source_line_numbers.get(key, "?")
+            elif line.startswith("-"):
+                actual_line = self.target_line_numbers.get(key, "?")
+            else:
+                actual_line = self.target_line_numbers.get(key, "?")
+        else:
+            actual_line = "?"
+
+        # Add line number if enabled
+        if self.config["show_line_numbers"] and line_number is not None:
+            controls.append(
+                Text(
+                    f"{actual_line:>4} │ ",
+                    size=14,
+                    weight="w400",
+                    color=self.COLORS["text"]["secondary"],
+                    font_family="Consolas",
+                )
+            )
+            
+        # Add appropriate icon
         if line.startswith("+"):
             icon = Icon(Icons.ADD, color="green")
         elif line.startswith("-"):
@@ -1551,7 +1614,13 @@ class App:
             icon = Icon(Icons.WARNING, color="yellow")
         else:
             icon = Icon(Icons.HELP, color="grey")
-        return Row(controls=[icon, Text(line)], spacing=8)
+            
+        controls.extend([
+            icon,
+            Text(line, font_family="Consolas")
+        ])
+        
+        return Row(controls=controls, spacing=8)
 
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
         from flet import Container, Column, Text
@@ -1637,10 +1706,12 @@ class App:
 
     def open_settings(self, e):
         self.settings_dialog.open = True
+        self.register_keyboard_navigation()  # Register handler when dialog opens
         self.page.update()
 
     def close_settings(self, e):
         self.settings_dialog.open = False
+        self.unregister_keyboard_navigation()  # Unregister handler when dialog closes
         self.page.update()
 
     def reset_colors(self, e):
@@ -1746,6 +1817,8 @@ class App:
 
         if hasattr(self, 'file_input'):
             self.file_input.update_colors(self.COLORS)
+
+        logging.info(f"Theme updated to '{theme_key}'. Current COLORS: {self.COLORS}")
 
     def handle_case_change(self, e):
         self.config["ignore_case"] = e.control.value
@@ -1937,6 +2010,7 @@ class App:
         if self.custom_theme_dialog not in self.page.overlay:
             self.page.overlay.append(self.custom_theme_dialog)
         self.custom_theme_dialog.open = True
+        self.register_keyboard_navigation()  # Register handler for custom theme dialog
         self.page.update()
 
     def save_custom_theme(self, e):
@@ -1946,6 +2020,7 @@ class App:
 
     def close_custom_theme_settings(self, e):
         self.custom_theme_dialog.open = False
+        self.unregister_keyboard_navigation()  # Remove handler after closing dialog
         self.page.update()
 
     def handle_preview_toggle(self, e):
@@ -1974,27 +2049,33 @@ class App:
             self.page.update()
 
     def compare_directories(self):
-        """Compare all matching files in source and target directories"""
+        """Compare all matching files in source and target directories with improved error handling"""
         self.loading_ring.visible = True
         self.status_label.value = "Comparing directories..."
         self.page.update()
 
         try:
             source_files = {f.name: f for f in Path(self.source_dir_path).glob("*") 
-                          if f.suffix.lower() in SUPPORTED_FORMATS}
+                            if f.suffix.lower() in SUPPORTED_FORMATS}
             target_files = {f.name: f for f in Path(self.target_dir_path).glob("*") 
-                          if f.suffix.lower() in SUPPORTED_FORMATS}
+                            if f.suffix.lower() in SUPPORTED_FORMATS}
             
-            # Find matching files
             common_files = set(source_files.keys()) & set(target_files.keys())
-            
-            # Clear existing tabs
+            if not common_files:
+                msg = "No matching files found in the selected directories."
+                self.show_snackbar(msg)
+                self.status_label.value = msg
+                self.update_statistics(0, 0, 0)
+                self.results_tabs.tabs.clear()
+                self.results_tabs.visible = False
+                self.results_container.content = self.results_tabs
+                return
+
+            # Clear existing tabs and initialize counters.
             self.results_tabs.tabs.clear()
-            
             total_missing = 0
             total_obsolete = 0
             
-            # Compare each matching pair
             for filename in sorted(common_files):
                 source_path = source_files[filename]
                 target_path = target_files[filename]
@@ -2008,7 +2089,6 @@ class App:
                 source_dict = logic.parse_content_by_ext(source_content, source_path.suffix)
                 target_dict = logic.parse_content_by_ext(target_content, target_path.suffix)
                 
-                # Compare translations
                 comparison_result = logic.compare_translations(
                     target_dict,
                     source_dict,
@@ -2022,15 +2102,13 @@ class App:
                     auto_fill_missing=self.config["auto_fill_missing"],
                 )
                 
-                # Calculate statistics for this file
                 missing = len(set(source_dict.keys()) - set(target_dict.keys()))
                 obsolete = len(set(target_dict.keys()) - set(source_dict.keys()))
                 total_missing += missing
                 total_obsolete += obsolete
                 
-                # Create tab for this file
                 self.results_tabs.tabs.append(
-                    Tab(
+                    ft.Tab(
                         text=filename,
                         content=Container(
                             content=Column(
@@ -2061,18 +2139,16 @@ class App:
                     )
                 )
             
-            # Update statistics
             self.update_statistics(len(common_files), total_missing, total_obsolete)
-            
-            # Show tabbed results
             self.results_tabs.visible = True
             self.results_container.content = self.results_tabs
-            
-            self.status_label.value = f"Compared {len(common_files)} files"
+            self.status_label.value = f"Compared {len(common_files)} files."
             
         except Exception as e:
+            logging.error(f"Directory comparison error: {str(e)}")
             self.show_snackbar(f"Error comparing directories: {str(e)}")
             self.status_label.value = "Comparison failed"
+            self.update_statistics(0, 0, 0)
         finally:
             self.loading_ring.visible = False
             self.page.update()
@@ -2305,6 +2381,148 @@ class App:
             focusable=True,
             data={"tab_index": 3 if is_source else 4}
         )
+
+    def handle_line_numbers_toggle(self, e):
+        """Handle toggling of line numbers in results"""
+        self.config["show_line_numbers"] = e.control.value
+        ConfigManager.save(self.config)
+        # Rebuild results table if we have results
+        if self.output_text.value and self.output_text.value != "Comparison results will appear here":
+            self.build_results_table(self.output_text.value)
+        self.page.update()
+
+    # New dedicated methods for keyboard navigation management
+    def register_keyboard_navigation(self):
+        """Attach keyboard event handler."""
+        if self.config.get("enable_keyboard_nav"):
+            self.page.on_keyboard_event = self.handle_keyboard_event
+
+    def unregister_keyboard_navigation(self):
+        """Detach keyboard event handler."""
+        self.page.on_keyboard_event = None
+
+    def update_keyboard_navigation(self):
+        """Update keyboard navigation settings by attaching or detaching the event handler."""
+        if self.config.get("enable_keyboard_nav"):
+            self.register_keyboard_navigation()
+        else:
+            self.unregister_keyboard_navigation()
+        self.page.update()
+
+    def open_file_picker(self, e):
+        self.file_picker.get_file_path()
+
+    def handle_file_picked(self, e: FilePickerResultEvent):
+        if e.path:
+            self.file_path = e.path
+            self.file_label.value = f"File: {Path(e.path).name}"
+            self.page.update()
+
+    def compare_file(self):
+        """Compare the selected file with improved error handling and UI feedback"""
+        self.loading_ring.visible = True
+        self.status_label.value = "Comparing file..."
+        self.page.update()
+
+        try:
+            # Read file with explicit encoding fallback
+            try:
+                with open(self.file_path, 'r', encoding='utf-8') as f:
+                    file_content = f.read()
+            except UnicodeDecodeError:
+                with open(self.file_path, 'r', encoding='latin-1') as f:
+                    file_content = f.read()
+                logging.warning(f"File {self.file_path} using fallback encoding latin-1")
+            
+            # Parse content based on file extension
+            ext = Path(self.file_path).suffix.lower()
+            result = logic.parse_content_by_ext(file_content, ext)
+            
+            # Unpack dictionaries for comparison
+            source_dict = result.get("translations", {})
+            source_lines = result.get("line_numbers", {})
+            
+            if not source_dict:
+                raise ValueError("No valid translations found in file")
+
+            # Store line numbers for reference
+            self.source_line_numbers = source_lines
+            
+            # Compare against itself to validate format
+            comparison_result = logic.compare_translations(
+                source_dict,
+                source_dict,
+                ignore_case=self.config["ignore_case"],
+                ignore_whitespace=self.config["ignore_whitespace"],
+                is_gui=True,
+                include_summary=True,
+                compare_values=self.config["compare_values"],
+                ignore_patterns=self.config["ignore_patterns"],
+                log_missing_keys=self.config["log_missing_strings"],
+                auto_fill_missing=self.config["auto_fill_missing"],
+            )
+
+            # Clear and update results tabs
+            self.results_tabs.tabs.clear()
+            self.results_tabs.tabs.append(
+                ft.Tab(
+                    text=Path(self.file_path).name,
+                    content=Container(
+                        content=Column(
+                            controls=[
+                                Text(
+                                    f"Total entries: {len(source_dict)}",
+                                    size=14,
+                                    color=self.COLORS["text"]["secondary"],
+                                ),
+                                TextField(
+                                    value=comparison_result,
+                                    multiline=True,
+                                    read_only=True,
+                                    min_lines=10,
+                                    max_lines=None,
+                                    text_style=TextStyle(
+                                        color=self.COLORS["text"]["secondary"],
+                                        size=14,
+                                        font_family="Consolas",
+                                        weight=FontWeight.W_400,
+                                    ),
+                                ),
+                            ],
+                            scroll=ft.ScrollMode.AUTO,
+                            spacing=8,
+                        ),
+                        padding=10,
+                    ),
+                )
+            )
+
+            # Update UI elements
+            self.results_tabs.visible = True
+            self.results_container.content = self.results_tabs
+            self.status_label.value = f"File validation complete. Found {len(source_dict)} entries."
+            self.update_statistics(len(source_dict), 0, 0)  # Update statistics panel
+
+        except FileNotFoundError:
+            logging.error(f"File not found: {self.file_path}")
+            self.show_snackbar("Error: File not found")
+            self.status_label.value = "Comparison failed: File not found"
+        except UnicodeError as e:
+            logging.error(f"Encoding error: {str(e)}")
+            self.show_snackbar("Error: Unable to read file encoding")
+            self.status_label.value = "Comparison failed: Encoding error"
+        except ValueError as e:
+            logging.error(f"Validation error: {str(e)}")
+            self.show_snackbar(f"Error: {str(e)}")
+            self.status_label.value = "Comparison failed: Invalid content"
+        except Exception as e:
+            logging.error(f"Unexpected error during comparison: {str(e)}")
+            self.show_snackbar(f"Unexpected error: {str(e)}")
+            self.status_label.value = "Comparison failed"
+            raise  # Re-raise for debugging
+        finally:
+            self.loading_ring.visible = False
+            self.page.update()
 
 def main(page: ft.Page):
     App(page)

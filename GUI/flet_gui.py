@@ -591,8 +591,8 @@ class App:
         self.source_icon = Icon(Icons.DESCRIPTION, color=self.COLORS["text"]["secondary"], size=20)
         self.target_icon = Icon(Icons.DESCRIPTION, color=self.COLORS["text"]["secondary"], size=20)
         
-        self.source_picker = FilePicker(on_result=lambda e: self.handle_file_picked(e, self.source_label, self.source_icon, None, "source"))
-        self.target_picker = FilePicker(on_result=lambda e: self.handle_file_picked(e, self.target_label, self.target_icon, None, "target"))
+        self.source_picker = FilePicker(on_result=lambda e: self.handle_file_picked(e, self.source_label, self.source_icon, "source"))
+        self.target_picker = FilePicker(on_result=lambda e: self.handle_file_picked(e, self.target_label, self.target_icon, "target"))
         
         page.overlay.extend([self.source_picker, self.target_picker])
         # Page setup
@@ -1062,7 +1062,10 @@ class App:
         threading.Timer(0.1, self.force_refresh_ui).start()
 
     def force_refresh_ui(self):
-        logging.info(f"Forced UI refresh: applied theme '{self.current_theme}' with colors: {self.COLORS}")
+        """
+        Force a UI refresh.
+        """
+        logging.info("Forced UI refresh: applied theme '%s' with colors: %s", self.current_theme, self.COLORS)
         self.page.update()
 
     def create_checkbox(self, label: str, value: bool = False):
@@ -1236,7 +1239,10 @@ class App:
         except:
             return 0
 
-    def handle_file_picked(self, e: FilePickerResultEvent, field, icon, clear_btn, field_type):
+    def handle_file_picked(self, e: FilePickerResultEvent, field, icon, field_type):
+        """
+        Handle file selection and update its related UI components.
+        """
         if e.files and len(e.files) > 0:
             file_path = e.files[0].path
             if self.validate_file(file_path):
@@ -1274,7 +1280,9 @@ class App:
                 icon.update()
 
     def update_file_preview(self, file_path: str, field_type: str):
-        """Update the preview text field with the first few lines of the file"""
+        """
+        Update the preview text field with the first few lines of the file.
+        """
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 # Read first 5 lines
@@ -1292,8 +1300,8 @@ class App:
                 preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
                 preview_field.value = preview_text
                 
-        except Exception as e:
-            logging.error(f"Error reading preview: {str(e)}")
+        except (OSError, UnicodeDecodeError) as error:
+            logging.error("Error reading preview: %s", error)
             preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
             preview_field.value = "Error reading file preview"
 
@@ -1362,121 +1370,120 @@ class App:
         self.page.update()
 
     def compare_files_gui(self, e):
-        """Updated to handle both file and directory comparisons"""
-        if self.source_dir_path and self.target_dir_path:
-            self.compare_directories()
-        else:
-            self.loading_ring.visible = True
-            self.status_label.value = "Comparing files..."
-            self.page.update()
+        """
+        Compare source and target files and update the UI.
+        """
+        self.loading_ring.visible = True
+        self.status_label.value = "Comparing files..."
+        self.page.update()
+
+        try:
+            # Read files with explicit encoding and error handling
+            try:
+                with open(self.source_file_path, 'r', encoding='utf-8') as f:
+                    source_content = f.read()
+            except UnicodeDecodeError:
+                with open(self.source_file_path, 'r', encoding='latin-1') as f:
+                    source_content = f.read()
 
             try:
-                # Read files with explicit encoding and error handling
-                try:
-                    with open(self.source_file_path, 'r', encoding='utf-8') as f:
-                        source_content = f.read()
-                except UnicodeDecodeError:
-                    with open(self.source_file_path, 'r', encoding='latin-1') as f:
-                        source_content = f.read()
+                with open(self.target_file_path, 'r', encoding='utf-8') as f:
+                    target_content = f.read()
+            except UnicodeDecodeError:
+                with open(self.target_file_path, 'r', encoding='latin-1') as f:
+                    target_content = f.read()
 
-                try:
-                    with open(self.target_file_path, 'r', encoding='utf-8') as f:
-                        target_content = f.read()
-                except UnicodeDecodeError:
-                    with open(self.target_file_path, 'r', encoding='latin-1') as f:
-                        target_content = f.read()
+            ext_source = Path(self.source_file_path).suffix.lower()
+            ext_target = Path(self.target_file_path).suffix.lower()
 
-                ext_source = Path(self.source_file_path).suffix.lower()
-                ext_target = Path(self.target_file_path).suffix.lower()
+            # Parse both files
+            source_result = logic.parse_content_by_ext(source_content, ext_source)
+            target_result = logic.parse_content_by_ext(target_content, ext_target)
+            
+            # Updated extraction: if output has no 'translations' key, assume result is the dict
+            if isinstance(source_result, dict) and "translations" in source_result:
+                source_dict = source_result["translations"]
+                source_lines = source_result.get("line_numbers", {})
+            else:
+                source_dict = source_result
+                source_lines = {}
+            if isinstance(target_result, dict) and "translations" in target_result:
+                target_dict = target_result["translations"]
+                target_lines = target_result.get("line_numbers", {})
+            else:
+                target_dict = target_result
+                target_lines = {}
 
-                # Parse both files
-                source_result = logic.parse_content_by_ext(source_content, ext_source)
-                target_result = logic.parse_content_by_ext(target_content, ext_target)
-                
-                # Updated extraction: if output has no 'translations' key, assume result is the dict
-                if isinstance(source_result, dict) and "translations" in source_result:
-                    source_dict = source_result["translations"]
-                    source_lines = source_result.get("line_numbers", {})
-                else:
-                    source_dict = source_result
-                    source_lines = {}
-                if isinstance(target_result, dict) and "translations" in target_result:
-                    target_dict = target_result["translations"]
-                    target_lines = target_result.get("line_numbers", {})
-                else:
-                    target_dict = target_result
-                    target_lines = {}
+            # Store line numbers for use in results display
+            self.source_line_numbers = source_lines
+            self.target_line_numbers = target_lines
 
-                # Store line numbers for use in results display
-                self.source_line_numbers = source_lines
-                self.target_line_numbers = target_lines
+            # Debug logging
+            logging.info("Source file entries: %s", len(source_dict))
+            logging.info("Target file entries: %s", len(target_dict))
+            logging.info("Sample source entries: %s", dict(list(source_dict.items())[:3]))
+            logging.info("Sample target entries: %s", dict(list(target_dict.items())[:3]))
 
-                # Debug logging
-                print(f"Source file entries: {len(source_dict)}")
-                print(f"Target file entries: {len(target_dict)}")
-                print("Sample source entries:", dict(list(source_dict.items())[:3]))
-                print("Sample target entries:", dict(list(target_dict.items())[:3]))
+            # Get ignore patterns
+            ignore_patterns = []
+            pattern_str = self.ignore_pattern_field.value.strip()
+            if pattern_str:
+                ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
 
-                # Get ignore patterns
-                ignore_patterns = []
-                pattern_str = self.ignore_pattern_field.value.strip()
-                if pattern_str:
-                    ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
+            # Add MT settings to comparison
+            mt_settings = {
+                'enabled': self.config["mt_enabled"],
+                'api_key': self.config["mt_api_key"],
+                'source_lang': self.config["mt_source_lang"],
+                'target_lang': self.config["mt_target_lang"]
+            }
 
-                # Add MT settings to comparison
-                mt_settings = {
-                    'enabled': self.config["mt_enabled"],
-                    'api_key': self.config["mt_api_key"],
-                    'source_lang': self.config["mt_source_lang"],
-                    'target_lang': self.config["mt_target_lang"]
-                }
+            # Compare translations - modify the call to not include summary
+            comparison_result = logic.compare_translations(
+                target_dict,  # target translations (old_translations)
+                source_dict,  # source translations (new_translations)
+                ignore_case=self.config["ignore_case"],
+                ignore_whitespace=self.config["ignore_whitespace"],
+                is_gui=True,
+                include_summary=False,  # Add this parameter
+                compare_values=self.config["compare_values"],
+                ignore_patterns=self.config["ignore_patterns"],
+                log_missing_keys=self.config["log_missing_strings"],
+                auto_fill_missing=self.config["auto_fill_missing"],
+                mt_settings=mt_settings
+            )
 
-                # Compare translations - modify the call to not include summary
-                comparison_result = logic.compare_translations(
-                    target_dict,  # target translations (old_translations)
-                    source_dict,  # source translations (new_translations)
-                    ignore_case=self.config["ignore_case"],
-                    ignore_whitespace=self.config["ignore_whitespace"],
-                    is_gui=True,
-                    include_summary=False,  # Add this parameter
-                    compare_values=self.config["compare_values"],
-                    ignore_patterns=self.config["ignore_patterns"],
-                    log_missing_keys=self.config["log_missing_strings"],
-                    auto_fill_missing=self.config["auto_fill_missing"],
-                    mt_settings=mt_settings
-                )
+            # Calculate the sets of missing and obsolete keys
+            missing_keys_set = set(source_dict.keys()) - set(target_dict.keys())
+            obsolete_keys_set = set(target_dict.keys()) - set(source_dict.keys())
 
-                # Calculate the sets of missing and obsolete keys
-                missing_keys_set = set(source_dict.keys()) - set(target_dict.keys())
-                obsolete_keys_set = set(target_dict.keys()) - set(source_dict.keys())
+            # Update statistics using the lengths
+            total_keys = len(source_dict)
+            missing_keys = len(missing_keys_set)
+            obsolete_keys = len(obsolete_keys_set)
+            self.update_statistics(total_keys, missing_keys, obsolete_keys)
 
-                # Update statistics using the lengths
-                total_keys = len(source_dict)
-                missing_keys = len(missing_keys_set)
-                obsolete_keys = len(obsolete_keys_set)
-                self.update_statistics(total_keys, missing_keys, obsolete_keys)
+            # Update UI with results
+            self.output_text.value = comparison_result
+            self.build_results_table(comparison_result)
+            self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
 
-                # Update UI with results
-                self.output_text.value = comparison_result
-                self.build_results_table(comparison_result)
-                self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
-
-            except Exception as e:
-                import traceback
-                error_details = traceback.format_exc()
-                print(f"Error details: {error_details}")
-                self.show_snackbar(f"Error: {str(e)}")
-                self.status_label.value = "Comparison failed"
-                # Reset statistics on error
-                self.update_statistics(0, 0, 0)
-            finally:
-                self.loading_ring.visible = False
-                self.page.update()
-
-            # Add this at the end of the method:
-            translate_button = self.compare_button.content.controls[1]
-            translate_button.visible = self.config["mt_enabled"]
+        except (ValueError, OSError) as error:
+            import traceback
+            error_details = traceback.format_exc()
+            print("Error details: %s", error_details)
+            self.show_snackbar("Error: %s" % error)
+            self.status_label.value = "Comparison failed"
+            # Reset statistics on error
+            self.update_statistics(0, 0, 0)
+        finally:
+            self.loading_ring.visible = False
             self.page.update()
+
+        # Add this at the end of the method:
+        translate_button = self.compare_button.content.controls[1]
+        translate_button.visible = self.config["mt_enabled"]
+        self.page.update()
 
     def group_keys_by_namespace(self, lines: list[str]) -> dict:
         groups = {}
@@ -1601,6 +1608,7 @@ class App:
                 actual_line = self.target_line_numbers.get(key, "?")
             else:
                 actual_line = self.target_line_numbers.get(key, "?")
+
         else:
             actual_line = "?"
 
@@ -1830,7 +1838,7 @@ class App:
         if hasattr(self, 'file_input'):
             self.file_input.update_colors(self.COLORS)
 
-        logging.info(f"Theme updated to '{theme_key}'. Current COLORS: {self.COLORS}")
+        logging.info("Theme updated to '%s'. Current COLORS: %s", theme_key, self.COLORS)
 
     def handle_case_change(self, e):
         self.config["ignore_case"] = e.control.value
@@ -2157,7 +2165,7 @@ class App:
             self.status_label.value = f"Compared {len(common_files)} files."
             
         except Exception as e:
-            logging.error(f"Directory comparison error: {str(e)}")
+            logging.error("Directory comparison error: %s", e)
             self.show_snackbar(f"Error comparing directories: {str(e)}")
             self.status_label.value = "Comparison failed"
             self.update_statistics(0, 0, 0)
@@ -2444,7 +2452,7 @@ class App:
             except UnicodeDecodeError:
                 with open(self.file_path, 'r', encoding='latin-1') as f:
                     file_content = f.read()
-                logging.warning(f"File {self.file_path} using fallback encoding latin-1")
+                logging.warning("File %s using fallback encoding latin-1", self.file_path)
             
             # Parse content based on file extension
             ext = Path(self.file_path).suffix.lower()
@@ -2516,20 +2524,20 @@ class App:
             self.update_statistics(len(source_dict), 0, 0)  # Update statistics panel
 
         except FileNotFoundError:
-            logging.error(f"File not found: {self.file_path}")
+            logging.error("File not found: %s", self.file_path)
             self.show_snackbar("Error: File not found")
             self.status_label.value = "Comparison failed: File not found"
         except UnicodeError as e:
-            logging.error(f"Encoding error: {str(e)}")
+            logging.error("Encoding error: %s", e)
             self.show_snackbar("Error: Unable to read file encoding")
             self.status_label.value = "Comparison failed: Encoding error"
         except ValueError as e:
-            logging.error(f"Validation error: {str(e)}")
-            self.show_snackbar(f"Error: {str(e)}")
+            logging.error("Validation error: %s", e)
+            self.show_snackbar("Error: %s" % e)
             self.status_label.value = "Comparison failed: Invalid content"
         except Exception as e:
-            logging.error(f"Unexpected error during comparison: {str(e)}")
-            self.show_snackbar(f"Unexpected error: {str(e)}")
+            logging.error("Unexpected error during comparison: %s", e)
+            self.show_snackbar("Unexpected error: %s" % e)
             self.status_label.value = "Comparison failed"
             raise  # Re-raise for debugging
         finally:

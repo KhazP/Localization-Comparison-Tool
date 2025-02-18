@@ -141,11 +141,15 @@ class ResultsViewComponent:
                 header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
                 result_rows.append(header)
                 for line in group_lines:
-                    row = self.create_result_row(line)
+                    key = line.split(" ", 1)[-1].split(":", 1)[0].strip()
+                    line_number = self.app.source_line_numbers.get(key, None) if getattr(self.app, "show_line_numbers", False) else None
+                    row = self.create_result_row(line, line_number=line_number)
                     result_rows.append(row)
         else:
             for line in sorted_lines:
-                row = self.create_result_row(line)
+                key = line.split(" ", 1)[-1].split(":", 1)[0].strip()
+                line_number = self.app.source_line_numbers.get(key, None) if getattr(self.app, "show_line_numbers", False) else None
+                row = self.create_result_row(line, line_number=line_number)
                 result_rows.append(row)
 
         self.original_result_rows = result_rows
@@ -155,7 +159,7 @@ class ResultsViewComponent:
         self.results_container.content = self.results_column
         self.page.update()
 
-    def create_result_row(self, line: str) -> Row:
+    def create_result_row(self, line: str, line_number: int = None) -> Row:
         if line.startswith("+"):
             icon = Icon(Icons.ADD, color="green")
         elif line.startswith("-"):
@@ -164,7 +168,14 @@ class ResultsViewComponent:
             icon = Icon(Icons.WARNING, color="yellow")
         else:
             icon = Icon(Icons.HELP, color="grey")
-        return Row(controls=[icon, Text(line)], spacing=8)
+        line_num_display = f"[Line {line_number}] " if line_number is not None else ""
+        return Row(
+            controls=[
+                icon,
+                Text(f"{line_num_display}{line}")
+            ],
+            spacing=8
+        )
 
     def group_keys_by_namespace(self, lines: list[str]) -> dict:
         groups = {}

@@ -53,28 +53,35 @@ import threading  # Add at top if not already imported
 
 # New configuration manager class
 class ConfigManager:
+    """Handles loading and saving configuration settings from a JSON file."""
+
     CONFIG_FILE = r"E:/ProgramTests/LocalizerAppMain/config.json"
     
     @staticmethod
     def load():
+        """Load configuration from the file. Returns a dict or empty dict on error."""
         if os.path.exists(ConfigManager.CONFIG_FILE):
             try:
                 with open(ConfigManager.CONFIG_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except Exception as e:
+            except (json.JSONDecodeError, IOError) as e:
                 print(f"Error loading config: {e}")
         return {}
     
     @staticmethod
     def save(config: dict):
+        """Save configuration to the file. Prints error if saving fails."""
         try:
             with open(ConfigManager.CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=4)
-        except Exception as e:
+        except (IOError, TypeError) as e:
             print(f"Error saving config: {e}")
 
 class App:
+    """Main GUI application class implementing localization comparison using flet."""
+
     def __init__(self, page: ft.Page):
+        """Initialize the application, load configuration and setup UI elements."""
         self.page = page
         # Add color cache
         self._cached_colors = {}
@@ -1709,6 +1716,7 @@ class App:
         return f"--- Summary ---\nAdded: {added}\nRemoved: {removed}"
 
     def open_settings(self, e):
+        """Open the settings dialog."""
         self.settings_dialog.open = True
         self.register_keyboard_navigation()  # Register handler when dialog opens
         self.page.update()
@@ -1724,7 +1732,7 @@ class App:
         self.page.update()
 
     def update_theme_colors(self):
-        """Update colors of all UI elements with caching"""
+        """Update the colors in the UI using the current theme settings."""
         # Get current theme and handle system theme - UPDATED
         theme_key = self.config.get("theme", "system")
         

@@ -1190,7 +1190,6 @@ class App:
             )
             self.page.overlay.append(save_dialog)
             save_dialog.save_file(
-                allowed_extensions=["json", "yaml", "xml", "lang"],
                 file_name=f"new_target{ext_target}"
             )
 
@@ -2080,9 +2079,9 @@ class App:
 
         try:
             source_files = {f.name: f for f in Path(self.source_dir_path).glob("*") 
-                            if f.suffix.lower() in SUPPORTED_FORMATS}
+                            if any(f.name.lower().endswith(ext) for ext in SUPPORTED_FORMATS)}
             target_files = {f.name: f for f in Path(self.target_dir_path).glob("*") 
-                            if f.suffix.lower() in SUPPORTED_FORMATS}
+                            if any(f.name.lower().endswith(ext) for ext in SUPPORTED_FORMATS)}
             
             common_files = set(source_files.keys()) & set(target_files.keys())
             if not common_files:

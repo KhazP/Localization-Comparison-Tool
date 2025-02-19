@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en" target-language="en">
+    <body>
+      <trans-unit id="welcome">
+        <source>Welcome to our application</source>
+        <target>Welcome to our application</target>
+      </trans-unit>
+      <trans-unit id="login.title">
+        <source>Login</source>
+        <target>Login</target>
+      </trans-unit>
+      <trans-unit id="login.username">
+        <source>Username</source>
+        <target>Username</target>
+      </trans-unit>
+      <trans-unit id="login.password">
+        <source>Password</source>
+        <target>Password</target>
+      </trans-unit>
+      <trans-unit id="user.greeting">
+        <source>Hello, {username}!</source>
+        <target>Hello, {username}!</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -344,7 +344,7 @@ def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) 
             # This returns {"translations": {...}, "line_numbers": {...}}
             return parser.parse(content)
         
-        if ext.lower() == '.xliff':
+        if ext.lower() in ['.xliff', '.xlf']:
             return parse_xliff(content)
         elif ext.lower() == '.properties':
             return parse_properties_file(content)

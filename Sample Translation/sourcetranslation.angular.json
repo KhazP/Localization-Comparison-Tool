@@ -1,0 +1,24 @@
+{
+  "COMMON": {
+    "LOADING": "Loading...",
+    "ERROR": "Error",
+    "SUCCESS": "Success"
+  },
+  "AUTH": {
+    "LOGIN": "Log In",
+    "LOGOUT": "Log Out",
+    "SIGNUP": "Sign Up",
+    "FORGOT_PASSWORD": "Forgot Password?",
+    "REMEMBER_ME": "Remember Me"
+  },
+  "FORM": {
+    "SUBMIT": "Submit",
+    "CANCEL": "Cancel",
+    "REQUIRED_FIELD": "This field is required",
+    "VALIDATION": {
+      "EMAIL": "Please enter a valid email address",
+      "PASSWORD": "Password must be at least 8 characters long",
+      "MATCH": "Passwords do not match"
+    }
+  }
+}

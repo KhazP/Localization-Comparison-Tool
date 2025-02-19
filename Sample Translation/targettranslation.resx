@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="ErrorMessage" xml:space="preserve">
+    <value>Bir hata oluştu. Lütfen tekrar deneyin.</value>
+  </data>
+  <data name="SaveButton" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="CancelButton" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="DeleteConfirmation" xml:space="preserve">
+    <value>{0} öğesini silmek istediğinizden emin misiniz?</value>
+  </data>
+</root>

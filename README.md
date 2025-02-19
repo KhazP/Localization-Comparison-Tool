@@ -3,7 +3,7 @@
 
 A modern, open-source localization tool built with [Flet](https://flet.dev/) for comparing and analyzing localization files. This tool helps streamline the localization process by making it easy to identify differences between translation files.
 
-
+[![GitHub stars](https://img.shields.io/github/stars/KhazP/LocalizerAppMain)](https://github.com/KhazP/LocalizerAppMain/stargazers)  
 ## Prerequisites
 
 ### Required:

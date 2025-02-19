@@ -7,12 +7,13 @@
 A modern, open-source localization tool built with [Flet](https://flet.dev/) for comparing and analyzing localization files. This tool helps streamline the localization process by making it easy to identify differences between translation files.
 
 [![GitHub stars](https://img.shields.io/github/stars/KhazP/LocalizerAppMain)](https://github.com/KhazP/LocalizerAppMain/stargazers)  
-## Prerequisites
 
 ## 🔍 Why Use LocalizerAppMain?  
 - **Streamline Comparisons**: Identify added/removed strings in seconds.  
 - **Multi-Format Support**: Works with CSV, XML, LANG, and more.  
-- **Developer-Ready**: Built with Python and Flet for easy customization.  
+- **Developer-Ready**: Built with Python and Flet for easy customization.
+  
+## Prerequisites
 
 ### Required:
 - **Git**: Download and install the latest version of [Git](https://git-scm.com/downloads/win)

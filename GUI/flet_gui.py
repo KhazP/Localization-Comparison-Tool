@@ -51,6 +51,8 @@ from components import (
 )
 import threading  # Add at top if not already imported
 from utils.logger_service import logger_service
+import datetime                        # Added to fix NameError
+from utils import history_manager      # New import for history management
 
 # Get logger from service
 logger = logger_service.get_logger()
@@ -910,6 +912,21 @@ class App:
             padding=24,
             border_radius=12,
         )
+        # Create a history button to the left of the settings button
+        self.history_button = IconButton(
+            icon=Icons.HISTORY,
+            icon_color=self.COLORS["text"]["secondary"],
+            tooltip="Comparison History",
+            on_click=self.open_history_dialog
+        )
+        self.settings_button = IconButton(
+            icon=Icons.SETTINGS,
+            icon_color=self.COLORS["text"]["secondary"],
+            tooltip="Settings",
+            on_click=self.open_settings
+        )
+        
+        # Update header row: place history_button to the left of settings_button
         self.content = Container(
             expand=True,
             height=page.height,
@@ -918,54 +935,32 @@ class App:
                 expand=True,
                 scroll=ScrollMode.AUTO,
                 controls=[
-                    # Header (fixed height)
+                    # Header: replace placeholder with history_button and settings_button
                     Container(
-                        content=Column(
+                        content=Row(
                             controls=[
-                                Row(
-                                    controls=[
-                                        # Add a placeholder container on the left with width for one button
-                                        Container(width=48),  # Width of one IconButton
-                                        Text(
-                                            "Localization Comparison Tool",
-                                            size=32,
-                                            weight="bold",
-                                            text_align="center",
-                                            expand=True,
-                                        ),
-                                        # Right-side container with single button
-                                        Container(
-                                            content=Row(
-                                                controls=[
-                                                    self.settings_button,
-                                                ],
-                                                spacing=0,
-                                            ),
-                                            width=48,  # Match left placeholder width
-                                        ),
-                                    ],
-                                    alignment="spaceBetween",
-                                ),
+                                self.history_button,
                                 Text(
-                                    "Compare Source and Target Localization Files",
-                                    size=16,
-                                    color=self.COLORS["text"]["secondary"],
+                                    "Localization Comparison Tool",
+                                    size=32,
+                                    weight="bold",
                                     text_align="center",
+                                    expand=True,
                                 ),
+                                self.settings_button,
                             ],
-                            horizontal_alignment="center",
-                            spacing=8,
+                            alignment="spaceBetween",
                         ),
                         padding=padding.only(bottom=24),
-                        height=100,  # Fixed height for header
+                        height=100,
                     ),
-                    # Main card with scrollable content (updated layout)
+                    # ...existing main card container...
                     self.main_card_container,
                 ],
                 spacing=32,
             ),
         )
-        page.add(self.content)
+        self.page.add(self.content)
         self.page.on_window_event = self.handle_window_event
 
         self.user_friendly_errors = USER_MESSAGES
@@ -1470,6 +1465,15 @@ class App:
             self.output_text.value = comparison_result
             self.build_results_table(comparison_result)
             self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
+
+            # Save the comparison report into history
+            history_entry = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "source_file": os.path.basename(self.source_file_path),
+                "target_file": os.path.basename(self.target_file_path),
+                "diff": comparison_result
+            }
+            history_manager.save_history(history_entry)
 
         except (ValueError, OSError) as error:
             import traceback
@@ -2546,6 +2550,82 @@ class App:
         finally:
             self.loading_ring.visible = False
             self.page.update()
+
+    def open_history_dialog(self, e):
+        """Open a dialog showing past comparison reports."""
+        history = history_manager.load_history()
+        if not history:
+            history_controls = [Text("No history found.", color=self.COLORS["text"]["secondary"])]
+        else:
+            history_controls = []
+            for i, entry in enumerate(reversed(history), start=1):
+                # Each entry shows timestamp, file names and a button to load diff
+                entry_text = Text(
+                    f"{entry['timestamp']}\nSource: {entry['source_file']}  Target: {entry['target_file']}",
+                    color=self.COLORS["text"]["secondary"],
+                    size=14,
+                )
+                load_btn = ElevatedButton(
+                    text="Load",
+                    on_click=lambda e, diff=entry['diff']: self.load_history_entry(diff),
+                    style=ButtonStyle(
+                        bgcolor=self.COLORS["bg"]["accent"],
+                        color=self.COLORS["text"]["primary"],
+                    )
+                )
+                history_controls.append(Row(controls=[entry_text, load_btn], alignment="spaceBetween"))
+                history_controls.append(Divider(color=self.COLORS["border"]["default"]))
+        self.history_dialog = ft.AlertDialog(
+            title=Text("Comparison History", size=20),
+            content=Container(
+                content=Column(
+                    controls=history_controls,
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+                width=500,
+                height=400,
+            ),
+            # Added a Clear History button alongside Close
+            actions=[
+                TextButton("Clear History", on_click=self.clear_history_entries),
+                TextButton("Close", on_click=lambda e: self.close_history_dialog())
+            ],
+        )
+        if self.history_dialog not in self.page.overlay:
+            self.page.overlay.append(self.history_dialog)
+        self.history_dialog.open = True
+        self.page.update()
+    
+    def clear_history_entries(self, e):
+        """Clear the history, update the dialog, and show a confirmation message."""
+        history_manager.clear_history()
+        self.show_snackbar("History cleared.")
+        # Refresh the history dialog content
+        self.history_dialog.content = Container(
+            content=Column(
+                controls=[Text("No history found.", color=self.COLORS["text"]["secondary"])],
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            width=500,
+            height=400,
+        )
+        self.page.update()
+    
+    def close_history_dialog(self):
+        self.history_dialog.open = False
+        self.page.update()
+    
+    def load_history_entry(self, diff: str):
+        # Initialize missing line numbers if not already set
+        if not hasattr(self, "target_line_numbers"):
+            self.target_line_numbers = {}
+        if not hasattr(self, "source_line_numbers"):
+            self.source_line_numbers = {}
+        # ...existing code...
+        self.output_text.value = diff
+        self.build_results_table(diff)
+        self.show_snackbar("History entry loaded.")
+        self.page.update()
 
 def main(page: ft.Page):
     App(page)

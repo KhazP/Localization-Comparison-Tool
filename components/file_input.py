@@ -86,10 +86,11 @@ class FileInputComponent:
                 file_size = self.get_readable_file_size(os.path.getsize(file_path))
                 line_count = self.get_file_lines(file_path)
                 field.value = f"{file_name} ({file_size}, {line_count} lines)"
-                
-                # Update file preview
-                self.update_file_preview(file_path, field_type)
 
+                if self.app.config["show_preview"]:
+                    self.update_file_preview(file_path, field_type)
+                    self.app.preview_section.visible = True
+                
                 if field_type == "source":
                     self.source_file_path = file_path
                     self.app.source_file_path = file_path

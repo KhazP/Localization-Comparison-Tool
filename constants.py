@@ -1,4 +1,4 @@
-SUPPORTED_FORMATS = [".csv", ".lang", ".txt", ".json", ".yaml", ".yml", ".xml", ".xliff", ".xlf", ".resx", ".properties", ".angular.json", ".ngjson"]
+SUPPORTED_FORMATS = [".csv", ".lang", ".txt", ".json", ".yaml", ".yml"]
 
 USER_MESSAGES = {
     "file_not_found": "File does not exist or is not valid. Please check the path.",

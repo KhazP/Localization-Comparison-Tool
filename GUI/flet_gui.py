@@ -394,7 +394,7 @@ class App:
             "font_size_scale": 1.0
         })
 
-        # Add accessibility section to settings dialog
+        # Update accessibility tab to remove the keyboard navigation option
         accessibility_tab = Tab(
             text="Accessibility",
             icon=Icons.ACCESSIBILITY,
@@ -402,12 +402,7 @@ class App:
                 content=Column(
                     controls=[
                         Text("Accessibility Settings", size=16, weight="bold"),
-                        ft.Checkbox(
-                            label="Enable Keyboard Navigation",
-                            value=self.config["enable_keyboard_nav"],
-                            on_change=self.handle_keyboard_nav_change,
-                            tooltip="Toggle keyboard navigation support"
-                        ),
+                        # Removed: Keyboard Navigation option
                         ft.Checkbox(
                             label="High Contrast Mode",
                             value=self.config["high_contrast"],
@@ -554,10 +549,12 @@ class App:
             bgcolor="transparent",
             expand=True,
         )
+        # Update results container to clip overflowing text
         self.results_container = Container(
             content=self.summary_text,
             padding=padding.all(16),
             expand=True,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE  # Changed from CLIP to HARD_EDGE
         )
         self.status_label = Text(
             value="Ready",
@@ -1033,7 +1030,7 @@ class App:
         # Initialize results view component
         self.results_view = ResultsViewComponent(page, self, self.COLORS)
         
-        # Create results area with header
+        # Update results area card to clip its content as well
         self.results_area = Container(
             content=Card(
                 content=Column(
@@ -1048,11 +1045,13 @@ class App:
                             content=self.results_view.results_container,
                             padding=padding.all(16),
                             expand=True,
+                            clip_behavior=ft.ClipBehavior.HARD_EDGE  # Changed here too
                         ),
                     ],
                     spacing=0,
                 ),
                 elevation=1,
+                clip_behavior=ft.ClipBehavior.HARD_EDGE  # Changed here too
             ),
             expand=True,
         )

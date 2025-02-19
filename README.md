@@ -21,8 +21,6 @@ A modern, open-source localization tool built with [Flet](https://flet.dev/) for
 ### Optional:
 - **Python 3.8+**: Only needed if building from source
 
-## Installation
-
 ## 🛠️ Installation  
 1. **For Translators**: Download the latest [release](https://github.com/KhazP/LocalizerAppMain/releases).  
 2. **For Developers**:  

@@ -1,6 +1,0 @@
-Metadata-Version: 2.2
-Name: localizer
-Version: 0.1
-Requires-Dist: pytest>=7.0.0
-Requires-Dist: pyyaml>=6.0.0
-Dynamic: requires-dist

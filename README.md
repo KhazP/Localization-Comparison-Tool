@@ -29,5 +29,3 @@ A modern, open-source localization tool built with [Flet](https://flet.dev/) for
    git clone https://github.com/KhazP/LocalizerAppMain.git  
    pip install -r requirements.txt
    ```
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/alpyalayg)

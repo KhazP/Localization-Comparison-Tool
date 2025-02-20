@@ -29,3 +29,5 @@ A modern, open-source localization tool built with [Flet](https://flet.dev/) for
    git clone https://github.com/KhazP/LocalizerAppMain.git  
    pip install -r requirements.txt
    ```
+## License  
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.  

@@ -18,7 +18,7 @@ import html
 from typing import Optional
 import re
 from functools import lru_cache
-from constants import SUPPORTED_FORMATS, USER_MESSAGES
+from core.constants import SUPPORTED_FORMATS, USER_MESSAGES
 try:
     import yaml
 except ImportError:
@@ -721,4 +721,4 @@ def validate_placeholders(source_text: str, target_text: str) -> tuple[bool, str
         
     return False, "; ".join(error_msg)
 
-from constants import SUPPORTED_FORMATS, USER_MESSAGES
+from core.constants import SUPPORTED_FORMATS, USER_MESSAGES

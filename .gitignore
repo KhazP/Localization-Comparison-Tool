@@ -37,3 +37,6 @@ env/
 
 # Git LFS (if you decide to use it later)
 .gitattributes
+
+# Test Files for QA
+Sample Translation/

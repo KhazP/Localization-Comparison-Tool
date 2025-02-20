@@ -2,7 +2,8 @@ import os
 import json
 import datetime
 
-HISTORY_FILE = os.path.join(os.path.dirname(__file__), "..", "history.json")
+HISTORY_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "config", "history.json")
 
 def load_history() -> list:
     """Load history entries from the JSON history file."""
@@ -10,8 +11,8 @@ def load_history() -> list:
         try:
             with open(HISTORY_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
-            return []
+        except Exception as e:
+            print(f"Error loading history: {e}")
     return []
 
 def save_history(entry: dict) -> None:

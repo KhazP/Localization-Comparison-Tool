@@ -1,3 +1,5 @@
+"""Theme definitions for the Localizer application."""
+
 THEMES = {
     "dark": {
         "bg": {

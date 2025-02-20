@@ -1,4 +1,5 @@
 import flet as ft
+import re  # Add this import
 from flet import (
     Checkbox,
     Column,
@@ -40,9 +41,7 @@ import logic
 import logging  # Add this import
 from pathlib import Path
 from core.constants import SUPPORTED_FORMATS, USER_MESSAGES, GOOGLE_CLOUD_LANGUAGES
-import json
-import re
-from themes import THEMES  # Add this import
+from core.themes import THEMES  # Updated import path
 from components import (
     FileInputComponent,
     ResultsViewComponent,

@@ -19,6 +19,7 @@ from typing import Optional
 import re
 from functools import lru_cache
 from core.constants import SUPPORTED_FORMATS, USER_MESSAGES
+from core.errors import ParsingError  # Updated import path
 try:
     import yaml
 except ImportError:

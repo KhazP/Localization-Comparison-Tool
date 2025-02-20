@@ -6,7 +6,8 @@ from colorama import init, Fore, Style
 import git
 from pathlib import Path
 from core.constants import SUPPORTED_FORMATS
-from core import logic
+from GUI import logic  # UPDATED import
+from GUI.logic import compare_translations  # Updated to import from GUI.logic
 
 # Initialize colorama
 init()
@@ -120,59 +121,6 @@ def get_file_content(repo_path, file_path, commit_id):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
-
-def compare_translations(old_translations, new_translations, ignore_case=False, ignore_whitespace=False, output_file=None):
-    """Compares two translation dictionaries, identifies changes, and prints/writes formatted output."""
-
-    added_count = 0
-    removed_count = 0
-    modified_count = 0
-
-    all_keys = sorted(set(old_translations.keys()) | set(new_translations.keys()))
-    max_key_length = max(len(key) for key in all_keys) if all_keys else 0
-
-    if output_file:
-        try:
-            outfile = open(output_file, "w", encoding="utf-8")
-        except Exception as e:
-            print(f"Error: Could not open output file '{output_file}': {e}")
-            return
-    else:
-        outfile = sys.stdout
-
-    for key in all_keys:
-        if key in old_translations and key in new_translations:
-            old_value = old_translations[key]
-            new_value = new_translations[key]
-
-            if ignore_case:
-                old_value = old_value.lower()
-                new_value = new_value.lower()
-
-            if ignore_whitespace:
-                old_value = old_value.strip()
-                new_value = new_value.strip()
-
-            if old_value == new_value:
-                print(f"  {key.ljust(max_key_length)} : {old_translations[key]}", file=outfile)
-            else:
-                print(Fore.YELLOW + f"- {key.ljust(max_key_length)} : {old_translations[key]}" + Style.RESET_ALL, file=outfile)
-                print(Fore.YELLOW + f"+ {key.ljust(max_key_length)} : {new_translations[key]}" + Style.RESET_ALL, file=outfile)
-                modified_count += 1
-        elif key in old_translations:
-            print(Fore.RED + f"- {key.ljust(max_key_length)} : {old_translations[key]}" + Style.RESET_ALL, file=outfile)
-            removed_count += 1
-        else:
-            print(Fore.GREEN + f"+ {key.ljust(max_key_length)} : {new_translations[key]}" + Style.RESET_ALL, file=outfile)
-            added_count += 1
-
-    print("\n--- Summary ---", file=outfile)
-    print(f"Added:     {Fore.GREEN}{added_count}{Style.RESET_ALL}", file=outfile)
-    print(f"Removed:   {Fore.RED}{removed_count}{Style.RESET_ALL}", file=outfile)
-    print(f"Modified:  {Fore.YELLOW}{modified_count}{Style.RESET_ALL}", file=outfile)
-
-    if output_file:
-        outfile.close()
 
 # --- Main part of the script ---
 

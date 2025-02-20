@@ -11,7 +11,6 @@ import xml.etree.ElementTree as ET
 import git  # If you plan on adding git functionality to this module later
 from colorama import init, Fore, Style
 from enum import Enum, auto
-import xml_parser  # New import added at top
 import json
 import requests
 import html
@@ -723,3 +722,4 @@ def validate_placeholders(source_text: str, target_text: str) -> tuple[bool, str
     return False, "; ".join(error_msg)
 
 from core.constants import SUPPORTED_FORMATS, USER_MESSAGES
+from parsers.xml_parser import XMLParser  # Updated import path

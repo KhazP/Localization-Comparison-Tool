@@ -53,6 +53,7 @@ from utils.logger_service import logger_service
 import datetime                        # Added to fix NameError
 from utils import history_manager      # New import for history management
 from core.config import ConfigManager
+from components.onboarding import OnboardingTutorial
 
 # Get logger from service
 logger = logger_service.get_logger()
@@ -1032,6 +1033,20 @@ class App:
 
         # Force a UI refresh after app loads to ensure theme consistency
         threading.Timer(0.1, self.force_refresh_ui).start()
+
+        # Initialize onboarding tutorial
+        self.tutorial = OnboardingTutorial(page, self)
+        
+        # Force a UI refresh after app loads and show tutorial if needed
+        threading.Timer(0.1, self.post_init).start()
+
+    def post_init(self):
+        """Perform post-initialization tasks."""
+        self.force_refresh_ui()
+        
+        # Show tutorial for first-time users
+        if not self.config.get("tutorial_completed", False):
+            self.tutorial.start_tutorial()
 
     def force_refresh_ui(self):
         """
@@ -2678,6 +2693,11 @@ class App:
         self.output_text.value = diff
         self.build_results_table(diff)
         self.show_snackbar("History entry loaded.")
+        self.page.update()
+
+    def save_config(self):
+        """Save current configuration to disk."""
+        ConfigManager.save(self.config)
         self.page.update()
 
 def main(page: ft.Page):

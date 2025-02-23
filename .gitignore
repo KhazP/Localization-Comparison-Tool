@@ -22,6 +22,8 @@ htmlcov/
 # Development and IDE
 .vscode/
 .idea/
+code-style.md
+copilot-instructions.md
 
 # Logs and temporary files
 *.log

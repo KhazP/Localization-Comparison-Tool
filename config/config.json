@@ -22,5 +22,6 @@
     "large_text": false,
     "font_size_scale": 1.0,
     "page_size": 50,
-    "use_infinite_scroll": true
+    "use_infinite_scroll": true,
+    "max_history_entries": 100
 }

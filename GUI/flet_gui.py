@@ -2621,6 +2621,9 @@ class App:
 
     def open_history_dialog(self, e):
         """Open a dialog showing past comparison reports."""
+        # Run purge on old entries (older than 30 days)
+        history_manager.purge_old_entries(30)
+        
         history = history_manager.load_history()
         if not history:
             history_controls = [Text("No history found.", color=self.COLORS["text"]["secondary"])]
@@ -2643,8 +2646,14 @@ class App:
                 )
                 history_controls.append(Row(controls=[entry_text, load_btn], alignment="spaceBetween"))
                 history_controls.append(Divider(color=self.COLORS["border"]["default"]))
+        
+        # Add count indicator to show how many entries are available
+        history_count = len(history)
+        max_entries = self.config.get("max_history_entries", 100)
+        title_text = f"Comparison History ({history_count}/{max_entries})"
+        
         self.history_dialog = ft.AlertDialog(
-            title=Text("Comparison History", size=20),
+            title=Text(title_text, size=20),
             content=Container(
                 content=Column(
                     controls=history_controls,

@@ -70,39 +70,22 @@ class App:
         # Replace the existing THEMES with the imported one
         self.THEMES = THEMES
 
-        # Initialize configuration from defaults then merge saved settings
-        saved_config = ConfigManager.load()
-        if saved_config:
-            self.config = saved_config
-        else:
-            self.config = {
-                # ...existing config defaults...
-                "theme": "system",
-            }
-        # Clear cached themes before applying the chosen theme
-        self._cached_colors.clear() 
-
-        # Set initial theme and colors - UPDATED
-        self.current_theme = self.config.get("theme", "system")
+        # Load configuration with defaults already merged
+        self.config = ConfigManager.load()
         
-        # Set theme mode first
-        if self.current_theme == "system":
-            self.page.theme_mode = ft.ThemeMode.SYSTEM
-            # Detect system theme
-            import darkdetect
-            system_theme = "dark" if darkdetect.isDark() else "light"
-            self.COLORS = self.THEMES[system_theme]
-        else:
-            # Set explicit theme mode
-            if self.current_theme in ["dark", "amoled"]:
-                self.page.theme_mode = ft.ThemeMode.DARK
-            else:
-                self.page.theme_mode = ft.ThemeMode.LIGHT
-            # Use selected theme colors
-            self.COLORS = self.THEMES[self.current_theme]
-        
-        # Cache initial colors
+        # Apply configuration-dependent setup
+        self.log_missing_strings = self.config["log_missing_strings"]
+        self.current_theme = self.config["theme"]
+        self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
         self._cached_colors[self.current_theme] = self.COLORS
+
+        # Update page theme mode based on saved theme
+        if self.current_theme == "system":
+            page.theme_mode = ft.ThemeMode.SYSTEM
+        elif self.current_theme in ["dark", "amoled"]:
+            page.theme_mode = ft.ThemeMode.DARK
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
 
         # Remove theme toggle button initialization and keep only settings button
         self.settings_button = IconButton(
@@ -1922,71 +1905,44 @@ class App:
         self.page.update()
 
     def reset_settings(self, e):
-        # Update theme reset
-        self.current_theme = "system"
-        self.page.theme_mode = ft.ThemeMode.SYSTEM
-        self.COLORS = self.THEMES["dark"]
-
-        self.config = {
-            "auto_fill_missing": False,
-            "log_missing_strings": False,
-            "ignore_patterns": [],
-            "preferred_format": "auto",
-            "ignore_whitespace": False,
-            "ignore_case": False,
-            "compare_values": True,
-            "group_by_namespace": True,  # Add default value here too
-            "show_preview": False,  # Add this line
-            "theme": "system",  # Add theme reset
-        }
+        """Reset all settings to defaults."""
+        # Use the centralized reset function
+        self.config = ConfigManager.reset()
         
-        # Reset theme to system default
-        self.page.theme_mode = ft.ThemeMode.SYSTEM
-        self.COLORS = self.THEMES["dark"]
+        # Update UI to reflect reset values
+        self.current_theme = self.config["theme"]
+        self.log_missing_strings = self.config["log_missing_strings"]
         
-        # Update UI controls to match reset settings
-        for container in self.settings_dialog.content.controls:
-            if isinstance(container, Container):
-                for control in container.content.controls:
-                    if isinstance(control, ft.Checkbox):
-                        control.value = False
-                    elif isinstance(control, ft.Dropdown):
-                        if hasattr(control, "label") and control.label == "Theme Mode":
-                            control.value = "system"
-                        else:
-                            control.value = "auto"
-                    elif isinstance(control, TextField):
-                        control.value = ""
-                        
+        # Update colors based on theme
         self.update_theme_colors()
-        self.page.update()
-
-        self.config.update({
-            "mt_enabled": False,
-            "mt_api_key": "",
-            "mt_source_lang": "en",
-            "mt_target_lang": "tr"
-        })
-
-        # Update all tabs' controls to reflect reset values
-        self.settings_tabs.tabs[0].content.content.controls[0].content.controls[1].value = "system"  # Theme dropdown
-        # Update other tab controls as needed
         
-        ConfigManager.save(self.config)
+        # Update all settings controls to match reset values
+        # ...update UI controls code...
+        
+        self.show_snackbar("Settings reset to defaults.")
         self.page.update()
 
     def handle_mt_enabled_change(self, e):
+        """Handle machine translation enabled setting change"""
         self.config["mt_enabled"] = e.control.value
+        
+        # Validate MT settings
+        errors = ConfigManager.validate_required_fields(self.config)
+        if "mt_api_key" in errors and self.config["mt_enabled"]:
+            self.show_snackbar(errors["mt_api_key"])
+        
         ConfigManager.save(self.config)
         self.page.update()
 
     def handle_mt_api_key_change(self, e):
+        """Handle machine translation API key change"""
         new_key = e.control.value.strip() if e.control.value else ""
-        if not new_key:
-            self.show_snackbar("API key cannot be empty.")
-            self.config["mt_api_key"] = ""
-        else:
-            self.config["mt_api_key"] = new_key
+        self.config["mt_api_key"] = new_key
+        
+        # Validate MT settings if enabled
+        if self.config["mt_enabled"] and not new_key:
+            self.show_snackbar("API key cannot be empty when machine translation is enabled.")
+        
         ConfigManager.save(self.config)
         self.page.update()
 

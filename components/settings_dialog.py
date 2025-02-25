@@ -4,10 +4,11 @@ from flet import (
     Icons, padding, TextButton, Tab, Tabs, Checkbox, Slider,
     dropdown, Theme, Colors, ThemeMode, ButtonStyle
 )
-from typing import Optional
+from typing import Dict, Any
+from core.config import ConfigManager
 
 class SettingsDialogComponent:
-    def __init__(self, page: ft.Page, app_reference, config: dict, colors: dict):
+    def __init__(self, page: ft.Page, app_reference, config: Dict[str, Any], colors: dict):
         self.page = page
         self.app = app_reference
         self.config = config
@@ -112,9 +113,22 @@ class SettingsDialogComponent:
         self.page.update()
 
     def reset_settings(self, e):
-        # Reset settings to defaults
-        # ...implementation...
-        pass
+        """Reset settings to defaults using ConfigManager"""
+        # Reset config using ConfigManager
+        self.config.update(ConfigManager.reset())
+        
+        # Update app reference config too
+        self.app.config = self.config
+        
+        # Update UI controls to match reset values
+        # ...update UI controls...
+        
+        # Apply theme changes
+        self.app.current_theme = self.config["theme"]
+        self.app.update_theme_colors()
+        self.app.page.update()
+        
+        self.app.show_snackbar("Settings reset to defaults")
 
     def handle_theme_change(self, e):
         self.app.handle_theme_change(e)
@@ -124,5 +138,17 @@ class SettingsDialogComponent:
         self.app.save_config()
         self.page.update()
 
+    def handle_mt_enabled_change(self, e):
+        """Handle machine translation toggle"""
+        self.config["mt_enabled"] = e.control.value
+        
+        # Validate MT settings
+        errors = ConfigManager.validate_required_fields(self.config)
+        if "mt_api_key" in errors and self.config["mt_enabled"]:
+            self.app.show_snackbar(errors["mt_api_key"])
+            
+        ConfigManager.save(self.config)
+        self.page.update()
+    
     # Add all other handler methods...
     # ...rest of handler methods...

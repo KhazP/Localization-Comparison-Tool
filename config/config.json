@@ -13,15 +13,14 @@
     "mt_api_key": "",
     "mt_source_lang": "en",
     "mt_target_lang": "tr",
-    "theme_mode": "light",
-    "custom_theme": "minimalist",
-    "tutorial_completed": false,
     "theme": "system",
+    "custom_theme": "minimalist",
     "enable_keyboard_nav": true,
     "high_contrast": false,
     "large_text": false,
     "font_size_scale": 1.0,
     "page_size": 50,
     "use_infinite_scroll": true,
-    "max_history_entries": 100
+    "max_history_entries": 100,
+    "tutorial_completed": false
 }

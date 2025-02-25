@@ -226,18 +226,6 @@ class App:
                                                 value=self.config["group_by_namespace"],
                                                 on_change=self.handle_group_by_namespace_change
                                             ),
-                                            ft.Dropdown(
-                                                label="Preferred Format",
-                                                value=self.config["preferred_format"],
-                                                options=[
-                                                    ft.dropdown.Option("auto", "Auto-Detect"),
-                                                    ft.dropdown.Option("json", "JSON"),
-                                                    ft.dropdown.Option("yaml", "YAML"),
-                                                    ft.dropdown.Option("lang", ".lang"),
-                                                    ft.dropdown.Option("xml", "XML"),
-                                                ],
-                                                on_change=self.handle_format_change,
-                                            ),
                                         ],
                                         spacing=8
                                     ),
@@ -594,6 +582,8 @@ class App:
                 color=self.COLORS["text"]["primary"],
                 height=36,
                 style=ButtonStyle(shape=RoundedRectangleBorder(radius=8)),
+                focusable=True,
+                data={"tab_index": 1 if is_source else 2}
             )
             # Wrap in a container to enable hover state transition.
             hover_button = Container(
@@ -2377,11 +2367,18 @@ class App:
 
     def handle_tab_navigation(self, shift: bool):
         """Handle Tab key navigation"""
-        focusable_controls = [
-            control for control in self.page.controls 
-            if getattr(control, "focusable", False)
-        ]
-        
+        def get_focusable_controls(control):
+            """Recursively collect focusable controls"""
+            focusable_controls = []
+            if getattr(control, "focusable", False):
+                focusable_controls.append(control)
+            if hasattr(control, "controls"):
+                for child in control.controls:
+                    focusable_controls.extend(get_focusable_controls(child))
+            return focusable_controls
+
+        focusable_controls = get_focusable_controls(self.page)
+
         if not focusable_controls:
             return
 

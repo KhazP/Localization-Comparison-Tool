@@ -638,31 +638,43 @@ def translate_missing_keys(source_dict: dict, target_dict: dict,
 def save_translations(translations: dict, filepath: str, format: str = "auto") -> tuple[bool, str]:
     """Save translations to file in specified format. Returns (success, error_message)"""
     try:
-        format = format.lower() if format != "auto" else filepath.split('.')[-1].lower()
         content = None
-
-        if format in ['json', 'yaml', 'yml']:
-            # Sort keys for consistent output
-            sorted_translations = dict(sorted(translations.items()))
-            
-            if format == 'json':
-                content = json.dumps(sorted_translations, indent=2, ensure_ascii=False)
-            else:  # yaml format
-                if not yaml:
-                    return False, "PyYAML not installed"
-                content = yaml.dump(sorted_translations, allow_unicode=True, sort_keys=False)
-        
-        elif format == 'lang':
-            # Basic key=value format
-            lines = [f"{k}={v}" for k, v in sorted(translations.items())]
-            content = '\n'.join(lines)
-        
-        else:  # Default to XML
+        if format == "json":
+            import json
+            content = json.dumps(translations, indent=4, ensure_ascii=False)
+        elif format in {"yaml", "yml"}:
+            import yaml
+            content = yaml.dump(translations, allow_unicode=True)
+        elif format == "lang":
+            content = "\n".join(f"{key}={value}" for key, value in translations.items())
+        elif format == "xml":
+            import xml.etree.ElementTree as ET
             root = ET.Element("resources")
             for key, value in sorted(translations.items()):
                 string_elem = ET.SubElement(root, "string", name=key)
                 string_elem.text = value
             content = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding='unicode', method='xml')
+        elif format == "auto":
+            ext = os.path.splitext(filepath)[1].lower()
+            if ext == ".json":
+                import json
+                content = json.dumps(translations, indent=4, ensure_ascii=False)
+            elif ext in {".yaml", ".yml"}:
+                import yaml
+                content = yaml.dump(translations, allow_unicode=True)
+            elif ext == ".lang":
+                content = "\n".join(f"{key}={value}" for key, value in translations.items())
+            elif ext == ".xml":
+                import xml.etree.ElementTree as ET
+                root = ET.Element("resources")
+                for key, value in sorted(translations.items()):
+                    string_elem = ET.SubElement(root, "string", name=key)
+                    string_elem.text = value
+                content = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding='unicode', method='xml')
+            else:
+                return False, "Unsupported file extension for auto-detection"
+        else:
+            return False, "Unsupported format"
 
         if content is not None:
             with open(filepath, 'w', encoding='utf-8') as f:

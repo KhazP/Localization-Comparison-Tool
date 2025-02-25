@@ -226,6 +226,18 @@ class App:
                                                 value=self.config["group_by_namespace"],
                                                 on_change=self.handle_group_by_namespace_change
                                             ),
+                                            ft.Dropdown(
+                                                label="Preferred Format",
+                                                value=self.config["preferred_format"],
+                                                options=[
+                                                    ft.dropdown.Option("auto", "Auto-Detect"),
+                                                    ft.dropdown.Option("json", "JSON"),
+                                                    ft.dropdown.Option("yaml", "YAML"),
+                                                    ft.dropdown.Option("lang", ".lang"),
+                                                    ft.dropdown.Option("xml", "XML"),
+                                                ],
+                                                on_change=self.handle_format_change,
+                                            ),
                                         ],
                                         spacing=8
                                     ),

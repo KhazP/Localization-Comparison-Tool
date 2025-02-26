@@ -1,7 +1,7 @@
 import flet as ft
 from flet import (
     Card, Container, Row, Column, Text, VerticalDivider,
-    padding, FontWeight
+    padding, FontWeight, ResponsiveRow
 )
 
 class StatsPanelComponent:
@@ -60,15 +60,12 @@ class StatsPanelComponent:
         """
         return Card(
             content=Container(
-                content=Row(
+                content=ResponsiveRow(
                     controls=[
-                        self._create_stat_container("Total Keys", self.stats_text_total),
-                        VerticalDivider(color=self.colors["border"]["default"], width=1),
-                        self._create_stat_container("Missing in Target", self.stats_text_missing),
-                        VerticalDivider(color=self.colors["border"]["default"], width=1),
-                        self._create_stat_container("Missing in Source", self.stats_text_obsolete),
-                        VerticalDivider(color=self.colors["border"]["default"], width=1),
-                        self._create_stat_container("Translated %", self.stats_text_percentage),
+                        self._create_stat_container("Total Keys", self.stats_text_total, {"sm": 6, "md": 3, "lg": 3}),
+                        self._create_stat_container("Missing in Target", self.stats_text_missing, {"sm": 6, "md": 3, "lg": 3}),
+                        self._create_stat_container("Missing in Source", self.stats_text_obsolete, {"sm": 6, "md": 3, "lg": 3}),
+                        self._create_stat_container("Translated %", self.stats_text_percentage, {"sm": 6, "md": 3, "lg": 3}),
                     ],
                     alignment="center",
                 ),
@@ -78,12 +75,13 @@ class StatsPanelComponent:
             elevation=1,
         )
 
-    def _create_stat_container(self, label: str, stat_text: Text):
+    def _create_stat_container(self, label: str, stat_text: Text, col=None):
         """Create a container for a single statistic.
         
         Args:
             label: The label text for the statistic
             stat_text: The Text control displaying the statistic value
+            col: Column definition for ResponsiveRow
             
         Returns:
             Container: A formatted container with the statistic and its label
@@ -99,6 +97,7 @@ class StatsPanelComponent:
             ),
             padding=padding.all(16),
             expand=True,
+            col=col,
         )
 
     def update_stats(self, total_keys: int, missing_keys: int, obsolete_keys: int):

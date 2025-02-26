@@ -54,6 +54,10 @@ import datetime                        # Added to fix NameError
 from utils import history_manager      # New import for history management
 from core.config import ConfigManager
 from components.onboarding import OnboardingTutorial
+import asyncio
+import time
+from utils.file_cache_service import file_cache_service
+from utils.file_processing_service import file_processing_service
 
 # Get logger from service
 logger = logger_service.get_logger()
@@ -1169,116 +1173,247 @@ class App:
             self.loading_ring.visible = False
             self.page.update()
 
-    def compare_files_gui(self, event):
+    async def compare_files_async(self, event):
         """
-        Compare source and target files and update the UI with the comparison result.
+        Compare source and target files asynchronously to keep UI responsive.
         """
         self.loading_ring.visible = True
         self.status_label.value = "Comparing files..."
         self.page.update()
-
+        
+        # Update progress bar to show activity
+        def update_progress(progress_value):
+            self.loading_ring.value = progress_value if progress_value < 1.0 else None
+            self.page.update()
+        
         try:
-            try:
-                with open(self.source_file_path, 'r', encoding='utf-8') as f:
-                    source_content = f.read()
-            except UnicodeDecodeError:
-                with open(self.source_file_path, 'r', encoding='latin-1') as f:
-                    source_content = f.read()
-
-            try:
-                with open(self.target_file_path, 'r', encoding='utf-8') as f:
-                    target_content = f.read()
-            except UnicodeDecodeError:
-                with open(self.target_file_path, 'r', encoding='latin-1') as f:
-                    target_content = f.read()
-
-            ext_source = Path(self.source_file_path).suffix.lower()
-            ext_target = Path(self.target_file_path).suffix.lower()
-
-            source_result = logic.parse_content_by_ext(source_content, ext_source)
-            target_result = logic.parse_content_by_ext(target_content, ext_target)
+            # Start async comparison
+            task_id = file_processing_service.compare_files_async(
+                self.source_file_path, 
+                self.target_file_path,
+                self.config,
+                update_progress
+            )
             
-            if isinstance(source_result, dict) and "translations" in source_result:
-                source_dict = source_result["translations"]
-                source_lines = source_result.get("line_numbers", {})
-            else:
-                source_dict = source_result
-                source_lines = {}
-            if isinstance(target_result, dict) and "translations" in target_result:
-                target_dict = target_result["translations"]
-                target_lines = target_result.get("line_numbers", {})
-            else:
-                target_dict = target_result
-                target_lines = {}
-
+            # Poll for results
+            while not file_processing_service.is_task_complete(task_id):
+                await asyncio.sleep(0.1)  # Short sleep to avoid blocking UI
+                
+            # Get the final result
+            result = file_processing_service.get_task_status(task_id)
+            
+            if result['status'] == 'error':
+                raise Exception(result['error'])
+                
+            # Process successful result
+            comparison_data = result['result']
+            comparison_result = comparison_data['comparison']
+            source_dict = comparison_data['source_dict']
+            target_dict = comparison_data['target_dict']
+            source_lines = comparison_data['source_lines']
+            target_lines = comparison_data['target_lines']
+            stats = comparison_data['stats']
+            
+            # Store line numbers for reference
             self.source_line_numbers = source_lines
             self.target_line_numbers = target_lines
-
-            logging.info("Source file entries: %s", len(source_dict))
-            logging.info("Target file entries: %s", len(target_dict))
-            logging.info("Sample source entries: %s", dict(list(source_dict.items())[:3]))
-            logging.info("Sample target entries: %s", dict(list(target_dict.items())[:3]))
-
-            ignore_patterns = []
-            pattern_str = self.ignore_pattern_field.value.strip()
-            if pattern_str:
-                ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
-
-            mt_settings = {
-                'enabled': self.config["mt_enabled"],
-                'api_key': self.config["mt_api_key"],
-                'source_lang': self.config["mt_source_lang"],
-                'target_lang': self.config["mt_target_lang"]
-            }
-
-            comparison_result = logic.compare_translations(
-                target_dict,
-                source_dict,
-                ignore_case=self.config["ignore_case"],
-                ignore_whitespace=self.config["ignore_whitespace"],
-                is_gui=True,
-                include_summary=False,
-                compare_values=self.config["compare_values"],
-                ignore_patterns=self.config["ignore_patterns"],
-                log_missing_keys=self.config["log_missing_strings"],
-                auto_fill_missing=self.config["auto_fill_missing"],
-                mt_settings=mt_settings
-            )
-
-            missing_keys_set = set(source_dict.keys()) - set(target_dict.keys())
-            obsolete_keys_set = set(target_dict.keys()) - set(source_dict.keys())
-
-            total_keys = len(source_dict)
-            missing_keys = len(missing_keys_set)
-            obsolete_keys = len(obsolete_keys_set)
-            self.update_statistics(total_keys, missing_keys, obsolete_keys)
-
-            self.output_text.value = comparison_result
+            
+            # Update UI with results
+            self.update_statistics(stats['total_keys'], stats['missing_keys'], stats['obsolete_keys'])
+            
+            # Build the comparison view
             self.build_results_table(comparison_result)
-            self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
-
-            history_entry = {
-                "timestamp": datetime.datetime.now().isoformat(),
-                "source_file": os.path.basename(self.source_file_path),
-                "target_file": os.path.basename(self.target_file_path),
-                "diff": comparison_result
-            }
-            history_manager.save_history(history_entry)
-
-        except (ValueError, OSError) as err:
-            import traceback
-            error_details = traceback.format_exc()
-            print("Error details: %s", error_details)
-            self.show_snackbar("Error: %s" % err)
+            
+            # Show completed status
+            self.status_label.value = (
+                f"Comparison complete: {stats['total_keys']} keys, "
+                f"{stats['missing_keys']} missing, {stats['obsolete_keys']} obsolete"
+            )
+                
+        except FileNotFoundError as e:
+            logging.error(f"File not found: {str(e)}")
+            self.show_snackbar("Error: File not found")
+            self.status_label.value = "Comparison failed: File not found"
+        except UnicodeError as e:
+            logging.error(f"Encoding error: {str(e)}")
+            self.show_snackbar("Error: Unable to read file encoding")
+            self.status_label.value = "Comparison failed: Encoding error"
+        except Exception as e:
+            logging.error(f"Error during comparison: {str(e)}")
+            self.show_snackbar(f"Error: {str(e)}")
+            self.status_label.value = "Comparison failed"
+        finally:
+            # Hide loading indicator when done
+            self.loading_ring.visible = False
+            self.page.update()
+    
+    async def compare_directories_async(self, event):
+        """
+        Compare all matching files in source and target directories asynchronously
+        with improved error handling and UI feedback.
+        """
+        self.loading_ring.visible = True
+        self.status_label.value = "Comparing directories..."
+        self.page.update()
+        
+        # Update progress bar to show activity
+        def update_progress(progress_value):
+            self.loading_ring.value = progress_value if progress_value < 1.0 else None
+            self.page.update()
+        
+        try:
+            # Start async directory comparison
+            task_id = file_processing_service.compare_directories_async(
+                self.source_dir_path,
+                self.target_dir_path,
+                self.config,
+                update_progress
+            )
+            
+            # Poll for results
+            while not file_processing_service.is_task_complete(task_id):
+                await asyncio.sleep(0.1)  # Short sleep to avoid blocking UI
+                
+            # Get the final result
+            result = file_processing_service.get_task_status(task_id)
+            
+            if result['status'] == 'error':
+                raise Exception(result['error'])
+                
+            # Process successful result
+            comparison_data = result['result']
+            if 'error' in comparison_data:
+                self.show_snackbar(comparison_data['error'])
+                return
+                
+            file_results = comparison_data['file_results']
+            stats = comparison_data['stats']
+            
+            # Clear existing tabs and recreate
+            self.results_tabs.tabs.clear()
+            
+            # Create tab for each file
+            for filename, file_data in file_results.items():
+                if 'error' in file_data:
+                    # Create tab for file with error
+                    self.results_tabs.tabs.append(
+                        ft.Tab(
+                            text=filename,
+                            content=Container(
+                                content=Text(f"Error: {file_data['error']}"),
+                                padding=10,
+                            )
+                        )
+                    )
+                else:
+                    # Create tab for successful comparison
+                    stats = file_data['stats']
+                    comparison = file_data['comparison']
+                    
+                    self.results_tabs.tabs.append(
+                        ft.Tab(
+                            text=filename,
+                            content=Container(
+                                content=Column(
+                                    controls=[
+                                        Text(
+                                            f"Total: {stats['total_keys']} keys | "
+                                            f"Missing: {stats['missing_keys']} | "
+                                            f"Obsolete: {stats['obsolete_keys']}",
+                                            size=14,
+                                            color=self.COLORS["text"]["secondary"],
+                                        ),
+                                        TextField(
+                                            value=comparison,
+                                            multiline=True,
+                                            read_only=True,
+                                            min_lines=10,
+                                            max_lines=None,
+                                            text_style=TextStyle(
+                                                color=self.COLORS["text"]["secondary"],
+                                                size=14,
+                                                font_family="Consolas",
+                                            ),
+                                        ),
+                                    ],
+                                    scroll=ft.ScrollMode.AUTO,
+                                    spacing=8,
+                                ),
+                                padding=10,
+                            ),
+                        )
+                    )
+            
+            # Update statistics
+            self.update_statistics(
+                stats['total_files'],
+                stats['total_missing'],
+                stats['total_obsolete']
+            )
+            
+            # Make tabs visible and update container
+            self.results_tabs.visible = True
+            self.results_container.content = self.results_tabs
+            
+            # Update status message
+            self.status_label.value = (
+                f"Compared {stats['total_files']} files. "
+                f"Found {stats['total_missing']} missing and {stats['total_obsolete']} obsolete keys."
+            )
+        
+        except Exception as e:
+            logging.error(f"Directory comparison error: {str(e)}")
+            self.show_snackbar(f"Error comparing directories: {str(e)}")
             self.status_label.value = "Comparison failed"
             self.update_statistics(0, 0, 0)
         finally:
             self.loading_ring.visible = False
             self.page.update()
-
-        translate_button = self.compare_button.content.controls[1]
-        translate_button.visible = self.config["mt_enabled"]
-        self.page.update()
+    
+    def compare_files_gui(self, event):
+        """
+        Entry point for file comparison that launches the async operation.
+        This replaces the original synchronous method.
+        """
+        asyncio.run_coroutine_threadsafe(
+            self.compare_files_async(event), 
+            asyncio.get_event_loop()
+        )
+    
+    def compare_directories(self, event):
+        """
+        Entry point for directory comparison that launches the async operation.
+        This replaces the original synchronous method.
+        """
+        asyncio.run_coroutine_threadsafe(
+            self.compare_directories_async(event), 
+            asyncio.get_event_loop()
+        )
+    
+    def get_file_lines(self, file_path):
+        """
+        Count lines in a file using the optimized file cache service.
+        """
+        try:
+            return file_cache_service.count_lines(file_path)
+        except Exception as e:
+            logging.error(f"Error counting lines: {str(e)}")
+            return 0
+    
+    def update_file_preview(self, file_path: str, field_type: str):
+        """
+        Update file preview using the optimized file cache service.
+        """
+        try:
+            preview_text = file_cache_service.preview_file(file_path)
+            
+            preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
+            preview_field.value = preview_text
+            
+        except Exception as e:
+            logging.error(f"Error reading preview: {str(e)}")
+            preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
+            preview_field.value = "Error reading file preview"
 
     def _on_browse_hover(self, e, button):
         hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"

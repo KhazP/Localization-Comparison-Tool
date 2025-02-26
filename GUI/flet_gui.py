@@ -2730,9 +2730,20 @@ class App:
         else:
             history_controls = []
             for i, entry in enumerate(reversed(history), start=1):
+                # Format timestamp for display - handle both ISO and old format
+                timestamp = entry.get('timestamp', '')
+                try:
+                    if 'T' in timestamp:  # ISO format
+                        dt = datetime.datetime.fromisoformat(timestamp)
+                    else:  # Old format
+                        dt = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+                    formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                except (ValueError, TypeError):
+                    formatted_time = timestamp  # Fallback to raw timestamp if parsing fails
+                
                 # Each entry shows timestamp, file names and a button to load diff
                 entry_text = Text(
-                    f"{entry['timestamp']}\nSource: {entry['source_file']}  Target: {entry['target_file']}",
+                    f"{formatted_time}\nSource: {entry['source_file']}  Target: {entry['target_file']}",
                     color=self.COLORS["text"]["secondary"],
                     size=14,
                 )

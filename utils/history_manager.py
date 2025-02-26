@@ -62,7 +62,13 @@ def purge_old_entries(max_age_days=30) -> None:
     
     for entry in history:
         try:
-            entry_time = datetime.datetime.strptime(entry['timestamp'], "%Y-%m-%d %H:%M:%S")
+            # Support both ISO format and the old format
+            timestamp = entry.get('timestamp', '')
+            if 'T' in timestamp:  # ISO format (YYYY-MM-DDTHH:MM:SS.ssssss)
+                entry_time = datetime.datetime.fromisoformat(timestamp)
+            else:  # Old format (YYYY-MM-DD HH:MM:SS)
+                entry_time = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+                
             age = (current_time - entry_time).days
             if age <= max_age_days:
                 filtered_history.append(entry)

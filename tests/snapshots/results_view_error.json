@@ -1,0 +1,10 @@
+{
+  "content": {
+    "bgcolor": "transparent",
+    "disabled": false,
+    "type": "TextField",
+    "value": "An error occurred during comparison",
+    "visible": true
+  },
+  "disabled": false,
+  "padding": 

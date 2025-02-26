@@ -18,7 +18,7 @@ from typing import Optional
 import re
 from functools import lru_cache
 from core.constants import SUPPORTED_FORMATS, USER_MESSAGES
-from core.errors import ParsingError  # Updated import path
+from core.errors import ParsingError, FileParsingError, CSVParsingError, UnknownFormatError  # Updated import path
 try:
     import yaml
 except ImportError:
@@ -101,18 +101,6 @@ class YAMLParser(TranslationParser):
         else:
             logging.error("PyYAML not installed")
             return {}
-
-class FileParsingError(Exception):
-    """Base exception for file parsing issues."""
-    pass
-
-class CSVParsingError(FileParsingError):
-    """Raised when CSV parsing fails."""
-    pass
-
-class UnknownFormatError(FileParsingError):
-    """Raised when file format is not recognized."""
-    pass
 
 @lru_cache(maxsize=32)
 def read_csv_file(content, delimiter=',', has_header=True, key_column='key', value_column='value'):

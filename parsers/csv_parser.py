@@ -4,20 +4,16 @@ from typing import Dict, Optional, Tuple, Union
 from .base_parser import TranslationParser
 try:
     from ..utils.logger_service import logger_service
-    from ..errors import ParsingError
+    from ..core.errors import CSVParsingError
 except ImportError:
     # Handle case when running directly
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).parent.parent))
     from utils.logger_service import logger_service
-    from errors import ParsingError
+    from core.errors import CSVParsingError
 
 logger = logger_service.get_logger()
-
-class CSVParsingError(ParsingError):
-    """Specific exception for CSV parsing errors."""
-    pass
 
 class CSVParser(TranslationParser):
     def __init__(self, 

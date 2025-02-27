@@ -705,7 +705,7 @@ class App:
         # Add preview containers after file input initialization
         self.preview_section = Container(
             visible=False,
-            content=Row(
+            content=ResponsiveRow(
                 controls=[
                     Container(
                         content=Column(
@@ -731,13 +731,16 @@ class App:
                                     border_radius=8,
                                     padding=8,
                                     bgcolor=self.COLORS["bg"]["input"],
+                                    expand=True,
                                 ),
                             ],
                             spacing=8,
+                            expand=True,
                         ),
+                        col={"sm": 12, "md": 6},
+                        padding=5,
                         expand=True,
                     ),
-                    Container(width=16),  # Spacer
                     Container(
                         content=Column(
                             controls=[
@@ -762,16 +765,20 @@ class App:
                                     border_radius=8,
                                     padding=8,
                                     bgcolor=self.COLORS["bg"]["input"],
+                                    expand=True,
                                 ),
                             ],
                             spacing=8,
+                            expand=True,
                         ),
+                        col={"sm": 12, "md": 6},
+                        padding=5,
                         expand=True,
                     ),
                 ],
-                alignment="start",
+                spacing=10,
             ),
-            padding=padding.only(top=16, bottom=16),
+            margin=padding.only(top=10, bottom=10),
         )
 
         # In the main_card_container initialization, add the stats_panel

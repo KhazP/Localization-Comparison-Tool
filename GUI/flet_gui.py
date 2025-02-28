@@ -740,7 +740,7 @@ class App:
         )
 
         # Force a UI refresh after app loads to ensure theme consistency
-        threading.Timer(0.1, self.force_refresh_ui).start()
+        self.page.on_load = self.post_init
 
         # Initialize onboarding tutorial
         self.tutorial = OnboardingTutorial(page, self)
@@ -752,12 +752,15 @@ class App:
         self.history_dialog = HistoryDialogComponent(page, self)  # Remove the extra COLORS parameter
         page.overlay.append(self.history_dialog.dialog)  # Add dialog to page overlay
 
-    def post_init(self):
-        """Perform post-initialization tasks."""
+    async def post_init(self, e=None):
+        """Perform post-initialization tasks using async/await."""
+        # Force UI refresh first
         self.force_refresh_ui()
         
-        # Show tutorial for first-time users
+        # Show tutorial for first-time users if needed
         if not self.config.get("tutorial_completed", False):
+            # Add a small delay to ensure UI is ready
+            await asyncio.sleep(0.2)
             self.tutorial.start_tutorial()
 
     def force_refresh_ui(self):
@@ -1095,23 +1098,23 @@ class App:
     
     def compare_files_gui(self, event):
         """
-        Entry point for file comparison that launches the async operation.
-        This replaces the original synchronous method.
+        Entry point for file comparison that queues the async operation in the existing event loop.
         """
-        asyncio.run_coroutine_threadsafe(
-            self.compare_files_async(event), 
-            asyncio.get_event_loop()
-        )
+        # Schedule the coroutine properly in Flet's event loop
+        async def run_comparison():
+            await self.compare_files_async(event)
+            
+        asyncio.create_task(run_comparison())
     
     def compare_directories(self, event):
         """
-        Entry point for directory comparison that launches the async operation.
-        This replaces the original synchronous method.
+        Entry point for directory comparison that queues the async operation in the existing event loop.
         """
-        asyncio.run_coroutine_threadsafe(
-            self.compare_directories_async(event), 
-            asyncio.get_event_loop()
-        )
+        # Schedule the coroutine properly in Flet's event loop
+        async def run_comparison():
+            await self.compare_directories_async(event)
+            
+        asyncio.create_task(run_comparison())
     
     def get_file_lines(self, file_path):
         """

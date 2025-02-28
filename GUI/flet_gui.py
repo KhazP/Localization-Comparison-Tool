@@ -1391,118 +1391,33 @@ class App:
     
     def get_file_lines(self, file_path):
         """
-        Count lines in a file using the optimized file cache service.
+        Count number of lines in a file efficiently using FileCacheService.
+        This method is synchronous but uses optimized line counting.
         """
         try:
             return file_cache_service.count_lines(file_path)
         except Exception as e:
-            logging.error(f"Error counting lines: {str(e)}")
+            logging.error(f"Error counting lines in file {file_path}: {str(e)}")
             return 0
-    
+
     def update_file_preview(self, file_path: str, field_type: str):
         """
-        Update file preview using the optimized file cache service.
+        Update the preview text field with the first few lines of the file.
+        Uses FileCacheService for optimized file reading.
         """
         try:
             preview_text = file_cache_service.preview_file(file_path)
             
+            # Get the appropriate preview TextField
             preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
             preview_field.value = preview_text
+            preview_field.update()
             
         except Exception as e:
             logging.error(f"Error reading preview: {str(e)}")
             preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
             preview_field.value = "Error reading file preview"
-
-    def _on_browse_hover(self, e, button):
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        if e.data == "true":
-            button.bgcolor = hover_color
-        else:
-            button.bgcolor = self.COLORS["bg"]["accent"]
-        button.update()
-
-    def _on_compare_button_hover(self, e, button):
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        if e.data == "true":
-            button.bgcolor = hover_color
-        else:
-            button.bgcolor = self.COLORS["bg"]["accent"]
-        button.update()
-
-    def get_file_lines(self, file_path):
-        """Count number of lines in a file"""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return sum(1 for line in f)
-        except:
-            return 0
-
-    def handle_file_picked(self, e: FilePickerResultEvent, field, icon, field_type):
-        """
-        Handle file selection and update its related UI components.
-        """
-        if e.files and len(e.files) > 0:
-            file_path = e.files[0].path
-            if self.validate_file(file_path):
-                file_name = Path(file_path).name
-                file_size = self.get_readable_file_size(os.path.getsize(file_path))
-                line_count = self.get_file_lines(file_path)
-                field.value = f"{file_name} ({file_size}, {line_count} lines)"
-                # File type indicator logic
-                ext = Path(file_path).suffix.lower()
-                if ext == ".csv":
-                    # ...set icon for CSV...
-                    pass
-                elif ext in [".lang", ".txt"]:
-                    # ...set icon for lang/txt...
-                    pass
-                else:
-                    # ...set a default icon...
-                    pass
-                # Update preview only if enabled
-                if self.config["show_preview"]:
-                    self.update_file_preview(file_path, field_type)
-                    self.preview_section.visible = True
-                
-                if field_type == "source":
-                    self.source_file_path = file_path
-                else:
-                    self.target_file_path = file_path
-                icon.color = Colors.BLUE_400
-                self.update_compare_button()
-                self.page.update()
-            else:
-                field.value = ""
-                icon.color = "red"  # visually indicate error
-                field.update()
-                icon.update()
-
-    def update_file_preview(self, file_path: str, field_type: str):
-        """
-        Update the preview text field with the first few lines of the file.
-        """
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                # Read first 5 lines
-                preview_lines = []
-                for i, line in enumerate(f):
-                    if i >= 5:
-                        break
-                    preview_lines.append(line.rstrip())
-                
-                preview_text = '\n'.join(preview_lines)
-                if len(preview_lines) == 5:
-                    preview_text += "\n..."
-                
-                # Get the appropriate preview TextField
-                preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
-                preview_field.value = preview_text
-                
-        except (OSError, UnicodeDecodeError) as error:
-            logging.error("Error reading preview: %s", error)
-            preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
-            preview_field.value = "Error reading file preview"
+            preview_field.update()
 
     def get_readable_file_size(self, size_in_bytes):
         """Convert file size in bytes to human readable format"""
@@ -2733,6 +2648,24 @@ class App:
         """Save current configuration to disk."""
         ConfigManager.save(self.config)
         self.page.update()
+
+    def _on_compare_button_hover(self, e, button):
+        """Handle hover effect for compare button"""
+        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
+        if e.data == "true":
+            button.bgcolor = hover_color
+        else:
+            button.bgcolor = self.COLORS["bg"]["accent"]
+        button.update()
+
+    def _on_browse_hover(self, e, button):
+        """Handle hover effect for browse button"""
+        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
+        if e.data == "true":
+            button.bgcolor = hover_color
+        else:
+            button.bgcolor = self.COLORS["bg"]["accent"]
+        button.update()
 
 def main(page: ft.Page):
     App(page)

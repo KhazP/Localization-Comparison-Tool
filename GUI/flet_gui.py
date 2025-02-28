@@ -1387,10 +1387,9 @@ class App:
         self.page.update()
 
     def filter_results(self, query: str):
-        """Filter results based on search query"""
+        """Filter results based on search query while preserving expand/collapse states"""
         query = query.lower()
         
-        # Start with namespace headers and their content
         filtered_rows = []
         current_namespace = None
         namespace_has_matches = False
@@ -1399,13 +1398,19 @@ class App:
         for row in self.original_result_rows:
             # Check if this is a namespace header
             if len(row.controls) == 1 and isinstance(row.controls[0], Text) and row.controls[0].weight == "bold":
-                # If we had a previous namespace and it had matches, add it
+                # If we had a previous namespace and it had matches, add it and respect its expansion state
                 if current_namespace and namespace_has_matches:
+                    # Preserve the previous namespace's expansion state if it exists
+                    if hasattr(current_namespace, 'expanded'):
+                        for content in namespace_content:
+                            content.visible = current_namespace.expanded
                     filtered_rows.append(current_namespace)
                     filtered_rows.extend(namespace_content)
                 
-                # Store new namespace header
+                # Store new namespace header and initialize its expansion state if not set
                 current_namespace = row
+                if not hasattr(current_namespace, 'expanded'):
+                    current_namespace.expanded = self.expand_all
                 namespace_content = []
                 namespace_has_matches = False
                 continue
@@ -1420,8 +1425,11 @@ class App:
                     else:
                         filtered_rows.append(row)
         
-        # Add last namespace if it had matches
+        # Handle the last namespace
         if current_namespace and namespace_has_matches:
+            if hasattr(current_namespace, 'expanded'):
+                for content in namespace_content:
+                    content.visible = current_namespace.expanded
             filtered_rows.append(current_namespace)
             filtered_rows.extend(namespace_content)
         
@@ -1478,33 +1486,47 @@ class App:
         return Row(controls=controls, spacing=8)
 
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
+        """Update statistics panel with current comparison results"""
+        # Safety check for required UI components
+        if not hasattr(self, 'stats_panel') or not hasattr(self.stats_panel, 'content'):
+            logging.warning("Stats panel not fully initialized when update_statistics was called")
+            return
+
         from flet import Container, Column, Text
         translated_keys = total_keys - missing_keys
         translation_percentage = (translated_keys / total_keys * 100) if total_keys else 0
+        
         self.stats_text_total.value = str(total_keys)
         self.stats_text_missing.value = str(missing_keys)
         self.stats_text_obsolete.value = str(obsolete_keys)
+        
         if not hasattr(self, "stats_text_percentage"):
             self.stats_text_percentage = Text(
                 value="0%",
                 size=24,
                 weight=FontWeight.BOLD,
-                color="lightblue" 
+                color="lightblue"
             )
-            self.stats_panel.content.content.controls.append(
-                Container(
-                    content=Column(
-                        controls=[
-                            Text("Translated %", size=14, color=self.COLORS["text"]["secondary"]),
-                            self.stats_text_percentage,
-                        ],
-                        horizontal_alignment="center",
-                        spacing=4,
-                    ),
-                    padding=padding.all(16),
-                    expand=True,
+            # Additional safety check before appending
+            if hasattr(self.stats_panel.content, 'content') and hasattr(self.stats_panel.content.content, 'controls'):
+                self.stats_panel.content.content.controls.append(
+                    Container(
+                        content=Column(
+                            controls=[
+                                Text("Translated %", size=14, color=self.COLORS["text"]["secondary"]),
+                                self.stats_text_percentage,
+                            ],
+                            horizontal_alignment="center",
+                            spacing=4,
+                        ),
+                        padding=padding.all(16),
+                        expand=True,
+                    )
                 )
-            )
+            else:
+                logging.warning("Stats panel structure not complete when trying to add percentage display")
+                return
+                
         self.stats_text_percentage.value = f"{translation_percentage:.1f}%"
         self.page.update()
 
@@ -1515,10 +1537,21 @@ class App:
         self.page.update()
 
     def toggle_expand_all(self, e):
-        # Toggle expand/collapse functionality.
+        """Toggle expand/collapse state for all namespace sections"""
         self.expand_all = not self.expand_all
-        # Dummy implementation: update the status_label based on expand_all state.
-        self.status_label.value = "Expanded" if self.expand_all else "Collapsed"
+        
+        # Update the button icon
+        self.expand_collapse_button.icon = Icons.UNFOLD_LESS if self.expand_all else Icons.UNFOLD_MORE
+        
+        # Update expansion state for all namespace headers and their content
+        current_namespace = None
+        for row in self.results_column.controls[1].controls:
+            if len(row.controls) == 1 and isinstance(row.controls[0], Text) and row.controls[0].weight == "bold":
+                current_namespace = row
+                current_namespace.expanded = self.expand_all
+            elif current_namespace:
+                row.visible = self.expand_all
+        
         self.page.update()
 
     def clear_text_field(self, text_field, clear_btn):

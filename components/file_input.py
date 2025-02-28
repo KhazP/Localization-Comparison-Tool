@@ -144,16 +144,7 @@ class FileInputComponent:
             size_in_bytes /= 1024
         return f"{size_in_bytes:.1f} TB"
     
-    def get_file_lines(self, file_path):
-        """
-        Count number of lines in a file efficiently using FileCacheService.
-        This method is synchronous but uses optimized line counting.
-        """
-        try:
-            return file_cache_service.count_lines(file_path)
-        except Exception as e:
-            logging.error(f"Error counting lines in file {file_path}: {str(e)}")
-            return 0
+    # Removed duplicate get_file_lines method - using file_cache_service directly
     
     def update_file_preview(self, file_path: str, field_type: str):
         """

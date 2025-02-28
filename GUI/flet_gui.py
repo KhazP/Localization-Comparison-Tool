@@ -1116,36 +1116,6 @@ class App:
             
         asyncio.create_task(run_comparison())
     
-    def get_file_lines(self, file_path):
-        """
-        Count number of lines in a file efficiently using FileCacheService.
-        This method is synchronous but uses optimized line counting.
-        """
-        try:
-            return file_cache_service.count_lines(file_path)
-        except Exception as e:
-            logging.error(f"Error counting lines in file {file_path}: {str(e)}")
-            return 0
-
-    def update_file_preview(self, file_path: str, field_type: str):
-        """
-        Update the preview text field with the first few lines of the file.
-        Uses FileCacheService for optimized file reading.
-        """
-        try:
-            preview_text = file_cache_service.preview_file(file_path)
-            
-            # Get the appropriate preview TextField
-            preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
-            preview_field.value = preview_text
-            preview_field.update()
-            
-        except Exception as e:
-            logging.error(f"Error reading preview: {str(e)}")
-            preview_field = self.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
-            preview_field.value = "Error reading file preview"
-            preview_field.update()
-
     def get_readable_file_size(self, size_in_bytes):
         """Convert file size in bytes to human readable format"""
         for unit in ['B', 'KB', 'MB', 'GB']:

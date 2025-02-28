@@ -13,7 +13,7 @@
     "mt_api_key": "",
     "mt_source_lang": "en",
     "mt_target_lang": "tr",
-    "theme": "dark",
+    "theme": "system",
     "custom_theme": "minimalist",
     "enable_keyboard_nav": true,
     "high_contrast": false,

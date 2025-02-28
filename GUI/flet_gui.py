@@ -85,22 +85,11 @@ class App:
 
         # Load configuration with defaults already merged
         self.config = ConfigManager.load()
-        
-        # Apply configuration-dependent setup
-        self.log_missing_strings = self.config["log_missing_strings"]
-        self.current_theme = self.config["theme"]
+        self.current_theme = self.config.get("theme", "system")
         self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
-        self._cached_colors[self.current_theme] = self.COLORS
+        self._cached_colors = {self.current_theme: self.COLORS}
 
-        # Update page theme mode based on saved theme
-        if self.current_theme == "system":
-            page.theme_mode = ft.ThemeMode.SYSTEM
-        elif self.current_theme in ["dark", "amoled"]:
-            page.theme_mode = ft.ThemeMode.DARK
-        else:
-            page.theme_mode = ft.ThemeMode.LIGHT
-
-        # Create settings dialog using the new component
+        # Create settings dialog using SettingsDialogComponent
         self.settings_dialog_component = SettingsDialogComponent(page, self, self.config, self.COLORS)
         self.settings_dialog = self.settings_dialog_component.dialog
         
@@ -154,213 +143,6 @@ class App:
         else:
             page.theme_mode = ft.ThemeMode.LIGHT
 
-        # Create tabs for settings dialog
-        general_tab = Tab(
-            text="General",
-            icon=Icons.SETTINGS,
-            content=Container(
-                content=Column(
-                    controls=[
-                        Container(
-                            content=Column(
-                                controls=[
-                                    Text("Theme Settings", size=16, weight="bold"),
-                                    ft.Dropdown(
-                                        label="Theme Mode",
-                                        value=self.current_theme,  # Use saved theme
-                                        options=[
-                                            ft.dropdown.Option("system", "System Default"),
-                                            ft.dropdown.Option("dark", "Dark Theme"),
-                                            ft.dropdown.Option("light", "Light Theme"),
-                                            ft.dropdown.Option("amoled", "AMOLED Dark"),
-                                            ft.dropdown.Option("high_contrast", "High Contrast"),
-                                            ft.dropdown.Option("minimalist", "Minimalist"),
-                                            ft.dropdown.Option("earth_tones", "Earth Tones"),
-                                            ft.dropdown.Option("pastel", "Pastel"),
-                                        ],
-                                        on_change=self.handle_theme_change,
-                                    ),
-                                    TextButton("Custom Themes", on_click=self.open_custom_theme_settings),
-                                ],
-                                spacing=8
-                            ),
-                            padding=10,
-                        ),
-                    ],
-                ),
-                padding=20,
-            ),
-        )
-
-        # Create tabs for settings dialog with the updated general tab
-        self.settings_tabs = Tabs(
-            selected_index=0,
-            animation_duration=300,
-            tabs=[
-                general_tab,
-                Tab(
-                    text="Comparison",
-                    icon=Icons.COMPARE_ARROWS,
-                    content=Container(
-                        content=Column(
-                            controls=[
-                                Container(
-                                    content=Column(
-                                        controls=[
-                                            Text("Comparison Settings", size=16, weight="bold"),
-                                            ft.Checkbox(
-                                                label="Show File Preview",
-                                                value=self.config["show_preview"],
-                                                on_change=self.handle_preview_toggle
-                                            ),
-                                            ft.Checkbox(
-                                                label="Show Line Numbers",  # Add this checkbox
-                                                value=self.config["show_line_numbers"],
-                                                on_change=self.handle_line_numbers_toggle
-                                            ),
-                                            ft.Checkbox(
-                                                label="Auto-Fill Missing Keys",
-                                                value=self.config["auto_fill_missing"],
-                                                on_change=self.handle_auto_fill_change
-                                            ),
-                                            ft.Checkbox(
-                                                label="Log Missing Keys",
-                                                value=self.config["log_missing_strings"],
-                                                on_change=self.handle_log_missing_change
-                                            ),
-                                            ft.Checkbox(
-                                                label="Ignore Whitespace",
-                                                value=self.config["ignore_whitespace"],
-                                                on_change=self.handle_whitespace_change
-                                            ),
-                                            ft.Checkbox(
-                                                label="Ignore Case",
-                                                value=self.config["ignore_case"],
-                                                on_change=self.handle_case_change
-                                            ),
-                                            ft.Checkbox(
-                                                label="Group by Namespace",
-                                                value=self.config["group_by_namespace"],
-                                                on_change=self.handle_group_by_namespace_change
-                                            ),
-                                        ],
-                                        spacing=8
-                                    ),
-                                    padding=10,
-                                ),
-                            ],
-                        ),
-                        padding=20,
-                    ),
-                ),
-                Tab(
-                    text="File Format",
-                    icon=Icons.FILE_PRESENT,
-                    content=Container(
-                        content=Column(
-                            controls=[
-                                Container(
-                                    content=Column(
-                                        controls=[
-                                            Text("File Format Settings", size=16, weight="bold"),
-                                            ft.Dropdown(
-                                                label="Preferred Format",
-                                                value=self.config["preferred_format"],
-                                                options=[
-                                                    ft.dropdown.Option("auto", "Auto-Detect"),
-                                                    ft.dropdown.Option("json", "JSON"),
-                                                    ft.dropdown.Option("yaml", "YAML"),
-                                                    ft.dropdown.Option("lang", ".lang"),
-                                                    ft.dropdown.Option("xml", "XML"),
-                                                ],
-                                                on_change=self.handle_format_change,
-                                            ),
-                                        ],
-                                        spacing=8
-                                    ),
-                                    padding=10,
-                                ),
-                                Container(
-                                    content=Column(
-                                        controls=[
-                                            Text("Ignore Patterns", size=16, weight="bold"),
-                                            TextField(
-                                                value=",".join(self.config["ignore_patterns"]),
-                                                hint_text="Enter regex patterns (comma-separated)",
-                                                on_change=self.handle_patterns_change,
-                                                multiline=True,
-                                                min_lines=2,
-                                                max_lines=4,
-                                            ),
-                                            Text(
-                                                "Example: temp_, test_, debug_",
-                                                size=12,
-                                                color=self.COLORS["text"]["secondary"],
-                                            ),
-                                        ],
-                                        spacing=8
-                                    ),
-                                    padding=10,
-                                ),
-                            ],
-                        ),
-                        padding=20,
-                    ),
-                ),
-                Tab(
-                    text="Translation",
-                    icon=Icons.TRANSLATE,
-                    content=Container(
-                        content=Column(
-                            controls=[
-                                Container(
-                                    content=Column(
-                                        controls=[
-                                            Text("Machine Translation Settings", size=16, weight="bold"),
-                                            ft.Checkbox(
-                                                label="Enable Machine Translation",
-                                                value=self.config["mt_enabled"],
-                                                on_change=self.handle_mt_enabled_change
-                                            ),
-                                            TextField(
-                                                label="Google Cloud API Key",
-                                                value=self.config["mt_api_key"],
-                                                password=True,
-                                                can_reveal_password=True,
-                                                on_change=self.handle_mt_api_key_change
-                                            ),
-                                            ft.Dropdown(
-                                                label="Source Language",
-                                                value=self.config["mt_source_lang"],
-                                                options=[
-                                                    ft.dropdown.Option(code, name)
-                                                    for code, name in sorted(GOOGLE_CLOUD_LANGUAGES.items(), key=lambda x: x[1])
-                                                ],
-                                                on_change=self.handle_mt_source_lang_change
-                                            ),
-                                            ft.Dropdown(
-                                                label="Target Language",
-                                                value=self.config["mt_target_lang"],
-                                                options=[
-                                                    ft.dropdown.Option(code, name)
-                                                    for code, name in sorted(GOOGLE_CLOUD_LANGUAGES.items(), key=lambda x: x[1])
-                                                ],
-                                                on_change=self.handle_mt_target_lang_change
-                                            ),
-                                        ],
-                                        spacing=8
-                                    ),
-                                    padding=10,
-                                ),
-                            ],
-                        ),
-                        padding=20,
-                    ),
-                ),
-            ],
-            expand=1,
-        )
-
         # Add keyboard navigation settings to config
         self.config.update({
             "enable_keyboard_nav": True,
@@ -368,72 +150,6 @@ class App:
             "large_text": False,
             "font_size_scale": 1.0
         })
-
-        # Update accessibility tab to remove the keyboard navigation option
-        accessibility_tab = Tab(
-            text="Accessibility",
-            icon=Icons.ACCESSIBILITY,
-            content=Container(
-                content=Column(
-                    controls=[
-                        Text("Accessibility Settings", size=16, weight="bold"),
-                        # Removed: Keyboard Navigation option
-                        ft.Checkbox(
-                            label="High Contrast Mode",
-                            value=self.config["high_contrast"],
-                            on_change=self.handle_contrast_change,
-                            tooltip="Enable high contrast colors"
-                        ),
-                        ft.Checkbox(
-                            label="Large Text",
-                            value=self.config["large_text"],
-                            on_change=self.handle_text_size_change,
-                            tooltip="Increase text size"
-                        ),
-                        ft.Slider(
-                            min=1.0,
-                            max=2.0,
-                            divisions=4,
-                            value=self.config["font_size_scale"],
-                            label="Text Size Scale",
-                            on_change=self.handle_font_scale_change,
-                            tooltip="Adjust overall text size"
-                        ),
-                    ],
-                    spacing=20,
-                ),
-                padding=20,
-            ),
-        )
-        
-        # Add accessibility tab to settings
-        self.settings_tabs.tabs.append(accessibility_tab)
-
-        # Update button creation with accessibility improvements
-        def create_accessible_button(text, icon, tooltip, on_click, tab_index):
-            return ElevatedButton(
-                text=text,
-                icon=icon,
-                tooltip=tooltip,
-                on_click=on_click,
-                focusable=True,
-                data={"tab_index": tab_index},
-                style=ButtonStyle(
-                    color=self.COLORS["text"]["primary"],
-                    bgcolor=self.COLORS["bg"]["accent"],
-                    shape=RoundedRectangleBorder(radius=8),
-                ),
-            )
-
-        # Update text field creation with accessibility improvements
-        def create_accessible_textfield(hint_text, label, tooltip, tab_index):
-            return TextField(
-                hint_text=hint_text,
-                label=label,
-                tooltip=tooltip,
-                focusable=True,
-                data={"tab_index": tab_index},
-            )
 
         # Initialize file paths
         self.source_file_path = ""
@@ -1956,73 +1672,6 @@ class App:
 
         logging.info("Theme updated to '%s'. Current COLORS: %s", theme_key, self.COLORS)
 
-    def handle_case_change(self, e):
-        self.config["ignore_case"] = e.control.value
-        ConfigManager.save(self.config)
-        self.ignore_case_checkbox.value = e.control.value  # Update main UI checkbox
-        self.page.update()
-
-    def reset_settings(self, e):
-        """Reset all settings to defaults."""
-        # Use the centralized reset function
-        self.config = ConfigManager.reset()
-        
-        # Update UI to reflect reset values
-        self.current_theme = self.config["theme"]
-        self.log_missing_strings = self.config["log_missing_strings"]
-        
-        # Update colors based on theme
-        self.update_theme_colors()
-        
-        # Update all settings controls to match reset values
-        # ...update UI controls code...
-        
-        self.show_snackbar("Settings reset to defaults.")
-        self.page.update()
-
-    def handle_mt_enabled_change(self, e):
-        """Handle machine translation enabled setting change"""
-        self.config["mt_enabled"] = e.control.value
-        
-        # Validate MT settings
-        errors = ConfigManager.validate_required_fields(self.config)
-        if "mt_api_key" in errors and self.config["mt_enabled"]:
-            self.show_snackbar(errors["mt_api_key"])
-        
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_mt_api_key_change(self, e):
-        """Handle machine translation API key change"""
-        new_key = e.control.value.strip() if e.control.value else ""
-        self.config["mt_api_key"] = new_key
-        
-        # Validate MT settings if enabled
-        if self.config["mt_enabled"] and not new_key:
-            self.show_snackbar("API key cannot be empty when machine translation is enabled.")
-        
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_mt_source_lang_change(self, e):
-        self.config["mt_source_lang"] = e.control.value
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_mt_target_lang_change(self, e):
-        self.config["mt_target_lang"] = e.control.value
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_group_by_namespace_change(self, e):
-        """Handle toggling of namespace grouping"""
-        self.config["group_by_namespace"] = e.control.value
-        ConfigManager.save(self.config)
-        # Rebuild results table if we have results
-        if self.output_text.value and self.output_text.value != "Comparison results will appear here":
-            self.build_results_table(self.output_text.value)
-        self.page.update()
-
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
         from flet import Container, Column, Text
         translated_keys = total_keys - missing_keys
@@ -2052,93 +1701,6 @@ class App:
                 )
             )
         self.stats_text_percentage.value = f"{translation_percentage:.1f}%"
-        self.page.update()
-
-    def handle_theme_change(self, e):
-        """Handle theme mode changes using themes from themes.py"""
-        selected = e.control.value
-        self.current_theme = selected
-        
-        # Set theme mode and colors based on selection
-        if selected == "system":
-            self.page.theme_mode = ft.ThemeMode.SYSTEM
-            if HAS_DARKDETECT:
-                system_theme = "dark" if darkdetect.isDark() else "light"
-            else:
-                system_theme = "dark"
-            self.COLORS = self.THEMES[system_theme]
-        else:
-            # Set explicit theme mode
-            if selected in ["dark", "amoled"]:
-                self.page.theme_mode = ft.ThemeMode.DARK
-            else:
-                self.page.theme_mode = ft.ThemeMode.LIGHT
-            self.COLORS = self.THEMES[selected]
-        
-        # Cache and save theme
-        self._cached_colors[selected] = self.COLORS
-        self.config["theme"] = selected
-        ConfigManager.save(self.config)
-        
-        # Update UI with new colors
-        self.update_theme_colors()
-        self.page.update()
-
-    def handle_auto_fill_change(self, e):
-        """Handle auto-fill settings change"""
-        self.config["auto_fill_missing"] = e.control.value
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_patterns_change(self, e):
-        """Handle ignore patterns change"""
-        patterns = [p.strip() for p in e.control.value.split(",") if p.strip()]
-        self.config["ignore_patterns"] = patterns
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_format_change(self, e):
-        """Handle preferred format change"""
-        self.config["preferred_format"] = e.control.value
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_whitespace_change(self, e):
-        """Handle whitespace ignore setting change"""
-        self.config["ignore_whitespace"] = e.control.value
-        ConfigManager.save(self.config)
-        self.page.update()
-
-    def handle_log_missing_change(self, e):
-        """Handle log missing keys setting change"""
-        self.config["log_missing_strings"] = e.control.value
-        ConfigManager.save(self.config)
-        self.log_missing_strings = e.control.value  # Update the flag as well
-        self.page.update()
-
-    def open_custom_theme_settings(self, e):
-        # Remove old dialog_open check
-        if self.custom_theme_dialog not in self.page.overlay:
-            self.page.overlay.append(self.custom_theme_dialog)
-        self.custom_theme_dialog.open = True
-        self.register_keyboard_navigation()  # Register handler for custom theme dialog
-        self.page.update()
-
-    def save_custom_theme(self, e):
-        # ...existing code or placeholder...
-        self.custom_theme_dialog.open = False
-        self.page.update()
-
-    def close_custom_theme_settings(self, e):
-        self.custom_theme_dialog.open = False
-        self.unregister_keyboard_navigation()  # Remove handler after closing dialog
-        self.page.update()
-
-    def handle_preview_toggle(self, e):
-        """Handle toggling of file preview feature"""
-        self.config["show_preview"] = e.control.value
-        ConfigManager.save(self.config)
-        self.preview_section.visible = e.control.value and (self.source_file_path or self.target_file_path)
         self.page.update()
 
     def open_source_dir_picker(self, e):
@@ -2268,256 +1830,6 @@ class App:
         """Simple syntax highlighting for comparison lines."""
         # No highlighting needed for GUI as we handle colors in the UI
         return line
-
-    def handle_keyboard_nav_change(self, e):
-        """Handle keyboard navigation toggle"""
-        self.config["enable_keyboard_nav"] = e.control.value
-        ConfigManager.save(self.config)
-        self.update_keyboard_navigation()
-        self.page.update()
-
-    def handle_contrast_change(self, e):
-        """Handle high contrast mode toggle"""
-        self.config["high_contrast"] = e.control.value
-        if e.control.value:
-            self.COLORS = self.THEMES["high_contrast"]
-            # Force update all text colors for high contrast
-            self.page.theme = ft.Theme(
-                color_scheme_seed=Colors.BLUE_GREY,
-                font_family="Roboto",
-                visual_density=ft.ThemeVisualDensity.COMFORTABLE,
-            )
-        else:
-            self.COLORS = self.THEMES[self.current_theme]
-        
-        self.update_theme_colors()
-        self.update_text_sizes()  # Also update text sizes to maintain accessibility
-        self.page.update()
-
-    def handle_text_size_change(self, e):
-        """Handle large text mode toggle"""
-        self.config["large_text"] = e.control.value
-        self.update_all_text_sizes()
-        self.page.update()
-
-    def handle_font_scale_change(self, e):
-        """Handle font size scale adjustment"""
-        self.config["font_size_scale"] = e.control.value
-        self.update_all_text_sizes()
-        self.page.update()
-
-    def update_all_text_sizes(self):
-        """Update text sizes throughout the application"""
-        scale = self.config["font_size_scale"]
-        if self.config["large_text"]:
-            scale *= 1.25
-
-        # Base sizes for different text types
-        base_sizes = {
-            "small": 12,
-            "normal": 14,
-            "large": 16,
-            "header": 32,
-            "title": 24
-        }
-
-        def update_control_text_size(control):
-            """Recursively update text sizes in controls"""
-            if isinstance(control, Text):
-                # Determine the base size category for this text
-                if control.weight == "bold" and control.size >= 24:
-                    base_size = base_sizes["title"]
-                elif control.weight == "bold":
-                    base_size = base_sizes["large"]
-                else:
-                    base_size = base_sizes["normal"]
-                
-                # Apply scaling
-                control.size = int(base_size * scale)
-                # Only update if the control is in the page (avoids "must be added to the page first" error)
-                if hasattr(control, "page") and control.page:
-                    control.update()
-            
-            # Update text style for TextFields
-            elif isinstance(control, TextField):
-                current_style = control.text_style or TextStyle()
-                current_size = current_style.size or base_sizes["normal"]
-                control.text_style = TextStyle(
-                    size=int(current_size * scale),
-                    color=current_style.color,
-                    font_family=current_style.font_family,
-                    weight=current_style.weight
-                )
-                # Only update if the control is in the page (avoids "must be added to the page first" error)
-                if hasattr(control, "page") and control.page:
-                    control.update()
-
-            # Recursively process containers and their children
-            if hasattr(control, "content") and control.content:
-                if isinstance(control.content, (Column, Row)):
-                    for child in control.content.controls:
-                        update_control_text_size(child)
-                else:
-                    update_control_text_size(control.content)
-            
-            elif hasattr(control, "controls"):
-                for child in control.controls:
-                    update_control_text_size(child)
-
-        # Update main content
-        update_control_text_size(self.content)
-        
-        # Update specific sections
-        update_control_text_size(self.settings_dialog)
-        update_control_text_size(self.preview_section)
-        update_control_text_size(self.results_container)
-        update_control_text_size(self.stats_panel)
-
-        # Update text field sizes
-        text_fields = [
-            self.output_text,
-            self.source_text,
-            self.target_text,
-            self.summary_text
-        ]
-        
-        for tf in text_fields:
-            tf.text_style = TextStyle(
-                color=self.COLORS["text"]["secondary"],
-                size=int(14 * scale),  # Scale the default size
-                font_family="Consolas",
-                weight=FontWeight.W_400,
-            )
-            # Only update if the control is in the page (avoids "must be added to the page first" error)
-            if hasattr(tf, "page") and tf.page:
-                tf.update()
-
-        # Update statistics text
-        stats_texts = [
-            self.stats_text_total,
-            self.stats_text_missing,
-            self.stats_text_obsolete
-        ]
-        
-        for stat in stats_texts:
-            stat.size = int(24 * scale)  # Scale the statistics text size
-            # Only update if the control is in the page (avoids "must be added to the page first" error)
-            if hasattr(stat, "page") and stat.page:
-                stat.update()
-
-        if hasattr(self, "stats_text_percentage"):
-            self.stats_text_percentage.size = int(24 * scale)
-            # Only update if the control is in the page (avoids "must be added to the page first" error)
-            if hasattr(self.stats_text_percentage, "page") and self.stats_text_percentage.page:
-                self.stats_text_percentage.update()
-
-        self.page.update()
-
-    def update_keyboard_navigation(self):
-        """Update keyboard navigation settings"""
-        if self.config["enable_keyboard_nav"]:
-            self.page.on_keyboard_event = self.handle_keyboard_event
-        else:
-            self.page.on_keyboard_event = None
-        self.page.update()
-
-    def handle_keyboard_event(self, e: ft.KeyboardEvent):
-        """Handle keyboard navigation events"""
-        if not self.config["enable_keyboard_nav"]:
-            return
-
-        if e.key == "Tab":
-            self.handle_tab_navigation(e.shift)
-        elif e.key == "Enter":
-            self.handle_enter_key()
-        elif e.key in ["ArrowUp", "ArrowDown"]:
-            self.handle_arrow_navigation(e.key)
-
-    def handle_tab_navigation(self, shift: bool):
-        """Handle Tab key navigation"""
-        def get_focusable_controls(control):
-            """Recursively collect focusable controls"""
-            focusable_controls = []
-            if getattr(control, "focusable", False):
-                focusable_controls.append(control)
-            if hasattr(control, "controls"):
-                for child in control.controls:
-                    focusable_controls.extend(get_focusable_controls(child))
-            return focusable_controls
-
-        focusable_controls = get_focusable_controls(self.page)
-
-        if not focusable_controls:
-            return
-
-        current_index = -1
-        for i, control in enumerate(focusable_controls):
-            if control.focused:
-                current_index = i
-                break
-
-        # Calculate next focus index
-        if shift:
-            next_index = (current_index - 1) if current_index > 0 else len(focusable_controls) - 1
-        else:
-            next_index = (current_index + 1) if current_index < len(focusable_controls) - 1 else 0
-
-        # Focus next control
-        focusable_controls[next_index].focus()
-        self.page.update()
-
-    def handle_enter_key(self):
-        """Handle Enter key press on focused element"""
-        for control in self.page.controls:
-            if getattr(control, "focused", False) and hasattr(control, "on_click"):
-                control.on_click(None)
-                break
-
-    def handle_arrow_navigation(self, key: str):
-        """Handle arrow key navigation"""
-        if not hasattr(self, "results_tabs") or not self.results_tabs.visible:
-            return
-
-        current_tab = self.results_tabs.selected_index
-        if key == "ArrowUp" and current_tab > 0:
-            self.results_tabs.selected_index -= 1
-        elif key == "ArrowDown" and current_tab < len(self.results_tabs.tabs) - 1:
-            self.results_tabs.selected_index += 1
-        self.page.update()
-
-    # Update create_file_input method to include accessibility features
-    def create_file_input(self, label: str, is_source=True):
-        browse_button = ElevatedButton(
-            "Browse",
-            icon=Icons.UPLOAD,
-            tooltip=f"Select a {label} file",
-            on_click=self.open_source_picker if is_source else self.open_target_picker,
-            bgcolor=self.COLORS["bg"]["accent"],
-            color=self.COLORS["text"]["primary"],
-            height=36,
-            style=ButtonStyle(shape=RoundedRectangleBorder(radius=8)),
-            focusable=True,
-            data={"tab_index": 1 if is_source else 2}
-        )
-
-        folder_button = IconButton(
-            icon=Icons.FOLDER,
-            icon_size=20,
-            tooltip=f"Select {label} folder",
-            on_click=self.open_source_dir_picker if is_source else self.open_target_dir_picker,
-            icon_color=self.COLORS["text"]["secondary"],
-            focusable=True,
-            data={"tab_index": 3 if is_source else 4}
-        )
-
-    def handle_line_numbers_toggle(self, e):
-        """Handle toggling of line numbers in results"""
-        self.config["show_line_numbers"] = e.control.value
-        ConfigManager.save(self.config)
-        # Rebuild results table if we have results
-        if self.output_text.value and self.output_text.value != "Comparison results will appear here":
-            self.build_results_table(self.output_text.value)
-        self.page.update()
 
     # New dedicated methods for keyboard navigation management
     def register_keyboard_navigation(self):
@@ -2678,6 +1990,53 @@ class App:
         else:
             button.bgcolor = self.COLORS["bg"]["accent"]
         button.update()
+
+    def handle_preview_toggle(self, e):
+        """Handle toggling of file preview feature"""
+        self.config["show_preview"] = e.control.value
+        ConfigManager.save(self.config)
+        
+        # Update preview visibility based on setting and file selection
+        self.preview_section.visible = e.control.value and (self.source_file_path or self.target_file_path)
+        
+        # If preview is now visible and we have files selected, update the previews
+        if self.preview_section.visible:
+            if self.source_file_path:
+                self.update_file_preview(self.source_file_path, "source")
+            if self.target_file_path:
+                self.update_file_preview(self.target_file_path, "target")
+        
+        self.page.update()
+
+    def handle_theme_change(self, e):
+        """Handle theme mode changes using themes from themes.py"""
+        selected = e.control.value if hasattr(e, 'control') else e
+        self.current_theme = selected
+        
+        # Set theme mode and colors based on selection
+        if selected == "system":
+            self.page.theme_mode = ft.ThemeMode.SYSTEM
+            if HAS_DARKDETECT:
+                system_theme = "dark" if darkdetect.isDark() else "light"
+            else:
+                system_theme = "dark"
+            self.COLORS = self.THEMES[system_theme]
+        else:
+            # Set explicit theme mode
+            if selected in ["dark", "amoled"]:
+                self.page.theme_mode = ft.ThemeMode.DARK
+            else:
+                self.page.theme_mode = ft.ThemeMode.LIGHT
+            self.COLORS = self.THEMES[selected]
+        
+        # Cache and save theme
+        self._cached_colors[selected] = self.COLORS
+        self.config["theme"] = selected
+        ConfigManager.save(self.config)
+        
+        # Update UI with new colors
+        self.update_theme_colors()
+        self.page.update()
 
 def main(page: ft.Page):
     App(page)

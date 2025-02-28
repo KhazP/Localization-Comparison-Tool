@@ -60,6 +60,14 @@ from utils.file_cache_service import file_cache_service
 from utils.file_processing_service import file_processing_service
 from components.history_dialog import HistoryDialogComponent
 
+# Add darkdetect import at the module level with try/except to handle case if not installed
+try:
+    import darkdetect
+    HAS_DARKDETECT = True
+except ImportError:
+    HAS_DARKDETECT = False
+    logging.warning("darkdetect package not found. System theme detection will fall back to 'dark'.")
+
 # Get logger from service
 logger = logger_service.get_logger()
 
@@ -1851,8 +1859,10 @@ class App:
         theme_key = self.config.get("theme", "system")
         
         if theme_key == "system":
-            import darkdetect
-            system_theme = "dark" if darkdetect.isDark() else "light"
+            if HAS_DARKDETECT:
+                system_theme = "dark" if darkdetect.isDark() else "light"
+            else:
+                system_theme = "dark"
             self.COLORS = self.THEMES[system_theme]
         else:
             self.COLORS = self.THEMES[theme_key]
@@ -2052,8 +2062,10 @@ class App:
         # Set theme mode and colors based on selection
         if selected == "system":
             self.page.theme_mode = ft.ThemeMode.SYSTEM
-            import darkdetect
-            system_theme = "dark" if darkdetect.isDark() else "light"
+            if HAS_DARKDETECT:
+                system_theme = "dark" if darkdetect.isDark() else "light"
+            else:
+                system_theme = "dark"
             self.COLORS = self.THEMES[system_theme]
         else:
             # Set explicit theme mode

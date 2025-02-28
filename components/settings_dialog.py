@@ -320,28 +320,7 @@ class SettingsDialogComponent:
                                             padding=10,
                                             on_click=lambda e: self.quick_theme_change("light"),
                                         ),
-                                        Container(
-                                            content=Column([
-                                                Icon(Icons.CONTRAST, size=24),
-                                                Text("Contrast", size=11),
-                                            ], 
-                                            alignment="center",
-                                            spacing=5
-                                            ),
-                                            width=70,
-                                            height=70,
-                                            border_radius=BorderRadius(8, 8, 8, 8),
-                                            bgcolor=ft.colors.with_opacity(
-                                                0.1 if self.app.current_theme == "high_contrast" else 0.05,
-                                                self.tab_colors[0]
-                                            ),
-                                            border=ft.border.all(
-                                                2 if self.app.current_theme == "high_contrast" else 0,
-                                                self.tab_colors[0]
-                                            ),
-                                            padding=10,
-                                            on_click=lambda e: self.quick_theme_change("high_contrast"),
-                                        ),
+                                        # Remove high contrast option from here since it's in Accessibility tab
                                         Container(
                                             content=Column([
                                                 Icon(Icons.SETTINGS_SUGGEST, size=24),
@@ -364,37 +343,35 @@ class SettingsDialogComponent:
                                             padding=10,
                                             on_click=lambda e: self.quick_theme_change("system"),
                                         ),
+                                        Container(
+                                            content=Column([
+                                                Icon(Icons.NIGHTLIGHT_ROUND, size=24),
+                                                Text("AMOLED", size=11),
+                                            ], 
+                                            alignment="center",
+                                            spacing=5
+                                            ),
+                                            width=70,
+                                            height=70,
+                                            border_radius=BorderRadius(8, 8, 8, 8),
+                                            bgcolor=ft.colors.with_opacity(
+                                                0.1 if self.app.current_theme == "amoled" else 0.05,
+                                                self.tab_colors[0]
+                                            ),
+                                            border=ft.border.all(
+                                                2 if self.app.current_theme == "amoled" else 0, 
+                                                self.tab_colors[0]
+                                            ),
+                                            padding=10,
+                                            on_click=lambda e: self.quick_theme_change("amoled"),
+                                        ),
                                     ], 
                                     alignment="spaceEvenly"
                                     ),
                                     Container(height=24),
-                                    Row(
-                                        controls=[
-                                            Checkbox(
-                                                value=self.config.get("show_preview", True),
-                                                label="Show file preview",
-                                                on_change=self.app.handle_preview_toggle,
-                                            ),
-                                        ],
-                                    ),
-                                    Checkbox(
-                                        value=self.config.get("auto_fill_missing", False),
-                                        label="Auto-fill missing translations",
-                                        on_change=lambda e: self.handle_setting_change(e, "auto_fill_missing"),
-                                    ),
-                                    Checkbox(
-                                        value=self.config.get("confirm_actions", True),
-                                        label="Confirm destructive actions",
-                                        on_change=lambda e: self.handle_setting_change(e, "confirm_actions"),
-                                    ),
-                                    Slider(
-                                        min=0,
-                                        max=1000,
-                                        divisions=10,
-                                        value=self.config.get("animation_speed", 300),
-                                        label="{value}ms",
-                                        on_change=lambda e: self.handle_setting_change(e, "animation_speed"),
-                                    ),
+                                    # Remove duplicate settings:
+                                    # - Show file preview (moved to Comparison tab)
+                                    # - Auto-fill missing translations (moved to Comparison tab)
                                 ],
                                 spacing=10,
                             ),
@@ -496,7 +473,7 @@ class SettingsDialogComponent:
                                     ),
                                     Container(height=20),
                                     
-                                    # Basic comparison options
+                                    # Display options - kept in Comparison tab
                                     Checkbox(
                                         value=self.config.get("show_preview", True),
                                         label="Show File Preview",
@@ -852,7 +829,7 @@ class SettingsDialogComponent:
                                     ),
                                     Container(height=20),
                                     
-                                    # High contrast mode
+                                    # Keep high contrast mode here instead of in themes
                                     Checkbox(
                                         value=self.config.get("high_contrast", False),
                                         label="High Contrast Mode",
@@ -932,7 +909,7 @@ class SettingsDialogComponent:
                                         on_change=lambda e: self.handle_setting_change(e, "focus_highlight"),
                                     ),
                                     
-                                    # Reduce animations
+                                    # Reduce animations - consolidated with animation settings
                                     Checkbox(
                                         value=self.config.get("reduce_animations", False),
                                         label="Reduce Animations",

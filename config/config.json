@@ -13,7 +13,7 @@
     "mt_api_key": "",
     "mt_source_lang": "en",
     "mt_target_lang": "tr",
-    "theme": "system",
+    "theme": "dark",
     "custom_theme": "minimalist",
     "enable_keyboard_nav": true,
     "high_contrast": false,
@@ -22,5 +22,5 @@
     "page_size": 50,
     "use_infinite_scroll": true,
     "max_history_entries": 100,
-    "tutorial_completed": false
+    "tutorial_completed": true
 }

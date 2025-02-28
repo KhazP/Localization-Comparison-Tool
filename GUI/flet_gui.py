@@ -58,6 +58,7 @@ import asyncio
 import time
 from utils.file_cache_service import file_cache_service
 from utils.file_processing_service import file_processing_service
+from components.history_dialog import HistoryDialogComponent
 
 # Get logger from service
 logger = logger_service.get_logger()
@@ -91,11 +92,15 @@ class App:
         else:
             page.theme_mode = ft.ThemeMode.LIGHT
 
-        # Remove theme toggle button initialization and keep only settings button
+        # Create settings dialog using the new component
+        self.settings_dialog_component = SettingsDialogComponent(page, self, self.config, self.COLORS)
+        self.settings_dialog = self.settings_dialog_component.dialog
+        
+        # Settings button that will use the SettingsDialogComponent
         self.settings_button = IconButton(
             icon=Icons.SETTINGS,
             icon_color=self.COLORS["text"]["secondary"],
-            tooltip="Settings",  # Changed from "Theme Settings"
+            tooltip="Settings",
             on_click=self.open_settings
         )
 
@@ -421,23 +426,6 @@ class App:
                 focusable=True,
                 data={"tab_index": tab_index},
             )
-
-        # Update settings dialog to use tabs
-        self.settings_dialog = ft.AlertDialog(
-            title=Text("Settings", size=20),
-            content=Container(
-                content=Column(
-                    controls=[self.settings_tabs],
-                    scroll=ft.ScrollMode.AUTO,
-                ),
-                width=500,  # Made slightly wider to accommodate tabs
-                height=400,  # Fixed height for better appearance
-            ),
-            actions=[
-                TextButton("Reset to Default", on_click=self.reset_settings),
-                TextButton("Close", on_click=self.close_settings),
-            ],
-        )
 
         # Initialize file paths
         self.source_file_path = ""
@@ -1035,6 +1023,10 @@ class App:
         
         # Force a UI refresh after app loads and show tutorial if needed
         threading.Timer(0.1, self.post_init).start()
+
+        # Initialize HistoryDialogComponent
+        self.history_dialog = HistoryDialogComponent(page, self)  # Remove the extra COLORS parameter
+        page.overlay.append(self.history_dialog.dialog)  # Add dialog to page overlay
 
     def post_init(self):
         """Perform post-initialization tasks."""
@@ -1855,7 +1847,7 @@ class App:
                 value="0%",
                 size=24,
                 weight=FontWeight.BOLD,
-                color="lightblue"
+                color="lightblue" 
             )
             self.stats_panel.content.content.controls.append(
                 Container(
@@ -1927,14 +1919,11 @@ class App:
 
     def open_settings(self, e):
         """Open the settings dialog."""
-        self.settings_dialog.open = True
-        self.register_keyboard_navigation()  # Register handler when dialog opens
-        self.page.update()
+        self.settings_dialog_component.open_dialog(e)
 
     def close_settings(self, e):
-        self.settings_dialog.open = False
-        self.unregister_keyboard_navigation()  # Unregister handler when dialog closes
-        self.page.update()
+        """Close the settings dialog."""
+        self.settings_dialog_component.close_dialog(e)
 
     def reset_colors(self, e):
         self.COLORS = self.THEMES["dark"]
@@ -2418,7 +2407,9 @@ class App:
                 
                 # Apply scaling
                 control.size = int(base_size * scale)
-                control.update()
+                # Only update if the control is in the page (avoids "must be added to the page first" error)
+                if hasattr(control, "page") and control.page:
+                    control.update()
             
             # Update text style for TextFields
             elif isinstance(control, TextField):
@@ -2430,7 +2421,9 @@ class App:
                     font_family=current_style.font_family,
                     weight=current_style.weight
                 )
-                control.update()
+                # Only update if the control is in the page (avoids "must be added to the page first" error)
+                if hasattr(control, "page") and control.page:
+                    control.update()
 
             # Recursively process containers and their children
             if hasattr(control, "content") and control.content:
@@ -2468,7 +2461,9 @@ class App:
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             )
-            tf.update()
+            # Only update if the control is in the page (avoids "must be added to the page first" error)
+            if hasattr(tf, "page") and tf.page:
+                tf.update()
 
         # Update statistics text
         stats_texts = [
@@ -2479,11 +2474,15 @@ class App:
         
         for stat in stats_texts:
             stat.size = int(24 * scale)  # Scale the statistics text size
-            stat.update()
+            # Only update if the control is in the page (avoids "must be added to the page first" error)
+            if hasattr(stat, "page") and stat.page:
+                stat.update()
 
         if hasattr(self, "stats_text_percentage"):
             self.stats_text_percentage.size = int(24 * scale)
-            self.stats_text_percentage.update()
+            # Only update if the control is in the page (avoids "must be added to the page first" error)
+            if hasattr(self.stats_text_percentage, "page") and self.stats_text_percentage.page:
+                self.stats_text_percentage.update()
 
         self.page.update()
 
@@ -2728,99 +2727,7 @@ class App:
 
     def open_history_dialog(self, e):
         """Open a dialog showing past comparison reports."""
-        # Run purge on old entries (older than 30 days)
-        history_manager.purge_old_entries(30)
-        
-        history = history_manager.load_history()
-        if not history:
-            history_controls = [Text("No history found.", color=self.COLORS["text"]["secondary"])]
-        else:
-            history_controls = []
-            for i, entry in enumerate(reversed(history), start=1):
-                # Format timestamp for display - handle both ISO and old format
-                timestamp = entry.get('timestamp', '')
-                try:
-                    if 'T' in timestamp:  # ISO format
-                        dt = datetime.datetime.fromisoformat(timestamp)
-                    else:  # Old format
-                        dt = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-                    formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
-                except (ValueError, TypeError):
-                    formatted_time = timestamp  # Fallback to raw timestamp if parsing fails
-                
-                # Each entry shows timestamp, file names and a button to load diff
-                entry_text = Text(
-                    f"{formatted_time}\nSource: {entry['source_file']}  Target: {entry['target_file']}",
-                    color=self.COLORS["text"]["secondary"],
-                    size=14,
-                )
-                load_btn = ElevatedButton(
-                    text="Load",
-                    on_click=lambda e, diff=entry['diff']: self.load_history_entry(diff),
-                    style=ButtonStyle(
-                        bgcolor=self.COLORS["bg"]["accent"],
-                        color=self.COLORS["text"]["primary"],
-                    )
-                )
-                history_controls.append(Row(controls=[entry_text, load_btn], alignment="spaceBetween"))
-                history_controls.append(Divider(color=self.COLORS["border"]["default"]))
-        
-        # Add count indicator to show how many entries are available
-        history_count = len(history)
-        max_entries = self.config.get("max_history_entries", 100)
-        title_text = f"Comparison History ({history_count}/{max_entries})"
-        
-        self.history_dialog = ft.AlertDialog(
-            title=Text(title_text, size=20),
-            content=Container(
-                content=Column(
-                    controls=history_controls,
-                    scroll=ft.ScrollMode.AUTO,
-                ),
-                width=500,
-                height=400,
-            ),
-            # Added a Clear History button alongside Close
-            actions=[
-                TextButton("Clear History", on_click=self.clear_history_entries),
-                TextButton("Close", on_click=lambda e: self.close_history_dialog())
-            ],
-        )
-        if self.history_dialog not in self.page.overlay:
-            self.page.overlay.append(self.history_dialog)
-        self.history_dialog.open = True
-        self.page.update()
-    
-    def clear_history_entries(self, e):
-        """Clear the history, update the dialog, and show a confirmation message."""
-        history_manager.clear_history()
-        self.show_snackbar("History cleared.")
-        # Refresh the history dialog content
-        self.history_dialog.content = Container(
-            content=Column(
-                controls=[Text("No history found.", color=self.COLORS["text"]["secondary"])],
-                scroll=ft.ScrollMode.AUTO,
-            ),
-            width=500,
-            height=400,
-        )
-        self.page.update()
-    
-    def close_history_dialog(self):
-        self.history_dialog.open = False
-        self.page.update()
-    
-    def load_history_entry(self, diff: str):
-        # Initialize missing line numbers if not already set
-        if not hasattr(self, "target_line_numbers"):
-            self.target_line_numbers = {}
-        if not hasattr(self, "source_line_numbers"):
-            self.source_line_numbers = {}
-        # ...existing code...
-        self.output_text.value = diff
-        self.build_results_table(diff)
-        self.show_snackbar("History entry loaded.")
-        self.page.update()
+        self.history_dialog.open_dialog(e)
 
     def save_config(self):
         """Save current configuration to disk."""

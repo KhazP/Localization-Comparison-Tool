@@ -165,13 +165,15 @@ class FileInputComponent:
             preview_text = file_cache_service.preview_file(file_path)
             
             # Get the appropriate preview TextField
-            preview_field = self.app.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
+            # Fix index for target file - use index 1 instead of 2
+            preview_field = self.app.preview_section.content.controls[0 if field_type == "source" else 1].content.controls[1].content
             preview_field.value = preview_text
             preview_field.update()
             
         except Exception as e:
             logging.error(f"Error reading preview: {str(e)}")
-            preview_field = self.app.preview_section.content.controls[0 if field_type == "source" else 2].content.controls[1].content
+            # Fix index for target file - use index 1 instead of 2
+            preview_field = self.app.preview_section.content.controls[0 if field_type == "source" else 1].content.controls[1].content
             preview_field.value = "Error reading file preview"
             preview_field.update()
 

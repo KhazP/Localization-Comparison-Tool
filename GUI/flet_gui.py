@@ -2008,33 +2008,52 @@ class App:
         
         self.page.update()
 
-    def handle_theme_change(self, e):
-        """Handle theme mode changes using themes from themes.py"""
-        selected = e.control.value if hasattr(e, 'control') else e
-        self.current_theme = selected
+    def handle_setting_change(self, e, setting_name):
+        """Generic handler for updating any setting in the config"""
+        self.config[setting_name] = e.control.value
+        ConfigManager.save(self.config)
         
-        # Set theme mode and colors based on selection
-        if selected == "system":
-            self.page.theme_mode = ft.ThemeMode.SYSTEM
+        # Apply changes that require immediate UI updates
+        if setting_name == "show_preview":
+            # Update preview visibility based on setting and file selection
+            self.preview_section.visible = e.control.value and (self.source_file_path or self.target_file_path)
+            # Update previews if now visible
+            if self.preview_section.visible:
+                if self.source_file_path:
+                    self.update_file_preview(self.source_file_path, "source")
+                if self.target_file_path:
+                    self.update_file_preview(self.target_file_path, "target")
+        
+        self.page.update()
+
+    def handle_theme_change(self, e):
+        """Handle theme mode changes"""
+        theme = e.control.value
+        self.current_theme = theme
+        
+        # Update page theme mode based on new theme
+        if theme == "system":
             if HAS_DARKDETECT:
                 system_theme = "dark" if darkdetect.isDark() else "light"
             else:
                 system_theme = "dark"
+            self.page.theme_mode = ft.ThemeMode.SYSTEM
             self.COLORS = self.THEMES[system_theme]
+        elif theme in ["dark", "amoled"]:
+            self.page.theme_mode = ft.ThemeMode.DARK
+            self.COLORS = self.THEMES[theme]
         else:
-            # Set explicit theme mode
-            if selected in ["dark", "amoled"]:
-                self.page.theme_mode = ft.ThemeMode.DARK
-            else:
-                self.page.theme_mode = ft.ThemeMode.LIGHT
-            self.COLORS = self.THEMES[selected]
+            self.page.theme_mode = ft.ThemeMode.LIGHT
+            self.COLORS = self.THEMES[theme]
+
+        # Cache the colors for this theme
+        self._cached_colors[theme] = self.COLORS
         
-        # Cache and save theme
-        self._cached_colors[selected] = self.COLORS
-        self.config["theme"] = selected
+        # Update config and save
+        self.config["theme"] = theme
         ConfigManager.save(self.config)
         
-        # Update UI with new colors
+        # Update UI with new theme colors
         self.update_theme_colors()
         self.page.update()
 

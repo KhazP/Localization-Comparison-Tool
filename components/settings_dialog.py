@@ -377,6 +377,24 @@ class SettingsDialogComponent:
                                             ),
                                         ],
                                     ),
+                                    Checkbox(
+                                        value=self.config.get("auto_fill_missing", False),
+                                        label="Auto-fill missing translations",
+                                        on_change=lambda e: self.handle_setting_change(e, "auto_fill_missing"),
+                                    ),
+                                    Checkbox(
+                                        value=self.config.get("confirm_actions", True),
+                                        label="Confirm destructive actions",
+                                        on_change=lambda e: self.handle_setting_change(e, "confirm_actions"),
+                                    ),
+                                    Slider(
+                                        min=0,
+                                        max=1000,
+                                        divisions=10,
+                                        value=self.config.get("animation_speed", 300),
+                                        label="{value}ms",
+                                        on_change=lambda e: self.handle_setting_change(e, "animation_speed"),
+                                    ),
                                 ],
                                 spacing=10,
                             ),
@@ -426,7 +444,7 @@ class SettingsDialogComponent:
                                                 divisions=10,
                                                 width=350,
                                                 label="{value}ms",
-                                                on_change=self.handle_animation_speed_change,
+                                                on_change=lambda e: self.handle_setting_change(e, "animation_speed"),
                                             ),
                                         ],
                                         spacing=10,
@@ -437,7 +455,7 @@ class SettingsDialogComponent:
                                             Checkbox(
                                                 value=self.config.get("confirm_actions", True),
                                                 label="Confirm destructive actions",
-                                                on_change=self.handle_confirm_actions_change,
+                                                on_change=lambda e: self.handle_setting_change(e, "confirm_actions"),
                                             ),
                                         ],
                                     ),
@@ -492,7 +510,7 @@ class SettingsDialogComponent:
                                     Checkbox(
                                         value=self.config.get("auto_fill_missing", False),
                                         label="Auto-Fill Missing Keys",
-                                        on_change=self.handle_auto_fill_change,
+                                        on_change=lambda e: self.handle_setting_change(e, "auto_fill_missing"),
                                     ),
                                     Checkbox(
                                         value=self.config.get("log_missing_strings", False),
@@ -1069,23 +1087,9 @@ class SettingsDialogComponent:
         # Update the button states
         self.switch_to_tab(self.current_tab)
 
-    def handle_auto_fill_change(self, e):
-        self.config["auto_fill_missing"] = e.control.value
-        self.app.save_config()
-        self.page.update()
-
-    def handle_animation_speed_change(self, e):
-        self.config["animation_speed"] = e.control.value
-        ConfigManager.save(self.config)
-        self.page.update()
-        
-    def handle_confirm_actions_change(self, e):
-        self.config["confirm_actions"] = e.control.value
-        ConfigManager.save(self.config)
-        self.page.update()
-
     def handle_mt_enabled_change(self, e):
-        """Handle machine translation toggle"""
+        """Handle machine translation toggle with validation"""
+        # Keep this specialized handler for MT validation
         self.config["mt_enabled"] = e.control.value
         
         # Validate MT settings
@@ -1121,6 +1125,7 @@ class SettingsDialogComponent:
 
     def handle_ignore_patterns_change(self, e):
         """Handle changes to ignore patterns text field"""
+        # Keep this specialized handler for pattern processing
         patterns = [p.strip() for p in e.control.value.split(",") if p.strip()]
         self.config["ignore_patterns"] = patterns
         ConfigManager.save(self.config)

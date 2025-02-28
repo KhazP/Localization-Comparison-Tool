@@ -1832,8 +1832,8 @@ class App:
         else:
             indicator = "  "
         line = f"{indicator}{key.ljust(max_key_length)} : {value}"
-        # Delegate syntax highlighting to our helper module.
-        import syntax_highlighter
+        # Use the properly imported module from GUI package
+        from GUI import syntax_highlighter  # Move import here to ensure it's available
         return syntax_highlighter.highlight_line(line, change_type)
 
     # Update format_summary method

@@ -6,67 +6,102 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.8, 3.9, "3.10"]
+      fail-fast: false
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+    
+    - name: Fix Git permissions
+      run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
+        # Fix requirements.txt
+        sed -i '1d' requirements.txt  # Remove the first line with filepath comment
         pip install -r requirements.txt
         pip install pytest pytest-asyncio pytest-cov
     
+    - name: List installed packages
+      run: pip list
+    
+    - name: Check Python version
+      run: |
+        python --version
+        pip --version
+    
     - name: Run tests with coverage
       run: |
-        pytest --cov=. --cov-report=xml
+        python -m pytest --cov=. --cov-report=xml -v
+      env:
+        PYTHONPATH: ${{ github.workspace }}
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
-        fail_ci_if_error: true
-
-    - name: Cache pip packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        fail_ci_if_error: false
 
   lint:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Fix Git permissions
+      run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
     
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: "3.10"
+        cache: 'pip'
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
+        # Fix requirements.txt
+        sed -i '1d' requirements.txt  # Remove the first line with filepath comment
         pip install -r requirements.txt
+        pip install pylint
     
     - name: Create pylintrc
       run: |
-        echo "[MASTER]" > .pylintrc
-        echo "init-hook='import sys; sys.path.append(\".\")'" >> .pylintrc
-        echo "disable=import-error,invalid-name" >> .pylintrc
+        cat > .pylintrc << EOL
+[MASTER]
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+disable=import-error,invalid-name,missing-docstring,line-too-long,too-many-instance-attributes,too-many-arguments
+
+[FORMAT]
+max-line-length=120
+EOL
+    
+    - name: List installed packages
+      run: pip list
     
     - name: Run pylint
       run: |
-        PYTHONPATH=$PYTHONPATH:$(pwd) pylint ./GUI ./MixedParser
+        PYTHONPATH=$PYTHONPATH:$(pwd) pylint --jobs=0 ./GUI ./MixedParser

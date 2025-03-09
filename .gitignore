@@ -25,6 +25,9 @@ htmlcov/
 code-style.md
 copilot-instructions.md
 
+# Personal TODO list
+docs/TODO.md
+
 # Logs and temporary files
 *.log
 localizer_debug.log
@@ -34,7 +37,7 @@ Thumbs.db
 # Virtual environments
 venv/
 env/
-.env/
+.venv/
 .venv/
 
 # Git LFS (if you decide to use it later)
@@ -43,5 +46,7 @@ env/
 # Test Files for QA
 Sample Translation/
 
-
 hook-flet.py
+
+# Documentation
+docs/report

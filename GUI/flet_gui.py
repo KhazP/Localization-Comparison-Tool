@@ -740,13 +740,10 @@ class App:
         )
 
         # Force a UI refresh after app loads to ensure theme consistency
-        self.page.on_load = self.post_init
+        self.page.on_load = lambda _: asyncio.create_task(self.post_init())
 
         # Initialize onboarding tutorial
         self.tutorial = OnboardingTutorial(page, self)
-        
-        # Force a UI refresh after app loads and show tutorial if needed
-        threading.Timer(0.1, self.post_init).start()
 
         # Initialize HistoryDialogComponent
         self.history_dialog = HistoryDialogComponent(page, self)  # Remove the extra COLORS parameter

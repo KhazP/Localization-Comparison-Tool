@@ -55,7 +55,7 @@ or acting as an appointed representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the project maintainer at [INSERT YOUR CONTACT INFO HERE].
+reported to the project maintainer at [alpyalay@gmail.com](mailto:alpyalay@gmail.com).
 All complaints will be reviewed and investigated promptly and fairly.
 
 As the project maintainer, I am obligated to respect the privacy and security of the

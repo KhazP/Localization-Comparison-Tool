@@ -4,7 +4,7 @@
 
 ![image](https://github.com/user-attachments/assets/2a19bfb0-9ecf-40b4-9286-02ac368618b9)
 
-A modern, open-source localization tool built with [Flet](https://flet.dev/) for comparing and analyzing localization files. This tool helps streamline the localization process by making it easy to identify differences between translation files.
+A modern, open-source localization tool built with [Flet](https://flet.dev/) for comparing and analyzing localization files. This tool helps streamline the localization process by making it easy to[...]
 
 [![GitHub stars](https://img.shields.io/github/stars/KhazP/LocalizerAppMain)](https://github.com/KhazP/LocalizerAppMain/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -58,17 +58,18 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Using Python
 Run the application using the following command:
 
 ```bash
 python main.py
 ```
 
-The tool will open with an intuitive interface:
-1. Load your source and target localization files
-2. Select comparison options
-3. View the differences highlighted in the comparison view
-4. Copy results if needed
+### Using the .bat file
+Alternatively, you can start the program using the provided `.bat` file:
+
+1. Double-click on the `start_localizer.bat` file.
+2. The tool will launcher after the CMD/Terminal window.
 
 ## Documentation
 

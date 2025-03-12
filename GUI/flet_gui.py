@@ -80,6 +80,12 @@ class App:
         # Add color cache
         self._cached_colors = {}
         
+        # Create a SnackBar for the app
+        self.page.snack_bar = ft.SnackBar(
+            content=ft.Text(""),
+            bgcolor=self.COLORS["bg"]["secondary"] if hasattr(self, "COLORS") else "#333333",
+        )
+        
         # Replace the existing THEMES with the imported one
         self.THEMES = THEMES
 
@@ -88,6 +94,9 @@ class App:
         self.current_theme = self.config.get("theme", "system")
         self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
         self._cached_colors = {self.current_theme: self.COLORS}
+
+        # Update the snack bar colors now that COLORS is initialized
+        self.page.snack_bar.bgcolor = self.COLORS["bg"]["secondary"]
 
         # Create settings dialog using SettingsDialogComponent
         self.settings_dialog_component = SettingsDialogComponent(page, self, self.config, self.COLORS)
@@ -263,157 +272,29 @@ class App:
         )
         self.compare_button = self.create_compare_button()
         
-        self.source_label = Text("No file selected", color=self.COLORS["text"]["secondary"], expand=True)
-        self.target_label = Text("No file selected", color=self.COLORS["text"]["secondary"], expand=True)
-        self.source_icon = Icon(Icons.DESCRIPTION, color=self.COLORS["text"]["secondary"], size=20)
-        self.target_icon = Icon(Icons.DESCRIPTION, color=self.COLORS["text"]["secondary"], size=20)
-        
-        self.source_picker = FilePicker(on_result=lambda e: self.handle_file_picked(e, self.source_label, self.source_icon, "source"))
-        self.target_picker = FilePicker(on_result=lambda e: self.handle_file_picked(e, self.target_label, self.target_icon, "target"))
-        
-        page.overlay.extend([self.source_picker, self.target_picker])
-        # Page setup
-        page.title = "Localization Helper"
-        page.theme_mode = ft.ThemeMode.SYSTEM
-        page.padding = 0  # We'll handle padding in the main container
-        page.bgcolor = "#111827"  # Matches Tailwind's gray-900
-        page.snack_bar = SnackBar(
-            content=Text(""),
-            bgcolor="#374151",  # Tailwind gray-700
-        )
-        
-        # Configure default and dark themes
-        page.theme = ft.Theme(color_scheme_seed=Colors.GREEN)
-        page.dark_theme = ft.Theme(color_scheme_seed=Colors.BLUE)
-
-        # Create modern file input
-        def create_file_input(label: str, is_source=True):
-            # Create a Browse button and wrap it in an AnimatedContainer for hover effects.
-            browse_button = ElevatedButton(
-                "Browse",
-                icon=Icons.UPLOAD,
-                tooltip=f"Select a {label}",
-                on_click=self.open_source_picker if is_source else self.open_target_picker,
-                bgcolor=self.COLORS["bg"]["accent"],
-                color=self.COLORS["text"]["primary"],
-                height=36,
-                style=ButtonStyle(shape=RoundedRectangleBorder(radius=8)),
-                focusable=True,
-                data={"tab_index": 1 if is_source else 2}
-            )
-            # Wrap in a container to enable hover state transition.
-            hover_button = Container(
-                content=browse_button,
-                animate=ft.Animation(duration=200, curve="easeInOut"),
-                on_hover=lambda e, btn=browse_button: self._on_browse_hover(e, btn)
-            )
-            return Container(
-                content=Column(
-                    controls=[
-                        Text(label, color=self.COLORS["text"]["secondary"], size=14, weight=FontWeight.W_500),
-                        Container(
-                            content=Row(
-                                controls=[
-                                    self.source_icon if is_source else self.target_icon,
-                                    self.source_label if is_source else self.target_label,
-                                    hover_button,
-                                ],
-                                alignment="center",
-                                spacing=8,
-                            ),
-                            border=border.all(2, self.COLORS["border"]["default"]),
-                            border_radius=8,
-                            bgcolor=self.COLORS["bg"]["input"],
-                            padding=12,
-                        ),
-                    ],
-                    spacing=8,
-                )
-            )
-
-        # Main content area with vertical scrolling
+        # Initialize file input component first to access its properties later
         self.file_input = FileInputComponent(page, self)
+
+        # Initialize results view component before creating the layout
+        self.results_view = ResultsViewComponent(page, self, self.COLORS)
+        
+        # Initialize the stats panel component before creating the layout
+        self.stats_panel_component = StatsPanelComponent(page, self, self.COLORS)
+        
+        # Get references to components for easier access
         self.source_file_container = self.file_input.source_file_container
         self.target_file_container = self.file_input.target_file_container
-
-        # Add statistics fields after other UI element initializations
-        self.stats_text_total = Text(
-            value="0",
-            size=24,
-            weight=FontWeight.BOLD,
-            color=self.COLORS["text"]["primary"],
-        )
-        self.stats_text_missing = Text(
-            value="0",
-            size=24,
-            weight=FontWeight.BOLD,
-            color=self.COLORS["changes"]["removed"],
-        )
-        self.stats_text_obsolete = Text(
-            value="0",
-            size=24,
-            weight=FontWeight.BOLD,
-            color=self.COLORS["changes"]["added"],
-        )
-
-        # Create statistics panel
-        self.stats_panel = Card(
-            content=Container(
-                content=Row(
-                    controls=[
-                        Container(
-                            content=Column(
-                                controls=[
-                                    Text("Total Keys", size=14, color=self.COLORS["text"]["secondary"]),
-                                    self.stats_text_total,
-                                ],
-                                horizontal_alignment="center",
-                                spacing=4,
-                            ),
-                            padding=padding.all(16),
-                            expand=True,
-                        ),
-                        VerticalDivider(
-                            color=self.COLORS["border"]["default"],
-                            width=1,
-                        ),
-                        Container(
-                            content=Column(
-                                controls=[
-                                    Text("Missing in Target", size=14, color=self.COLORS["text"]["secondary"]),
-                                    self.stats_text_missing,
-                                ],
-                                horizontal_alignment="center",
-                                spacing=4,
-                            ),
-                            padding=padding.all(16),
-                            expand=True,
-                        ),
-                        VerticalDivider(
-                            color=self.COLORS["border"]["default"],
-                            width=1,
-                        ),
-                        Container(
-                            content=Column(
-                                controls=[
-                                    Text("Missing in Source", size=14, color=self.COLORS["text"]["secondary"]),
-                                    self.stats_text_obsolete,
-                                ],
-                                horizontal_alignment="center",
-                                spacing=4,
-                            ),
-                            padding=padding.all(16),
-                            expand=True,
-                        ),
-                    ],
-                    alignment="center",
-                ),
-                bgcolor=self.COLORS["bg"]["secondary"],
-                border_radius=8,
-            ),
-            elevation=1,
-        )
-
+        self.source_label = self.file_input.source_label
+        self.target_label = self.file_input.target_label
+        self.source_icon = self.file_input.source_icon
+        self.target_icon = self.file_input.target_icon
+        self.output_text = self.results_view.output_text
+        self.summary_text = self.results_view.summary_text
+        
+        # Replace these with references to the results_view properties
+        self.output_text = self.results_view.output_text
+        self.summary_text = self.results_view.summary_text
+        
         # Add preview containers after file input initialization
         self.preview_section = Container(
             visible=False,
@@ -493,7 +374,14 @@ class App:
             margin=padding.only(top=10, bottom=10),
         )
 
-        # In the main_card_container initialization, add the stats_panel
+        # Initialize results view component BEFORE creating the layout
+        self.results_view = ResultsViewComponent(page, self, self.COLORS)
+        
+        # Replace these with references to the results_view properties
+        self.output_text = self.results_view.output_text
+        self.summary_text = self.results_view.summary_text
+        
+        # Update the main_card_container to use the results_view
         self.main_card_container = Container(
             expand=True,
             content=Column(
@@ -524,48 +412,29 @@ class App:
                     ),
                     # NEW: Statistics panel
                     Container(
-                        content=self.stats_panel,
+                        content=self.stats_panel_component.panel,
                         padding=padding.only(top=8, bottom=8),
                     ),
-                    # Results area using dynamic sizing
+                    # Results area using the results_view component
                     Container(
                         content=Card(
                             content=Column(
                                 expand=True,
                                 controls=[
-                                    # Results header (unchanged)
-                                    Container(
-                                        content=Row(
-                                            controls=[
-                                                Text(
-                                                    "Results",
-                                                    size=16,
-                                                    weight="w500",
-                                                    color=self.COLORS["text"]["secondary"],
-                                                ),
-                                                IconButton(
-                                                    icon=Icons.COPY,
-                                                    icon_color=self.COLORS["text"]["secondary"],
-                                                    tooltip="Copy comparison results",
-                                                    on_click=self.copy_results,
-                                                ),
-                                            ],
-                                            alignment="spaceBetween",
-                                        ),
-                                        padding=padding.only(left=16, right=16, top=16),
-                                    ),
+                                    # Results header from results_view
+                                    self.results_view.results_header,
                                     Divider(
                                         color=self.COLORS["border"]["default"],
                                         height=1,
                                     ),
-                                    # Removed: Split view container of source_text and target_text
-                                    # NEW: Container for output summary only
+                                    # Container for the results_view's results_container
                                     Container(
-                                        content=self.results_container,
+                                        content=self.results_view.results_container,
                                         padding=padding.all(16),
                                         expand=True,
+                                        clip_behavior=ft.ClipBehavior.HARD_EDGE
                                     ),
-                                    # Status indicators in footer (unchanged)
+                                    # Status indicators in footer
                                     Container(
                                         content=Row(
                                             controls=[
@@ -579,9 +448,10 @@ class App:
                                         expand=True,
                                     ),
                                 ],
-                                spacing=32,
+                                spacing=0,
                             ),
                             elevation=1,
+                            clip_behavior=ft.ClipBehavior.HARD_EDGE
                         ),
                         expand=True,
                     ),
@@ -710,35 +580,6 @@ class App:
             expand=True,
         )
 
-        # Initialize results view component
-        self.results_view = ResultsViewComponent(page, self, self.COLORS)
-        
-        # Update results area card to clip its content as well
-        self.results_area = Container(
-            content=Card(
-                content=Column(
-                    expand=True,
-                    controls=[
-                        self.results_view.results_header,
-                        Divider(
-                            color=self.COLORS["border"]["default"],
-                            height=1,
-                        ),
-                        Container(
-                            content=self.results_view.results_container,
-                            padding=padding.all(16),
-                            expand=True,
-                            clip_behavior=ft.ClipBehavior.HARD_EDGE  # Changed here too
-                        ),
-                    ],
-                    spacing=0,
-                ),
-                elevation=1,
-                clip_behavior=ft.ClipBehavior.HARD_EDGE  # Changed here too
-            ),
-            expand=True,
-        )
-
         # Force a UI refresh after app loads to ensure theme consistency
         self.page.on_load = lambda _: asyncio.create_task(self.post_init())
 
@@ -748,7 +589,22 @@ class App:
         # Initialize HistoryDialogComponent
         self.history_dialog = HistoryDialogComponent(page, self)  # Remove the extra COLORS parameter
         page.overlay.append(self.history_dialog.dialog)  # Add dialog to page overlay
+        
+    # Remove duplicate methods for file handling that are now handled by FileInputComponent
+    # def open_source_picker
+    # def open_target_picker
+    # def handle_file_picked
+    # def _on_browse_hover
 
+    # Update the update_compare_button method to work with FileInputComponent
+    def update_compare_button(self):
+        """Enable/disable compare button based on file selection"""
+        has_source = bool(self.source_file_path) 
+        has_target = bool(self.target_file_path)
+        self.compare_button.content.controls[0].disabled = not (has_source and has_target)
+        self.page.update()
+
+    # Keep the rest of the methods unchanged
     async def post_init(self, e=None):
         """Perform post-initialization tasks using async/await."""
         # Force UI refresh first
@@ -945,13 +801,22 @@ class App:
             self.update_statistics(stats['total_keys'], stats['missing_keys'], stats['obsolete_keys'])
             
             # Build the comparison view
-            self.build_results_table(comparison_result)
+            self.results_view.build_results_table(comparison_result)
             
             # Show completed status
             self.status_label.value = (
                 f"Comparison complete: {stats['total_keys']} keys, "
                 f"{stats['missing_keys']} missing, {stats['obsolete_keys']} obsolete"
             )
+
+            # Save comparison to history
+            history_entry = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "source_file": os.path.basename(self.source_file_path),
+                "target_file": os.path.basename(self.target_file_path),
+                "diff": comparison_result
+            }
+            history_manager.save_history(history_entry)
                 
         except FileNotFoundError as e:
             logging.error(f"File not found: {str(e)}")
@@ -1261,8 +1126,12 @@ class App:
             obsolete_keys = len(obsolete_keys_set)
             self.update_statistics(total_keys, missing_keys, obsolete_keys)
 
+            # Store the comparison result in the output_text for copying
             self.output_text.value = comparison_result
-            self.build_results_table(comparison_result)
+            
+            # Delegate the rendering to the results_view component
+            self.results_view.build_results_table(comparison_result)
+            
             self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
 
             history_entry = {
@@ -1288,214 +1157,13 @@ class App:
         translate_button.visible = self.config["mt_enabled"]
         self.page.update()
 
-    def group_keys_by_namespace(self, lines: list[str]) -> dict:
-        groups = {}
-        for line in lines:
-            # Assume lines are in format: "+ key : value ..." (or "-" or "~")
-            # Remove indicator and split by ":" to isolate key.
-            try:
-                indicator, rest = line.split(" ", 1)
-                key_part = rest.split(":", 1)[0].strip()
-            except ValueError:
-                key_part = "General"
-            namespace = key_part.split(".")[0] if "." in key_part else "General"
-            groups.setdefault(namespace, []).append(line)
-        return groups
-
-    def build_results_table(self, comparison_result: str):
-        """Initialize the results table with search field and content"""
-        from flet import Icon, Column, Row, Text, TextField
-        lines = comparison_result.splitlines()
-        sorted_lines = sorted(lines, key=lambda l: {'-': 0, '~': 1, '+': 2}.get(l[0], 3))
-        result_rows = []
-        
-        line_number = 1  # Initialize line counter
-        
-        if self.config.get("group_by_namespace"):
-            groups = self.group_keys_by_namespace(sorted_lines)
-            for namespace, group_lines in groups.items():
-                header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
-                result_rows.append(header)
-                for line in group_lines:
-                    row = self.create_result_row(line, line_number if self.config["show_line_numbers"] else None)
-                    result_rows.append(row)
-                    line_number += 1
-        else:
-            for line in sorted_lines:
-                row = self.create_result_row(line, line_number if self.config["show_line_numbers"] else None)
-                result_rows.append(row)
-                line_number += 1
-
-        # Store the original rows for filtering
-        self.original_result_rows = result_rows
-
-        # Create results column with fixed search field
-        self.results_column = Column(
-            controls=[
-                TextField(
-                    hint_text="Search results...",
-                    on_change=lambda e: self.filter_results(e.control.value),
-                    border=border.all(color=self.COLORS["border"]["default"]),
-                    content_padding=padding.all(10),
-                ),
-                Column(  # Wrapper for filtered results
-                    controls=result_rows,
-                    scroll=ft.ScrollMode.AUTO,
-                    spacing=2,
-                    expand=True,
-                )
-            ],
-            spacing=10,
-            scroll=ft.ScrollMode.AUTO,
-        )
-        
-        # Update the container content
-        self.results_container.content = self.results_column
-        self.page.update()
-
-    def filter_results(self, query: str):
-        """Filter results based on search query while preserving expand/collapse states"""
-        query = query.lower()
-        
-        filtered_rows = []
-        current_namespace = None
-        namespace_has_matches = False
-        namespace_content = []
-        
-        for row in self.original_result_rows:
-            # Check if this is a namespace header
-            if len(row.controls) == 1 and isinstance(row.controls[0], Text) and row.controls[0].weight == "bold":
-                # If we had a previous namespace and it had matches, add it and respect its expansion state
-                if current_namespace and namespace_has_matches:
-                    # Preserve the previous namespace's expansion state if it exists
-                    if hasattr(current_namespace, 'expanded'):
-                        for content in namespace_content:
-                            content.visible = current_namespace.expanded
-                    filtered_rows.append(current_namespace)
-                    filtered_rows.extend(namespace_content)
-                
-                # Store new namespace header and initialize its expansion state if not set
-                current_namespace = row
-                if not hasattr(current_namespace, 'expanded'):
-                    current_namespace.expanded = self.expand_all
-                namespace_content = []
-                namespace_has_matches = False
-                continue
-            
-            # For content rows, check if they match the query
-            if len(row.controls) > 1 and isinstance(row.controls[1], Text):
-                text = row.controls[1].value.lower()
-                if query in text:
-                    if current_namespace:
-                        namespace_content.append(row)
-                        namespace_has_matches = True
-                    else:
-                        filtered_rows.append(row)
-        
-        # Handle the last namespace
-        if current_namespace and namespace_has_matches:
-            if hasattr(current_namespace, 'expanded'):
-                for content in namespace_content:
-                    content.visible = current_namespace.expanded
-            filtered_rows.append(current_namespace)
-            filtered_rows.extend(namespace_content)
-        
-        # Update only the results portion while keeping the search field
-        self.results_column.controls[1].controls = filtered_rows
-        self.page.update()
-
-    def create_result_row(self, line: str, line_number: int = None) -> Row:
-        """Helper method to create a result row with proper icon and text"""
-        controls = []
-        
-        # Extract key using improved regex to match keys with letters,dots or dashes
-        key_match = re.search(r'^[+-~]\s*([\w\.\-]+)\s*:', line)
-        if key_match:
-            key = key_match.group(1).strip()
-            # Look up the original line number using the key from the parser
-            if line.startswith("+"):
-                actual_line = self.source_line_numbers.get(key, "?")
-            elif line.startswith("-"):
-                actual_line = self.target_line_numbers.get(key, "?")
-            else:
-                actual_line = self.target_line_numbers.get(key, "?")
-
-        else:
-            actual_line = "?"
-
-        # Add line number if enabled
-        if self.config["show_line_numbers"] and line_number is not None:
-            controls.append(
-                Text(
-                    f"{actual_line:>4} │ ",
-                    size=14,
-                    weight="w400",
-                    color=self.COLORS["text"]["secondary"],
-                    font_family="Consolas",
-                )
-            )
-            
-        # Add appropriate icon
-        if line.startswith("+"):
-            icon = Icon(Icons.ADD, color="green")
-        elif line.startswith("-"):
-            icon = Icon(Icons.REMOVE, color="red")
-        elif line.startswith("~"):
-            icon = Icon(Icons.WARNING, color="yellow")
-        else:
-            icon = Icon(Icons.HELP, color="grey")
-            
-        controls.extend([
-            icon,
-            Text(line, font_family="Consolas")
-        ])
-        
-        return Row(controls=controls, spacing=8)
-
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
         """Update statistics panel with current comparison results"""
-        # Safety check for required UI components
-        if not hasattr(self, 'stats_panel') or not hasattr(self.stats_panel, 'content'):
-            logging.warning("Stats panel not fully initialized when update_statistics was called")
-            return
-
-        from flet import Container, Column, Text
-        translated_keys = total_keys - missing_keys
-        translation_percentage = (translated_keys / total_keys * 100) if total_keys else 0
-        
-        self.stats_text_total.value = str(total_keys)
-        self.stats_text_missing.value = str(missing_keys)
-        self.stats_text_obsolete.value = str(obsolete_keys)
-        
-        if not hasattr(self, "stats_text_percentage"):
-            self.stats_text_percentage = Text(
-                value="0%",
-                size=24,
-                weight=FontWeight.BOLD,
-                color="lightblue"
-            )
-            # Additional safety check before appending
-            if hasattr(self.stats_panel.content, 'content') and hasattr(self.stats_panel.content.content, 'controls'):
-                self.stats_panel.content.content.controls.append(
-                    Container(
-                        content=Column(
-                            controls=[
-                                Text("Translated %", size=14, color=self.COLORS["text"]["secondary"]),
-                                self.stats_text_percentage,
-                            ],
-                            horizontal_alignment="center",
-                            spacing=4,
-                        ),
-                        padding=padding.all(16),
-                        expand=True,
-                    )
-                )
-            else:
-                logging.warning("Stats panel structure not complete when trying to add percentage display")
-                return
-                
-        self.stats_text_percentage.value = f"{translation_percentage:.1f}%"
-        self.page.update()
+        # Delegate to the StatsPanelComponent
+        if hasattr(self, 'stats_panel_component'):
+            self.stats_panel_component.update_stats(total_keys, missing_keys, obsolete_keys)
+        else:
+            logging.warning("StatsPanelComponent not initialized when update_statistics was called")
 
     def toggle_section(self, e, column):
         """Toggle visibility of a namespace section"""
@@ -1530,14 +1198,8 @@ class App:
 
     def copy_results(self, e):
         """Copy results text to clipboard and show feedback"""
-        self.page.set_clipboard(self.output_text.value)
-        self.show_snackbar("Results copied to clipboard")
-
-    def open_source_picker(self, e):
-        self.source_picker.pick_files()
-
-    def open_target_picker(self, e):
-        self.target_picker.pick_files()
+        # Delegate to the results_view component
+        self.results_view.copy_results(e)
 
     def handle_window_event(self, e):
         # Add window event handling as needed
@@ -1561,11 +1223,34 @@ class App:
 
     def open_settings(self, e):
         """Open the settings dialog."""
-        self.settings_dialog_component.open_dialog(e)
+        if hasattr(self, 'settings_dialog') and self.settings_dialog:
+            self.settings_dialog.open = True
+            self.page.update()
+        elif hasattr(self, 'settings_dialog_component'):
+            self.settings_dialog_component.open_dialog(e)
 
     def close_settings(self, e):
         """Close the settings dialog."""
-        self.settings_dialog_component.close_dialog(e)
+        if hasattr(self, 'settings_dialog') and self.settings_dialog:
+            self.settings_dialog.open = False
+            self.page.update()
+        elif hasattr(self, 'settings_dialog_component'):
+            self.settings_dialog_component.close_dialog(e)
+
+    def open_history_dialog(self, e):
+        """Open a dialog showing past comparison reports."""
+        if hasattr(self, 'history_dialog'):
+            # If using HistoryDialogComponent class
+            if hasattr(self.history_dialog, 'open_dialog'):
+                # This will refresh history before opening the dialog
+                self.history_dialog.open_dialog(e)
+            # If we have direct access to the dialog property
+            elif hasattr(self.history_dialog, 'dialog'):
+                # Make sure to load history before opening the dialog
+                if hasattr(self.history_dialog, '_load_history'):
+                    self.history_dialog._load_history()
+                self.history_dialog.dialog.open = True
+                self.page.update()
 
     def reset_colors(self, e):
         self.COLORS = self.THEMES["dark"]
@@ -1593,9 +1278,6 @@ class App:
         self.page.bgcolor = self.COLORS["bg"]["primary"]
         self.page.theme = ft.Theme(color_scheme_seed=Colors.GREEN)
         self.page.dark_theme = ft.Theme(color_scheme_seed=Colors.BLUE)
-
-        # Rest of UI updates...
-        # ...existing code...
 
         # Merge custom theme if available
         custom_theme = self.config.get("custom_theme", {})
@@ -1653,12 +1335,6 @@ class App:
         # Update main card container background color:
         self.main_card_container.bgcolor = self.COLORS["bg"]["secondary"]
 
-        # Update statistics panel colors
-        self.stats_text_total.color = self.COLORS["text"]["primary"]
-        self.stats_text_missing.color = self.COLORS["changes"]["removed"]
-        self.stats_text_obsolete.color = self.COLORS["changes"]["added"]
-        self.stats_panel.content.bgcolor = self.COLORS["bg"]["secondary"]
-
         # Update preview section colors
         if hasattr(self, 'preview_section'):
             for container in self.preview_section.content.controls:
@@ -1670,41 +1346,26 @@ class App:
                     preview_container.bgcolor = self.COLORS["bg"]["input"]
                     preview_container.border = border.all(color=self.COLORS["border"]["default"])
 
+        # Update components with new colors
         if hasattr(self, 'file_input'):
             self.file_input.update_colors(self.COLORS)
+
+        if hasattr(self, 'results_view'):
+            self.results_view.update_colors(self.COLORS)
+            
+        # Update the stats panel component with new colors
+        if hasattr(self, 'stats_panel_component'):
+            self.stats_panel_component.update_colors(self.COLORS)
 
         logging.info("Theme updated to '%s'. Current COLORS: %s", theme_key, self.COLORS)
 
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
-        from flet import Container, Column, Text
-        translated_keys = total_keys - missing_keys
-        translation_percentage = (translated_keys / total_keys * 100) if total_keys else 0
-        self.stats_text_total.value = str(total_keys)
-        self.stats_text_missing.value = str(missing_keys)
-        self.stats_text_obsolete.value = str(obsolete_keys)
-        if not hasattr(self, "stats_text_percentage"):
-            self.stats_text_percentage = Text(
-                value="0%",
-                size=24,
-                weight=FontWeight.BOLD,
-                color="lightblue"
-            )
-            self.stats_panel.content.content.controls.append(
-                Container(
-                    content=Column(
-                        controls=[
-                            Text("Translated %", size=14, color=self.COLORS["text"]["secondary"]),
-                            self.stats_text_percentage,
-                        ],
-                        horizontal_alignment="center",
-                        spacing=4,
-                    ),
-                    padding=padding.all(16),
-                    expand=True,
-                )
-            )
-        self.stats_text_percentage.value = f"{translation_percentage:.1f}%"
-        self.page.update()
+        """Update statistics panel with current comparison results"""
+        # Delegate to the StatsPanelComponent
+        if hasattr(self, 'stats_panel_component'):
+            self.stats_panel_component.update_stats(total_keys, missing_keys, obsolete_keys)
+        else:
+            logging.warning("StatsPanelComponent not initialized when update_statistics was called")
 
     def open_source_dir_picker(self, e):
         self.source_dir_picker.get_directory_path()
@@ -1969,7 +1630,18 @@ class App:
 
     def open_history_dialog(self, e):
         """Open a dialog showing past comparison reports."""
-        self.history_dialog.open_dialog(e)
+        if hasattr(self, 'history_dialog'):
+            # If using HistoryDialogComponent class
+            if hasattr(self.history_dialog, 'open_dialog'):
+                # This will refresh history before opening the dialog
+                self.history_dialog.open_dialog(e)
+            # If we have direct access to the dialog property
+            elif hasattr(self.history_dialog, 'dialog'):
+                # Make sure to load history before opening the dialog
+                if hasattr(self.history_dialog, '_load_history'):
+                    self.history_dialog._load_history()
+                self.history_dialog.dialog.open = True
+                self.page.update()
 
     def save_config(self):
         """Save current configuration to disk."""

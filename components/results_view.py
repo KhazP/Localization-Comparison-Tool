@@ -19,27 +19,36 @@ class ResultsViewComponent:
         self.expand_collapse_button = self._create_expand_collapse_button()
         self.results_header = self._create_results_header()
         self.results_tabs = self._create_results_tabs()
-        self.results_container = self._create_results_container()
+
+        # Initialize search field
+        self.search_field = TextField(
+            hint_text="Search results...",
+            on_change=lambda e: self.filter_results(e.control.value),
+            border=border.all(color=colors["border"]["default"]),
+            content_padding=padding.all(10),
+        )
+
+        # Initialize results content
+        self.results_content = Column(  # Results container
+            controls=[],
+            scroll=ScrollMode.AUTO,
+            spacing=2,
+            expand=True,
+        )
 
         # Initialize results column with search field
         self.results_column = Column(
             controls=[
-                TextField(
-                    hint_text="Search results...",
-                    on_change=lambda e: self.filter_results(e.control.value),
-                    border=border.all(color=colors["border"]["default"]),
-                    content_padding=padding.all(10),
-                ),
-                Column(  # Results container
-                    controls=[],
-                    scroll=ScrollMode.AUTO,
-                    spacing=2,
-                    expand=True,
-                )
+                self.search_field,
+                self.results_content
             ],
             spacing=10,
             scroll=ScrollMode.AUTO,
+            expand=True,  # Make sure the column expands
         )
+
+        # Create the results container after initializing the column
+        self.results_container = self._create_results_container()
 
     def _create_output_text(self):
         return TextField(
@@ -123,43 +132,64 @@ class ResultsViewComponent:
         )
 
     def _create_results_container(self):
+        # Start with the results column visible
         return Container(
-            content=self.summary_text,
-            padding=padding.all(16),
+            content=self.results_column,
+            padding=padding.all(8),  # Reduce padding to give more space for content
             expand=True,
         )
 
     def build_results_table(self, comparison_result: str):
         """Initialize the results table with search field and content"""
+        if not comparison_result:
+            self.results_content.controls = [
+                Text("No comparison results to display", color=self.colors["text"]["secondary"])
+            ]
+            self.page.update()
+            return
+
         lines = comparison_result.splitlines()
-        sorted_lines = sorted(lines, key=lambda l: {'-': 0, '~': 1, '+': 2}.get(l[0], 3))
+        sorted_lines = sorted(lines, key=lambda l: {'-': 0, '~': 1, '+': 2}.get(l[0] if l else '', 3))
         result_rows = []
         
-        if self.app.config.get("group_by_namespace"):
+        if hasattr(self.app, 'config') and self.app.config.get("group_by_namespace", True):
             groups = self.group_keys_by_namespace(sorted_lines)
             for namespace, group_lines in groups.items():
                 header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
                 result_rows.append(header)
                 for line in group_lines:
-                    key = line.split(" ", 1)[-1].split(":", 1)[0].strip()
-                    line_number = self.app.source_line_numbers.get(key, None) if getattr(self.app, "show_line_numbers", False) else None
+                    key = line.split(" ", 1)[-1].split(":", 1)[0].strip() if " " in line else ""
+                    line_number = self.app.source_line_numbers.get(key, None) if hasattr(self.app, "show_line_numbers") and getattr(self.app, "show_line_numbers", False) else None
                     row = self.create_result_row(line, line_number=line_number)
                     result_rows.append(row)
         else:
             for line in sorted_lines:
-                key = line.split(" ", 1)[-1].split(":", 1)[0].strip()
-                line_number = self.app.source_line_numbers.get(key, None) if getattr(self.app, "show_line_numbers", False) else None
+                if not line.strip():  # Skip empty lines
+                    continue
+                key = line.split(" ", 1)[-1].split(":", 1)[0].strip() if " " in line else ""
+                line_number = self.app.source_line_numbers.get(key, None) if hasattr(self.app, "show_line_numbers") and getattr(self.app, "show_line_numbers", False) else None
                 row = self.create_result_row(line, line_number=line_number)
                 result_rows.append(row)
 
         self.original_result_rows = result_rows
 
-        # Update the results column
-        self.results_column.controls[1].controls = result_rows
+        # Clear the results content and add the new rows
+        self.results_content.controls.clear()
+        self.results_content.controls.extend(result_rows)
+        
+        # Make sure the results column is visible and contains our content
         self.results_container.content = self.results_column
+        
+        # Clear any search filtering
+        self.search_field.value = ""
+        
+        # Update the UI
         self.page.update()
 
     def create_result_row(self, line: str, line_number: int = None) -> Row:
+        if not line:
+            return Row(controls=[])
+            
         if line.startswith("+"):
             icon = Icon(Icons.ADD, color="green")
         elif line.startswith("-"):
@@ -172,7 +202,7 @@ class ResultsViewComponent:
         return Row(
             controls=[
                 icon,
-                Text(f"{line_num_display}{line}")
+                Text(f"{line_num_display}{line}", color=self.colors["text"]["secondary"])
             ],
             spacing=8
         )
@@ -219,7 +249,7 @@ class ResultsViewComponent:
             filtered_rows.append(current_namespace)
             filtered_rows.extend(namespace_content)
         
-        self.results_column.controls[1].controls = filtered_rows
+        self.results_content.controls = filtered_rows
         self.page.update()
 
     def toggle_expand_all(self, e):
@@ -232,7 +262,8 @@ class ResultsViewComponent:
 
     def copy_results(self, e):
         self.page.set_clipboard(self.output_text.value)
-        self.app.show_snackbar("Results copied to clipboard")
+        if hasattr(self.app, 'show_snackbar'):
+            self.app.show_snackbar("Results copied to clipboard")
 
     def update_colors(self, colors: dict):
         """Update component colors when theme changes"""
@@ -255,8 +286,12 @@ class ResultsViewComponent:
         self.results_container.bgcolor = "transparent"
 
         # Safely update search field and results
-        if (hasattr(self, 'results_column') and 
-            self.results_column.controls and 
-            isinstance(self.results_column.controls[0], TextField)):
-            search_field = self.results_column.controls[0]
-            search_field.border = border.all(color=colors["border"]["default"])
+        if hasattr(self, 'search_field'):
+            self.search_field.border = border.all(color=colors["border"]["default"])
+        
+        # Update result rows text colors
+        for row in self.original_result_rows:
+            if len(row.controls) > 1 and isinstance(row.controls[1], Text):
+                row.controls[1].color = colors["text"]["secondary"]
+        
+        self.page.update()

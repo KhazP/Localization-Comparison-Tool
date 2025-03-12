@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+import logging
 
 HISTORY_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                             "config", "history.json")
@@ -9,14 +10,27 @@ def load_history() -> list:
     """Load history entries from the JSON history file."""
     if os.path.exists(HISTORY_FILE):
         try:
+            # Check if file is empty
+            if os.path.getsize(HISTORY_FILE) == 0:
+                return []
+                
             with open(HISTORY_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
+        except json.JSONDecodeError as e:
+            logging.warning(f"Invalid JSON in history file: {e}. Creating new history.")
+            # If the file exists but contains invalid JSON, return an empty list
+            return []
         except Exception as e:
-            print(f"Error loading history: {e}")
+            logging.error(f"Error loading history: {e}")
+    
+    # If the file doesn't exist or there was an error, return an empty list
     return []
 
 def save_history(entry: dict) -> None:
     """Append a history entry and save the file."""
+    # Ensure the config directory exists
+    os.makedirs(os.path.dirname(HISTORY_FILE), exist_ok=True)
+    
     history = load_history()
     history.append(entry)
     
@@ -41,15 +55,18 @@ def save_history(entry: dict) -> None:
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(history, f, indent=2, ensure_ascii=False)
     except Exception as e:
-        print(f"Error saving history: {e}")
+        logging.error(f"Error saving history: {e}")
 
 def clear_history() -> None:
     """Clear all history entries by overwriting the history file with an empty list."""
     try:
+        # Ensure the config directory exists
+        os.makedirs(os.path.dirname(HISTORY_FILE), exist_ok=True)
+        
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump([], f, indent=2, ensure_ascii=False)
     except Exception as e:
-        print(f"Error clearing history: {e}")
+        logging.error(f"Error clearing history: {e}")
 
 def purge_old_entries(max_age_days=30) -> None:
     """Remove history entries older than the specified number of days."""
@@ -81,4 +98,4 @@ def purge_old_entries(max_age_days=30) -> None:
             with open(HISTORY_FILE, "w", encoding="utf-8") as f:
                 json.dump(filtered_history, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"Error purging old history entries: {e}")
+            logging.error(f"Error purging old history entries: {e}")

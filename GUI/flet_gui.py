@@ -1291,13 +1291,15 @@ class App:
             if "text" in custom_theme:
                 self.COLORS["text"]["primary"] = custom_theme["text"]
 
-        # Update UI elements with cached colors
+        # Update core UI elements with cached colors
         self.page.bgcolor = self.COLORS["bg"]["primary"]
         self.content.bgcolor = self.COLORS["bg"]["secondary"]
-        # Status label
-        self.status_label.color = self.COLORS["text"]["secondary"]
         
-        # Update the compare and translate buttons
+        # Update status label and progress indicators (core app UI, not components)
+        self.status_label.color = self.COLORS["text"]["secondary"]
+        self.loading_ring.color = self.COLORS["bg"]["accent"]
+        
+        # Update compare button (core app UI, not component)
         for button in self.compare_button.content.controls:
             if isinstance(button, ElevatedButton):
                 button.style = ButtonStyle(
@@ -1306,56 +1308,45 @@ class App:
                     shape=RoundedRectangleBorder(radius=8),
                 )
 
-        # Settings button icon
+        # Update settings and history buttons (core app UI)
         self.settings_button.icon_color = self.COLORS["text"]["secondary"]
+        if hasattr(self, 'history_button'):
+            self.history_button.icon_color = self.COLORS["text"]["secondary"]
 
-        # File picker icons and labels
-        self.source_icon.color = self.COLORS["text"]["secondary"]
-        self.target_icon.color = self.COLORS["text"]["secondary"]
-        self.source_label.color = self.COLORS["text"]["secondary"]
-        self.target_label.color = self.COLORS["text"]["secondary"]
-
-        # Update file input containers (assumes create_file_input returns a Column)
-        for container in [self.source_file_container, self.target_file_container]:
-            if isinstance(container.content, Column):
-                file_input_col = container.content
-                file_input_col.controls[0].color = self.COLORS["text"]["secondary"]  # Label text
-                inner = file_input_col.controls[1]  # Row container holding file icon/label and browse button
-                inner.bgcolor = self.COLORS["bg"]["input"]
-                inner.border = border.all(2, self.COLORS["border"]["default"])
-
-        # Text fields update
-        for tf in [self.output_text, self.source_text, self.target_text, self.summary_text]:
-            tf.text_style = TextStyle(color=self.COLORS["text"]["secondary"], size=14, font_family="Consolas", weight=FontWeight.W_400)
-            tf.bgcolor = "transparent"
-
-        # Update progress ring color
-        self.loading_ring.color = self.COLORS["bg"]["accent"]
-
-        # Update main card container background color:
+        # Update main card container background color (core app container)
         self.main_card_container.bgcolor = self.COLORS["bg"]["secondary"]
 
-        # Update preview section colors
-        if hasattr(self, 'preview_section'):
-            for container in self.preview_section.content.controls:
-                if isinstance(container, Container) and container.content:
-                    # Update text colors
-                    container.content.controls[0].color = self.COLORS["text"]["secondary"]
-                    # Update preview container colors
-                    preview_container = container.content.controls[1]
-                    preview_container.bgcolor = self.COLORS["bg"]["input"]
-                    preview_container.border = border.all(color=self.COLORS["border"]["default"])
+        # Update snack bar colors
+        if hasattr(self, 'page') and hasattr(self.page, 'snack_bar'):
+            self.page.snack_bar.bgcolor = self.COLORS["bg"]["secondary"]
 
-        # Update components with new colors
+        # Delegate component updates to their respective update methods
+        # This is better than directly manipulating their internal UI elements
+        # as it respects encapsulation and allows components to handle their own updates
+        
+        # Update file input component
         if hasattr(self, 'file_input'):
             self.file_input.update_colors(self.COLORS)
 
+        # Update results view component
         if hasattr(self, 'results_view'):
             self.results_view.update_colors(self.COLORS)
-            
-        # Update the stats panel component with new colors
+        
+        # Update stats panel component
         if hasattr(self, 'stats_panel_component'):
             self.stats_panel_component.update_colors(self.COLORS)
+            
+        # Update settings dialog component
+        if hasattr(self, 'settings_dialog_component'):
+            self.settings_dialog_component.update_colors(self.COLORS)
+            
+        # Update history dialog component
+        if hasattr(self, 'history_dialog') and hasattr(self.history_dialog, 'update_colors'):
+            self.history_dialog.update_colors(self.COLORS)
+            
+        # Update tutorial component if it exists
+        if hasattr(self, 'tutorial') and hasattr(self.tutorial, 'update_colors'):
+            self.tutorial.update_colors(self.COLORS)
 
         logging.info("Theme updated to '%s'. Current COLORS: %s", theme_key, self.COLORS)
 

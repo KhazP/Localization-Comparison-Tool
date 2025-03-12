@@ -116,6 +116,69 @@ class SettingsDialogComponent:
             on_dismiss=lambda e: self.close_dialog(e)
         )
 
+    # Add the missing update_colors method
+    def update_colors(self, colors: dict):
+        """Update the component's colors based on the current theme."""
+        self.colors = colors
+        
+        # Update dialog background gradient
+        dialog_container = self.dialog.content
+        dialog_container.gradient = LinearGradient(
+            begin=alignment.top_center,
+            end=alignment.bottom_center,
+            colors=[
+                self.colors["bg"]["secondary"], 
+                self.colors["bg"]["primary"]
+            ]
+        )
+        
+        # Update progress bar colors
+        self.progress_bar.bgcolor = ft.colors.with_opacity(0.2, self.colors["bg"]["accent"])
+        
+        # Update header text colors
+        header = self.dialog.content.content.controls[0].content.controls
+        header[1].color = self.colors["text"]["primary"]  # Tab title text
+        header[2].icon_color = self.colors["text"]["secondary"]  # Close button
+        
+        # Update tab buttons
+        for i, button in enumerate(self.settings_tabs.controls):
+            is_current = i == self.current_tab
+            color = self.tab_colors[i] if is_current else self.colors["text"]["secondary"]
+            button.content.icon_color = color
+        
+        # Update all text colors in content tabs
+        for tab in self.tabs_content:
+            self._update_tab_colors(tab)
+            
+        # Update the footer buttons
+        footer = self.dialog.content.content.controls[3]
+        footer.controls[0].style.color = ft.colors.with_opacity(0.7, self.colors["text"]["secondary"])
+        footer.controls[1].controls[0].style.color = self.colors["text"]["secondary"]
+        footer.controls[1].controls[1].content.style.color = self.colors["text"]["primary"]
+
+    def _update_tab_colors(self, tab):
+        """Helper method to update colors in a tab container."""
+        # This is a basic implementation that will need to be adjusted based on
+        # the actual structure of your tabs
+        if hasattr(tab, "content") and tab.content:
+            if isinstance(tab.content, Column):
+                for control in tab.content.controls:
+                    if isinstance(control, Card):
+                        control.color = self.colors["bg"]["secondary"]
+                        if hasattr(control, "content") and hasattr(control.content, "content"):
+                            if isinstance(control.content.content, Column):
+                                for item in control.content.content.controls:
+                                    if isinstance(item, Text):
+                                        if item.weight == "bold" or item.size == 18:
+                                            # Keep section titles in their tab color
+                                            continue
+                                        elif item.size == 14 and not item.weight:
+                                            # Section descriptions
+                                            item.color = self.colors["text"]["secondary"]
+                                        else:
+                                            # Other text
+                                            item.color = self.colors["text"]["primary"]
+
     def _create_header(self):
         """Create animated header with active tab info and close button"""
         return Container(

@@ -6,8 +6,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "flet>=0.7.0",  # Main GUI framework
-        "pyyaml",       # For YAML file parsing
+        "pyyaml>=6.0.1",  # For YAML file parsing - Updated for security
         "xmltodict",    # For XML file parsing
+        "colorama==0.4.6",  # Added version constraint for security
     ],
     extras_require={
         "full": [

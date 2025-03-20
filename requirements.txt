@@ -1,11 +1,11 @@
 # Requirements for LocalizerAppMain
 flet>=0.21.0
-colorama>=0.4.6
+colorama==0.4.6  # Pinned to specific secure version due to recent compromise
 ruamel.yaml>=0.17.0
 tomlkit>=0.11.8
-GitPython>=3.1.32
+GitPython>=3.1.41  # Updated to address multiple security vulnerabilities (CVE-2024-22190, CVE-2023-41040)
 requests>=2.31.0
-PyYAML>=6.0
+PyYAML>=6.0.1  # Updated to address arbitrary code execution vulnerabilities
 lxml>=4.9.3
 darkdetect==0.8.0
 flake8>=6.0.0

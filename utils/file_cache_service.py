@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import Dict, Optional, Callable, Tuple, List
 import logging
-from utils.logger_service import logger_service
+from .logger_service import logger_service # Changed to relative
 from itertools import takewhile, repeat
 
 logger = logger_service.get_logger()

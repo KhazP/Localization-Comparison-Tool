@@ -11,8 +11,9 @@ from colorama import Fore, Style, init as colorama_init
 # However, the sandbox environment might have specific path requirements.
 # Let's try relative imports first if these modules are considered part of the same top-level package.
 # If 'core' and 'utils' are sibling directories under a common project root added to PYTHONPATH:
-from utils.string_utils import validate_placeholders
-from utils.translation_service import machine_translate
+# Changed to relative imports
+from ..utils.string_utils import validate_placeholders
+from ..utils.translation_service import machine_translate
 
 
 # Initialize Colorama

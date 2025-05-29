@@ -1,11 +1,14 @@
 import os
 import sys
 import logging
-from utils.logger_service import logger_service
-from core.errors import ParsingError # Kept for potential future use or consistency
-from core.constants import SUPPORTED_FORMATS, USER_MESSAGES # Kept as they might be used by GUI components
+from ..utils.logger_service import logger_service  # Changed to relative
+from ..core.errors import ParsingError # Changed to relative
+from ..core.constants import SUPPORTED_FORMATS, USER_MESSAGES # Changed to relative
 
 # Add parent directory to Python path to find modules
+# This line might become redundant or even problematic with consistent relative imports.
+# For now, keeping it as per original structure, but it's a candidate for removal later
+# if all modules correctly use relative imports and the package structure is sound.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from colorama import init as colorama_init

@@ -17,7 +17,7 @@ from ..parsers import get_available_parsers, get_parser_for_file, BaseParser # B
 from ..core.errors import UnsupportedFormatError, ParsingError
 # New import for the relocated compare_translations function
 from ..core.comparison_service import compare_translations
-from ..core.errors import UnsupportedFormatError, ParsingError
+# Removed duplicate import of UnsupportedFormatError, ParsingError
 
 logger = logger_service.get_logger()
 

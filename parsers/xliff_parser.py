@@ -1,89 +1,71 @@
-import logging
 import xml.etree.ElementTree as ET
-from typing import Dict, Optional
-from .base_parser import TranslationParser
+from typing import Dict, List, Optional # Added List
+from .base_parser import BaseParser
+from ..core.errors import ParsingError # Assuming ..core.errors is correct
 
-class XLIFFParser(TranslationParser):
+class XliffParser(BaseParser): # Renamed and changed parent class
     """Parser for XLIFF (XML Localization Interchange File Format) files."""
     
+    # __init__ can be kept if its parameters are used by the parse method,
+    # or if the parser instance needs to be configured.
+    # For this task, source_lang and target_lang from __init__ are class members
+    # that can be read by parse, so keeping __init__ is fine.
     def __init__(self, source_lang: Optional[str] = None, target_lang: Optional[str] = None):
         self.source_lang = source_lang
         self.target_lang = target_lang
         
-    def parse(self, content: str) -> dict:
-        """
-        Parse XLIFF content into a dictionary of translations.
-        
-        Args:
-            content: String content of the XLIFF file
-            
-        Returns:
-            Dictionary with translations and line numbers
-            
-        Raises:
-            ValueError: If XLIFF content is invalid
-        """
-        translations = {}
-        line_numbers = {}
-        
+    def parse(self, file_path: str) -> Dict[str, str]: # Changed signature
+        translations: Dict[str, str] = {}
         try:
-            # Parse XML content
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
             root = ET.fromstring(content)
             
-            # XLIFF files can have multiple 'file' elements
-            for file_num, file_elem in enumerate(root.findall('.//file')):
-                # Extract source/target languages if not provided
-                if not self.source_lang:
-                    self.source_lang = file_elem.get('source-language')
-                if not self.target_lang:
-                    self.target_lang = file_elem.get('target-language')
-                    
-                # Process translation units
-                for unit_num, unit in enumerate(file_elem.findall('.//trans-unit')):
-                    try:
-                        key = unit.get('id')
-                        if not key:
-                            logging.warning(f"Found trans-unit without 'id' attribute in file {file_num + 1}")
-                            continue
-                            
-                        # Get the target element content
-                        target = unit.find('target')
-                        if target is not None and target.text is not None:
-                            translations[key] = target.text
-                            # Calculate approximate line number
-                            line_numbers[key] = unit_num + 1
-                        else:
-                            # Fallback to source if target is missing
-                            source = unit.find('source')
-                            if source is not None and source.text is not None:
-                                translations[key] = source.text
-                                line_numbers[key] = unit_num + 1
-                                logging.debug(f"Using source text for key '{key}' (missing target)")
-                            else:
-                                logging.warning(f"No target or source text found for key '{key}'")
-                                translations[key] = ''
-                                line_numbers[key] = unit_num + 1
-                                
-                    except Exception as e:
-                        logging.error(f"Error processing trans-unit: {str(e)}")
-                        continue
+            # Define XLIFF namespace if needed, often it's the default namespace
+            # For XLIFF 1.2, the namespace is "urn:oasis:names:tc:xliff:document:1.2"
+            # ET.register_namespace('', "urn:oasis:names:tc:xliff:document:1.2") # For output, not strictly needed for findall with local names
+            # If elements are namespaced, findall might need nsmap.
+            # Example: root.findall('.//{urn:oasis:names:tc:xliff:document:1.2}file')
+            # For simplicity, assuming default namespace or no namespace for findall paths as in original.
 
-            if not translations:
-                logging.warning("No translations found in XLIFF content")
-                
-            return {
-                "translations": translations,
-                "line_numbers": line_numbers,
-                "source_lang": self.source_lang,
-                "target_lang": self.target_lang
-            }
+            for file_elem in root.findall('.//file'): # Original used .//file, implies it works without explicit ns
+                # Update source/target language from file if not set in constructor
+                current_source_lang = self.source_lang or file_elem.get('source-language')
+                current_target_lang = self.target_lang or file_elem.get('target-language')
+                # These are not directly used in the key-value extraction below but could be if logic required it.
+
+                for unit in file_elem.findall('.//trans-unit'): # Original used .//trans-unit
+                    key = unit.get('id')
+                    if not key:
+                        # Skip trans-unit without id
+                        continue
+                            
+                    value_text = '' # Default value
+                    target_elem = unit.find('target') # Find target element
+                    
+                    # Priority: target text in the file's target language (if specified and matches)
+                    # This level of detail (matching target_elem.get('xml:lang') to current_target_lang)
+                    # was not in the original, so stick to simpler logic: take any <target>.
+                    if target_elem is not None and target_elem.text is not None:
+                        value_text = target_elem.text
+                    else:
+                        # Fallback to source text if target is missing or empty
+                        source_elem = unit.find('source') # Find source element
+                        if source_elem is not None and source_elem.text is not None:
+                            value_text = source_elem.text
+                        # If both target and source are missing/empty, value_text remains ''
+                            
+                    translations[str(key)] = str(value_text) # Ensure string types
             
+            return translations
+            
+        except FileNotFoundError:
+            raise ParsingError(f"File not found.", filepath=file_path)
         except ET.ParseError as e:
-            error_msg = f"Invalid XLIFF XML syntax: {str(e)}"
-            logging.error(error_msg)
-            raise ValueError(error_msg)
-            
-        except Exception as e:
-            error_msg = f"Failed to parse XLIFF content: {str(e)}"
-            logging.error(error_msg)
-            raise ValueError(error_msg)
+            raise ParsingError(f"Invalid XLIFF XML syntax: {e}", filepath=file_path, original_exception=e)
+        except Exception as e: # Catch other potential errors
+            raise ParsingError(f"An unexpected error occurred during XLIFF parsing: {e}", filepath=file_path, original_exception=e)
+
+    def get_supported_extensions(self) -> List[str]:
+        return ['.xlf', '.xliff'] # Common extensions for XLIFF

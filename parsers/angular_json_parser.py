@@ -1,61 +1,118 @@
+import logging
 import json
-from typing import Dict, Any, List # Added List
-from .base_parser import BaseParser
-from ..core.errors import ParsingError # Assuming ..core.errors is correct
+import re  # Added missing import
+from typing import Dict, Any, Optional
 
-class AngularJsonParser(BaseParser): # Renamed and changed parent class
+from .base_parser import TranslationParser
+
+class AngularJSONParser(TranslationParser):
     """Parser for Angular Translate JSON format."""
     
-    def __init__(self, flatten_nested: bool = True, key_separator: str = '.'):
+    def __init__(self, flatten_nested: bool = True):
         self.flatten_nested = flatten_nested
-        self.key_separator = key_separator # Allow customizing separator for flattened keys
         
-    def _flatten_dict(self, d: Dict[str, Any], parent_key: str = '') -> Dict[str, Any]:
+    def _flatten_dict(self, d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Any]:
+        """
+        Flatten nested dictionary with dot notation.
+        
+        Args:
+            d: Dictionary to flatten
+            parent_key: Parent key for nested items
+            sep: Separator for nested keys
+            
+        Returns:
+            Flattened dictionary
+        """
         items = []
         for k, v in d.items():
-            new_key = f"{parent_key}{self.key_separator}{k}" if parent_key else k
-            if isinstance(v, dict) and self.flatten_nested: # Check flatten_nested here
-                items.extend(self._flatten_dict(v, new_key).items())
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            
+            if isinstance(v, dict):
+                items.extend(self._flatten_dict(v, new_key, sep).items())
             else:
-                # If not flattening further, or if v is not a dict, process the value
-                items.append((str(new_key), self._process_value(v)))
+                items.append((new_key, v))
+                
         return dict(items)
         
-    def _process_value(self, value: Any) -> str:
+    def _process_interpolation(self, value: Any) -> str:
         """
-        Convert value to string. Handles complex types like ICU messages by JSON dumping them.
-        """
-        if isinstance(value, (dict, list)): # ICU messages or arrays
-            return json.dumps(value, ensure_ascii=False)
-        if value is None:
-            return "" # Represent None as empty string
-        return str(value) # Ensure everything else is a string
+        Convert value to string, handling Angular interpolation.
         
-    def parse(self, file_path: str) -> Dict[str, str]: # Changed signature and return type
+        Args:
+            value: Value to process
+            
+        Returns:
+            Processed string value
+        """
+        if isinstance(value, (dict, list)):
+            # Handle ICU message format
+            return json.dumps(value, ensure_ascii=False)
+        return str(value)
+        
+    def parse(self, content: str) -> Dict[str, Any]:
+        """
+        Parse Angular Translate JSON content into a dictionary.
+        
+        Args:
+            content: String content of the JSON file
+            
+        Returns:
+            Dictionary with translations and metadata
+            
+        Raises:
+            ValueError: If JSON content is invalid
+        """
         translations: Dict[str, str] = {}
+        line_numbers: Dict[str, int] = {}
+        
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+            # Parse JSON content
+            data = json.loads(content)
             
             if not isinstance(data, dict):
-                raise ParsingError("Root element of Angular JSON must be an object.", filepath=file_path)
+                raise ValueError("Root element must be an object")
                 
+            # Track line numbers by counting newlines before each key
+            content_lines = content.split('\n')
+            for i, line in enumerate(content_lines, 1):
+                # Simple heuristic to find keys in the JSON
+                match = re.search(r'"([^"]+)"\s*:', line)
+                if match:
+                    key = match.group(1)
+                    line_numbers[key] = i
+                    
+            # Process translations
             if self.flatten_nested:
-                processed_data = self._flatten_dict(data)
-                # _flatten_dict now also calls _process_value, so items are already str:str
-                translations = processed_data
-            else: # Process only top-level keys if not flattening
+                flattened = self._flatten_dict(data)
+                for key, value in flattened.items():
+                    translations[key] = self._process_interpolation(value)
+            else:
                 for key, value in data.items():
-                    translations[str(key)] = self._process_value(value)
+                    translations[key] = self._process_interpolation(value)
+                    
+            # Look for metadata in common locations
+            metadata = None
+            if '@metadata' in data:
+                metadata = data['@metadata']
+            elif '@angular' in data:
+                metadata = data['@angular']
+                
+            if not translations:
+                logging.warning("No translations found in JSON content")
+                
+            return {
+                "translations": translations,
+                "line_numbers": line_numbers,
+                "metadata": metadata,
+                "is_flat": self.flatten_nested
+            }
             
-            return translations
-            
-        except FileNotFoundError:
-            raise ParsingError(f"File not found.", filepath=file_path)
         except json.JSONDecodeError as e:
-            raise ParsingError(f"Invalid JSON syntax: {e}", filepath=file_path, original_exception=e)
-        except Exception as e: # Catch other potential errors
-            raise ParsingError(f"An unexpected error occurred during Angular JSON parsing: {e}", filepath=file_path, original_exception=e)
-
-    def get_supported_extensions(self) -> List[str]:
-        return ['.json'] # Handles .json files, specifically for Angular i18n structure
+            error_msg = f"Invalid JSON syntax: {str(e)}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
+            
+        except Exception as e:
+            error_msg = f"Failed to parse Angular JSON content: {str(e)}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)

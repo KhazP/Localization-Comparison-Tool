@@ -1,44 +1,78 @@
+import logging
 import xml.etree.ElementTree as ET
-from typing import Dict, List
-from .base_parser import BaseParser
-from ..core.errors import ParsingError # Assuming ..core.errors is correct
+from typing import Dict, Optional
+from .base_parser import TranslationParser
 
-class ResxParser(BaseParser): # Renamed and changed parent class
+class RESXParser(TranslationParser):
     """Parser for .NET resource (RESX) files."""
     
-    def parse(self, file_path: str) -> Dict[str, str]: # Changed signature
-        translations: Dict[str, str] = {}
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+    def parse(self, content: str) -> dict:
+        """
+        Parse RESX content into a dictionary of translations.
+        
+        Args:
+            content: String content of the RESX file
             
+        Returns:
+            Dictionary with translations and line numbers
+            
+        Raises:
+            ValueError: If RESX content is invalid
+        """
+        translations = {}
+        line_numbers = {}
+        
+        try:
             # Parse XML content
             root = ET.fromstring(content)
             
             # RESX files use <data name="key"><value>text</value></data> format
-            # Comments (<comment>) are ignored as per Dict[str, str] return type
-            for data_elem in root.findall('.//data'):
-                key = data_elem.get('name')
-                if not key:
-                    # logging.warning equivalent: perhaps skip, or raise ParsingError for malformed entry
-                    # For now, skip entries without a name, consistent with previous logging behavior
-                    continue 
+            for i, data_elem in enumerate(root.findall('.//data'), 1):
+                try:
+                    key = data_elem.get('name')
+                    if not key:
+                        logging.warning(f"Found data element without 'name' attribute at position {i}")
+                        continue
                         
-                value_elem = data_elem.find('value')
-                value_text = '' # Default to empty string if no <value> or if <value> is empty
-                if value_elem is not None and value_elem.text is not None:
-                    value_text = value_elem.text
-                
-                translations[str(key)] = str(value_text) # Ensure string types
-            
-            return translations
-            
-        except FileNotFoundError:
-            raise ParsingError(f"File not found.", filepath=file_path)
-        except ET.ParseError as e:
-            raise ParsingError(f"Invalid RESX XML syntax: {e}", filepath=file_path, original_exception=e)
-        except Exception as e: # Catch other potential errors
-            raise ParsingError(f"An unexpected error occurred during RESX parsing: {e}", filepath=file_path, original_exception=e)
+                    value_elem = data_elem.find('value')
+                    if value_elem is not None:
+                        # Handle potential None values
+                        translations[key] = value_elem.text or ''
+                        line_numbers[key] = i
+                    else:
+                        logging.warning(f"No value element found for key '{key}'")
+                        translations[key] = ''
+                        line_numbers[key] = i
+                        
+                except Exception as e:
+                    logging.error(f"Error processing data element: {str(e)}")
+                    continue
+                    
+            comment_elems = root.findall('.//data/comment')
+            if comment_elems:
+                # Store comments in a separate dictionary if needed
+                comments = {}
+                for data_elem in root.findall('.//data'):
+                    key = data_elem.get('name')
+                    comment_elem = data_elem.find('comment')
+                    if key and comment_elem is not None and comment_elem.text:
+                        comments[key] = comment_elem.text
 
-    def get_supported_extensions(self) -> List[str]:
-        return ['.resx']
+            if not translations:
+                logging.warning("No translations found in RESX content")
+                
+            return {
+                "translations": translations,
+                "line_numbers": line_numbers,
+                "comments": comments if comment_elems else None
+            }
+            
+        except ET.ParseError as e:
+            error_msg = f"Invalid RESX XML syntax: {str(e)}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
+            
+        except Exception as e:
+            error_msg = f"Failed to parse RESX content: {str(e)}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)

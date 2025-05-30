@@ -1,35 +1,25 @@
-from .base_parser import BaseParser
-from ..core.errors import ParsingError
-from typing import Dict, List
-
+import logging
 try:
     import yaml
     from yaml.error import YAMLError
 except ImportError:
-    yaml = None # Keep this for the check
+    yaml = None
 
-class YamlParser(BaseParser): # Changed class name and parent
-    def parse(self, file_path: str) -> Dict[str, str]: # Changed signature
+from .base_parser import TranslationParser
+
+class YAMLParser(TranslationParser):
+    def parse(self, content: str) -> dict:
         if not yaml:
-            # This indicates a setup issue, but ParsingError is used as the file can't be parsed
-            raise ParsingError("PyYAML is not installed. Please install it to parse YAML files.", filepath=file_path)
+            raise ImportError("PyYAML is not installed.")
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = yaml.safe_load(f)
-            
-            if data is None: # Handle empty YAML file
+            data = yaml.safe_load(content)
+            if data is None:
+                logging.warning("YAML parser returned None, defaulting to empty dict")
                 return {}
             if not isinstance(data, dict):
-                raise ParsingError(f"YAML root must be an object (dictionary).", filepath=file_path)
-            
-            # Ensure all keys and values are strings
-            return {str(k): str(v) for k, v in data.items()}
-        except FileNotFoundError:
-            raise ParsingError(f"File not found.", filepath=file_path)
+                logging.error(f"YAML content is not a dictionary, got {type(data)}")
+                return {}
+            return data
         except YAMLError as e:
-            raise ParsingError(f"Invalid YAML syntax: {e}", filepath=file_path, original_exception=e)
-        except Exception as e: # Catch other potential errors
-            raise ParsingError(f"An unexpected error occurred during YAML parsing: {e}", filepath=file_path, original_exception=e)
-
-    def get_supported_extensions(self) -> List[str]:
-        return ['.yaml', '.yml']
+            logging.error(f"YAML parse error: {str(e)}")
+            raise ValueError(f"Invalid YAML content: {e}")

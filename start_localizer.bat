@@ -69,7 +69,7 @@ for /f "tokens=2" %%I in ('python --version 2^>^&1') do (
 echo   [%TIME:~0,8%] Checking dependencies...
 
 :: Array of required packages
-set REQUIRED_PACKAGES=flet darkdetect pillow
+set REQUIRED_PACKAGES=flet darkdetect pillow gitpython
 for %%P in (%REQUIRED_PACKAGES%) do (
     python -c "import %%P" >nul 2>&1 || (
         echo   [%TIME:~0,8%] Installing required package: %%P

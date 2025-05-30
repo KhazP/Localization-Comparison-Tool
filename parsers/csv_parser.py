@@ -1,19 +1,19 @@
 import csv
 from io import StringIO
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union, List # Added List
 from .base_parser import TranslationParser
+from core.parsing_result import ParsingResult # Import the new class
 try:
+    # Assuming these are for a larger project structure
     from ..utils.logger_service import logger_service
     from ..core.errors import CSVParsingError
 except ImportError:
-    # Handle case when running directly
-    import sys
-    from pathlib import Path
-    sys.path.append(str(Path(__file__).parent.parent))
-    from utils.logger_service import logger_service
-    from core.errors import CSVParsingError
+    # Fallback for standalone execution or simpler project structure
+    import logging as logger_service # Use standard logging as a fallback
+    class CSVParsingError(ValueError): pass # Define a basic error class
 
-logger = logger_service.get_logger()
+# If using standard logging as fallback, get a logger instance
+logger = logger_service.getLogger(__name__) if hasattr(logger_service, 'getLogger') else logger_service
 
 class CSVParser(TranslationParser):
     def __init__(self, 
@@ -22,16 +22,6 @@ class CSVParser(TranslationParser):
                  key_column: Union[str, int] = 'key',
                  value_column: Union[str, int] = 'value',
                  quoting: int = csv.QUOTE_MINIMAL):
-        """
-        Initialize CSV parser with configurable options.
-        
-        Args:
-            delimiter: CSV field delimiter (default: ',')
-            has_header: Whether CSV has header row (default: True)
-            key_column: Column name or index for keys (default: 'key')
-            value_column: Column name or index for values (default: 'value')
-            quoting: CSV quoting style (default: QUOTE_MINIMAL)
-        """
         self.delimiter = delimiter
         self.has_header = has_header
         self.key_column = key_column
@@ -39,156 +29,139 @@ class CSVParser(TranslationParser):
         self.quoting = quoting
         
     def _validate_columns(self, fieldnames: list) -> None:
-        """Validate column specifications against CSV headers."""
+        if not self.has_header: return # No fieldnames to validate if no header
         if isinstance(self.key_column, str) and self.key_column not in fieldnames:
             raise CSVParsingError(f"Key column '{self.key_column}' not found in headers: {fieldnames}")
         if isinstance(self.value_column, str) and self.value_column not in fieldnames:
             raise CSVParsingError(f"Value column '{self.value_column}' not found in headers: {fieldnames}")
 
-    def _get_column_indices(self, row: list) -> Tuple[int, int]:
-        """Get column indices for key and value columns."""
+    def _get_column_indices_from_header(self, fieldnames: List[str]) -> Tuple[int, int]:
         try:
-            if isinstance(self.key_column, str):
-                key_idx = row.index(self.key_column)
-            else:
-                key_idx = self.key_column
+            key_idx = fieldnames.index(self.key_column) if isinstance(self.key_column, str) else int(self.key_column)
+            val_idx = fieldnames.index(self.value_column) if isinstance(self.value_column, str) else int(self.value_column)
 
-            if isinstance(self.value_column, str):
-                val_idx = row.index(self.value_column)
-            else:
-                val_idx = self.value_column
-
-            if key_idx >= len(row) or val_idx >= len(row):
-                raise CSVParsingError(f"Column index out of range. Row has {len(row)} columns.")
-                
+            if not (0 <= key_idx < len(fieldnames) and 0 <= val_idx < len(fieldnames)):
+                raise CSVParsingError(f"Column index out of range for header. Fields: {fieldnames}")
             return key_idx, val_idx
-            
-        except ValueError as e:
-            raise CSVParsingError(f"Column not found: {str(e)}")
+        except ValueError as e: # Handles .index not found or int conversion error
+            raise CSVParsingError(f"Column not found in header or invalid index: {e}. Fields: {fieldnames}")
+        except TypeError: # Handles int(self.key_column) if it's not int-like
+             raise CSVParsingError(f"Invalid column index type. Key: '{self.key_column}', Value: '{self.value_column}'")
 
-    def parse(self, content: str) -> Dict[str, str]:
-        """
-        Parse CSV content into a dictionary of translations.
-        
-        Args:
-            content: CSV content as string
-            
-        Returns:
-            Dictionary of key-value translations
-            
-        Raises:
-            CSVParsingError: If CSV parsing fails
-        """
+
+    def _get_column_indices_no_header(self) -> Tuple[int, int]:
+        try:
+            key_idx = int(self.key_column)
+            val_idx = int(self.value_column)
+            if key_idx < 0 or val_idx < 0:
+                raise CSVParsingError("Column indices must be non-negative for no-header CSV.")
+            return key_idx, val_idx
+        except (ValueError, TypeError):
+            raise CSVParsingError(
+                f"Invalid column index. For no-header CSV, key_column ('{self.key_column}') and "
+                f"value_column ('{self.value_column}') must be integers."
+            )
+
+    def parse(self, content: str) -> ParsingResult: # Update return type annotation
         if not content.strip():
             logger.warning("Empty content provided to CSV parser")
-            return {}
+            return ParsingResult(translations={}, errors=["Empty content provided."])
 
-        translations = {}
-        line_numbers = {}  # Track line numbers for error reporting
+        translations: Dict[str, str] = {}
+        line_numbers: Dict[str, int] = {}
+        parsing_errors: List[str] = []
         
         try:
-            # Remove BOM if present and split into lines
-            content = content.strip().lstrip('\ufeff')
+            content = content.strip().lstrip('\ufeff') # Remove BOM
             csv_file = StringIO(content)
             
-            # Try to detect dialect
+            dialect = None
             try:
-                dialect = csv.Sniffer().sniff(content[:1024])
-                logger.debug(f"Detected CSV dialect: delimiter='{dialect.delimiter}'")
-                if self.delimiter != dialect.delimiter:
-                    logger.warning(
-                        f"Provided delimiter '{self.delimiter}' differs from detected "
-                        f"delimiter '{dialect.delimiter}'"
-                    )
+                # Sniff first 1024 bytes for dialect, ensure there's content to sniff
+                sample = content[:1024]
+                if sample:
+                    dialect = csv.Sniffer().sniff(sample)
+                    logger.debug(f"Detected CSV dialect: delimiter='{dialect.delimiter}', quotechar='{dialect.quotechar}'")
+                    # Optionally, you could override self.delimiter and self.quoting if dialect is found
+                    # For now, just log it.
+                else:
+                    logger.debug("Content too short to sniff CSV dialect reliably.")
             except csv.Error as e:
-                logger.debug(f"Could not detect CSV dialect: {e}")
-                dialect = None
+                logger.debug(f"Could not auto-detect CSV dialect: {e}. Using provided settings.")
+
+            reader_kwargs = {'delimiter': self.delimiter, 'quoting': self.quoting}
+            if dialect: # If dialect detected, prefer its delimiter and quotechar
+                reader_kwargs['delimiter'] = dialect.delimiter
+                reader_kwargs['quotechar'] = dialect.quotechar
+                # Note: Sniffer might not detect all quoting styles correctly, so self.quoting is still a fallback.
+
 
             if self.has_header:
-                reader = csv.DictReader(
-                    csv_file,
-                    delimiter=self.delimiter,
-                    quoting=self.quoting
-                )
+                reader = csv.reader(csv_file, **reader_kwargs)
+                header = next(reader, None)
+                if not header:
+                    return ParsingResult(translations={}, errors=["CSV file is empty or contains only a header."])
                 
-                if not reader.fieldnames:
-                    raise CSVParsingError("No header row found in CSV")
-                    
-                self._validate_columns(reader.fieldnames)
+                self._validate_columns(header) # Validates string key/value columns against header names
+                key_idx, val_idx = self._get_column_indices_from_header(header)
                 
-                for row_num, row in enumerate(reader, start=2):  # Start from 2 to account for header
-                    try:
-                        key = row[self.key_column]
-                        value = row[self.value_column]
-                        
-                        if not key:
-                            logger.warning(f"Empty key in row {row_num}, skipping")
-                            continue
-                            
-                        translations[key] = value or ''
-                        line_numbers[key] = row_num
-                        logger.debug(f"Parsed row {row_num}: {key}={value}")
-                        
-                    except KeyError as e:
-                        logger.error(f"Missing column in row {row_num}: {e}")
-                        raise CSVParsingError(f"Row {row_num}: Missing column {e}")
-                        
+                start_line_num = 2 # Data starts from line 2 if header is present
             else:
-                reader = csv.reader(
-                    csv_file,
-                    delimiter=self.delimiter,
-                    quoting=self.quoting
-                )
-                
-                # Get column indices from first row
-                first_row = next(reader, None)
-                if not first_row:
-                    raise CSVParsingError("Empty CSV file")
-                    
-                key_idx, val_idx = self._get_column_indices(first_row)
-                
-                # Parse rows
-                for row_num, row in enumerate(reader, start=1):
-                    if len(row) <= max(key_idx, val_idx):
-                        logger.warning(f"Row {row_num}: Insufficient columns, skipping")
-                        continue
-                        
-                    key = row[key_idx]
-                    if not key:
-                        logger.warning(f"Empty key in row {row_num}, skipping")
-                        continue
-                        
-                    translations[key] = row[val_idx] or ''
-                    line_numbers[key] = row_num
-                    logger.debug(f"Parsed row {row_num}: {key}={translations[key]}")
+                reader = csv.reader(csv_file, **reader_kwargs)
+                key_idx, val_idx = self._get_column_indices_no_header()
+                start_line_num = 1 # Data starts from line 1 if no header
 
-        except csv.Error as e:
+            for row_num, row in enumerate(reader, start=start_line_num):
+                try:
+                    if len(row) <= max(key_idx, val_idx):
+                        msg = f"Row {row_num}: Insufficient columns ({len(row)}). Expected at least {max(key_idx, val_idx)+1}."
+                        logger.warning(msg)
+                        parsing_errors.append(msg)
+                        continue
+                        
+                    key = row[key_idx].strip() # Keys are usually stripped
+                    value = row[val_idx] # Values might need to preserve whitespace
+
+                    if not key:
+                        msg = f"Row {row_num}: Empty key found, skipping."
+                        logger.warning(msg)
+                        parsing_errors.append(msg)
+                        continue
+
+                    if key in translations:
+                        msg = f"Row {row_num}: Duplicate key '{key}' found. Value will be overwritten."
+                        logger.warning(msg)
+                        parsing_errors.append(msg)
+                        
+                    translations[key] = value or '' # Store empty string if value is None
+                    line_numbers[key] = row_num
+                    # logger.debug(f"Parsed row {row_num}: {key}={value}")
+
+                except IndexError: # Should be caught by len(row) check, but as a safeguard
+                    msg = f"Row {row_num}: Column index out of range. Row content: {row}"
+                    logger.warning(msg)
+                    parsing_errors.append(msg)
+
+        except CSVParsingError as e: # Catch config errors (e.g. bad column names)
+            logger.error(f"CSV configuration error: {str(e)}")
+            return ParsingResult(translations={}, errors=[f"CSV configuration error: {str(e)}"])
+        except csv.Error as e: # Catch errors from the csv module itself
             error_msg = f"CSV parsing error: {str(e)}"
             logger.error(error_msg)
-            raise CSVParsingError(error_msg)
-            
-        except (KeyError, IndexError) as e:
-            error_msg = f"CSV column error: {str(e)}"
-            logger.error(error_msg)
-            raise CSVParsingError(error_msg)
-            
-        except (UnicodeDecodeError, UnicodeError) as e:
-            error_msg = f"CSV encoding error: {str(e)}"
-            logger.error(error_msg)
-            raise CSVParsingError(error_msg)
-            
-        except OSError as e:
-            error_msg = f"File system error: {str(e)}"
-            logger.error(error_msg)
-            raise CSVParsingError(error_msg)
-            
-        except Exception as e:
+            return ParsingResult(translations={}, line_numbers=line_numbers, errors=[error_msg] + parsing_errors)
+        except Exception as e: # Catch any other unexpected errors
             error_msg = f"Unexpected error parsing CSV: {str(e)}"
-            logger.error(error_msg)
-            raise CSVParsingError(error_msg)
+            logger.error(error_msg, exc_info=True) # Log with stack trace
+            return ParsingResult(translations={}, errors=[error_msg] + parsing_errors)
 
-        logger.info(f"Successfully parsed {len(translations)} translations from CSV")
-        return {
-            "translations": translations,
-            "line_numbers": line_numbers
-        }
+        if not translations and not parsing_errors:
+             logger.info("CSV parsing yielded no translations and no errors.")
+        elif not translations and parsing_errors:
+             logger.warning(f"CSV parsing yielded no translations, but {len(parsing_errors)} warnings/errors occurred.")
+
+
+        return ParsingResult(
+            translations=translations,
+            line_numbers=line_numbers,
+            errors=parsing_errors if parsing_errors else None
+        )

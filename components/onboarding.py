@@ -14,317 +14,240 @@ class OnboardingTutorial:
     
     def __init__(self, page: ft.Page, app_reference):
         self.page = page
-        self.app = app_reference
+        self.app = app_reference # app_reference.COLORS is the M3 theme
         self.current_step = 0
         
-        # Define tutorial steps with enhanced content and icons
-        self.tutorial_steps = [
-            {
-                "title": "Welcome!",
-                "content": "This tool helps you compare and analyze the differences between translation files.",
-                "icon": icons.WAVING_HAND,
-                "color": "#4CAF50"  # Green
-            },
-            {
-                "title": "Select Files",
-                "content": "Start by selecting your source and target translation files using the browse buttons.",
-                "icon": icons.FOLDER_OPEN,
-                "color": "#2196F3"  # Blue
-            },
-            {
-                "title": "Compare Files",
-                "content": "Click the Compare button to analyze differences between your files.",
-                "icon": icons.COMPARE_ARROWS,
-                "color": "#FF9800"  # Orange
-            },
-            {
-                "title": "View Results",
-                "content": "Results show missing translations (+), obsolete entries (-), and potential issues (~).",
-                "icon": icons.LIST_ALT,
-                "color": "#9C27B0"  # Purple
-            },
-            {
-                "title": "Machine Translation",
-                "content": "Automatically translate missing entries using Google Cloud Translation (configurable in Settings).",
-                "icon": icons.TRANSLATE,
-                "color": "#E91E63"  # Pink
-            }
+        # Define tutorial steps with M3 color mapping (conceptual)
+        # Actual colors will come from self.app.COLORS
+        self.tutorial_steps_config = [
+            {"title": "Welcome!", "content": "This tool helps you compare and analyze translation files.", "icon": icons.WAVING_HAND_OUTLINED, "color_role": "primary"},
+            {"title": "Select Files", "content": "Start by selecting your source and target files using the browse buttons.", "icon": icons.FOLDER_OPEN_OUTLINED, "color_role": "secondary"},
+            {"title": "Compare Files", "content": "Click the Compare button to analyze differences.", "icon": icons.COMPARE_ARROWS_ROUNDED, "color_role": "tertiary"},
+            {"title": "View Results", "content": "Results show missing (+), obsolete (-), and changed (~) entries.", "icon": icons.LIST_ALT_OUTLINED, "color_role": "primary"},
+            {"title": "Machine Translation", "content": "Auto-translate missing entries via Settings (Google Cloud).", "icon": icons.TRANSLATE_ROUNDED, "color_role": "secondary"}
         ]
         
-        # Create tutorial dialog with enhanced styling
         self.dialog = AlertDialog(
             modal=True,
-            bgcolor=ft.colors.TRANSPARENT,  # Make the dialog background transparent
-            content=Container(
+            shape=RoundedRectangleBorder(radius=28), # M3 Dialog shape
+            content=Container( # This container defines the dialog's appearance
                 content=Column(
                     controls=[
-                        self._create_header(),
-                        self._create_content(),
-                        self._create_navigation()
+                        self._create_header(), # Will be populated by update_step
+                        self._create_content_area(), # Will be populated by update_step
+                        self._create_navigation() # Will be populated by update_step
                     ],
-                    spacing=20,
+                    spacing=16, # M3 spacing between sections
+                    tight=True,
                 ),
-                padding=padding.all(24),
-                width=450,  # Slightly wider for better readability
-                border_radius=BorderRadius(12, 12, 12, 12),
-                gradient=LinearGradient(
-                    begin=alignment.top_center,
-                    end=alignment.bottom_center,
-                    colors=[self.app.COLORS["bg"]["secondary"], self.app.COLORS["bg"]["primary"]]
-                ),
-                shadow=BoxShadow(
-                    spread_radius=1,
-                    blur_radius=15,
-                    color=ft.colors.with_opacity(0.3, "#000000"),
-                    offset=Offset(0, 4)
-                )
+                padding=padding.all(24), # M3 dialog padding
+                width=400, # Adjusted width
+                border_radius=BorderRadius(28,28,28,28), # Match dialog shape
+                # bgcolor will be set in update_colors
             ),
-            actions=[],
-            actions_alignment="end",
-            open=False  # Initialize as closed
+            actions_alignment="spaceBetween", # Skip/Back on left, Next/Finish on right
+            open=False
         )
-        # Add dialog to page overlay immediately
         self.page.overlay.append(self.dialog)
+        self.update_colors(self.app.COLORS) # Apply initial M3 colors
+
+    def update_colors(self, colors):
+        self.app.COLORS = colors # Ensure app reference is updated if needed, though usually app owns this
+        # Update dialog's main container background
+        if isinstance(self.dialog.content, Container):
+            self.dialog.content.bgcolor = self.app.COLORS.get("surfaceContainerHigh")
         
+        # If dialog is open, force re-render of current step with new colors
+        if self.dialog.open:
+            self.update_step(force_render_controls=True)
+        else: # Otherwise, ensure header, content, nav areas are ready for when it opens
+             if hasattr(self, 'header_container'): self._update_header_style(self.app.COLORS)
+             if hasattr(self, 'content_display_area'): self._update_content_area_style(self.app.COLORS)
+             if hasattr(self, 'navigation_controls'): self._update_navigation_style(self.app.COLORS)
+
+
+    def _get_step_m3_color(self, step_config):
+        """Gets the actual M3 theme color based on the role defined in step_config."""
+        return self.app.COLORS.get(step_config["color_role"], self.app.COLORS.get("primary"))
+
     def _create_header(self):
-        """Create the tutorial step header with icon and title."""
-        return Container(
+        """Creates the static structure for the tutorial step header."""
+        self.header_icon_display = Icon(size=28) # Icon name and color set in update_step
+        self.header_title_display = Text(size=22, weight=ft.FontWeight.BOLD) # Value and color set in update_step
+
+        self.header_container = Container(
             content=Row(
                 controls=[
-                    Container(
-                        content=Icon(
-                            self.tutorial_steps[0]["icon"],
-                            size=32,
-                            color=self.tutorial_steps[0]["color"]  # Use the step-specific color
-                        ),
-                        padding=padding.all(12),
-                        border_radius=BorderRadius(8, 8, 8, 8),
-                        bgcolor=ft.colors.with_opacity(0.1, self.tutorial_steps[0]["color"]),
+                    Container( # Circle background for icon
+                        content=self.header_icon_display,
+                        padding=padding.all(10),
+                        border_radius=BorderRadius(100,100,100,100), # Circular
+                        # bgcolor set in update_step
                     ),
-                    Text(
-                        self.tutorial_steps[0]["title"],
-                        size=24,
-                        weight="bold",
-                        color=self.app.COLORS["text"]["primary"]
-                    )
+                    self.header_title_display,
                 ],
-                alignment="center",
-                spacing=16,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=12,
             ),
-            margin=padding.only(bottom=10)
+            padding=padding.only(bottom=8), # M3 spacing
         )
+        return self.header_container
+
+    def _update_header_style(self, current_colors, step_config=None):
+        if step_config is None: step_config = self.tutorial_steps_config[self.current_step]
+        step_m3_color = self._get_step_m3_color(step_config)
+
+        self.header_icon_display.name = step_config["icon"]
+        self.header_icon_display.color = step_m3_color
+        self.header_title_display.value = step_config["title"]
+        self.header_title_display.color = current_colors.get("onSurface")
         
-    def _create_content(self):
-        """Create the main content area for tutorial steps with illustrations."""
-        return Container(
+        icon_bg_container = self.header_container.content.controls[0]
+        if isinstance(icon_bg_container, Container):
+            icon_bg_container.bgcolor = ft.colors.with_opacity(0.15, step_m3_color)
+
+
+    def _create_content_area(self):
+        """Creates the static structure for the tutorial step content."""
+        self.content_text_display = Text(size=14, text_align="center", selectable=True) # Value and color set in update_step
+        self.content_icon_display = Icon(size=64, opacity=0.9) # Name, color set in update_step
+
+        self.content_display_area = Container(
             content=Column(
                 controls=[
-                    Text(
-                        self.tutorial_steps[0]["content"],
-                        size=16,
-                        color=self.app.COLORS["text"]["secondary"],
-                        text_align="center"
-                    ),
-                    # Add illustration container that will be populated in update_step
-                    Container(
-                        content=Icon(
-                            self.tutorial_steps[0]["icon"],
-                            size=80,
-                            color=self.tutorial_steps[0]["color"],
-                            opacity=0.8
-                        ),
+                    self.content_text_display,
+                    Container( # Illustration container
+                        content=self.content_icon_display,
                         alignment=ft.alignment.center,
-                        height=120,
-                        animate=animation.Animation(500, "decelerate")
+                        height=100, # M3 illustration area
+                        padding=padding.only(top=16)
                     )
                 ],
-                horizontal_alignment="center",
-                spacing=24
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=12, # M3 spacing
             ),
-            padding=padding.symmetric(vertical=20),
-            animate=animation.Animation(300, "easeInOut")
+            padding=padding.symmetric(vertical=16), # M3 padding
+            animate=animation.Animation(250, ft.AnimationCurve.EASE_IN_OUT) # M3 animation timing
         )
+        return self.content_display_area
+
+    def _update_content_area_style(self, current_colors, step_config=None):
+        if step_config is None: step_config = self.tutorial_steps_config[self.current_step]
+        step_m3_color = self._get_step_m3_color(step_config)
+
+        self.content_text_display.value = step_config["content"]
+        self.content_text_display.color = current_colors.get("onSurfaceVariant")
+        self.content_icon_display.name = step_config["icon"]
+        self.content_icon_display.color = step_m3_color
         
     def _create_navigation(self):
-        """Create navigation controls with enhanced progress bar and buttons."""
-        return Column(
+        """Creates the static structure for tutorial navigation."""
+        self.step_indicator_row = Row(alignment="center", spacing=6) # Indicators populated in update_step
+        self.progress_bar_display = ProgressBar(height=4, border_radius=BorderRadius(2,2,2,2)) # Value/colors in update_step
+
+        self.skip_button = TextButton("Skip Tutorial", on_click=self.end_tutorial)
+        self.back_button = TextButton("Back", on_click=self.previous_step, disabled=True)
+        self.next_button_content_row = Row(controls=[Text("Next", size=14), Icon(icons.ARROW_FORWARD_IOS_ROUNDED, size=16)], spacing=4, tight=True, vertical_alignment=ft.CrossAxisAlignment.CENTER)
+        self.next_button = ft.FilledButton(content=self.next_button_content_row, on_click=self.next_step) # M3 FilledButton
+
+        self.navigation_controls = Column(
             controls=[
-                # Enhanced progress bar with step indicators
-                Container(
-                    content=Row(
-                        [self._create_step_indicator(i) for i in range(len(self.tutorial_steps))],
-                        alignment="center",
-                        spacing=8
-                    ),
-                    margin=padding.only(bottom=10)
-                ),
-                # Animated progress bar 
-                ProgressBar(
-                    value=0,
-                    bgcolor=ft.colors.with_opacity(0.2, self.app.COLORS["bg"]["accent"]),
-                    color=self.app.COLORS["bg"]["accent"],
-                    height=4,
-                    border_radius=BorderRadius(2, 2, 2, 2),
-                ),
+                Container(content=self.step_indicator_row, margin=padding.only(bottom=8)),
+                self.progress_bar_display,
                 Row(
                     controls=[
-                        TextButton(
-                            "Skip Tutorial",
-                            on_click=self.end_tutorial,
-                            style=ft.ButtonStyle(
-                                color=ft.colors.with_opacity(0.7, self.app.COLORS["text"]["secondary"])
-                            )
-                        ),
-                        Row(
-                            controls=[
-                                TextButton(
-                                    "Back",
-                                    on_click=self.previous_step,
-                                    disabled=True,
-                                    style=ft.ButtonStyle(
-                                        color=self.app.COLORS["text"]["secondary"]
-                                    )
-                                ),
-                                Container(  # Create animated Next button
-                                    content=TextButton(
-                                        content=Row(
-                                            controls=[
-                                                Text("Next", size=16),
-                                                Icon(icons.ARROW_FORWARD, size=16)
-                                            ],
-                                            spacing=5
-                                        ),
-                                        on_click=self.next_step,
-                                        style=ft.ButtonStyle(
-                                            color=self.app.COLORS["text"]["primary"],
-                                        )
-                                    ),
-                                    animate=animation.Animation(300, "bounceOut"),
-                                ),
-                            ],
-                            spacing=10
-                        ),
+                        self.skip_button,
+                        Row([self.back_button, self.next_button], spacing=8)
                     ],
                     alignment="spaceBetween"
                 )
             ],
-            spacing=20
+            spacing=12, # M3 spacing
         )
-    
-    def _create_step_indicator(self, step_index):
-        """Create an individual step indicator dot for the progress bar."""
-        is_current = step_index == 0
-        color = self.tutorial_steps[step_index]["color"] if is_current else self.app.COLORS["border"]["default"]
+        return self.navigation_controls
+
+    def _update_navigation_style(self, current_colors, step_config=None):
+        if step_config is None: step_config = self.tutorial_steps_config[self.current_step]
+
+        # Step Indicators
+        self.step_indicator_row.controls.clear()
+        for i in range(len(self.tutorial_steps_config)):
+            self.step_indicator_row.controls.append(self._create_step_indicator(i, current_colors))
+
+        # Progress Bar
+        self.progress_bar_display.bgcolor = ft.colors.with_opacity(0.2, current_colors.get("primaryContainer"))
+        self.progress_bar_display.color = current_colors.get("primary")
+        self.progress_bar_display.value = (self.current_step + 1) / len(self.tutorial_steps_config)
+
+        # Buttons
+        self.skip_button.style = ButtonStyle(color=current_colors.get("onSurfaceVariant"))
+        self.back_button.style = ButtonStyle(color=current_colors.get("onSurfaceVariant"))
+        self.back_button.disabled = self.current_step == 0
+
+        # Next/Finish Button
+        is_last_step = self.current_step == len(self.tutorial_steps_config) - 1
+        self.next_button_content_row.controls[0].value = "Finish" if is_last_step else "Next"
+        self.next_button_content_row.controls[1].name = icons.CHECK_ROUNDED if is_last_step else icons.ARROW_FORWARD_IOS_ROUNDED
+        self.next_button.on_click = self.end_tutorial if is_last_step else self.next_step
+        self.next_button.style = ButtonStyle(bgcolor=current_colors.get("primary"), color=current_colors.get("onPrimary"))
+        # Ensure icon and text inside FilledButton also get onPrimary color
+        self.next_button_content_row.controls[0].color = current_colors.get("onPrimary")
+        self.next_button_content_row.controls[1].color = current_colors.get("onPrimary")
+
+
+    def _create_step_indicator(self, step_index, current_colors):
+        """Creates an individual M3-style step indicator."""
+        is_current = step_index == self.current_step
+        step_config = self.tutorial_steps_config[step_index]
+        indicator_color = self._get_step_m3_color(step_config) if is_current else current_colors.get("surfaceVariant")
         
         return Container(
-            width=12,
-            height=12,
-            border_radius=BorderRadius(6, 6, 6, 6),
-            bgcolor=color,
-            tooltip=f"Step {step_index + 1}",
-            animate=animation.Animation(300, "easeInOut"),
-            on_click=lambda e, i=step_index: self._jump_to_step(i) if i < self.current_step + 1 else None
+            width=8 if not is_current else 12, # M3 active indicator can be larger
+            height=8 if not is_current else 12,
+            border_radius=BorderRadius(6,6,6,6),
+            bgcolor=indicator_color,
+            tooltip=f"Step {step_index + 1}: {step_config['title']}",
+            animate=animation.Animation(200, ft.AnimationCurve.EASE_OUT),
+            on_click=lambda e, i=step_index: self._jump_to_step(i)
         )
         
     def _jump_to_step(self, step_index):
+        """Jump to a specific step (can only go back or current)."""
         """Jump to a specific step when clicking on an active step indicator."""
         if step_index <= self.current_step:  # Only allow going back or staying on current step
             self.current_step = step_index
             self.update_step()
         
-    def update_step(self):
-        """Update the tutorial UI for the current step with animations."""
-        step = self.tutorial_steps[self.current_step]
-        
-        # Update header with animated icon and title
-        header_container = self.dialog.content.content.controls[0]
-        icon_container = header_container.content.controls[0]
-        icon_container.content.name = step["icon"]
-        icon_container.content.color = step["color"]
-        icon_container.bgcolor = ft.colors.with_opacity(0.1, step["color"])
-        header_container.content.controls[1].value = step["title"]
-        
-        # Update content
-        content_container = self.dialog.content.content.controls[1]
-        content_container.content.controls[0].value = step["content"]
-        
-        # Update illustration
-        illustration = content_container.content.controls[1].content
-        illustration.name = step["icon"]
-        illustration.color = step["color"]
-        content_container.content.controls[1].key = f"illustration-{self.current_step}"  # Force a refresh
-        
-        # Update progress indicators
-        navigation = self.dialog.content.content.controls[2]
-        step_indicators = navigation.controls[0].content.controls
-        
-        for i, indicator in enumerate(step_indicators):
-            if i < self.current_step:
-                indicator.bgcolor = ft.colors.with_opacity(0.6, self.tutorial_steps[i]["color"])
-                indicator.width = 10
-                indicator.height = 10
-            elif i == self.current_step:
-                indicator.bgcolor = self.tutorial_steps[i]["color"]
-                indicator.width = 14
-                indicator.height = 14
-            else:
-                indicator.bgcolor = self.app.COLORS["border"]["default"]
-                indicator.width = 10
-                indicator.height = 10
-        
-        # Update progress bar
-        progress_bar = navigation.controls[1]
-        progress_bar.value = (self.current_step + 1) / len(self.tutorial_steps)
-        
-        # Update navigation buttons
-        buttons_row = navigation.controls[2]
-        back_button = buttons_row.controls[1].controls[0]
-        back_button.disabled = self.current_step == 0
-        
-        next_button_container = buttons_row.controls[1].controls[1]
-        
-        if self.current_step == len(self.tutorial_steps) - 1:
-            # Last step - show finish button
-            next_button_container.content = TextButton(
-                content=Row(
-                    controls=[
-                        Text("Finish", size=16),
-                        Icon(icons.CHECK, size=16)
-                    ],
-                    spacing=5
-                ),
-                on_click=self.end_tutorial,
-                style=ft.ButtonStyle(
-                    color=self.app.COLORS["text"]["primary"],
-                )
-            )
-        else:
-            # Regular next button
-            next_button_container.content = TextButton(
-                content=Row(
-                    controls=[
-                        Text("Next", size=16),
-                        Icon(icons.ARROW_FORWARD, size=16)
-                    ],
-                    spacing=5
-                ),
-                on_click=self.next_step,
-                style=ft.ButtonStyle(
-                    color=self.app.COLORS["text"]["primary"],
-                )
-            )
+    def update_step(self, force_render_controls=False):
+        """Update the tutorial UI for the current step with M3 styling and animations."""
+        if not hasattr(self, 'header_container') or force_render_controls: # Ensure controls are created
+            # This path might be taken if update_colors is called before start_tutorial
+            # or if a theme change happens while tutorial is not open.
+            # Re-create parts of the dialog content if they don't exist.
+            # This is a bit of a workaround for Flet's declarative nature when styles change.
+            self.dialog.content.content.controls[0] = self._create_header()
+            self.dialog.content.content.controls[1] = self._create_content_area()
+            self.dialog.content.content.controls[2] = self._create_navigation()
 
-        # Apply pulse animation to the next/finish button container
-        next_button_container.scale = 1.05
-        self.page.update()
-        next_button_container.scale = 1.0
+        current_colors = self.app.COLORS # Use fresh colors
+        step_config = self.tutorial_steps_config[self.current_step]
+
+        self._update_header_style(current_colors, step_config)
+        self._update_content_area_style(current_colors, step_config)
+        self._update_navigation_style(current_colors, step_config)
         
-        self.dialog.open = True
+        # Animate content change
+        if hasattr(self, 'content_display_area'):
+            self.content_display_area.opacity = 0
+            self.page.update()
+            self.content_display_area.opacity = 1
+
+        self.dialog.open = True # Ensure dialog is open
         self.page.update()
         
     def next_step(self, e=None):
         """Advance to the next tutorial step."""
-        if self.current_step < len(self.tutorial_steps) - 1:
+        if self.current_step < len(self.tutorial_steps_config) - 1:
             self.current_step += 1
             self.update_step()
         else:
@@ -340,44 +263,39 @@ class OnboardingTutorial:
         """Begin the tutorial sequence with a fade-in animation."""
         self.current_step = 0
         
+        self.current_step = 0
+        self.update_colors(self.app.COLORS) # Apply current theme to dialog structure
+
         # Set initial opacity for fade-in effect
-        self.dialog.opacity = 0
+        self.dialog.content.opacity = 0 # Animate the content container
         self.dialog.open = True
-        self.page.update()
+        self.page.update() # Render dialog transparently first
         
-        # Use a timer instead of asyncio for the fade-in
-        def fade_in():
-            self.dialog.opacity = 1
-            self.update_step()
-            self.page.update()
+        def fade_in_and_update_step():
+            self.dialog.content.opacity = 1
+            self.update_step() # Now populate and style the first step
+            self.page.update() # Show content
         
-        # Schedule the fade-in after a short delay
-        threading.Timer(0.1, fade_in).start()
+        threading.Timer(0.05, fade_in_and_update_step).start() # Short delay for smoother transition
         
     def end_tutorial(self, e=None):
         """Complete the tutorial with fade-out animation and save progress."""
-        # Fade out animation
-        self.dialog.opacity = 0
+        self.dialog.content.opacity = 0
         self.page.update()
         
-        # Use a timer for cleanup after fade-out animation
-        def cleanup():
-            # Close dialog and save progress
+        def cleanup_and_close():
             self.dialog.open = False
-            self.app.config["tutorial_completed"] = True
-            self.app.save_config()
+            self.app.config["tutorial_completed"] = True # Persist completion
+            self.app.save_config() # Save this change
             
-            # Final page update
-            self.page.update()
-            
-            # Show a success snackbar
             self.page.snack_bar = ft.SnackBar(
-                content=Text("Tutorial completed! You can restart it anytime from the settings menu."),
-                bgcolor=self.app.COLORS["bg"]["secondary"],
-                action="OK"
+                content=Text("Tutorial completed! You can restart it from Settings.",
+                             color=self.app.COLORS.get("inverseOnSurface")),
+                bgcolor=self.app.COLORS.get("inverseSurface"), # M3 SnackBar colors
+                action="OK",
+                action_color=self.app.COLORS.get("inversePrimary")
             )
             self.page.snack_bar.open = True
             self.page.update()
         
-        # Schedule the cleanup after a short delay
-        threading.Timer(0.3, cleanup).start()
+        threading.Timer(0.3, cleanup_and_close).start() # Wait for fade out

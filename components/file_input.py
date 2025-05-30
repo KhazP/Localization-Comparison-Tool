@@ -16,11 +16,11 @@ class FileInputComponent:
         self.source_file_path = ""
         self.target_file_path = ""
         
-        # Initialize UI elements
-        self.source_label = Text("No file selected", color=self.app.COLORS["text"]["secondary"], expand=True)
-        self.target_label = Text("No file selected", color=self.app.COLORS["text"]["secondary"], expand=True)
-        self.source_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS["text"]["secondary"], size=20)
-        self.target_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS["text"]["secondary"], size=20)
+        # Initialize UI elements with M3 roles
+        self.source_label = Text("No file selected", color=self.app.COLORS.get("onSurfaceVariant"), expand=True)
+        self.target_label = Text("No file selected", color=self.app.COLORS.get("onSurfaceVariant"), expand=True)
+        self.source_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS.get("onSurfaceVariant"), size=20)
+        self.target_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS.get("onSurfaceVariant"), size=20)
         
         # Initialize file pickers
         self.source_picker = FilePicker(
@@ -38,43 +38,52 @@ class FileInputComponent:
         self.target_file_container = self._create_file_input("Target File", is_source=False)
     
     def _create_file_input(self, label: str, is_source=True) -> Container:
-        """Create a file input container with proper initialization"""
-        browse_button = ElevatedButton(
-            "Browse",
+        """Create a file input container with M3 styling"""
+        # Use ft.OutlinedButton for "Browse"
+        browse_button = ft.OutlinedButton(
+            text="Browse",
             icon=Icons.UPLOAD_FILE,
             tooltip=f"Select {label}",
             on_click=self.open_source_picker if is_source else self.open_target_picker,
-            bgcolor=self.app.COLORS["bg"]["accent"],
-            color=self.app.COLORS["text"]["primary"],
-            height=36,
-            style=ButtonStyle(shape=RoundedRectangleBorder(radius=8))
+            style=ft.ButtonStyle(
+                color=self.app.COLORS.get("primary"), # Text and icon color
+                shape=ft.RoundedRectangleBorder(radius=8),
+                side=ft.BorderSide(1, self.app.COLORS.get("outline")), # M3 outline
+            ),
+            height=40, # M3 standard height
         )
         
+        # Store button for update_colors
+        if is_source:
+            self.source_browse_button = browse_button
+        else:
+            self.target_browse_button = browse_button
+
         return Container(
             content=Column(
                 controls=[
-                    Text(label, color=self.app.COLORS["text"]["secondary"], size=14, weight=FontWeight.W_500),
+                    Text(label, color=self.app.COLORS.get("onSurfaceVariant"), size=14, weight=FontWeight.W_500),
                     Container(
                         content=Row(
                             controls=[
-                                self.source_icon if is_source else self.target_icon,
-                                self.source_label if is_source else self.target_label,
+                                self.source_icon if is_source else self.target_icon, # Already M3 styled
+                                self.source_label if is_source else self.target_label, # Already M3 styled
                                 Container(
-                                    content=browse_button,
+                                    content=browse_button, # M3 styled button
                                     animate=ft.Animation(duration=200, curve="easeInOut"),
                                     on_hover=lambda e, btn=browse_button: self._on_browse_hover(e, btn)
                                 ),
                             ],
                             alignment="center",
-                            spacing=8,
+                            spacing=8, # M3 spacing
                         ),
-                        border=border.all(2, self.app.COLORS["border"]["default"]),
-                        border_radius=8,
-                        bgcolor=self.app.COLORS["bg"]["input"],
-                        padding=12,
+                        border=ft.border.all(1, self.app.COLORS.get("outline")), # M3 border
+                        border_radius=8, # M3 radius
+                        bgcolor=self.app.COLORS.get("surfaceContainerHigh"), # M3 surface color
+                        padding=12, # M3 padding
                     ),
                 ],
-                spacing=8,
+                spacing=8, # M3 spacing
             )
         )
     
@@ -102,7 +111,7 @@ class FileInputComponent:
                             self.app.target_file_path = file_path
 
                         # Update UI elements
-                        icon.color = Colors.BLUE_400
+                        icon.color = self.app.COLORS.get("primary") # M3 primary for success/selection
                         self.app.update_compare_button()
                         
                         # Update preview if enabled
@@ -114,7 +123,7 @@ class FileInputComponent:
                     
                     # Use async line count to avoid freezing the UI
                     field.value = f"{file_name} (loading...)"
-                    icon.color = Colors.BLUE_200
+                    icon.color = self.app.COLORS.get("secondary") # M3 secondary for in-progress
                     field.update()
                     icon.update()
                     
@@ -124,13 +133,13 @@ class FileInputComponent:
                 except Exception as e:
                     logging.error(f"Error processing file: {str(e)}")
                     field.value = ""
-                    icon.color = "red"
+                    icon.color = self.app.COLORS.get("error") # M3 error color
                     field.update()
                     icon.update()
                     self.app.show_snackbar(f"Error processing file: {str(e)}")
             else:
                 field.value = ""
-                icon.color = "red"
+                icon.color = self.app.COLORS.get("error") # M3 error color
                 field.update()
                 icon.update()
     
@@ -174,36 +183,66 @@ class FileInputComponent:
     def open_target_picker(self, _):
         self.target_picker.pick_files()
 
-    def _on_browse_hover(self, e, button):
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        if e.data == "true":
-            button.bgcolor = hover_color
-        else:
-            button.bgcolor = self.app.COLORS["bg"]["accent"]
+    def _on_browse_hover(self, e, button: ft.OutlinedButton):
+        """Handle hover effect for ft.OutlinedButton."""
+        # M3 OutlinedButton hover: overlay of onSurface (8% opacity)
+        # Text and icon color can also change to primary
+        if e.data == "true": # Hovering
+            button.style.overlay_color = ft.colors.with_opacity(0.08, self.app.COLORS.get("onSurface"))
+            # Optionally, change text/icon to primary on hover:
+            # button.style.color = self.app.COLORS.get("primary")
+            # button.icon_color = self.app.COLORS.get("primary") # If icon property exists
+        else: # Not hovering
+            button.style.overlay_color = "transparent"
+            # Restore original text/icon color if changed on hover:
+            # button.style.color = self.app.COLORS.get("primary") # Assuming base is primary
         button.update()
 
     def update_colors(self, colors):
-        """Update component colors when theme changes"""
-        if self.source_label:
-            self.source_label.color = colors["text"]["secondary"]
-        if self.target_label:
-            self.target_label.color = colors["text"]["secondary"]
-        if self.source_icon:
-            self.source_icon.color = colors["text"]["secondary"]
-        if self.target_icon:
-            self.target_icon.color = colors["text"]["secondary"]
+        """Update component colors when theme changes, using M3 roles."""
+        # Labels and Icons
+        self.source_label.color = colors.get("onSurfaceVariant")
+        self.target_label.color = colors.get("onSurfaceVariant")
+        self.source_icon.color = colors.get("onSurfaceVariant")
+        self.target_icon.color = colors.get("onSurfaceVariant")
         
-        # Update container colors safely
-        for container in [self.source_file_container, self.target_file_container]:
-            if container and container.content and isinstance(container.content, Column):
-                file_input_col = container.content
-                if file_input_col.controls:
-                    if len(file_input_col.controls) > 0:
-                        file_input_col.controls[0].color = colors["text"]["secondary"]
-                    if len(file_input_col.controls) > 1:
-                        inner = file_input_col.controls[1]
-                        if inner:
-                            inner.bgcolor = colors["bg"]["input"]
-                            inner.border = border.all(2, colors["border"]["default"])
-        
-        # No need to call page.update() here as it will be handled by the main app
+        # Update file input containers
+        for i, container_wrapper in enumerate([self.source_file_container, self.target_file_container]):
+            if container_wrapper and isinstance(container_wrapper, ft.Container) and \
+               isinstance(container_wrapper.content, ft.Column):
+
+                column_content = container_wrapper.content
+
+                # Update label text (e.g., "Source File")
+                if column_content.controls and isinstance(column_content.controls[0], ft.Text):
+                    column_content.controls[0].color = colors.get("onSurfaceVariant")
+
+                # Update bordered container
+                if len(column_content.controls) > 1 and isinstance(column_content.controls[1], ft.Container):
+                    bordered_container = column_content.controls[1]
+                    bordered_container.bgcolor = colors.get("surfaceContainerHigh")
+                    bordered_container.border = ft.border.all(1, colors.get("outline"))
+
+                    # Update Browse button style within this container
+                    # The browse button is nested inside another container in a Row
+                    if isinstance(bordered_container.content, ft.Row) and \
+                       len(bordered_container.content.controls) > 2 and \
+                       isinstance(bordered_container.content.controls[2], ft.Container) and \
+                       isinstance(bordered_container.content.controls[2].content, ft.OutlinedButton):
+
+                        browse_button = bordered_container.content.controls[2].content
+                        browse_button.style.color = colors.get("primary")
+                        browse_button.style.side = ft.BorderSide(1, colors.get("outline"))
+                        # Re-apply hover handler in case button instance changed or needs re-binding with new colors
+                        # browse_button.on_hover = lambda e, btn=browse_button: self._on_browse_hover(e, btn)
+                        # It's better if on_hover is set once and _on_browse_hover uses self.app.COLORS directly.
+
+        # Update browse button styles directly if stored
+        if hasattr(self, 'source_browse_button'):
+            self.source_browse_button.style.color = colors.get("primary")
+            self.source_browse_button.style.side = ft.BorderSide(1, colors.get("outline"))
+        if hasattr(self, 'target_browse_button'):
+            self.target_browse_button.style.color = colors.get("primary")
+            self.target_browse_button.style.side = ft.BorderSide(1, colors.get("outline"))
+
+        # self.page.update() # Handled by App class

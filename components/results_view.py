@@ -8,24 +8,32 @@ from flet import (
 class ResultsViewComponent:
     def __init__(self, page: ft.Page, app_reference, colors: dict):
         self.page = page
-        self.app = app_reference
-        self.colors = colors
+        self.app = app_reference # Assuming app_reference.COLORS gives M3 theme
+        self.colors = colors # This will be updated by update_colors with M3 theme
         self.expand_all = True
         self.original_result_rows = []
 
-        # Create UI elements
+        # Create UI elements - initial styling will be M3 via self.colors (once updated)
+        # or directly using self.app.COLORS if available during init.
+        # For safety, make them use self.colors and ensure update_colors is called early.
         self.output_text = self._create_output_text()
         self.summary_text = self._create_summary_text()
         self.expand_collapse_button = self._create_expand_collapse_button()
-        self.results_header = self._create_results_header()
+        self.results_header = self._create_results_header() # Contains expand_collapse_button
         self.results_tabs = self._create_results_tabs()
 
         # Initialize search field
         self.search_field = TextField(
             hint_text="Search results...",
             on_change=lambda e: self.filter_results(e.control.value),
-            border=border.all(color=colors["border"]["default"]),
-            content_padding=padding.all(10),
+            text_style=TextStyle(color=self.colors.get("onSurface")),
+            hint_style=TextStyle(color=self.colors.get("onSurfaceVariant")),
+            border_color=self.colors.get("outline"),
+            focused_border_color=self.colors.get("primary"),
+            border_radius=8, # M3 like radius
+            border_width=1,
+            content_padding=padding.symmetric(horizontal=12, vertical=8), # M3 like padding
+            bgcolor=self.colors.get("surfaceContainerHigh"),
         )
 
         # Initialize results content
@@ -58,14 +66,13 @@ class ResultsViewComponent:
             min_lines=20,
             max_lines=None,
             text_style=TextStyle(
-                color=self.colors["text"]["secondary"],
+                color=self.colors.get("onSurfaceVariant"), # M3 role
                 size=14,
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
-            border=None,
-            cursor_color="transparent",
-            bgcolor="transparent",
+            border=ft.InputBorder.NONE, # M3 text fields can be borderless on some surfaces
+            bgcolor=self.colors.get("surface"), # M3 surface
             expand=True,
         )
 
@@ -75,51 +82,51 @@ class ResultsViewComponent:
             read_only=True,
             multiline=True,
             text_style=TextStyle(
-                color=self.colors["text"]["secondary"],
+                color=self.colors.get("onSurfaceVariant"), # M3 role
                 size=14,
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
-            border=None,
-            cursor_color="transparent",
-            bgcolor="transparent",
+            border=ft.InputBorder.NONE,
+            bgcolor=self.colors.get("surface"), # M3 surface
             expand=True,
         )
 
     def _create_expand_collapse_button(self):
         return IconButton(
             icon=Icons.UNFOLD_LESS,
-            icon_color=self.colors["text"]["secondary"],
+            icon_color=self.colors.get("onSurfaceVariant"), # M3 role
             tooltip="Collapse All",
             on_click=self.toggle_expand_all,
         )
 
     def _create_results_header(self):
+        # This header is part of the ResultsViewComponent
         return Container(
             content=Row(
                 controls=[
                     Text(
-                        "Results",
-                        size=16,
-                        weight="w500",
-                        color=self.colors["text"]["secondary"],
+                        "Results", # Title for this section
+                        size=16, # M3 Title Medium
+                        weight=FontWeight.W_500,
+                        color=self.colors.get("onSurfaceVariant"), # M3 role
                     ),
-                    Row(
+                    Row( # Buttons on the right
                         controls=[
-                            self.expand_collapse_button,
+                            self.expand_collapse_button, # Already created with M3 style
                             IconButton(
                                 icon=Icons.COPY,
-                                icon_color=self.colors["text"]["secondary"],
+                                icon_color=self.colors.get("onSurfaceVariant"), # M3 role
                                 tooltip="Copy comparison results",
                                 on_click=self.copy_results,
                             ),
                         ],
-                        spacing=8,
+                        spacing=0, # M3 icon buttons can be close
                     ),
                 ],
-                alignment="spaceBetween",
+                alignment="spaceBetween", # Pushes title left, buttons right
             ),
-            padding=padding.only(left=16, right=16, top=16),
+            padding=padding.symmetric(horizontal=16, vertical=8), # M3 padding
         )
 
     def _create_results_tabs(self):
@@ -143,9 +150,9 @@ class ResultsViewComponent:
         """Initialize the results table with search field and content"""
         if not comparison_result:
             self.results_content.controls = [
-                Text("No comparison results to display", color=self.colors["text"]["secondary"])
+                Text("No comparison results to display", color=self.colors.get("onSurfaceVariant"))
             ]
-            self.page.update()
+            # No need to self.page.update() here, caller should handle it or it's part of a larger update
             return
 
         lines = comparison_result.splitlines()
@@ -188,23 +195,35 @@ class ResultsViewComponent:
 
     def create_result_row(self, line: str, line_number: int = None) -> Row:
         if not line:
-            return Row(controls=[])
+            return Row(controls=[]) # Should ideally not happen if input is clean
             
+        icon_widget = Icon()
         if line.startswith("+"):
-            icon = Icon(Icons.ADD, color="green")
+            icon_widget.name = Icons.ADD_CIRCLE_OUTLINE
+            icon_widget.color = self.colors.get("tertiary") # Or a specific "success" color
         elif line.startswith("-"):
-            icon = Icon(Icons.REMOVE, color="red")
+            icon_widget.name = Icons.REMOVE_CIRCLE_OUTLINE
+            icon_widget.color = self.colors.get("error")
         elif line.startswith("~"):
-            icon = Icon(Icons.WARNING, color="yellow")
-        else:
-            icon = Icon(Icons.HELP, color="grey")
-        line_num_display = f"[Line {line_number}] " if line_number is not None else ""
+            icon_widget.name = Icons.WARNING_AMBER_ROUNDED
+            icon_widget.color = self.colors.get("secondary") # Or a specific "warning" color
+        else: # Neutral or no change
+            icon_widget.name = Icons.INFO_OUTLINE # Or a more neutral icon
+            icon_widget.color = self.colors.get("onSurfaceVariant")
+
+        line_num_display = f"[L:{line_number}] " if line_number is not None else ""
+
+        text_content = Text(
+            f"{line_num_display}{line}",
+            color=self.colors.get("onSurface"),
+            font_family="Consolas", # Keep monospace for alignment
+            size=13 # Slightly smaller for dense info
+        )
+
         return Row(
-            controls=[
-                icon,
-                Text(f"{line_num_display}{line}", color=self.colors["text"]["secondary"])
-            ],
-            spacing=8
+            controls=[icon_widget, text_content],
+            spacing=8,
+            vertical_alignment=ft.CrossAxisAlignment.START # Align icon with first line of text
         )
 
     def group_keys_by_namespace(self, lines: list[str]) -> dict:
@@ -267,31 +286,71 @@ class ResultsViewComponent:
 
     def update_colors(self, colors: dict):
         """Update component colors when theme changes"""
-        self.colors = colors
+        self.colors = colors # The new M3 theme colors from App
         
-        # Update text styles and colors
-        for text_field in [self.output_text, self.summary_text]:
-            text_field.text_style = TextStyle(
-                color=colors["text"]["secondary"],
-                size=14,
-                font_family="Consolas",
-                weight=FontWeight.W_400,
-            )
-        
-        # Update header colors
-        self.results_header.content.controls[0].color = colors["text"]["secondary"]
-        self.expand_collapse_button.icon_color = colors["text"]["secondary"]
-        
-        # Update borders and backgrounds
-        self.results_container.bgcolor = "transparent"
+        # Update TextFields (output_text, summary_text)
+        for tf in [self.output_text, self.summary_text]:
+            if tf:
+                tf.text_style.color = self.colors.get("onSurfaceVariant")
+                tf.bgcolor = self.colors.get("surface")
+                # tf.border = ft.InputBorder.NONE # Keep as initially set or update if needed
 
-        # Safely update search field and results
-        if hasattr(self, 'search_field'):
-            self.search_field.border = border.all(color=colors["border"]["default"])
+        # Update Results Header (Text and IconButtons)
+        if self.results_header and self.results_header.content and isinstance(self.results_header.content, Row):
+            # "Results" Text
+            results_text = self.results_header.content.controls[0]
+            if isinstance(results_text, Text):
+                results_text.color = self.colors.get("onSurfaceVariant")
+
+            # Buttons Row
+            buttons_row = self.results_header.content.controls[1]
+            if isinstance(buttons_row, Row):
+                for btn_control in buttons_row.controls:
+                    if isinstance(btn_control, IconButton):
+                        btn_control.icon_color = self.colors.get("onSurfaceVariant")
         
-        # Update result rows text colors
+        # Update Search Field
+        if self.search_field:
+            self.search_field.text_style.color = self.colors.get("onSurface")
+            self.search_field.hint_style.color = self.colors.get("onSurfaceVariant")
+            self.search_field.border_color = self.colors.get("outline")
+            self.search_field.focused_border_color = self.colors.get("primary")
+            self.search_field.bgcolor = self.colors.get("surfaceContainerHigh")
+
+        # Update Results Container (background)
+        if self.results_container:
+            self.results_container.bgcolor = self.colors.get("surface") # Or transparent if Card provides surface
+
+        # Update dynamically created result rows (icons and text)
+        # This requires re-styling existing rows if they are already in self.results_content.controls
+        # or ensuring new rows created by build_results_table use new colors.
+        # The create_result_row method will now use self.colors which are updated.
+        # If rows are stored in self.original_result_rows, we can update them:
         for row in self.original_result_rows:
-            if len(row.controls) > 1 and isinstance(row.controls[1], Text):
-                row.controls[1].color = colors["text"]["secondary"]
+            if row.controls and len(row.controls) > 0:
+                icon_widget = row.controls[0]
+                if isinstance(icon_widget, Icon):
+                    # Re-apply color based on icon type logic in create_result_row
+                    line_text_widget = row.controls[1] if len(row.controls) > 1 else None
+                    line_text_value = line_text_widget.value if line_text_widget and isinstance(line_text_widget, Text) else ""
+
+                    if line_text_value.startswith("+"): # Assuming line still has +/-
+                        icon_widget.color = self.colors.get("tertiary")
+                    elif line_text_value.startswith("-"):
+                        icon_widget.color = self.colors.get("error")
+                    elif line_text_value.startswith("~"):
+                        icon_widget.color = self.colors.get("secondary")
+                    else:
+                        icon_widget.color = self.colors.get("onSurfaceVariant")
+
+                text_widget = row.controls[1] if len(row.controls) > 1 else None
+                if isinstance(text_widget, Text):
+                    text_widget.color = self.colors.get("onSurface")
         
-        self.page.update()
+        # If results are currently displayed, trigger a re-render of those specific controls
+        # This is simpler if build_results_table is called again after colors change,
+        # but for now, let's try to update existing controls.
+        if self.results_content:
+            self.results_content.update()
+
+        # self.page.update() # Should be handled by the main App class after all components update

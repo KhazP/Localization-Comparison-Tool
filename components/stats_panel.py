@@ -24,29 +24,30 @@ class StatsPanelComponent:
         self.colors = colors
         
         # Initialize stats text fields
+        # Initialize stats text fields with M3 roles
         self.stats_text_total = Text(
             value="0",
-            size=24,
+            size=22, # M3 Headline Small/Title Large
             weight=FontWeight.BOLD,
-            color=self.colors["text"]["primary"],
+            color=self.colors.get("onSurface"), # Prominent text on surface
         )
         self.stats_text_missing = Text(
             value="0",
-            size=24,
+            size=22,
             weight=FontWeight.BOLD,
-            color=self.colors["changes"]["removed"],
+            color=self.colors.get("error"), # Semantic color for missing/removed
         )
-        self.stats_text_obsolete = Text(
+        self.stats_text_obsolete = Text( # "Obsolete" here means "missing in source", effectively "added in target unexpectedly"
             value="0",
-            size=24,
+            size=22,
             weight=FontWeight.BOLD,
-            color=self.colors["changes"]["added"],
+            color=self.colors.get("tertiary"), # Using tertiary for this distinct stat
         )
         self.stats_text_percentage = Text(
             value="0%",
-            size=24,
+            size=22,
             weight=FontWeight.BOLD,
-            color="lightblue",
+            color=self.colors.get("primary"), # Primary color for emphasis on percentage
         )
         
         # Create the stats panel
@@ -67,37 +68,33 @@ class StatsPanelComponent:
                         self._create_stat_container("Missing in Source", self.stats_text_obsolete, {"sm": 6, "md": 3, "lg": 3}),
                         self._create_stat_container("Translated %", self.stats_text_percentage, {"sm": 6, "md": 3, "lg": 3}),
                     ],
-                    alignment="center",
+                    alignment="center", # M3 content often centered in cards
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                bgcolor=self.colors["bg"]["secondary"],
-                border_radius=8,
+                bgcolor=self.colors.get("surfaceContainer"), # M3 surface role
+                padding=padding.all(8), # Reduced padding inside card before stat containers
+                border_radius=12, # M3 card radius
             ),
-            elevation=1,
+            elevation=1, # M3 standard elevation for cards like this
         )
 
     def _create_stat_container(self, label: str, stat_text: Text, col=None):
-        """Create a container for a single statistic.
-        
-        Args:
-            label: The label text for the statistic
-            stat_text: The Text control displaying the statistic value
-            col: Column definition for ResponsiveRow
-            
-        Returns:
-            Container: A formatted container with the statistic and its label
-        """
+        """Create a container for a single statistic with M3 styling."""
         return Container(
             content=Column(
                 controls=[
-                    Text(label, size=14, color=self.colors["text"]["secondary"]),
-                    stat_text,
+                    Text(label, size=12, color=self.colors.get("onSurfaceVariant"), weight=FontWeight.NORMAL), # M3 Body Small or Label Medium
+                    stat_text, # Already styled
                 ],
-                horizontal_alignment="center",
-                spacing=4,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER, # M3 center alignment
+                spacing=4, # M3 spacing
             ),
-            padding=padding.all(16),
+            padding=padding.symmetric(vertical=12, horizontal=8), # M3 padding
             expand=True,
             col=col,
+            # Add border for visual separation if needed, or rely on spacing
+            # border=ft.border.only(right=ft.border.BorderSide(1, self.colors.get("outlineVariant")))
+            # if not the last item, but ResponsiveRow handles spacing well.
         )
 
     def update_stats(self, total_keys: int, missing_keys: int, obsolete_keys: int):
@@ -124,8 +121,29 @@ class StatsPanelComponent:
         Args:
             colors: Dictionary containing the new theme colors
         """
-        self.colors = colors
-        self.stats_text_total.color = colors["text"]["primary"]
-        self.stats_text_missing.color = colors["changes"]["removed"]
-        self.stats_text_obsolete.color = colors["changes"]["added"]
-        # No need to call page.update() as it will be handled by the main app
+        self.colors = colors # Update the component's color map with new M3 theme
+
+        # Update stat text colors
+        self.stats_text_total.color = self.colors.get("onSurface")
+        self.stats_text_missing.color = self.colors.get("error")
+        self.stats_text_obsolete.color = self.colors.get("tertiary") # Or another distinct color like secondary
+        self.stats_text_percentage.color = self.colors.get("primary")
+
+        # Update panel background (Container within Card)
+        if self.panel and isinstance(self.panel, ft.Card) and isinstance(self.panel.content, ft.Container):
+            self.panel.content.bgcolor = self.colors.get("surfaceContainer")
+
+        # Update labels in stat containers
+        # Assuming the structure from _create_stat_container: Container -> Column -> Text (label)
+        if self.panel and self.panel.content and self.panel.content.content and \
+           isinstance(self.panel.content.content, ft.ResponsiveRow):
+            for stat_container_wrapper in self.panel.content.content.controls:
+                 if isinstance(stat_container_wrapper, ft.Container) and \
+                    isinstance(stat_container_wrapper.content, ft.Column) and \
+                    len(stat_container_wrapper.content.controls) > 0 and \
+                    isinstance(stat_container_wrapper.content.controls[0], ft.Text):
+
+                    label_text = stat_container_wrapper.content.controls[0]
+                    label_text.color = self.colors.get("onSurfaceVariant")
+
+        # No need to call self.page.update() directly, App class handles it.

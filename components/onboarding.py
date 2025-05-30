@@ -62,11 +62,11 @@ class OnboardingTutorial:
                         self._create_content(),
                         self._create_navigation()
                     ],
-                    spacing=20,
+                    spacing=self.app.spacing["l"] - self.app.spacing["xxs"], # 20px Updated
                 ),
-                padding=padding.all(24),
-                width=450,  # Slightly wider for better readability
-                border_radius=BorderRadius(12, 12, 12, 12),
+                padding=padding.all(self.app.spacing["l"]), # Updated
+                width=450, 
+                border_radius=BorderRadius.all(self.app.spacing["s"]), # Updated
                 gradient=LinearGradient(
                     begin=alignment.top_center,
                     end=alignment.bottom_center,
@@ -95,23 +95,23 @@ class OnboardingTutorial:
                         content=Icon(
                             self.tutorial_steps[0]["icon"],
                             size=32,
-                            color=self.tutorial_steps[0]["color"]  # Use the step-specific color
+                            color=self.tutorial_steps[0]["color"]
                         ),
-                        padding=padding.all(12),
-                        border_radius=BorderRadius(8, 8, 8, 8),
+                        padding=padding.all(self.app.spacing["s"]), # Updated
+                        border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         bgcolor=ft.colors.with_opacity(0.1, self.tutorial_steps[0]["color"]),
                     ),
                     Text(
                         self.tutorial_steps[0]["title"],
-                        size=24,
+                        size=self.app.TEXT_SIZE_XLARGE, # Updated
                         weight="bold",
                         color=self.app.COLORS["text"]["primary"]
                     )
                 ],
                 alignment="center",
-                spacing=16,
+                spacing=self.app.spacing["m"], # Updated
             ),
-            margin=padding.only(bottom=10)
+            margin=padding.only(bottom=self.app.spacing["s"]) # Updated
         )
         
     def _create_content(self):
@@ -121,50 +121,50 @@ class OnboardingTutorial:
                 controls=[
                     Text(
                         self.tutorial_steps[0]["content"],
-                        size=16,
+                        size=self.app.TEXT_SIZE_MEDIUM, # Updated
                         color=self.app.COLORS["text"]["secondary"],
                         text_align="center"
                     ),
-                    # Add illustration container that will be populated in update_step
                     Container(
                         content=Icon(
                             self.tutorial_steps[0]["icon"],
-                            size=80,
+                            size=80, # Keep size
                             color=self.tutorial_steps[0]["color"],
                             opacity=0.8
                         ),
                         alignment=ft.alignment.center,
-                        height=120,
-                        animate=animation.Animation(500, "decelerate")
+                        height=120, # Keep height
+                        animate=animation.Animation(500, "decelerate") # Keep animation
                     )
                 ],
                 horizontal_alignment="center",
-                spacing=24
+                spacing=self.app.spacing["l"] # Updated
             ),
-            padding=padding.symmetric(vertical=20),
-            animate=animation.Animation(300, "easeInOut")
+            padding=padding.symmetric(vertical=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
+            animate=animation.Animation(300, "easeInOut") # Keep animation
         )
         
     def _create_navigation(self):
         """Create navigation controls with enhanced progress bar and buttons."""
+        button_text_size = self.app.TEXT_SIZE_DEFAULT # 14px
+        icon_text_size = self.app.TEXT_SIZE_MEDIUM # 16px
+
         return Column(
             controls=[
-                # Enhanced progress bar with step indicators
                 Container(
                     content=Row(
                         [self._create_step_indicator(i) for i in range(len(self.tutorial_steps))],
                         alignment="center",
-                        spacing=8
+                        spacing=self.app.spacing["xs"] # Updated
                     ),
-                    margin=padding.only(bottom=10)
+                    margin=padding.only(bottom=self.app.spacing["s"]) # Updated
                 ),
-                # Animated progress bar 
                 ProgressBar(
                     value=0,
                     bgcolor=ft.colors.with_opacity(0.2, self.app.COLORS["bg"]["accent"]),
                     color=self.app.COLORS["bg"]["accent"],
-                    height=4,
-                    border_radius=BorderRadius(2, 2, 2, 2),
+                    height=self.app.spacing["xxs"], # Updated
+                    border_radius=BorderRadius.all(self.app.spacing["xxs"] / 2), # Updated
                 ),
                 Row(
                     controls=[
@@ -172,7 +172,8 @@ class OnboardingTutorial:
                             "Skip Tutorial",
                             on_click=self.end_tutorial,
                             style=ft.ButtonStyle(
-                                color=ft.colors.with_opacity(0.7, self.app.COLORS["text"]["secondary"])
+                                color=ft.colors.with_opacity(0.7, self.app.COLORS["text"]["secondary"]),
+                                text_style=ft.TextStyle(size=button_text_size) # Added
                             )
                         ),
                         Row(
@@ -182,33 +183,34 @@ class OnboardingTutorial:
                                     on_click=self.previous_step,
                                     disabled=True,
                                     style=ft.ButtonStyle(
-                                        color=self.app.COLORS["text"]["secondary"]
+                                        color=self.app.COLORS["text"]["secondary"],
+                                        text_style=ft.TextStyle(size=button_text_size) # Added
                                     )
                                 ),
-                                Container(  # Create animated Next button
+                                Container(
                                     content=TextButton(
                                         content=Row(
                                             controls=[
-                                                Text("Next", size=16),
-                                                Icon(icons.ARROW_FORWARD, size=16)
+                                                Text("Next", size=button_text_size), # Updated
+                                                Icon(icons.ARROW_FORWARD, size=icon_text_size) # Updated
                                             ],
-                                            spacing=5
+                                            spacing=self.app.spacing["xxs"] # Updated
                                         ),
                                         on_click=self.next_step,
                                         style=ft.ButtonStyle(
                                             color=self.app.COLORS["text"]["primary"],
                                         )
                                     ),
-                                    animate=animation.Animation(300, "bounceOut"),
+                                    animate=animation.Animation(300, "bounceOut"), # Keep animation
                                 ),
                             ],
-                            spacing=10
+                            spacing=self.app.spacing["s"] # Updated
                         ),
                     ],
-                    alignment="spaceBetween"
+                    alignment="spaceBetween" # Keep alignment
                 )
             ],
-            spacing=20
+            spacing=self.app.spacing["l"] - self.app.spacing["xxs"] # 20px Updated
         )
     
     def _create_step_indicator(self, step_index):

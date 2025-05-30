@@ -26,27 +26,27 @@ class StatsPanelComponent:
         # Initialize stats text fields
         self.stats_text_total = Text(
             value="0",
-            size=24,
+            size=self.app.TEXT_SIZE_XLARGE, # Updated
             weight=FontWeight.BOLD,
             color=self.colors["text"]["primary"],
         )
         self.stats_text_missing = Text(
             value="0",
-            size=24,
+            size=self.app.TEXT_SIZE_XLARGE, # Updated
             weight=FontWeight.BOLD,
             color=self.colors["changes"]["removed"],
         )
         self.stats_text_obsolete = Text(
             value="0",
-            size=24,
+            size=self.app.TEXT_SIZE_XLARGE, # Updated
             weight=FontWeight.BOLD,
-            color=self.colors["changes"]["added"],
+            color=self.colors["changes"]["added"], # This was 'added' in original, typically obsolete would be a warning/yellow or neutral. For now, keeping as is.
         )
         self.stats_text_percentage = Text(
             value="0%",
-            size=24,
+            size=self.app.TEXT_SIZE_XLARGE, # Updated
             weight=FontWeight.BOLD,
-            color="lightblue",
+            color=self.colors["text"]["accent"], # Updated from "lightblue"
         )
         
         # Create the stats panel
@@ -67,12 +67,12 @@ class StatsPanelComponent:
                         self._create_stat_container("Missing in Source", self.stats_text_obsolete, {"sm": 6, "md": 3, "lg": 3}),
                         self._create_stat_container("Translated %", self.stats_text_percentage, {"sm": 6, "md": 3, "lg": 3}),
                     ],
-                    alignment="center",
+                    alignment="center", # Keep alignment
                 ),
                 bgcolor=self.colors["bg"]["secondary"],
-                border_radius=8,
+                border_radius=self.app.spacing["xs"], # Updated
             ),
-            elevation=1,
+            elevation=1, # Keep elevation
         )
 
     def _create_stat_container(self, label: str, stat_text: Text, col=None):
@@ -89,15 +89,15 @@ class StatsPanelComponent:
         return Container(
             content=Column(
                 controls=[
-                    Text(label, size=14, color=self.colors["text"]["secondary"]),
+                    Text(label, size=self.app.TEXT_SIZE_DEFAULT, color=self.colors["text"]["secondary"]), # Updated
                     stat_text,
                 ],
-                horizontal_alignment="center",
-                spacing=4,
+                horizontal_alignment="center", # Keep alignment
+                spacing=self.app.spacing["xxs"], # Updated
             ),
-            padding=padding.all(16),
-            expand=True,
-            col=col,
+            padding=padding.all(self.app.spacing["m"]), # Updated
+            expand=True, # Keep expand
+            col=col, # Keep col
         )
 
     def update_stats(self, total_keys: int, missing_keys: int, obsolete_keys: int):
@@ -127,5 +127,9 @@ class StatsPanelComponent:
         self.colors = colors
         self.stats_text_total.color = colors["text"]["primary"]
         self.stats_text_missing.color = colors["changes"]["removed"]
-        self.stats_text_obsolete.color = colors["changes"]["added"]
+        # Assuming 'obsolete' should use a color like 'modified' or a neutral one.
+        # For now, let's map it to 'modified' which is often yellow/amber.
+        # If 'modified' isn't suitable, it could be colors["text"]["secondary"] or a new theme entry.
+        self.stats_text_obsolete.color = colors["changes"].get("modified", colors["text"]["secondary"])
+        self.stats_text_percentage.color = colors["text"]["accent"]
         # No need to call page.update() as it will be handled by the main app

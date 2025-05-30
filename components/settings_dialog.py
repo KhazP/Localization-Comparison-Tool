@@ -39,18 +39,18 @@ class SettingsDialogComponent:
         self.settings_tabs = Row(
             controls=[self._create_tab_button(i) for i in range(len(self.tabs_content))],
             alignment="center",
-            spacing=16,
-            height=80,
+            spacing=self.app.spacing["m"], # Updated
+            height=self.app.spacing["xxl"] + self.app.spacing["xl"], # 80px Updated
         )
         
         # Create progress bar that shows position like onboarding
         self.progress_bar = ProgressBar(
-            width=450,
-            value=0.2,  # Will be updated based on tab
+            width=450, # Keep width or make it relative
+            value=0.2,
             bgcolor=ft.colors.with_opacity(0.2, self.colors["bg"]["accent"]),
             color=self.tab_colors[0],
-            height=4,
-            border_radius=BorderRadius(2, 2, 2, 2),
+            height=self.app.spacing["xxs"], # Updated
+            border_radius=BorderRadius.all(self.app.spacing["xxs"]/2), # Updated
         )
         
         # Prepare main content container that will be dynamically updated
@@ -75,25 +75,25 @@ class SettingsDialogComponent:
                                 self.settings_tabs,
                                 self.progress_bar,
                             ]),
-                            margin=padding.only(top=10, bottom=10),
+                            margin=padding.only(top=self.app.spacing["s"], bottom=self.app.spacing["s"]), # Updated
                         ),
                         
                         # Dynamic content area - wrapped in a Column with scroll instead of Container
                         Column(
                             controls=[self.content_container],
-                            expand=True,
-                            scroll=ft.ScrollMode.AUTO,
-                            height=400,  # Fixed height to ensure scrolling works
+                            expand=True, # Keep expand
+                            scroll=ft.ScrollMode.AUTO, # Keep scroll
+                            height=400,  # Keep Fixed height for scrolling
                         ),
                         
                         # Footer navigation buttons 
                         self._create_footer(),
                     ],
-                    spacing=16,
+                    spacing=self.app.spacing["m"], # Updated
                 ),
-                width=550,
-                padding=padding.all(24),
-                border_radius=BorderRadius(12, 12, 12, 12),
+                width=550, # Keep width or make relative
+                padding=padding.all(self.app.spacing["l"]), # Updated
+                border_radius=BorderRadius.all(self.app.spacing["s"]), # Updated
                 gradient=LinearGradient(
                     begin=alignment.top_center,
                     end=alignment.bottom_center,
@@ -188,18 +188,18 @@ class SettingsDialogComponent:
                     Container(
                         content=Icon(
                             self._get_tab_icon(0),
-                            size=32,
+                            size=self.app.TEXT_SIZE_XXLARGE, # Updated
                             color=self.tab_colors[0]
                         ),
-                        padding=padding.all(12),
-                        border_radius=BorderRadius(8, 8, 8, 8),
+                        padding=padding.all(self.app.spacing["s"]), # Updated
+                        border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         bgcolor=ft.colors.with_opacity(0.1, self.tab_colors[0]),
                     ),
                     # Tab title text
                     Text(
                         self._get_tab_title(0),
-                        size=24,
-                        weight="bold",
+                        size=self.app.TEXT_SIZE_XLARGE, # Updated
+                        weight="bold", # Keep weight
                         color=self.colors["text"]["primary"]
                     ),
                     # Close (X) button
@@ -208,24 +208,29 @@ class SettingsDialogComponent:
                         icon_color=self.colors["text"]["secondary"],
                         tooltip="Close Settings",
                         on_click=self.close_dialog,
+                        icon_size=self.app.TEXT_SIZE_LARGE # Explicitly set icon size
                     ),
                 ],
                 alignment="spaceBetween",
                 vertical_alignment="center",
             ),
-            margin=padding.only(bottom=10),
-            animate=Animation(300, AnimationCurve.EASE_IN_OUT),
+            margin=padding.only(bottom=self.app.spacing["s"]), # Updated
+            animate=Animation(300, AnimationCurve.EASE_IN_OUT), # Keep animation
         )
 
     def _create_footer(self):
         """Create footer with action buttons"""
+        button_text_size = self.app.TEXT_SIZE_DEFAULT # Was 16, now 14
+        icon_size = self.app.TEXT_SIZE_MEDIUM # Was 16, now 16 (aligned)
+
         return Row(
             controls=[
                 TextButton(
                     "Reset to Default",
                     on_click=self.reset_settings,
                     style=ft.ButtonStyle(
-                        color=ft.colors.with_opacity(0.7, self.colors["text"]["secondary"])
+                        color=ft.colors.with_opacity(0.7, self.colors["text"]["secondary"]),
+                        text_style=ft.TextStyle(size=button_text_size) # Added text style
                     )
                 ),
                 Row(
@@ -233,10 +238,10 @@ class SettingsDialogComponent:
                         TextButton(
                             content=Row(
                                 controls=[
-                                    Icon(Icons.ARROW_BACK, size=16),
-                                    Text("Previous", size=16),
+                                    Icon(Icons.ARROW_BACK, size=icon_size), # Updated
+                                    Text("Previous", size=button_text_size), # Updated
                                 ],
-                                spacing=5
+                                spacing=self.app.spacing["xxs"] # Updated
                             ),
                             on_click=self.previous_tab,
                             style=ButtonStyle(
@@ -247,23 +252,23 @@ class SettingsDialogComponent:
                             content=TextButton(
                                 content=Row(
                                     controls=[
-                                        Text("Next", size=16),
-                                        Icon(Icons.ARROW_FORWARD, size=16)
+                                        Text("Next", size=button_text_size), # Updated
+                                        Icon(Icons.ARROW_FORWARD, size=icon_size) # Updated
                                     ],
-                                    spacing=5
+                                    spacing=self.app.spacing["xxs"] # Updated
                                 ),
                                 on_click=self.next_tab,
                                 style=ButtonStyle(
                                     color=self.colors["text"]["primary"],
                                 )
                             ),
-                            animate=Animation(300, AnimationCurve.BOUNCE_OUT),
+                            animate=Animation(300, AnimationCurve.BOUNCE_OUT), # Keep animation
                         ),
                     ],
-                    spacing=10
+                    spacing=self.app.spacing["s"] # Updated from 10 to 12
                 ),
             ],
-            alignment="spaceBetween"
+            alignment="spaceBetween" # Keep alignment
         )
 
     def _create_tab_button(self, index):
@@ -271,24 +276,26 @@ class SettingsDialogComponent:
         is_current = index == self.current_tab
         color = self.tab_colors[index] if is_current else self.colors["text"]["secondary"]
         bgcolor = ft.colors.with_opacity(0.1 if is_current else 0.05, color)
+        icon_size_current = self.app.TEXT_SIZE_XLARGE # 22px (was 24)
+        icon_size_default = self.app.TEXT_SIZE_LARGE # 18px (was 20)
         
         return Container(
             content=IconButton(
                 icon=self._get_tab_icon(index),
                 icon_color=color,
-                icon_size=24 if is_current else 20,
+                icon_size=icon_size_current if is_current else icon_size_default, # Updated
                 on_click=lambda e, i=index: self.switch_to_tab(i),
                 tooltip=self._get_tab_title(index),
             ),
-            border_radius=BorderRadius(8, 8, 8, 8),
+            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
             bgcolor=bgcolor,
-            width=64,
-            height=64,
-            animate=Animation(300, AnimationCurve.EASE_IN_OUT),
-            padding=8,
+            width=self.app.spacing["xl"] * 2, # 64px Updated
+            height=self.app.spacing["xl"] * 2, # 64px Updated
+            animate=Animation(300, AnimationCurve.EASE_IN_OUT), # Keep animation
+            padding=self.app.spacing["xs"], # Updated
             shadow=BoxShadow(
                 spread_radius=0,
-                blur_radius=8 if is_current else 0,
+                blur_radius=self.app.spacing["xs"] if is_current else 0, # Updated
                 color=ft.colors.with_opacity(0.2, color if is_current else "#000000"),
                 offset=Offset(0, 2),
             ),
@@ -328,50 +335,50 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Visual Appearance",
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[0],
                                     ),
                                     Text(
                                         "Choose your preferred theme and visual settings",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     Row([
                                         Container(
                                             content=Column([
-                                                Icon(Icons.DARK_MODE, size=24),
-                                                Text("Dark", size=12),
+                                                Icon(Icons.DARK_MODE, size=self.app.TEXT_SIZE_XLARGE), # Updated
+                                                Text("Dark", size=self.app.TEXT_SIZE_SMALL), # Updated
                                             ], 
                                             alignment="center",
-                                            spacing=5
+                                            spacing=self.app.spacing["xxs"] # Updated
                                             ),
-                                            width=70,
-                                            height=70,
-                                            border_radius=BorderRadius(8, 8, 8, 8),
+                                            width=self.app.BASE_UNIT * 18, # 72px Updated
+                                            height=self.app.BASE_UNIT * 18, # 72px Updated
+                                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                                             bgcolor=ft.colors.with_opacity(
                                                 0.1 if self.app.current_theme == "dark" else 0.05, 
                                                 self.tab_colors[0]
                                             ),
                                             border=ft.border.all(
-                                                2 if self.app.current_theme == "dark" else 0,
+                                                2 if self.app.current_theme == "dark" else 0, # Keep border width
                                                 self.tab_colors[0]
                                             ),
-                                            padding=10,
+                                            padding=self.app.spacing["s"], # Updated
                                             on_click=lambda e: self.quick_theme_change("dark"),
                                         ),
                                         Container(
                                             content=Column([
-                                                Icon(Icons.LIGHT_MODE, size=24),
-                                                Text("Light", size=12),
+                                                Icon(Icons.LIGHT_MODE, size=self.app.TEXT_SIZE_XLARGE), # Updated
+                                                Text("Light", size=self.app.TEXT_SIZE_SMALL), # Updated
                                             ], 
                                             alignment="center", 
-                                            spacing=5
+                                            spacing=self.app.spacing["xxs"] # Updated
                                             ),
-                                            width=70,
-                                            height=70,
-                                            border_radius=BorderRadius(8, 8, 8, 8),
+                                            width=self.app.BASE_UNIT * 18, # 72px Updated
+                                            height=self.app.BASE_UNIT * 18, # 72px Updated
+                                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                                             bgcolor=ft.colors.with_opacity(
                                                 0.1 if self.app.current_theme == "light" else 0.05,
                                                 self.tab_colors[0]
@@ -380,21 +387,20 @@ class SettingsDialogComponent:
                                                 2 if self.app.current_theme == "light" else 0, 
                                                 self.tab_colors[0]
                                             ),
-                                            padding=10,
+                                            padding=self.app.spacing["s"], # Updated
                                             on_click=lambda e: self.quick_theme_change("light"),
                                         ),
-                                        # Remove high contrast option from here since it's in Accessibility tab
                                         Container(
                                             content=Column([
-                                                Icon(Icons.SETTINGS_SUGGEST, size=24),
-                                                Text("System", size=12),
+                                                Icon(Icons.SETTINGS_SUGGEST, size=self.app.TEXT_SIZE_XLARGE), # Updated
+                                                Text("System", size=self.app.TEXT_SIZE_SMALL), # Updated
                                             ], 
                                             alignment="center",
-                                            spacing=5
+                                            spacing=self.app.spacing["xxs"] # Updated
                                             ),
-                                            width=70,
-                                            height=70,
-                                            border_radius=BorderRadius(8, 8, 8, 8),
+                                            width=self.app.BASE_UNIT * 18, # 72px Updated
+                                            height=self.app.BASE_UNIT * 18, # 72px Updated
+                                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                                             bgcolor=ft.colors.with_opacity(
                                                 0.1 if self.app.current_theme == "system" else 0.05,
                                                 self.tab_colors[0]
@@ -403,20 +409,20 @@ class SettingsDialogComponent:
                                                 2 if self.app.current_theme == "system" else 0, 
                                                 self.tab_colors[0]
                                             ),
-                                            padding=10,
+                                            padding=self.app.spacing["s"], # Updated
                                             on_click=lambda e: self.quick_theme_change("system"),
                                         ),
                                         Container(
                                             content=Column([
-                                                Icon(Icons.NIGHTLIGHT_ROUND, size=24),
-                                                Text("AMOLED", size=11),
+                                                Icon(Icons.NIGHTLIGHT_ROUND, size=self.app.TEXT_SIZE_XLARGE), # Updated
+                                                Text("AMOLED", size=self.app.TEXT_SIZE_XSMALL), # Adjusted for length
                                             ], 
                                             alignment="center",
-                                            spacing=5
+                                            spacing=self.app.spacing["xxs"] # Updated
                                             ),
-                                            width=70,
-                                            height=70,
-                                            border_radius=BorderRadius(8, 8, 8, 8),
+                                            width=self.app.BASE_UNIT * 18, # 72px Updated
+                                            height=self.app.BASE_UNIT * 18, # 72px Updated
+                                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                                             bgcolor=ft.colors.with_opacity(
                                                 0.1 if self.app.current_theme == "amoled" else 0.05,
                                                 self.tab_colors[0]
@@ -425,27 +431,24 @@ class SettingsDialogComponent:
                                                 2 if self.app.current_theme == "amoled" else 0, 
                                                 self.tab_colors[0]
                                             ),
-                                            padding=10,
+                                            padding=self.app.spacing["s"], # Updated
                                             on_click=lambda e: self.quick_theme_change("amoled"),
                                         ),
                                     ], 
-                                    alignment="spaceEvenly"
+                                    alignment="spaceEvenly" # Keep alignment
                                     ),
-                                    Container(height=24),
-                                    # Remove duplicate settings:
-                                    # - Show file preview (moved to Comparison tab)
-                                    # - Auto-fill missing translations (moved to Comparison tab)
+                                    Container(height=self.app.spacing["l"]), # 24px Updated
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                     
-                    Container(height=16),
+                    Container(height=self.app.spacing["m"]), # 16px Updated
                     
                     # User Interface Card
                     Card(
@@ -454,65 +457,66 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Interface Behavior", 
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[0],
                                     ),
                                     Text(
                                         "Configure how the application responds to your actions",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     Row(
                                         controls=[
                                             Text(
                                                 "Animation Speed",
-                                                size=14,
-                                                weight="bold",
+                                                size=self.app.TEXT_SIZE_DEFAULT, # Updated
+                                                weight="bold", # Keep weight
                                             ),
                                         ]
                                     ),
-                                    Container(height=8),
+                                    Container(height=self.app.spacing["xs"]), # 8px Updated
                                     Row(
                                         controls=[
-                                            Icon(Icons.SPEED_OUTLINED, size=20),
+                                            Icon(Icons.SPEED_OUTLINED, size=self.app.TEXT_SIZE_LARGE), # Updated
                                             Slider(
                                                 min=0,
                                                 max=1000,
                                                 value=self.config.get("animation_speed", 300),
                                                 divisions=10,
-                                                width=350,
+                                                width=350, # Keep width or make relative
                                                 label="{value}ms",
                                                 on_change=lambda e: self.handle_setting_change(e, "animation_speed"),
                                             ),
                                         ],
-                                        spacing=10,
+                                        spacing=self.app.spacing["s"], # Updated
                                     ),
-                                    Container(height=16),
+                                    Container(height=self.app.spacing["m"]), # 16px Updated
                                     Row(
                                         controls=[
                                             Checkbox(
                                                 value=self.config.get("confirm_actions", True),
                                                 label="Confirm destructive actions",
+                                                label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                                 on_change=lambda e: self.handle_setting_change(e, "confirm_actions"),
                                             ),
                                         ],
                                     ),
                                 ],
-                                spacing=8,
+                                spacing=self.app.spacing["xs"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                 ],
-                spacing=8,
-                scroll=ft.ScrollMode.AUTO,
+                spacing=self.app.spacing["xs"], # Updated
+                scroll=ft.ScrollMode.AUTO, # Keep scroll
             ),
-            padding=padding.all(10),
+            padding=padding.all(self.app.spacing["s"]), # Updated
         )
 
     def _create_comparison_tab(self) -> Container:
@@ -525,49 +529,52 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Comparison Options",
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[1],
                                     ),
                                     Text(
                                         "Configure how files are compared and displayed",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
-                                    # Display options - kept in Comparison tab
                                     Checkbox(
                                         value=self.config.get("show_preview", True),
                                         label="Show File Preview",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=self.app.handle_preview_toggle,
                                     ),
                                     Checkbox(
                                         value=self.config.get("show_line_numbers", False),
                                         label="Show Line Numbers",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "show_line_numbers"),
                                     ),
                                     Checkbox(
                                         value=self.config.get("auto_fill_missing", False),
                                         label="Auto-Fill Missing Keys",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "auto_fill_missing"),
                                     ),
                                     Checkbox(
                                         value=self.config.get("log_missing_strings", False),
                                         label="Log Missing Strings",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "log_missing_strings"),
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                     
-                    Container(height=16),
+                    Container(height=self.app.spacing["m"]), # 16px Updated
                     
                     # Advanced comparison options
                     Card(
@@ -576,46 +583,49 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Advanced Comparison", 
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[1],
                                     ),
                                     Text(
                                         "Configure detailed comparison behavior",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
                                     Checkbox(
                                         value=self.config.get("ignore_whitespace", False),
                                         label="Ignore Whitespace",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "ignore_whitespace"),
                                     ),
                                     Checkbox(
                                         value=self.config.get("ignore_case", False),
                                         label="Ignore Case",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "ignore_case"),
                                     ),
                                     Checkbox(
                                         value=self.config.get("group_by_namespace", True),
                                         label="Group by Namespace",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "group_by_namespace"),
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                 ],
-                spacing=8,
-                scroll=ft.ScrollMode.AUTO,
+                spacing=self.app.spacing["xs"], # Updated
+                scroll=ft.ScrollMode.AUTO, # Keep scroll
             ),
-            padding=padding.all(10),
+            padding=padding.all(self.app.spacing["s"]), # Updated
         )
 
     def _create_file_format_tab(self) -> Container:
@@ -628,27 +638,26 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Format Preferences",
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[2],
                                     ),
                                     Text(
                                         "Choose your preferred file format settings",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
-                                    # Format selection dropdown
                                     Text(
                                         "Default Format",
-                                        size=14,
-                                        weight="bold",
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
+                                        weight="bold", # Keep weight
                                     ),
-                                    Container(height=8),
+                                    Container(height=self.app.spacing["xs"]), # 8px Updated
                                     ft.Dropdown(
                                         value=self.config.get("preferred_format", "auto"),
-                                        width=400,
+                                        width=400, # Keep width or make relative
                                         options=[
                                             ft.dropdown.Option("auto", "Auto-Detect"),
                                             ft.dropdown.Option("json", "JSON"),
@@ -659,19 +668,22 @@ class SettingsDialogComponent:
                                             ft.dropdown.Option("csv", "CSV"),
                                             ft.dropdown.Option("resx", "RESX"),
                                         ],
+                                        text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added
+                                        # hint_style for dropdown is not directly available, default label uses text_style
+                                        # content_padding for dropdown can be set if needed
                                         on_change=lambda e: self.handle_setting_change(e, "preferred_format"),
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                     
-                    Container(height=16),
+                    Container(height=self.app.spacing["m"]), # 16px Updated
                     
                     # Ignore patterns section
                     Card(
@@ -680,48 +692,51 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Ignore Patterns", 
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[2],
                                     ),
                                     Text(
                                         "Specify patterns to ignore when comparing files",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
                                     TextField(
                                         value=",".join(self.config.get("ignore_patterns", [])),
                                         hint_text="Enter comma-separated patterns (e.g., temp_, debug_, test_)",
+                                        text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added
+                                        hint_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT, color=self.colors["text"]["secondary"]), # Added
+                                        content_padding=self.app.spacing["xs"], # Added
                                         on_change=self.handle_ignore_patterns_change,
                                         multiline=True,
                                         min_lines=3,
                                         max_lines=5,
-                                        border=ft.InputBorder.OUTLINE,
-                                        expand=True,
+                                        border=ft.InputBorder.OUTLINE, # Keep border
+                                        expand=True, # Keep expand
                                     ),
-                                    Container(height=10),
+                                    Container(height=self.app.spacing["s"]), # 10px -> 12px Updated
                                     Text(
                                         "Each pattern will be used to filter out keys containing that pattern",
-                                        size=12,
+                                        size=self.app.TEXT_SIZE_SMALL, # Updated
                                         color=self.colors["text"]["secondary"],
-                                        italic=True,
+                                        italic=True, # Keep italic
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                 ],
-                spacing=8,
-                scroll=ft.ScrollMode.AUTO,
+                spacing=self.app.spacing["xs"], # Updated
+                scroll=ft.ScrollMode.AUTO, # Keep scroll
             ),
-            padding=padding.all(10),
+            padding=padding.all(self.app.spacing["s"]), # Updated
         )
 
     def _create_translation_tab(self) -> Container:
@@ -734,57 +749,59 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Machine Translation",
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[3],
                                     ),
                                     Text(
                                         "Configure settings for automatic translation of missing strings",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
-                                    # Enable/disable machine translation
                                     Checkbox(
                                         value=self.config.get("mt_enabled", False),
                                         label="Enable Machine Translation",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=self.handle_mt_enabled_change,
                                     ),
                                     
-                                    # API key field
                                     Text(
                                         "Google Cloud API Key",
-                                        size=14,
-                                        weight="bold",
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
+                                        weight="bold", # Keep weight
                                     ),
-                                    Container(height=8),
+                                    Container(height=self.app.spacing["xs"]), # 8px Updated
                                     TextField(
                                         value=self.config.get("mt_api_key", ""),
                                         password=True,
                                         can_reveal_password=True,
                                         hint_text="Enter your Google Cloud API key",
+                                        text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added
+                                        hint_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT, color=self.colors["text"]["secondary"]), # Added
+                                        content_padding=self.app.spacing["xs"], # Added
                                         on_change=lambda e: self.handle_setting_change(e, "mt_api_key"),
-                                        border=ft.InputBorder.OUTLINE,
+                                        border=ft.InputBorder.OUTLINE, # Keep border
                                     ),
-                                    Container(height=8),
+                                    Container(height=self.app.spacing["xs"]), # 8px Updated
                                     Text(
                                         "You need a Google Cloud account with billing enabled to use this feature.",
-                                        size=12,
+                                        size=self.app.TEXT_SIZE_SMALL, # Updated
                                         color=self.colors["text"]["secondary"],
-                                        italic=True,
+                                        italic=True, # Keep italic
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                     
-                    Container(height=16),
+                    Container(height=self.app.spacing["m"]), # 16px Updated
                     
                     # Language settings
                     Card(
@@ -793,27 +810,26 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Language Settings", 
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[3],
                                     ),
                                     Text(
                                         "Set default languages for translation",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
-                                    # Source language dropdown
                                     Text(
                                         "Source Language",
-                                        size=14,
-                                        weight="bold",
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
+                                        weight="bold", # Keep weight
                                     ),
-                                    Container(height=8),
+                                    Container(height=self.app.spacing["xs"]), # 8px Updated
                                     ft.Dropdown(
                                         value=self.config.get("mt_source_lang", "en"),
-                                        width=400,
+                                        width=400, # Keep width or make relative
                                         options=[
                                             ft.dropdown.Option("en", "English"),
                                             ft.dropdown.Option("fr", "French"),
@@ -826,21 +842,21 @@ class SettingsDialogComponent:
                                             ft.dropdown.Option("ru", "Russian"),
                                             ft.dropdown.Option("zh", "Chinese"),
                                         ],
+                                        text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added
                                         on_change=lambda e: self.handle_setting_change(e, "mt_source_lang"),
                                     ),
                                     
-                                    Container(height=16),
+                                    Container(height=self.app.spacing["m"]), # 16px Updated
                                     
-                                    # Target language dropdown
                                     Text(
                                         "Target Language",
-                                        size=14,
-                                        weight="bold",
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
+                                        weight="bold", # Keep weight
                                     ),
-                                    Container(height=8),
+                                    Container(height=self.app.spacing["xs"]), # 8px Updated
                                     ft.Dropdown(
                                         value=self.config.get("mt_target_lang", "fr"),
-                                        width=400,
+                                        width=400, # Keep width or make relative
                                         options=[
                                             ft.dropdown.Option("en", "English"),
                                             ft.dropdown.Option("fr", "French"),
@@ -853,22 +869,23 @@ class SettingsDialogComponent:
                                             ft.dropdown.Option("ru", "Russian"),
                                             ft.dropdown.Option("zh", "Chinese"),
                                         ],
+                                        text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added
                                         on_change=lambda e: self.handle_setting_change(e, "mt_target_lang"),
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                 ],
-                spacing=8,
-                scroll=ft.ScrollMode.AUTO,
+                spacing=self.app.spacing["xs"], # Updated
+                scroll=ft.ScrollMode.AUTO, # Keep scroll
             ),
-            padding=padding.all(10),
+            padding=padding.all(self.app.spacing["s"]), # Updated
         )
 
     def _create_accessibility_tab(self) -> Container:
@@ -881,64 +898,63 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Visual Accessibility",
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[4],
                                     ),
                                     Text(
                                         "Configure appearance settings for better visibility",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
-                                    # Keep high contrast mode here instead of in themes
                                     Checkbox(
                                         value=self.config.get("high_contrast", False),
                                         label="High Contrast Mode",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "high_contrast"),
                                     ),
                                     
-                                    # Large text
                                     Checkbox(
                                         value=self.config.get("large_text", False),
                                         label="Large Text",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "large_text"),
                                     ),
                                     
-                                    # Font size scaling
                                     Text(
                                         "Font Size Scaling",
-                                        size=14,
-                                        weight="bold",
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
+                                        weight="bold", # Keep weight
                                     ),
-                                    Container(height=8),
+                                    Container(height=self.app.spacing["xs"]), # 8px Updated
                                     Row(
                                         controls=[
-                                            Icon(Icons.FORMAT_SIZE, size=20),
+                                            Icon(Icons.FORMAT_SIZE, size=self.app.TEXT_SIZE_LARGE), # Updated
                                             Slider(
                                                 min=1.0,
                                                 max=2.0,
                                                 divisions=10,
                                                 value=self.config.get("font_size_scale", 1.0),
-                                                label="{value}x",
-                                                width=350,
+                                                label="{value}x", # Label style for slider is default
+                                                width=350, # Keep width or make relative
                                                 on_change=lambda e: self.handle_setting_change(e, "font_size_scale"),
                                             ),
                                         ],
-                                        spacing=10,
+                                        spacing=self.app.spacing["s"], # Updated
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                     
-                    Container(height=16),
+                    Container(height=self.app.spacing["m"]), # 16px Updated
                     
                     # Interaction settings
                     Card(
@@ -947,51 +963,51 @@ class SettingsDialogComponent:
                                 controls=[
                                     Text(
                                         "Interaction Settings", 
-                                        size=18, 
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.tab_colors[4],
                                     ),
                                     Text(
                                         "Configure how you interact with the application",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"],
                                     ),
-                                    Container(height=20),
+                                    Container(height=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                                     
-                                    # Keyboard navigation
                                     Checkbox(
                                         value=self.config.get("enable_keyboard_nav", True),
                                         label="Enable Keyboard Navigation",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "enable_keyboard_nav"),
                                     ),
                                     
-                                    # Focus highlight
                                     Checkbox(
                                         value=self.config.get("focus_highlight", True),
                                         label="Show Focus Highlights",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "focus_highlight"),
                                     ),
                                     
-                                    # Reduce animations - consolidated with animation settings
                                     Checkbox(
                                         value=self.config.get("reduce_animations", False),
                                         label="Reduce Animations",
+                                        label_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Standardize label
                                         on_change=lambda e: self.handle_setting_change(e, "reduce_animations"),
                                     ),
                                 ],
-                                spacing=10,
+                                spacing=self.app.spacing["s"], # Updated
                             ),
-                            padding=20,
-                            border_radius=BorderRadius(8, 8, 8, 8),
+                            padding=self.app.BASE_UNIT * 5, # 20px Updated
+                            border_radius=BorderRadius.all(self.app.spacing["xs"]), # Updated
                         ),
-                        elevation=0,
-                        color=self.colors["bg"]["secondary"],
+                        elevation=0, # Keep elevation
+                        color=self.colors["bg"]["secondary"], # Keep color
                     ),
                 ],
-                spacing=8,
-                scroll=ft.ScrollMode.AUTO,
+                spacing=self.app.spacing["xs"], # Updated
+                scroll=ft.ScrollMode.AUTO, # Keep scroll
             ),
-            padding=padding.all(10),
+            padding=padding.all(self.app.spacing["s"]), # Updated
         )
 
     def open_dialog(self, e):

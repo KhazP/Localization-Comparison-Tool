@@ -38,6 +38,19 @@ from flet import (
 )
 import os
 import logic
+# Import status constants from logic.py to be used for calculating statistics
+from GUI.logic import (
+    KEY as LG_KEY, # Using LG_ prefix to avoid potential name clashes
+    STATUS as LG_STATUS,
+    SOURCE_VALUE as LG_SOURCE_VALUE,
+    TARGET_VALUE as LG_TARGET_VALUE,
+    DETAILS as LG_DETAILS,
+    STATUS_MISSING_IN_TARGET,
+    STATUS_OBSOLETE_IN_TARGET,
+    STATUS_PLACEHOLDER_MISMATCH,
+    STATUS_VALUE_CHANGED,
+    STATUS_IDENTICAL
+)
 import logging  # Add this import
 from pathlib import Path
 from core.constants import SUPPORTED_FORMATS, USER_MESSAGES, GOOGLE_CLOUD_LANGUAGES
@@ -74,9 +87,42 @@ logger = logger_service.get_logger()
 class App:
     """Main GUI application class implementing localization comparison using flet."""
 
+    # --- Typographic Scale ---
+    TEXT_SIZE_XSMALL = 10
+    TEXT_SIZE_SMALL = 12
+    TEXT_SIZE_DEFAULT = 14
+    TEXT_SIZE_MEDIUM = 16
+    TEXT_SIZE_LARGE = 18 # Reduced from 20 for finer control
+    TEXT_SIZE_XLARGE = 22 # Reduced from 24
+    TEXT_SIZE_XXLARGE = 28 # Reduced from 32
+    TEXT_SIZE_HERO = 36 # For very prominent titles if needed
+
+    # --- Spacing Scale (multiples of 4px and 8px) ---
+    BASE_UNIT = 4
+    spacing = {
+        "xxs": BASE_UNIT,    # 4px
+        "xs": BASE_UNIT * 2, # 8px
+        "s": BASE_UNIT * 3,  # 12px
+        "m": BASE_UNIT * 4,  # 16px
+        "l": BASE_UNIT * 6,  # 24px
+        "xl": BASE_UNIT * 8, # 32px
+        "xxl": BASE_UNIT * 12 # 48px
+    }
+
     def __init__(self, page: ft.Page):
         """Initialize the application, load configuration and setup UI elements."""
         self.page = page
+
+        # --- Typography & Spacing Setup ---
+        self.page.fonts = {
+            "Roboto": "https://fonts.google.com/specimen/Roboto",  # Example URL, Flet handles web fonts
+            "Consolas": "Consolas"  # Assuming Consolas is available or Flet has a fallback
+        }
+        # Set default font for the page themes
+        self.page.theme = ft.Theme(font_family="Roboto")
+        self.page.dark_theme = ft.Theme(font_family="Roboto")
+        # --- End Typography & Spacing Setup ---
+
         # Add color cache
         self._cached_colors = {}
         
@@ -146,11 +192,11 @@ class App:
 
         # Update page theme mode based on saved theme
         if self.current_theme == "system":
-            page.theme_mode = ft.ThemeMode.SYSTEM
+            self.page.theme_mode = ft.ThemeMode.SYSTEM # Use self.page
         elif self.current_theme in ["dark", "amoled"]:
-            page.theme_mode = ft.ThemeMode.DARK
+            self.page.theme_mode = ft.ThemeMode.DARK   # Use self.page
         else:
-            page.theme_mode = ft.ThemeMode.LIGHT
+            self.page.theme_mode = ft.ThemeMode.LIGHT  # Use self.page
 
         # Add keyboard navigation settings to config
         self.config.update({
@@ -173,7 +219,7 @@ class App:
             max_lines=None,
             text_style=TextStyle(
                 color=self.COLORS["text"]["secondary"],
-                size=14,
+                size=self.TEXT_SIZE_DEFAULT, # Updated
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
@@ -190,7 +236,7 @@ class App:
             max_lines=None,
             text_style=TextStyle(
                 color=self.COLORS["text"]["secondary"],
-                size=14,
+                size=self.TEXT_SIZE_DEFAULT, # Updated
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
@@ -207,7 +253,7 @@ class App:
             max_lines=None,
             text_style=TextStyle(
                 color=self.COLORS["text"]["secondary"],
-                size=14,
+                size=self.TEXT_SIZE_DEFAULT, # Updated
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
@@ -223,7 +269,7 @@ class App:
             multiline=True,
             text_style=TextStyle(
                 color=self.COLORS["text"]["secondary"],
-                size=14,
+                size=self.TEXT_SIZE_DEFAULT, # Updated
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
@@ -235,19 +281,19 @@ class App:
         # Update results container to clip overflowing text
         self.results_container = Container(
             content=self.summary_text,
-            padding=padding.all(16),
+            padding=padding.all(self.spacing["m"]), # Updated
             expand=True,
-            clip_behavior=ft.ClipBehavior.HARD_EDGE  # Changed from CLIP to HARD_EDGE
+            clip_behavior=ft.ClipBehavior.HARD_EDGE
         )
         self.status_label = Text(
             value="Ready",
             color=self.COLORS["text"]["secondary"],
-            size=14,
+            size=self.TEXT_SIZE_DEFAULT, # Updated
         )
         self.loading_ring = ProgressRing(
-            width=20,
-            height=20,
-            stroke_width=2,
+            width=self.TEXT_SIZE_LARGE, # Updated
+            height=self.TEXT_SIZE_LARGE, # Updated
+            stroke_width=2, # Kept stroke_width
             color=self.COLORS["bg"]["accent"],
             visible=False,
         )
@@ -260,14 +306,19 @@ class App:
         self.ignore_pattern_field = TextField(
             text_style=TextStyle(
                 color=self.COLORS["text"]["secondary"],
-                size=14,
+                size=self.TEXT_SIZE_DEFAULT, # Updated
                 font_family="Consolas",
                 weight=FontWeight.W_400,
             ),
             hint_text="Enter regex patterns (comma-separated)",
-            border=None,
-            cursor_color="transparent",
-            bgcolor="transparent",
+            hint_style=TextStyle(
+                size=self.TEXT_SIZE_DEFAULT,
+                color=self.COLORS["text"]["secondary"] 
+            ),
+            content_padding=self.spacing["xs"], 
+            border=None, 
+            cursor_color="transparent", # Keep as is
+            bgcolor="transparent", # Keep as is
             expand=True,
         )
         self.compare_button = self.create_compare_button()
@@ -304,7 +355,7 @@ class App:
                         content=Column(
                             controls=[
                                 Text("Source File Preview", 
-                                     size=14, 
+                                     size=self.TEXT_SIZE_DEFAULT, # Updated
                                      weight=FontWeight.W_500,
                                      color=self.COLORS["text"]["secondary"]),
                                 Container(
@@ -316,29 +367,30 @@ class App:
                                         max_lines=5,
                                         text_style=TextStyle(
                                             color=self.COLORS["text"]["secondary"],
-                                            size=14,
+                                            size=self.TEXT_SIZE_DEFAULT, # Updated
                                             font_family="Consolas",
                                         ),
+                                        content_padding=self.spacing["xs"] # Added padding for input fields
                                     ),
                                     border=border.all(color=self.COLORS["border"]["default"]),
-                                    border_radius=8,
-                                    padding=8,
+                                    border_radius=self.spacing["xs"], # Updated
+                                    padding=self.spacing["xs"], # Updated
                                     bgcolor=self.COLORS["bg"]["input"],
                                     expand=True,
                                 ),
                             ],
-                            spacing=8,
+                            spacing=self.spacing["xs"], # Updated
                             expand=True,
                         ),
                         col={"sm": 12, "md": 6},
-                        padding=5,
+                        padding=self.spacing["xxs"], # Updated padding for col container
                         expand=True,
                     ),
                     Container(
                         content=Column(
                             controls=[
                                 Text("Target File Preview", 
-                                     size=14, 
+                                     size=self.TEXT_SIZE_DEFAULT, # Updated
                                      weight=FontWeight.W_500,
                                      color=self.COLORS["text"]["secondary"]),
                                 Container(
@@ -350,28 +402,29 @@ class App:
                                         max_lines=5,
                                         text_style=TextStyle(
                                             color=self.COLORS["text"]["secondary"],
-                                            size=14,
+                                            size=self.TEXT_SIZE_DEFAULT, # Updated
                                             font_family="Consolas",
                                         ),
+                                        content_padding=self.spacing["xs"] # Added padding for input fields
                                     ),
                                     border=border.all(color=self.COLORS["border"]["default"]),
-                                    border_radius=8,
-                                    padding=8,
+                                    border_radius=self.spacing["xs"], # Updated
+                                    padding=self.spacing["xs"], # Updated
                                     bgcolor=self.COLORS["bg"]["input"],
                                     expand=True,
                                 ),
                             ],
-                            spacing=8,
+                            spacing=self.spacing["xs"], # Updated
                             expand=True,
                         ),
                         col={"sm": 12, "md": 6},
-                        padding=5,
+                        padding=self.spacing["xxs"], # Updated padding for col container
                         expand=True,
                     ),
                 ],
-                spacing=10,
+                spacing=self.spacing["s"], # Updated
             ),
-            margin=padding.only(top=10, bottom=10),
+            margin=padding.only(top=self.spacing["s"], bottom=self.spacing["s"]), # Updated
         )
 
         # Initialize results view component BEFORE creating the layout
@@ -401,19 +454,19 @@ class App:
                                 ),
                             ],
                         ),
-                        height=120,
+                height=self.spacing["xxl"] * 2 + self.spacing["m"], # 48*2+16 = 112. Or use self.spacing["xxl"]*2.5 for 120
                     ),
                     # NEW: Preview section
                     self.preview_section,
                     # Compare button (fixed height)
                     Container(
                         content=self.compare_button,
-                        height=50,
+                height=self.spacing["xxl"], # Updated
                     ),
                     # NEW: Statistics panel
                     Container(
                         content=self.stats_panel_component.panel,
-                        padding=padding.only(top=8, bottom=8),
+                padding=padding.only(top=self.spacing["xs"], bottom=self.spacing["xs"]), # Updated
                     ),
                     # Results area using the results_view component
                     Container(
@@ -425,12 +478,12 @@ class App:
                                     self.results_view.results_header,
                                     Divider(
                                         color=self.COLORS["border"]["default"],
-                                        height=1,
+                                        height=1, # Keep height 1 for divider
                                     ),
                                     # Container for the results_view's results_container
                                     Container(
                                         content=self.results_view.results_container,
-                                        padding=padding.all(16),
+                                        padding=padding.all(self.spacing["m"]), # Updated
                                         expand=True,
                                         clip_behavior=ft.ClipBehavior.HARD_EDGE
                                     ),
@@ -441,14 +494,14 @@ class App:
                                                 self.loading_ring,
                                                 self.status_label,
                                             ],
-                                            spacing=8,
+                                            spacing=self.spacing["xs"], # Updated
                                             vertical_alignment="center",
                                         ),
-                                        padding=padding.only(left=16, right=16, top=8, bottom=16),
-                                        expand=True,
+                                        padding=ft.padding.only(left=self.spacing["m"], right=self.spacing["m"], top=self.spacing["xs"], bottom=self.spacing["m"]), # Updated
+                                        expand=True, # Should this be True or False? If True, it might push content if results_container is also True. Let's keep for now.
                                     ),
                                 ],
-                                spacing=0,
+                                spacing=0, # Keep spacing 0 for this tight layout
                             ),
                             elevation=1,
                             clip_behavior=ft.ClipBehavior.HARD_EDGE
@@ -480,7 +533,7 @@ class App:
         self.content = Container(
             expand=True,
             height=page.height,
-            padding=32,
+            padding=self.spacing["xl"], # Updated
             content=Column(
                 expand=True,
                 scroll=ScrollMode.AUTO,
@@ -492,7 +545,7 @@ class App:
                                 self.history_button,
                                 Text(
                                     "Localization Comparison Tool",
-                                    size=32,
+                                    size=self.TEXT_SIZE_XXLARGE, # Updated
                                     weight="bold",
                                     text_align="center",
                                     expand=True,
@@ -501,13 +554,17 @@ class App:
                             ],
                             alignment="spaceBetween",
                         ),
-                        padding=padding.only(bottom=24),
-                        height=100,
+                        padding=padding.only(bottom=self.spacing["l"]), # Updated
+                        height=self.spacing["xxl"] + self.spacing["s"], # Adjusted height: 48 + 12 = 60. Original was 100. Let's try 80 for now.
+                                                                    # Using self.spacing["xl"] * 2.5 => 32 * 2.5 = 80
+                                                                    # A fixed height might be better adjusted visually later.
+                                                                    # Let's use a value like 72 or 80. For now: self.spacing["xxl"] + self.spacing["l"] -> 48 + 24 = 72
+                        height=self.spacing["xxl"] + self.spacing["l"], # 72px
                     ),
                     # ...existing main card container...
                     self.main_card_container,
                 ],
-                spacing=32,
+                spacing=self.spacing["xl"], # Updated
             ),
         )
         self.page.add(self.content)
@@ -523,20 +580,20 @@ class App:
         # Add expand/collapse control
         self.expand_all = True
         self.expand_collapse_button = IconButton(
-            icon=Icons.UNFOLD_LESS,
+            icon=Icons.UNFOLD_LESS, # Initial icon
             icon_color=self.COLORS["text"]["secondary"],
-            tooltip="Collapse All",
+            tooltip="Collapse All", # Initial tooltip
             on_click=self.toggle_expand_all,
         )
 
         # Modify the results header to include the expand/collapse button
-        self.results_header = Container(
+        self.results_header = Container( # This is self.results_view.results_header, will be updated in component
             content=Row(
                 controls=[
                     Text(
                         "Results",
-                        size=16,
-                        weight="w500",
+                        size=self.TEXT_SIZE_MEDIUM, # Updated
+                        weight="w500", # Keep weight
                         color=self.COLORS["text"]["secondary"],
                     ),
                     Row(
@@ -547,14 +604,15 @@ class App:
                                 icon_color=self.COLORS["text"]["secondary"],
                                 tooltip="Copy comparison results",
                                 on_click=self.copy_results,
+                                # Consider adding explicit size for IconButton
                             ),
                         ],
-                        spacing=0,
+                        spacing=0, # Keep spacing 0 for tight button group
                     ),
                 ],
                 alignment="spaceBetween",
             ),
-            padding=padding.only(left=16, right=16, top=16),
+            padding=ft.padding.only(left=self.spacing["m"], right=self.spacing["m"], top=self.spacing["m"], bottom=self.spacing["xs"]), # Adjusted bottom padding
         )
 
         # Add directory picker support
@@ -635,7 +693,7 @@ class App:
             check_color=self.COLORS["text"]["primary"],
             label_style=TextStyle(
                 color=self.COLORS["text"]["secondary"],
-                size=14,
+                size=self.TEXT_SIZE_DEFAULT, # Updated
             ),
         )
 
@@ -643,23 +701,29 @@ class App:
         """
         Create and return a compare button container with compare and translate buttons.
         """
+        compare_button_text_size = self.TEXT_SIZE_MEDIUM # Standardize button text
+        button_height = self.spacing["xxl"] # Standardize button height (48px)
+        button_radius = self.spacing["xs"] # Standardize button radius (8px)
+        button_icon_spacing = self.spacing["xs"] # Standardize icon spacing in button
+
         compare_button = ElevatedButton(
             content=Row(
                 controls=[
-                    Icon(Icons.REFRESH),
-                    Text("Compare Files", size=16),
+                    Icon(Icons.REFRESH), # Icon size can be controlled if needed
+                    Text("Compare Files", size=compare_button_text_size),
                 ],
                 alignment="center",
-                spacing=8,
+                spacing=button_icon_spacing, # Updated
             ),
             tooltip="Click to compare the source and target files",
             on_click=self.compare_files_gui,
             style=ButtonStyle(
                 color=self.COLORS["text"]["primary"],
                 bgcolor=self.COLORS["bg"]["accent"],
-                shape=RoundedRectangleBorder(radius=8),
+                shape=RoundedRectangleBorder(radius=button_radius), # Updated
+                padding=padding.symmetric(horizontal=self.spacing["m"]) # Added horizontal padding
             ),
-            height=48,
+            height=button_height, # Updated
             expand=True,
         )
         
@@ -667,33 +731,34 @@ class App:
             content=Row(
                 controls=[
                     Icon(Icons.TRANSLATE),
-                    Text("Translate Missing", size=16),
+                    Text("Translate Missing", size=compare_button_text_size), # Updated
                 ],
                 alignment="center",
-                spacing=8,
+                spacing=button_icon_spacing, # Updated
             ),
             tooltip="Translate missing keys using Google Cloud Translate",
             on_click=self.translate_missing_keys,
             style=ButtonStyle(
                 color=self.COLORS["text"]["primary"],
                 bgcolor=self.COLORS["bg"]["accent"],
-                shape=RoundedRectangleBorder(radius=8),
+                shape=RoundedRectangleBorder(radius=button_radius), # Updated
+                padding=padding.symmetric(horizontal=self.spacing["m"]) # Added horizontal padding
             ),
-            height=48,
+            height=button_height, # Updated
             expand=True,
-            visible=False,
+            visible=False, # Keep as is
         )
         
         button_row = Row(
             controls=[compare_button, translate_button],
             alignment="center",
-            spacing=16,
+            spacing=self.spacing["m"], # Updated
         )
         
-        return Container(
+        return Container( # This container's height is already set where it's used.
             content=button_row,
-            animate=ft.Animation(duration=200, curve="easeInOut"),
-            on_hover=lambda event: self._on_compare_button_hover(event, compare_button)
+            animate=ft.Animation(duration=200, curve="easeInOut"), # Keep animation
+            on_hover=lambda event: self._on_compare_button_hover(event, compare_button) # Keep hover
         )
 
     def translate_missing_keys(self, event):
@@ -797,24 +862,40 @@ class App:
             self.source_line_numbers = source_lines
             self.target_line_numbers = target_lines
             
-            # Update UI with results
-            self.update_statistics(stats['total_keys'], stats['missing_keys'], stats['obsolete_keys'])
+            # Process successful result
+            comparison_data = result['result']
+            # comparison_result is the list of structured dicts from file_processing_service
+            comparison_result_list = comparison_data['comparison'] 
+            source_dict_len = len(comparison_data['source_dict']) # Get length of source_dict for total keys
             
-            # Build the comparison view
-            self.results_view.build_results_table(comparison_result)
+            # Stats are pre-calculated in file_processing_service by comparing dict keys directly
+            stats = comparison_data['stats']
+            total_keys = stats.get('total_keys', source_dict_len) # Fallback to len(source_dict)
+            missing_keys = stats.get('missing_keys', 0)
+            obsolete_keys = stats.get('obsolete_keys', 0)
+            
+            # Store line numbers for reference (if ResultsViewComponent needs them directly from App)
+            # self.source_line_numbers = comparison_data['source_lines']
+            # self.target_line_numbers = comparison_data['target_lines']
+            
+            # Update UI with results
+            self.update_statistics(total_keys, missing_keys, obsolete_keys)
+            
+            # Build the comparison view using the structured list
+            self.results_view.build_results_table(comparison_result_list)
             
             # Show completed status
             self.status_label.value = (
-                f"Comparison complete: {stats['total_keys']} keys, "
-                f"{stats['missing_keys']} missing, {stats['obsolete_keys']} obsolete"
+                f"Comparison complete: {total_keys} keys, "
+                f"{missing_keys} missing, {obsolete_keys} obsolete"
             )
 
-            # Save comparison to history
+            # Save comparison to history (structured list)
             history_entry = {
                 "timestamp": datetime.datetime.now().isoformat(),
                 "source_file": os.path.basename(self.source_file_path),
                 "target_file": os.path.basename(self.target_file_path),
-                "diff": comparison_result
+                "diff": comparison_result_list # Store the structured list
             }
             history_manager.save_history(history_entry)
                 
@@ -908,7 +989,7 @@ class App:
                                             f"Total: {stats['total_keys']} keys | "
                                             f"Missing: {stats['missing_keys']} | "
                                             f"Obsolete: {stats['obsolete_keys']}",
-                                            size=14,
+                                            size=self.TEXT_SIZE_DEFAULT, # Updated
                                             color=self.COLORS["text"]["secondary"],
                                         ),
                                         TextField(
@@ -919,15 +1000,16 @@ class App:
                                             max_lines=None,
                                             text_style=TextStyle(
                                                 color=self.COLORS["text"]["secondary"],
-                                                size=14,
+                                                size=self.TEXT_SIZE_DEFAULT, # Updated
                                                 font_family="Consolas",
                                             ),
+                                            content_padding=self.spacing["xs"] # Added padding
                                         ),
                                     ],
-                                    scroll=ft.ScrollMode.AUTO,
-                                    spacing=8,
+                                    scroll=ft.ScrollMode.AUTO, # Keep scroll
+                                    spacing=self.spacing["xs"], # Updated
                                 ),
-                                padding=10,
+                                padding=self.spacing["s"], # Updated padding from 10 to 12 (s)
                             ),
                         )
                     )
@@ -1124,21 +1206,29 @@ class App:
             total_keys = len(source_dict)
             missing_keys = len(missing_keys_set)
             obsolete_keys = len(obsolete_keys_set)
-            self.update_statistics(total_keys, missing_keys, obsolete_keys)
+            # Calculate statistics from the structured comparison_result list
+            missing_keys_count = sum(1 for item in comparison_result if item.get(LG_STATUS) == STATUS_MISSING_IN_TARGET)
+            obsolete_keys_count = sum(1 for item in comparison_result if item.get(LG_STATUS) == STATUS_OBSOLETE_IN_TARGET)
+            # total_keys is len(source_dict), which is already calculated and available
+            
+            self.update_statistics(len(source_dict), missing_keys_count, obsolete_keys_count)
 
-            # Store the comparison result in the output_text for copying
-            self.output_text.value = comparison_result
+            # The self.output_text is a TextField expecting string. 
+            # ResultsViewComponent now handles its own display and copy.
+            # If a raw text version is still desired for self.output_text (e.g., for simple copy), generate it.
+            # For now, we'll clear it or set a generic message, as ResultsViewComponent is primary.
+            self.output_text.value = "" # Or generate a string summary if needed for some reason.
             
             # Delegate the rendering to the results_view component
-            self.results_view.build_results_table(comparison_result)
+            self.results_view.build_results_table(comparison_result) # Pass the list of dicts
             
-            self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
+            self.status_label.value = f"Comparison complete. Source keys: {len(source_dict)}, Missing: {missing_keys_count}, Obsolete: {obsolete_keys_count}."
 
             history_entry = {
                 "timestamp": datetime.datetime.now().isoformat(),
                 "source_file": os.path.basename(self.source_file_path),
                 "target_file": os.path.basename(self.target_file_path),
-                "diff": comparison_result
+                "diff": comparison_result # Store the structured list
             }
             history_manager.save_history(history_entry)
 
@@ -1175,10 +1265,20 @@ class App:
         """Toggle expand/collapse state for all namespace sections"""
         self.expand_all = not self.expand_all
         
-        # Update the button icon
-        self.expand_collapse_button.icon = Icons.UNFOLD_LESS if self.expand_all else Icons.UNFOLD_MORE
+        # Update the button icon and tooltip
+        if self.expand_all:
+            self.expand_collapse_button.icon = Icons.UNFOLD_LESS
+            self.expand_collapse_button.tooltip = "Collapse All"
+        else:
+            self.expand_collapse_button.icon = Icons.UNFOLD_MORE
+            self.expand_collapse_button.tooltip = "Expand All"
+        self.expand_collapse_button.update() # Update the button control
         
         # Update expansion state for all namespace headers and their content
+        # This part seems to refer to self.results_column which might be in ResultsViewComponent
+        # If self.results_column is part of this App class and directly managed here, this is fine.
+        # Otherwise, this logic should be in ResultsViewComponent.
+        # For now, assuming it's managed here as per original code structure.
         current_namespace = None
         for row in self.results_column.controls[1].controls:
             if len(row.controls) == 1 and isinstance(row.controls[0], Text) and row.controls[0].weight == "bold":
@@ -1276,8 +1376,18 @@ class App:
 
         # Update page theme colors
         self.page.bgcolor = self.COLORS["bg"]["primary"]
-        self.page.theme = ft.Theme(color_scheme_seed=Colors.GREEN)
-        self.page.dark_theme = ft.Theme(color_scheme_seed=Colors.BLUE)
+        # Theme font_family is now set during page initialization, keep color_scheme_seed if desired
+        # self.page.theme = ft.Theme(color_scheme_seed=Colors.GREEN, font_family="Roboto") # Example
+        # self.page.dark_theme = ft.Theme(color_scheme_seed=Colors.BLUE, font_family="Roboto") # Example
+        # Keeping previous color_scheme_seed logic, but font is globally set
+        current_page_theme = self.page.theme if self.page.theme else ft.Theme()
+        current_page_dark_theme = self.page.dark_theme if self.page.dark_theme else ft.Theme()
+
+        current_page_theme.color_scheme_seed = Colors.GREEN
+        current_page_dark_theme.color_scheme_seed = Colors.BLUE
+        
+        self.page.theme = current_page_theme
+        self.page.dark_theme = current_page_dark_theme
 
         # Merge custom theme if available
         custom_theme = self.config.get("custom_theme", {})
@@ -1462,7 +1572,7 @@ class App:
                             controls=[
                                 Text(
                                     f"Total entries: {len(source_dict)}",
-                                    size=14,
+                                    size=self.TEXT_SIZE_DEFAULT, # Updated
                                     color=self.COLORS["text"]["secondary"],
                                 ),
                                 TextField(
@@ -1473,16 +1583,17 @@ class App:
                                     max_lines=None,
                                     text_style=TextStyle(
                                         color=self.COLORS["text"]["secondary"],
-                                        size=14,
+                                        size=self.TEXT_SIZE_DEFAULT, # Updated
                                         font_family="Consolas",
                                         weight=FontWeight.W_400,
                                     ),
+                                    content_padding=self.spacing["xs"] # Added padding
                                 ),
                             ],
-                            scroll=ft.ScrollMode.AUTO,
-                            spacing=8,
+                            scroll=ft.ScrollMode.AUTO, # Keep scroll
+                            spacing=self.spacing["xs"], # Updated
                         ),
-                        padding=10,
+                        padding=self.spacing["s"], # Updated padding from 10 to 12 (s)
                     ),
                 )
             )
@@ -1535,21 +1646,21 @@ class App:
         self.page.update()
 
     def _on_compare_button_hover(self, e, button):
-        """Handle hover effect for compare button"""
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        if e.data == "true":
-            button.bgcolor = hover_color
-        else:
-            button.bgcolor = self.COLORS["bg"]["accent"]
+        """Handle hover effect for compare button using theme colors."""
+        if e.data == "true": # Hovering
+            button.style.bgcolor = self.COLORS["bg"]["hover"]
+        else: # Not hovering
+            button.style.bgcolor = self.COLORS["bg"]["accent"]
         button.update()
 
     def _on_browse_hover(self, e, button):
-        """Handle hover effect for browse button"""
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        if e.data == "true":
-            button.bgcolor = hover_color
-        else:
-            button.bgcolor = self.COLORS["bg"]["accent"]
+        """Handle hover effect for browse button using theme colors."""
+        # This method is likely for FileInputComponent's buttons.
+        # It assumes the button also uses accent color as its base.
+        if e.data == "true": # Hovering
+            button.style.bgcolor = self.COLORS["bg"]["hover"]
+        else: # Not hovering
+            button.style.bgcolor = self.COLORS["bg"]["accent"]
         button.update()
 
     def handle_preview_toggle(self, e):

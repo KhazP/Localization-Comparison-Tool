@@ -12,22 +12,26 @@ from utils.file_cache_service import file_cache_service
 class FileInputComponent:
     def __init__(self, page: ft.Page, app_reference):
         self.page = page
-        self.app = app_reference
+        self.app = app_reference # Provides access to COLORS, spacing, TEXT_SIZE constants
         self.source_file_path = ""
         self.target_file_path = ""
         
         # Initialize UI elements
-        self.source_label = Text("No file selected", color=self.app.COLORS["text"]["secondary"], expand=True)
-        self.target_label = Text("No file selected", color=self.app.COLORS["text"]["secondary"], expand=True)
-        self.source_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS["text"]["secondary"], size=20)
-        self.target_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS["text"]["secondary"], size=20)
+        self.source_label = Text("No file selected", color=self.app.COLORS["text"]["secondary"], size=self.app.TEXT_SIZE_DEFAULT, expand=True)
+        self.target_label = Text("No file selected", color=self.app.COLORS["text"]["secondary"], size=self.app.TEXT_SIZE_DEFAULT, expand=True)
+        self.source_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS["text"]["secondary"], size=self.app.TEXT_SIZE_LARGE)
+        self.target_icon = Icon(Icons.DESCRIPTION, color=self.app.COLORS["text"]["secondary"], size=self.app.TEXT_SIZE_LARGE)
+
+        # Clear buttons (initialized here, created in _create_file_input)
+        self.source_clear_button = None
+        self.target_clear_button = None
         
         # Initialize file pickers
         self.source_picker = FilePicker(
-            on_result=lambda e: self.handle_file_picked(e, self.source_label, self.source_icon, None, "source")
+            on_result=lambda e: self.handle_file_picked(e, "source")
         )
         self.target_picker = FilePicker(
-            on_result=lambda e: self.handle_file_picked(e, self.target_label, self.target_icon, None, "target")
+            on_result=lambda e: self.handle_file_picked(e, "target")
         )
         
         # Add pickers to page overlay
@@ -44,55 +48,115 @@ class FileInputComponent:
             icon=Icons.UPLOAD_FILE,
             tooltip=f"Select {label}",
             on_click=self.open_source_picker if is_source else self.open_target_picker,
-            bgcolor=self.app.COLORS["bg"]["accent"],
-            color=self.app.COLORS["text"]["primary"],
-            height=36,
-            style=ButtonStyle(shape=RoundedRectangleBorder(radius=8))
+            style=ButtonStyle(
+                bgcolor=self.app.COLORS["bg"]["accent"],
+                color=self.app.COLORS["text"]["primary"],
+                shape=RoundedRectangleBorder(radius=self.app.spacing["xs"]),
+                padding=padding.symmetric(horizontal=self.app.spacing["m"]) 
+            ),
+            height=self.app.BASE_UNIT * 9, # 36px
         )
         
         return Container(
             content=Column(
                 controls=[
-                    Text(label, color=self.app.COLORS["text"]["secondary"], size=14, weight=FontWeight.W_500),
+                    Text(label, color=self.app.COLORS["text"]["secondary"], size=self.app.TEXT_SIZE_DEFAULT, weight=FontWeight.W_500),
                     Container(
                         content=Row(
                             controls=[
                                 self.source_icon if is_source else self.target_icon,
                                 self.source_label if is_source else self.target_label,
-                                Container(
-                                    content=browse_button,
-                                    animate=ft.Animation(duration=200, curve="easeInOut"),
-                                    on_hover=lambda e, btn=browse_button: self._on_browse_hover(e, btn)
-                                ),
+                                self.source_clear_button if is_source else self.target_clear_button,
+                                browse_button,
                             ],
                             alignment="center",
-                            spacing=8,
+                            spacing=self.app.spacing["xs"],
                         ),
-                        border=border.all(2, self.app.COLORS["border"]["default"]),
-                        border_radius=8,
+                        border=border.all(1, self.app.COLORS["border"]["default"]), # Changed to 1px border
+                        border_radius=self.app.spacing["xs"],
                         bgcolor=self.app.COLORS["bg"]["input"],
-                        padding=12,
+                        padding=self.app.spacing["s"],
                     ),
                 ],
-                spacing=8,
+                spacing=self.app.spacing["xs"],
             )
         )
-    
-    def handle_file_picked(self, e: FilePickerResultEvent, field, icon, clear_btn, field_type):
+
+    def _clear_file_selection(self, field_type: str):
+        """Clears the selected file for the given field type."""
+        label_to_update = None
+        icon_to_update = None
+        clear_button_to_hide = None
+        preview_field_control = None
+
+        if field_type == "source":
+            self.source_file_path = ""
+            self.app.source_file_path = "" # Update app's path
+            label_to_update = self.source_label
+            icon_to_update = self.source_icon
+            clear_button_to_hide = self.source_clear_button
+            if self.app.preview_section.content.controls:
+                preview_field_control = self.app.preview_section.content.controls[0].content.controls[1].content
+        else: # target
+            self.target_file_path = ""
+            self.app.target_file_path = "" # Update app's path
+            label_to_update = self.target_label
+            icon_to_update = self.target_icon
+            clear_button_to_hide = self.target_clear_button
+            if len(self.app.preview_section.content.controls) > 1:
+                preview_field_control = self.app.preview_section.content.controls[1].content.controls[1].content
+        
+        if label_to_update:
+            label_to_update.value = "No file selected"
+            label_to_update.update()
+        if icon_to_update:
+            icon_to_update.color = self.app.COLORS["text"]["secondary"] # Reset icon color
+            icon_to_update.update()
+        if clear_button_to_hide:
+            clear_button_to_hide.visible = False
+            clear_button_to_hide.update()
+        
+        self.app.update_compare_button() # Update main compare button state
+
+        # Clear preview if visible
+        if self.app.config["show_preview"] and preview_field_control:
+            preview_field_control.value = "No file selected"
+            preview_field_control.update()
+            # Hide entire preview section if both files are cleared
+            if not self.source_file_path and not self.target_file_path:
+                 self.app.preview_section.visible = False
+                 self.app.preview_section.update()
+
+        self.page.update()
+
+    def handle_file_picked(self, e: FilePickerResultEvent, field_type: str):
         """
         Handle file selection using the FileCacheService for more efficient operations.
         """
+        label_to_update = self.source_label if field_type == "source" else self.target_label
+        icon_to_update = self.source_icon if field_type == "source" else self.target_icon
+        clear_button_to_show = self.source_clear_button if field_type == "source" else self.target_clear_button
+
         if e.files and len(e.files) > 0:
             file_path = e.files[0].path
             if self.app.validate_file(file_path):
                 file_name = Path(file_path).name
                 
-                # Use the file cache service for better performance
                 try:
-                    # Start asynchronous file operations
                     def update_file_stats(line_count, error):
+                        if error:
+                            logging.error(f"Error counting lines for {file_path}: {error}")
+                            self.app.show_snackbar(f"Error reading {file_name}: {error}")
+                            label_to_update.value = f"Error reading {file_name}"
+                            icon_to_update.color = Colors.RED_ACCENT_700
+                            if clear_button_to_show: clear_button_to_show.visible = True # Still show clear
+                            label_to_update.update()
+                            icon_to_update.update()
+                            if clear_button_to_show: clear_button_to_show.update()
+                            return
+
                         file_size = self.get_readable_file_size(os.path.getsize(file_path))
-                        field.value = f"{file_name} ({file_size}, {line_count} lines)"
+                        label_to_update.value = f"{file_name} ({file_size}, {line_count} lines)"
                         
                         if field_type == "source":
                             self.source_file_path = file_path
@@ -101,39 +165,51 @@ class FileInputComponent:
                             self.target_file_path = file_path
                             self.app.target_file_path = file_path
 
-                        # Update UI elements
-                        icon.color = Colors.BLUE_400
+                        icon_to_update.color = Colors.GREEN_ACCENT_700 # Use a success color
+                        if clear_button_to_show: clear_button_to_show.visible = True
+                        
                         self.app.update_compare_button()
                         
-                        # Update preview if enabled
                         if self.app.config["show_preview"]:
                             self.update_file_preview(file_path, field_type)
                             self.app.preview_section.visible = True
+                            self.app.preview_section.update()
                             
-                        self.page.update()
+                        label_to_update.update()
+                        icon_to_update.update()
+                        if clear_button_to_show: clear_button_to_show.update()
+                        self.page.update() # Ensure page updates after all individual updates
                     
-                    # Use async line count to avoid freezing the UI
-                    field.value = f"{file_name} (loading...)"
-                    icon.color = Colors.BLUE_200
-                    field.update()
-                    icon.update()
+                    label_to_update.value = f"{file_name} (loading...)"
+                    icon_to_update.color = self.app.COLORS["bg"]["accent"] # Use accent color for loading
+                    label_to_update.update()
+                    icon_to_update.update()
                     
-                    # Use the file cache service for async line counting
                     file_cache_service.count_lines_async(file_path, update_file_stats)
                     
-                except Exception as e:
-                    logging.error(f"Error processing file: {str(e)}")
-                    field.value = ""
-                    icon.color = "red"
-                    field.update()
-                    icon.update()
-                    self.app.show_snackbar(f"Error processing file: {str(e)}")
-            else:
-                field.value = ""
-                icon.color = "red"
-                field.update()
-                icon.update()
-    
+                except Exception as ex:
+                    logging.error(f"Error processing file {file_path}: {str(ex)}")
+                    label_to_update.value = "Error processing file"
+                    icon_to_update.color = Colors.RED_ACCENT_700
+                    if clear_button_to_show: clear_button_to_show.visible = False # Don't show if error before stats
+                    label_to_update.update()
+                    icon_to_update.update()
+                    if clear_button_to_show: clear_button_to_show.update()
+                    self.app.show_snackbar(f"Error processing file: {str(ex)}")
+            else: # File validation failed
+                label_to_update.value = "Invalid file"
+                icon_to_update.color = Colors.RED_ACCENT_700
+                if clear_button_to_show: clear_button_to_show.visible = False
+                label_to_update.update()
+                icon_to_update.update()
+                if clear_button_to_show: clear_button_to_show.update()
+        else: # No file selected or dialog cancelled
+            # Only clear if a file was previously selected for this field_type
+            if (field_type == "source" and self.source_file_path) or \
+               (field_type == "target" and self.target_file_path):
+                 self._clear_file_selection(field_type) # Call clear if selection is cancelled
+            # else: Do nothing if no file was selected and dialog was cancelled.
+
     def get_readable_file_size(self, size_in_bytes):
         """Convert file size in bytes to human readable format"""
         for unit in ['B', 'KB', 'MB', 'GB']:
@@ -175,11 +251,20 @@ class FileInputComponent:
         self.target_picker.pick_files()
 
     def _on_browse_hover(self, e, button):
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        if e.data == "true":
-            button.bgcolor = hover_color
-        else:
-            button.bgcolor = self.app.COLORS["bg"]["accent"]
+        """Handle hover effect for browse button using theme colors."""
+        # This method might be redundant if ElevatedButton's style can handle hover state directly.
+        # However, if called via on_hover=lambda e, btn=button: self._on_browse_hover(e, btn)
+        # on a Container, this would work. For an ElevatedButton, it's better to use button.style.
+        if hasattr(button, 'style') and isinstance(button.style, ButtonStyle):
+            if e.data == "true": # Hovering
+                button.style.bgcolor = self.app.COLORS["bg"]["hover"]
+            else: # Not hovering
+                button.style.bgcolor = self.app.COLORS["bg"]["accent"]
+        else: # Fallback for other types of controls if this method is reused
+            if e.data == "true":
+                button.bgcolor = self.app.COLORS["bg"]["hover"]
+            else:
+                button.bgcolor = self.app.COLORS["bg"]["accent"]
         button.update()
 
     def update_colors(self, colors):

@@ -551,44 +551,106 @@ def compare_translations(old_translations, new_translations, ignore_case=False,
     missing_count = len(missing_in_target)
     obsolete_count = len(obsolete_in_target)
     placeholder_count = len(invalid_placeholders)
-    output_lines = []
+    comparison_results = []
 
-    # Calculate max key length for proper alignment
-    max_key_length = max((len(key) for key in (source_keys | target_keys)), default=0)
+    # Constants for difference objects
+    KEY = "key"
+    STATUS = "status"
+    SOURCE_VALUE = "source_value"
+    TARGET_VALUE = "target_value"
+    DETAILS = "details"
+    
+    STATUS_MISSING_IN_TARGET = "missing_in_target"
+    STATUS_OBSOLETE_IN_TARGET = "obsolete_in_target"
+    STATUS_PLACEHOLDER_MISMATCH = "placeholder_mismatch"
+    STATUS_VALUE_CHANGED = "value_changed" # For when compare_values is True
+    STATUS_IDENTICAL = "identical" # For when compare_values is True and values are same
 
     # Report placeholder mismatches
-    for key, error_msg in invalid_placeholders:
-        line = f"~ {key.ljust(max_key_length)} : {new_translations[key]} ({error_msg})"
-        if not is_gui:
-            line = Fore.YELLOW + line + Style.RESET_ALL
-        output_lines.append(line)
+    for key_original_case, error_msg in invalid_placeholders:
+        # Find original casing for keys if ignore_case was true for lookup
+        # This assumes old_translations and new_translations have original cased keys
+        source_val = next((v for k, v in old_translations.items() if normalize_key(k) == key_original_case), None)
+        target_val = next((v for k, v in new_translations.items() if normalize_key(k) == key_original_case), None)
+        
+        comparison_results.append({
+            KEY: key_original_case, # Use the key that had the mismatch
+            STATUS: STATUS_PLACEHOLDER_MISMATCH,
+            SOURCE_VALUE: source_val,
+            TARGET_VALUE: target_val,
+            DETAILS: error_msg
+        })
 
-    # Log a warning for each missing key if the flag is enabled
-    for key in sorted(missing_in_target):
+    # Keys missing in target (present in source, but not in target)
+    for key_norm in sorted(missing_in_target):
+        # Find the original-cased key from old_translations
+        original_key = next((k for k in old_translations if normalize_key(k) == key_norm), key_norm)
+        comparison_results.append({
+            KEY: original_key,
+            STATUS: STATUS_MISSING_IN_TARGET,
+            SOURCE_VALUE: old_translations.get(original_key),
+            TARGET_VALUE: None, # Or new_translations.get(original_key) if auto_fill_missing added it
+            DETAILS: f"Missing in '{target_locale}' file"
+        })
         if log_missing_keys:
-            logging.warning(f"Missing translation key '{key}' for locale '{target_locale}'")
-        line = f"+ {key.ljust(max_key_length)} : {old_translations[key]} (missing in source translation)"
-        if not is_gui:
-            line = Fore.GREEN + line + Style.RESET_ALL
-        output_lines.append(line)
+            logging.warning(f"Missing translation key '{original_key}' for locale '{target_locale}'")
 
-    # Report obsolete entries (in target but not source) 
-    for key in sorted(obsolete_in_target):
-        line = f"- {key.ljust(max_key_length)} : {new_translations[key]} (missing in target translation)"
-        if not is_gui:
-            line = Fore.RED + line + Style.RESET_ALL
-        output_lines.append(line)
+    # Obsolete keys in target (present in target, but not in source)
+    for key_norm in sorted(obsolete_in_target):
+        original_key = next((k for k in new_translations if normalize_key(k) == key_norm), key_norm)
+        comparison_results.append({
+            KEY: original_key,
+            STATUS: STATUS_OBSOLETE_IN_TARGET,
+            SOURCE_VALUE: None,
+            TARGET_VALUE: new_translations.get(original_key),
+            DETAILS: "Obsolete in target (not in source)"
+        })
 
-    # Only add summary section if requested
-    if include_summary:
-        if output_lines:
-            output_lines.append("")
-        output_lines.append("--- Summary ---")
-        output_lines.append(f"Missing in target: {missing_count}")
-        output_lines.append(f"Obsolete in target: {obsolete_count}")
-        output_lines.append(f"Placeholder mismatches: {placeholder_count}")
+    # Compare values for common keys (if enabled and not already a placeholder mismatch)
+    if compare_values:
+        placeholder_mismatch_keys_norm = {normalize_key(k_orig) for k_orig, _ in invalid_placeholders}
+        for key_norm in common_keys:
+            if key_norm in placeholder_mismatch_keys_norm:
+                continue # Already handled as placeholder mismatch
 
-    return "\n".join(output_lines)
+            original_key_source = next((k for k in old_translations if normalize_key(k) == key_norm), key_norm)
+            original_key_target = next((k for k in new_translations if normalize_key(k) == key_norm), key_norm)
+
+            source_val_orig = old_translations.get(original_key_source, "")
+            target_val_orig = new_translations.get(original_key_target, "")
+
+            source_val_cmp = source_val_orig
+            target_val_cmp = target_val_orig
+
+            if ignore_whitespace:
+                source_val_cmp = source_val_cmp.strip()
+                target_val_cmp = target_val_cmp.strip()
+            if ignore_case: # Note: This was for keys, for values it's different.
+                            # The compare_values flag implies actual value comparison.
+                            # If ignore_case for values is needed, it should be a separate flag.
+                            # For now, direct comparison.
+                pass # source_val_cmp = source_val_cmp.lower(); target_val_cmp = target_val_cmp.lower()
+
+
+            if source_val_cmp != target_val_cmp:
+                comparison_results.append({
+                    KEY: original_key_source, # Or target, should be same for common keys effectively
+                    STATUS: STATUS_VALUE_CHANGED,
+                    SOURCE_VALUE: source_val_orig,
+                    TARGET_VALUE: target_val_orig,
+                    DETAILS: "Value differs between source and target"
+                })
+            else: # Values are effectively identical based on comparison flags
+                comparison_results.append({
+                    KEY: original_key_source,
+                    STATUS: STATUS_IDENTICAL,
+                    SOURCE_VALUE: source_val_orig,
+                    TARGET_VALUE: target_val_orig,
+                    DETAILS: "Values are identical"
+                })
+                
+    # The summary (counts) will be calculated by the caller (flet_gui.py) based on this list.
+    return comparison_results
 
 def translate_missing_keys(source_dict: dict, target_dict: dict, 
                          source_lang: str, target_lang: str, 

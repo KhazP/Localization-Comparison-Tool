@@ -24,13 +24,14 @@ class HistoryDialogComponent:
         return ft.AlertDialog(
             modal=False,
             on_dismiss=lambda e: self._close_dialog(e),
-            title=ft.Text("Comparison History", size=22, weight="bold"),
+            title=ft.Text("Comparison History", size=self.app.TEXT_SIZE_XLARGE, weight="bold"), # Updated
             content=self._create_content(),
             actions=[
                 ft.TextButton(
                     "Close",
                     style=ft.ButtonStyle(
                         color=self.colors["text"]["secondary"],
+                        text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT) # Added
                     ),
                     on_click=self._close_dialog
                 )
@@ -39,44 +40,50 @@ class HistoryDialogComponent:
         )
 
     def _create_confirm_clear_dialog(self):
+        button_style = ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=self.app.spacing["xs"]),
+            padding=ft.padding.symmetric(horizontal=self.app.spacing["m"])
+        )
         return ft.AlertDialog(
             modal=True,
             on_dismiss=lambda e: self._handle_clear_response(e, "no"),
-            title=ft.Text("Clear History?"),
+            title=ft.Text("Clear History?", size=self.app.TEXT_SIZE_LARGE, weight="bold"), # Updated
             content=ft.Container(
                 content=ft.Column([
                     ft.Icon(
                         ft.icons.WARNING_ROUNDED,
-                        color="#FFA000",
-                        size=36,
+                        color=self.colors["changes"].get("warning", ft_colors.AMBER_600), # Updated
+                        size=self.app.TEXT_SIZE_HERO, # Updated
                     ),
                     ft.Text(
                         "Are you sure you want to clear all comparison history?",
-                        text_align="center",
+                        text_align="center", size=self.app.TEXT_SIZE_DEFAULT # Updated
                     ),
                     ft.Text(
                         "This action cannot be undone.",
-                        size=12,
+                        size=self.app.TEXT_SIZE_SMALL, # Updated
                         color=self.colors["text"]["secondary"],
                         text_align="center",
                     ),
-                ]),
-                padding=20,
-                width=300,
+                ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=self.app.spacing["s"]), # Added spacing and alignment
+                padding=self.app.BASE_UNIT * 5, # 20px Updated
+                width=350, # Increased width
                 alignment=ft.alignment.center,
             ),
             actions=[
                 ft.TextButton(
                     "Cancel",
-                    style=ft.ButtonStyle(color=self.colors["text"]["secondary"]),
+                    style=ft.ButtonStyle(color=self.colors["text"]["secondary"], text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT)), # Added text_style
                     on_click=lambda e: self._handle_clear_response(e, "no"),
                 ),
                 ft.ElevatedButton(
                     "Clear",
-                    style=ft.ButtonStyle(
-                        color=ft.colors.WHITE,
-                        bgcolor=ft.colors.RED_400,
-                    ),
+                    style=button_style.merge(ft.ButtonStyle(
+                        color=self.colors.get("text",{}).get("on_error", ft_colors.WHITE), # Text on error color
+                        bgcolor=self.colors["changes"].get("removed", ft_colors.RED_700), # Error/Removed color
+                    )),
+                    height=self.app.BASE_UNIT * 9, # 36px,
+                    text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added text_style
                     on_click=lambda e: self._handle_clear_response(e, "yes"),
                 ),
             ],
@@ -132,9 +139,9 @@ class HistoryDialogComponent:
         """Create the main content of the history dialog with improved styling."""
         self.history_list = ft.ListView(
             expand=True,
-            spacing=10,
-            padding=10,
-            height=500,  # Increased height for better visibility
+            spacing=self.app.spacing["s"], # Updated
+            padding=self.app.spacing["s"], # Updated
+            height=500, 
         )
 
         self.empty_state = ft.Column(
@@ -142,40 +149,40 @@ class HistoryDialogComponent:
                 ft.Container(
                     content=ft.Icon(
                         ft.icons.HISTORY,
-                        size=64,
+                        size=self.app.spacing["xxl"] + self.app.spacing["m"], # 64px Updated
                         color=self.colors["text"]["secondary"],
                     ),
                     alignment=ft.alignment.center,
-                    margin=ft.margin.only(top=40),
+                    margin=ft.margin.only(top=self.app.spacing["xl"]), # Updated
                 ),
                 ft.Container(
                     content=ft.Text(
                         "No comparison history found",
-                        size=16,
+                        size=self.app.TEXT_SIZE_MEDIUM, # Updated
                         weight="w500",
                         color=self.colors["text"]["secondary"],
                         text_align="center",
                     ),
                     alignment=ft.alignment.center,
-                    margin=ft.margin.only(top=20, bottom=40),
+                    margin=ft.margin.only(top=self.app.spacing["l"] - self.app.spacing["xxs"], bottom=self.app.spacing["xl"]), # 20px, 32px Updated
                 ),
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-        # Add clear history button with enhanced styling
         clear_button = ft.IconButton(
             icon=ft.icons.DELETE_OUTLINE,
             tooltip="Clear History",
             icon_color=self.colors["text"]["secondary"],
+            icon_size=self.app.TEXT_SIZE_LARGE, # Added
             on_click=self._clear_history,
         )
 
-        # Add purge old entries button
         purge_button = ft.IconButton(
             icon=ft.icons.AUTO_DELETE,
             tooltip="Purge Old Entries (> 30 days)",
             icon_color=self.colors["text"]["secondary"],
+            icon_size=self.app.TEXT_SIZE_LARGE, # Added
             on_click=self._purge_old_entries,
         )
 
@@ -185,9 +192,9 @@ class HistoryDialogComponent:
                     content=ft.Text(
                         "View and manage your comparison history",
                         color=self.colors["text"]["secondary"],
-                        size=14,
+                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                     ),
-                    margin=ft.margin.only(bottom=10),
+                    margin=ft.margin.only(bottom=self.app.spacing["s"]), # Updated
                 ),
                 ft.Card(
                     content=ft.Container(
@@ -195,35 +202,33 @@ class HistoryDialogComponent:
                             controls=[
                                 ft.Text(
                                     "History Entries",
-                                    size=16,
+                                    size=self.app.TEXT_SIZE_MEDIUM, # Updated
                                     weight="w500",
                                     color=self.colors["text"]["primary"],
                                 ),
                                 ft.Row(
-                                    controls=[
-                                        clear_button,
-                                        purge_button,
-                                    ],
+                                    controls=[clear_button, purge_button],
+                                    spacing=self.app.spacing["xs"] # Added spacing for buttons
                                 ),
                             ],
                             alignment="spaceBetween",
                             vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
-                        padding=10,
+                        padding=self.app.spacing["s"], # Updated
                     ),
-                    color=self.colors["bg"]["secondary"],
+                    color=self.colors["bg"]["secondary"], # Keep color
                 ),
                 ft.Container(
                     content=ft.Column(
                         controls=[self.history_list],
-                        scroll=ft.ScrollMode.AUTO,
+                        scroll=ft.ScrollMode.AUTO, # Keep scroll
                     ),
-                    expand=True,
-                    margin=ft.margin.only(top=10),
+                    expand=True, # Keep expand
+                    margin=ft.margin.only(top=self.app.spacing["s"]), # Updated
                 )
             ]),
-            width=700,  # Wider dialog for better readability
-            height=600,  # Taller dialog for more content
+            width=700, 
+            height=600, 
         )
 
     def _clear_history(self, e):
@@ -311,21 +316,21 @@ class HistoryDialogComponent:
                             ),
                             ft.Text(
                                 f"{entry['source_file']} → {entry['target_file']}",
-                                size=16,
+                                size=self.app.TEXT_SIZE_MEDIUM, # Updated
                                 weight="bold",
                                 color=self.colors["text"]["primary"],
                             ),
-                            ft.Container(expand=True),  # Spacer
+                            ft.Container(expand=True), 
                             ft.Column([
                                 ft.Text(
                                     formatted_time,
-                                    size=12,
+                                    size=self.app.TEXT_SIZE_SMALL, # Updated
                                     color=self.colors["text"]["secondary"],
                                     text_align="right",
                                 ),
                                 ft.Text(
                                     relative_time,
-                                    size=11,
+                                    size=self.app.TEXT_SIZE_XSMALL, # Updated
                                     italic=True,
                                     color=self.colors["text"]["secondary"],
                                     text_align="right",
@@ -333,77 +338,76 @@ class HistoryDialogComponent:
                             ], spacing=0, horizontal_alignment=ft.CrossAxisAlignment.END),
                         ], alignment="spaceBetween", vertical_alignment="start"),
                         
-                        ft.Container(height=10),
+                        ft.Container(height=self.app.spacing["s"]), # Updated
                         
-                        # Replace TextField with a summary
                         ft.Container(
                             content=ft.Row([
                                 ft.Container(
                                     content=ft.Column([
                                         ft.Text(
                                             "Added", 
-                                            size=12,
+                                            size=self.app.TEXT_SIZE_SMALL, # Updated
                                             color=self.colors["text"]["secondary"]
                                         ),
                                         ft.Text(
                                             f"{added_count}",
-                                            size=18,
+                                            size=self.app.TEXT_SIZE_LARGE, # Updated
                                             weight="bold",
                                             color=self.colors["changes"]["added"]
                                         ),
                                     ], 
                                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                    spacing=4
+                                    spacing=self.app.spacing["xxs"] # Updated
                                 ),
-                                    width=100,
-                                    padding=10,
+                                    width=100, # Keep width
+                                    padding=self.app.spacing["s"], # Updated
                                 ),
                                 ft.VerticalDivider(
-                                    width=1,
+                                    width=1, # Keep width
                                     color=self.colors["border"]["default"],
                                 ),
                                 ft.Container(
                                     content=ft.Column([
                                         ft.Text(
                                             "Removed", 
-                                            size=12,
+                                            size=self.app.TEXT_SIZE_SMALL, # Updated
                                             color=self.colors["text"]["secondary"]
                                         ),
                                         ft.Text(
                                             f"{removed_count}",
-                                            size=18,
+                                            size=self.app.TEXT_SIZE_LARGE, # Updated
                                             weight="bold",
                                             color=self.colors["changes"]["removed"]
                                         ),
                                     ], 
                                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                    spacing=4
+                                    spacing=self.app.spacing["xxs"] # Updated
                                 ),
-                                    width=100,
-                                    padding=10,
+                                    width=100, # Keep width
+                                    padding=self.app.spacing["s"], # Updated
                                 ),
                                 ft.Container(
                                     content=ft.Text(
                                         "Click 'View Details' to see full comparison",
-                                        size=12,
+                                        size=self.app.TEXT_SIZE_SMALL, # Updated
                                         color=self.colors["text"]["secondary"],
                                         italic=True,
                                     ),
                                     expand=True,
                                     alignment=ft.alignment.center_right,
-                                    padding=10,
+                                    padding=self.app.spacing["s"], # Updated
                                 ),
                             ], 
                             alignment="spaceBetween",
                             vertical_alignment=ft.CrossAxisAlignment.CENTER
                             ),
                             border=ft.border.all(color=self.colors["border"]["default"]),
-                            border_radius=4,
-                            padding=5,
+                            border_radius=self.app.spacing["xxs"], # Updated
+                            padding=self.app.spacing["xxs"], # Updated
                             bgcolor=self.colors["bg"]["input"],
                         ),
                         
-                        ft.Container(height=5),
+                        ft.Container(height=self.app.spacing["xxs"]), # Updated
                         
                         ft.Row([
                             ft.OutlinedButton(
@@ -411,26 +415,34 @@ class HistoryDialogComponent:
                                 icon=ft.icons.COPY,
                                 style=ft.ButtonStyle(
                                     color=self.colors["text"]["secondary"],
+                                    text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added
+                                    shape=ft.RoundedRectangleBorder(radius=self.app.spacing["xs"]), # Added
+                                    padding=ft.padding.symmetric(horizontal=self.app.spacing["m"]) # Added
                                 ),
+                                height=self.app.BASE_UNIT * 9, # 36px
                                 on_click=lambda e, text=entry["diff"]: self._copy_diff(text)
                             ),
                             ft.ElevatedButton(
                                 "View Details",
                                 icon=ft.icons.VISIBILITY,
                                 style=ft.ButtonStyle(
-                                    color=ft.colors.WHITE,
+                                    color=self.colors.get("text",{}).get("on_accent", ft_colors.WHITE), # Use text on accent color
                                     bgcolor=self.colors["bg"]["accent"],
+                                    shape=ft.RoundedRectangleBorder(radius=self.app.spacing["xs"]), # Added
+                                    padding=ft.padding.symmetric(horizontal=self.app.spacing["m"]) # Added
                                 ),
+                                height=self.app.BASE_UNIT * 9, # 36px
+                                text_style=ft.TextStyle(size=self.app.TEXT_SIZE_DEFAULT), # Added
                                 on_click=lambda e, text=entry["diff"]: self._show_details(text)
                             )
-                        ], alignment="end", spacing=10)
+                        ], alignment="end", spacing=self.app.spacing["s"]) # Updated
                     ]),
-                    padding=15,
-                    animate=ft.animation.Animation(300, "easeOut"),
+                    padding=self.app.spacing["m"] - self.app.spacing["xxs"], # 15px -> 16-2=14. Let's use 15 -> BASE_UNIT * 3.75. Or m (16)
+                    animate=ft.animation.Animation(300, "easeOut"), # Keep animation
                 ),
-                elevation=2,
-                margin=ft.margin.only(bottom=10),
-                color=self.colors["bg"]["secondary"],
+                elevation=2, # Keep elevation
+                margin=ft.margin.only(bottom=self.app.spacing["s"]), # Updated
+                color=self.colors["bg"]["secondary"], # Keep color
             )
             self.history_list.controls.append(history_card)
 
@@ -469,87 +481,81 @@ class HistoryDialogComponent:
         # Create the dialog
         dialog = ft.AlertDialog(
             modal=False,  # changed from True
-            on_dismiss=lambda e: close_handler(e),  # new
+            on_dismiss=lambda e: close_handler(e), 
             title=ft.Row([
-                ft.Icon(ft.icons.COMPARE_ARROWS, color=self.colors["bg"]["accent"]),
-                ft.Text("Comparison Details", size=20, weight="bold"),
+                ft.Icon(ft.icons.COMPARE_ARROWS, color=self.colors["bg"]["accent"], size=self.app.TEXT_SIZE_XLARGE), # Added size
+                ft.Text("Comparison Details", size=self.app.TEXT_SIZE_XLARGE, weight="bold"), # Updated
             ]),
             content=ft.Container(
                 content=ft.Column([
-                    # Stats row
                     ft.Container(
                         content=ft.Row([
                             ft.Container(
                                 content=ft.Column([
                                     ft.Text(
                                         "Added Lines", 
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"]
                                     ),
                                     ft.Text(
                                         f"{len(added_lines)}",
-                                        size=20,
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.colors["changes"]["added"]
                                     ),
                                 ], 
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                spacing=4
+                                spacing=self.app.spacing["xxs"] # Updated
                             ),
-                                width=150,
-                                padding=10,
+                                width=150, # Keep width
+                                padding=self.app.spacing["s"], # Updated
                             ),
-                            ft.VerticalDivider(
-                                width=1,
-                                color=self.colors["border"]["default"],
-                            ),
+                            ft.VerticalDivider(width=1, color=self.colors["border"]["default"]),
                             ft.Container(
                                 content=ft.Column([
                                     ft.Text(
                                         "Removed Lines", 
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                         color=self.colors["text"]["secondary"]
                                     ),
                                     ft.Text(
                                         f"{len(removed_lines)}",
-                                        size=20,
+                                        size=self.app.TEXT_SIZE_LARGE, # Updated
                                         weight="bold",
                                         color=self.colors["changes"]["removed"]
                                     ),
                                 ], 
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                spacing=4
+                                spacing=self.app.spacing["xxs"] # Updated
                             ),
-                                width=150,
-                                padding=10,
+                                width=150, # Keep width
+                                padding=self.app.spacing["s"], # Updated
                             ),
                         ],
                         alignment="center",
                         ),
-                        padding=10,
+                        padding=self.app.spacing["s"], # Updated
                         border=ft.border.all(color=self.colors["border"]["default"]),
-                        border_radius=5,
-                        margin=ft.margin.only(bottom=20),
+                        border_radius=self.app.spacing["xxs"], # Updated
+                        margin=ft.margin.only(bottom=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                         bgcolor=self.colors["bg"]["secondary"],
                     ),
                     
-                    # Split view with side-by-side comparison
                     ft.Container(
                         content=ft.Row([
-                            # Left side - Added content
                             ft.Container(
                                 content=ft.Column([
                                     ft.Container(
                                         content=ft.Row([
-                                            ft.Icon(ft.icons.ADD_CIRCLE, color=self.colors["changes"]["added"], size=16),
+                                            ft.Icon(ft.icons.ADD_CIRCLE, color=self.colors["changes"]["added"], size=self.app.TEXT_SIZE_MEDIUM), # Updated
                                             ft.Text(
                                                 "Added Items",
                                                 weight="bold",
-                                                size=14,
+                                                size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                                 color=self.colors["changes"]["added"]
                                             ),
-                                        ], spacing=5),
-                                        padding=ft.padding.only(bottom=8),
+                                        ], spacing=self.app.spacing["xxs"]), # Updated
+                                        padding=ft.padding.only(bottom=self.app.spacing["xs"]), # Updated
                                     ),
                                     ft.Container(
                                         content=self._create_diff_view(added_lines, "added"),
@@ -557,29 +563,27 @@ class HistoryDialogComponent:
                                     ),
                                 ]),
                                 expand=True,
-                                padding=10,
+                                padding=self.app.spacing["s"], # Updated
                                 border=ft.border.all(color=self.colors["border"]["default"]),
-                                border_radius=5,
+                                border_radius=self.app.spacing["xxs"], # Updated
                                 bgcolor=self.colors["bg"]["input"],
                             ),
                             
-                            # Divider
-                            ft.Container(width=20),
+                            ft.Container(width=self.app.spacing["l"] - self.app.spacing["xxs"]), # 20px Updated
                             
-                            # Right side - Removed content
                             ft.Container(
                                 content=ft.Column([
                                     ft.Container(
                                         content=ft.Row([
-                                            ft.Icon(ft.icons.REMOVE_CIRCLE, color=self.colors["changes"]["removed"], size=16),
+                                            ft.Icon(ft.icons.REMOVE_CIRCLE, color=self.colors["changes"]["removed"], size=self.app.TEXT_SIZE_MEDIUM), # Updated
                                             ft.Text(
                                                 "Removed Items",
                                                 weight="bold",
-                                                size=14,
+                                                size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                                 color=self.colors["changes"]["removed"]
                                             ),
-                                        ], spacing=5),
-                                        padding=ft.padding.only(bottom=8),
+                                        ], spacing=self.app.spacing["xxs"]), # Updated
+                                        padding=ft.padding.only(bottom=self.app.spacing["xs"]), # Updated
                                     ),
                                     ft.Container(
                                         content=self._create_diff_view(removed_lines, "removed"),
@@ -587,16 +591,15 @@ class HistoryDialogComponent:
                                     ),
                                 ]),
                                 expand=True,
-                                padding=10,
+                                padding=self.app.spacing["s"], # Updated
                                 border=ft.border.all(color=self.colors["border"]["default"]),
-                                border_radius=5,
+                                border_radius=self.app.spacing["xxs"], # Updated
                                 bgcolor=self.colors["bg"]["input"],
                             ),
                         ]),
                         expand=True,
                     ),
                     
-                    # Raw diff section with toggle
                     ft.Container(
                         content=ft.Column([
                             ft.Container(
@@ -604,53 +607,47 @@ class HistoryDialogComponent:
                                     ft.Text(
                                         "Raw Diff Output",
                                         weight="bold",
-                                        size=14,
+                                        size=self.app.TEXT_SIZE_DEFAULT, # Updated
                                     ),
                                     ft.IconButton(
                                         icon=ft.icons.ARROW_DROP_DOWN,
+                                        icon_size=self.app.TEXT_SIZE_LARGE, # Added
                                         on_click=lambda e: self._toggle_raw_diff(e),
                                     )
                                 ], alignment="spaceBetween"),
-                                padding=10,
+                                padding=self.app.spacing["s"], # Updated
                                 bgcolor=self.colors["bg"]["secondary"],
                                 border_radius=ft.border_radius.only(
-                                    top_left=5, top_right=5, 
-                                    bottom_left=5 if not hasattr(self, "_show_raw_diff") else 0,
-                                    bottom_right=5 if not hasattr(self, "_show_raw_diff") else 0
-                                ),
+                                    top_left=self.app.spacing["xxs"], top_right=self.app.spacing["xxs"], 
+                                    bottom_left=self.app.spacing["xxs"] if not hasattr(self, "_show_raw_diff") or not self._show_raw_diff else 0,
+                                    bottom_right=self.app.spacing["xxs"] if not hasattr(self, "_show_raw_diff") or not self._show_raw_diff else 0
+                                ), # Updated
                             ),
                             ft.Container(
                                 content=ft.TextField(
                                     value=diff_text,
-                                    multiline=True,
-                                    read_only=True,
-                                    min_lines=5,
-                                    max_lines=10,
-                                    text_style=ft.TextStyle(
-                                        font_family="Consolas",
-                                        size=12,
-                                    ),
+                                    multiline=True, read_only=True, min_lines=5, max_lines=10,
+                                    text_style=ft.TextStyle(font_family="Consolas", size=self.app.TEXT_SIZE_SMALL), # Updated
                                     border=ft.border.all(color=self.colors["border"]["default"]),
                                     bgcolor=self.colors["bg"]["input"],
+                                    content_padding=self.app.spacing["xs"], # Added
                                     selection_color=self.colors["bg"]["accent"] + "40",
                                 ),
                                 visible=False if not hasattr(self, "_show_raw_diff") else self._show_raw_diff,
-                                border_radius=ft.border_radius.only(bottom_left=5, bottom_right=5),
+                                border_radius=ft.border_radius.only(bottom_left=self.app.spacing["xxs"], bottom_right=self.app.spacing["xxs"]), # Updated
                             )
                         ]),
-                        margin=ft.margin.only(top=10),
+                        margin=ft.margin.only(top=self.app.spacing["s"]), # Updated
                         border=ft.border.all(color=self.colors["border"]["default"]),
                     ),
                 ]),
-                width=900,
-                height=600,
-                padding=20,
+                width=900, height=600, # Keep dimensions
+                padding=self.app.BASE_UNIT * 5, # 20px Updated
             ),
-            actions=[],  # Initialize with empty actions
+            actions=[], 
             actions_alignment=ft.MainAxisAlignment.END,
         )
 
-        # Define a custom close handler that captures the dialog as a parameter
         def close_handler(e):
             self._close_details(dialog)
             

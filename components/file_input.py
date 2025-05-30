@@ -36,6 +36,10 @@ class FileInputComponent:
         # Create file input containers
         self.source_file_container = self._create_file_input("Source File", is_source=True)
         self.target_file_container = self._create_file_input("Target File", is_source=False)
+
+        # Store browse buttons to update them in update_colors
+        self.source_browse_button = self.source_file_container.content.controls[1].content.controls[2].content
+        self.target_browse_button = self.target_file_container.content.controls[1].content.controls[2].content
     
     def _create_file_input(self, label: str, is_source=True) -> Container:
         """Create a file input container with proper initialization"""
@@ -46,14 +50,14 @@ class FileInputComponent:
             on_click=self.open_source_picker if is_source else self.open_target_picker,
             bgcolor=self.app.COLORS["bg"]["accent"],
             color=self.app.COLORS["text"]["primary"],
-            height=36,
+            height=40, # Increased height
             style=ButtonStyle(shape=RoundedRectangleBorder(radius=8))
         )
         
         return Container(
             content=Column(
                 controls=[
-                    Text(label, color=self.app.COLORS["text"]["secondary"], size=14, weight=FontWeight.W_500),
+                    Text(label, color=self.app.COLORS["text"]["primary"], size=14, weight=FontWeight.W_500), # Changed to primary
                     Container(
                         content=Row(
                             controls=[
@@ -102,7 +106,7 @@ class FileInputComponent:
                             self.app.target_file_path = file_path
 
                         # Update UI elements
-                        icon.color = Colors.BLUE_400
+                        icon.color = self.app.COLORS["text"]["accent"] # Use theme color
                         self.app.update_compare_button()
                         
                         # Update preview if enabled
@@ -114,7 +118,7 @@ class FileInputComponent:
                     
                     # Use async line count to avoid freezing the UI
                     field.value = f"{file_name} (loading...)"
-                    icon.color = Colors.BLUE_200
+                    icon.color = self.app.COLORS["text"]["secondary"] # Use theme color for loading state
                     field.update()
                     icon.update()
                     
@@ -175,35 +179,52 @@ class FileInputComponent:
         self.target_picker.pick_files()
 
     def _on_browse_hover(self, e, button):
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
         if e.data == "true":
-            button.bgcolor = hover_color
+            button.bgcolor = self.app.COLORS["bg"]["hover"] # Use theme hover color
         else:
             button.bgcolor = self.app.COLORS["bg"]["accent"]
         button.update()
 
     def update_colors(self, colors):
         """Update component colors when theme changes"""
+        # Update labels
         if self.source_label:
             self.source_label.color = colors["text"]["secondary"]
         if self.target_label:
             self.target_label.color = colors["text"]["secondary"]
-        if self.source_icon:
+
+        # Update icons (only if not actively selected, otherwise handle_file_picked color takes precedence)
+        if self.source_icon and self.source_file_path == "": # Only update if no file selected
             self.source_icon.color = colors["text"]["secondary"]
-        if self.target_icon:
+        elif self.source_icon and self.source_file_path != "": # If file selected, use accent
+             self.source_icon.color = colors["text"]["accent"]
+
+        if self.target_icon and self.target_file_path == "": # Only update if no file selected
             self.target_icon.color = colors["text"]["secondary"]
+        elif self.target_icon and self.target_file_path != "": # If file selected, use accent
+            self.target_icon.color = colors["text"]["accent"]
         
-        # Update container colors safely
-        for container in [self.source_file_container, self.target_file_container]:
-            if container and container.content and isinstance(container.content, Column):
-                file_input_col = container.content
+        # Update container colors and main labels
+        for i, container_wrapper in enumerate([self.source_file_container, self.target_file_container]):
+            if container_wrapper and container_wrapper.content and isinstance(container_wrapper.content, Column):
+                file_input_col = container_wrapper.content
                 if file_input_col.controls:
-                    if len(file_input_col.controls) > 0:
-                        file_input_col.controls[0].color = colors["text"]["secondary"]
-                    if len(file_input_col.controls) > 1:
-                        inner = file_input_col.controls[1]
-                        if inner:
-                            inner.bgcolor = colors["bg"]["input"]
-                            inner.border = border.all(2, colors["border"]["default"])
+                    # Update main label ("Source File" / "Target File")
+                    if len(file_input_col.controls) > 0 and isinstance(file_input_col.controls[0], Text):
+                        file_input_col.controls[0].color = colors["text"]["primary"]
+                    # Update inner container for file path display
+                    if len(file_input_col.controls) > 1 and isinstance(file_input_col.controls[1], Container):
+                        inner_container = file_input_col.controls[1]
+                        inner_container.bgcolor = colors["bg"]["input"]
+                        inner_container.border = border.all(2, colors["border"]["default"])
+
+        # Update browse buttons using stored references
+        if hasattr(self, 'source_browse_button') and self.source_browse_button:
+            self.source_browse_button.bgcolor = colors["bg"]["accent"]
+            self.source_browse_button.color = colors["text"]["primary"]
+
+        if hasattr(self, 'target_browse_button') and self.target_browse_button:
+            self.target_browse_button.bgcolor = colors["bg"]["accent"]
+            self.target_browse_button.color = colors["text"]["primary"]
         
         # No need to call page.update() here as it will be handled by the main app

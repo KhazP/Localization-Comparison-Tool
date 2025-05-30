@@ -116,9 +116,15 @@ class SettingsDialogComponent:
             on_dismiss=lambda e: self.close_dialog(e)
         )
 
-    # Add the missing update_colors method
     def update_colors(self, colors: dict):
-        """Update the component's colors based on the current theme."""
+        """
+        Update the component's colors based on the current theme.
+        This affects the dialog's own styling (like gradients, specific text elements)
+        and ensures that if any controls within the tabs need explicit color updates,
+        they can be handled here or in `_update_tab_colors`.
+        It also ensures tab selection visuals are updated according to the new theme's
+        primary/secondary text colors for non-active tabs.
+        """
         self.colors = colors
         
         # Update dialog background gradient
@@ -223,6 +229,7 @@ class SettingsDialogComponent:
             controls=[
                 TextButton(
                     "Reset to Default",
+                    tooltip="Reset all settings to their original defaults",
                     on_click=self.reset_settings,
                     style=ft.ButtonStyle(
                         color=ft.colors.with_opacity(0.7, self.colors["text"]["secondary"])
@@ -238,6 +245,7 @@ class SettingsDialogComponent:
                                 ],
                                 spacing=5
                             ),
+                            tooltip="Previous tab",
                             on_click=self.previous_tab,
                             style=ButtonStyle(
                                 color=self.colors["text"]["secondary"]
@@ -252,6 +260,7 @@ class SettingsDialogComponent:
                                     ],
                                     spacing=5
                                 ),
+                                tooltip="Next tab",
                                 on_click=self.next_tab,
                                 style=ButtonStyle(
                                     color=self.colors["text"]["primary"],
@@ -1103,7 +1112,7 @@ class SettingsDialogComponent:
         self.app.update_theme_colors()
         
         # Show success message
-        self.app.show_snackbar("Settings reset to defaults")
+        self.app.show_snackbar("Settings reset to defaults", message_type="success")
         
         # Close and reopen to refresh UI
         self.dialog.open = False
@@ -1135,7 +1144,7 @@ class SettingsDialogComponent:
         # Validate MT settings
         errors = ConfigManager.validate_required_fields(self.config)
         if "mt_api_key" in errors and self.config["mt_enabled"]:
-            self.app.show_snackbar(errors["mt_api_key"])
+            self.app.show_snackbar(errors["mt_api_key"], message_type="error")
             
         ConfigManager.save(self.config)
         self.page.update()

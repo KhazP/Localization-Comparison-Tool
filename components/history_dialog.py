@@ -20,12 +20,136 @@ class HistoryDialogComponent:
             self.confirm_purge_dialog
         ])
 
+    def update_colors(self, colors: dict):
+        """
+        Update component colors when the application's theme changes.
+        This method updates the `self.colors` dictionary and then re-styles
+        persistent UI elements of the dialog. If the dialog is currently open,
+        it also reloads the history list to apply the new theme to dynamic items.
+        """
+        self.colors = colors
+        self.app.COLORS = colors # Also update app reference if it's used by callbacks directly accessing app.COLORS
+
+        # Update main dialog elements
+        if self.dialog:
+            if isinstance(self.dialog.title, ft.Text):
+                self.dialog.title.color = self.colors["text"]["primary"]
+            if self.dialog.actions and isinstance(self.dialog.actions[0], ft.TextButton): # Close button
+                self.dialog.actions[0].style.color = self.colors["text"]["secondary"]
+            # self.dialog.bgcolor = self.colors["bg"]["primary"] # AlertDialog often follows page theme
+
+        # Update confirmation dialogs (they are created once)
+        self._update_confirm_clear_dialog_colors()
+        self._update_confirm_purge_dialog_colors()
+
+        # Update persistent parts of the content if already created
+        if hasattr(self, 'content_container_main_text') and self.content_container_main_text:
+            self.content_container_main_text.color = self.colors["text"]["secondary"]
+        if hasattr(self, 'history_entries_card') and self.history_entries_card:
+            self.history_entries_card.color = self.colors["bg"]["secondary"]
+            if self.history_entries_card.content and self.history_entries_card.content.controls:
+                # "History Entries" text
+                self.history_entries_card.content.controls[0].controls[0].color = self.colors["text"]["primary"]
+                # Clear button icon
+                self.history_entries_card.content.controls[0].controls[1].controls[0].icon_color = self.colors["text"]["secondary"]
+                # Purge button icon
+                self.history_entries_card.content.controls[0].controls[1].controls[1].icon_color = self.colors["text"]["secondary"]
+
+        if hasattr(self, 'empty_state') and self.empty_state:
+            if self.empty_state.controls[0].content: # Icon
+                 self.empty_state.controls[0].content.color = self.colors["text"]["disabled"]
+            if self.empty_state.controls[1].content: # Text
+                 self.empty_state.controls[1].content.color = self.colors["text"]["secondary"]
+
+        # Reload history if dialog is open to apply theme to dynamic cards
+        if self.dialog and self.dialog.open:
+            self._load_history()
+
+        if hasattr(self.page, 'update'):
+             self.page.update()
+
+    def _update_confirm_clear_dialog_colors(self):
+        if self.confirm_clear_dialog:
+            if isinstance(self.confirm_clear_dialog.title, ft.Text):
+                self.confirm_clear_dialog.title.color = self.colors["text"]["primary"]
+            if self.confirm_clear_dialog.content and self.confirm_clear_dialog.content.content and isinstance(self.confirm_clear_dialog.content.content, ft.Column):
+                # Icon
+                self.confirm_clear_dialog.content.content.controls[0].color = self.colors["changes"]["modified"] # Warning icon
+                # "This action cannot be undone" text
+                self.confirm_clear_dialog.content.content.controls[2].color = self.colors["text"]["secondary"]
+            if self.confirm_clear_dialog.actions:
+                # Cancel button
+                self.confirm_clear_dialog.actions[0].style.color = self.colors["text"]["secondary"]
+                # Clear button
+                self.confirm_clear_dialog.actions[1].style.bgcolor = self.colors["changes"]["removed"]
+                self.confirm_clear_dialog.actions[1].style.color = ft.colors.WHITE # Or a themed high-contrast text
+
+    def _update_confirm_purge_dialog_colors(self):
+        if self.confirm_purge_dialog:
+            if isinstance(self.confirm_purge_dialog.title, ft.Text):
+                self.confirm_purge_dialog.title.color = self.colors["text"]["primary"]
+            if self.confirm_purge_dialog.content and self.confirm_purge_dialog.content.content and isinstance(self.confirm_purge_dialog.content.content, ft.Column):
+                # Icon
+                self.confirm_purge_dialog.content.content.controls[0].color = self.colors["text"]["secondary"] # Or accent
+                # "This action cannot be undone" text
+                self.confirm_purge_dialog.content.content.controls[2].color = self.colors["text"]["secondary"]
+            if self.confirm_purge_dialog.actions:
+                # Cancel button
+                self.confirm_purge_dialog.actions[0].style.color = self.colors["text"]["secondary"]
+                # Purge button
+                self.confirm_purge_dialog.actions[1].style.bgcolor = self.colors["bg"]["accent"]
+                self.confirm_purge_dialog.actions[1].style.color = self.colors["text"]["primary"] # Assuming accent is dark enough
+
     def _create_main_dialog(self):
+        # Store parts of content for update_colors
+        self.content_container_main_text = ft.Text(
+            "View and manage your comparison history",
+            color=self.colors["text"]["secondary"],
+            size=14,
+        )
+        self.clear_history_button = ft.IconButton(
+            icon=ft.icons.DELETE_OUTLINE,
+            tooltip="Clear History",
+            icon_color=self.colors["text"]["secondary"],
+            on_click=self._clear_history,
+        )
+        self.purge_history_button = ft.IconButton(
+            icon=ft.icons.AUTO_DELETE,
+            tooltip="Purge Old Entries (> 30 days)",
+            icon_color=self.colors["text"]["secondary"],
+            on_click=self._purge_old_entries,
+        )
+        self.history_entries_title_text = ft.Text(
+            "History Entries",
+            size=16,
+            weight="w500",
+            color=self.colors["text"]["primary"],
+        )
+        self.history_entries_card = ft.Card( # This is the container for the header row, not individual cards
+            content=ft.Container(
+                content=ft.Row(
+                    controls=[
+                        self.history_entries_title_text,
+                        ft.Row(
+                            controls=[
+                                self.clear_history_button,
+                                self.purge_history_button,
+                            ],
+                        ),
+                    ],
+                    alignment="spaceBetween",
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                padding=10,
+            ),
+            color=self.colors["bg"]["secondary"], # This sets the background of the header card
+        )
+
         return ft.AlertDialog(
             modal=False,
             on_dismiss=lambda e: self._close_dialog(e),
-            title=ft.Text("Comparison History", size=22, weight="bold"),
-            content=self._create_content(),
+            title=ft.Text("Comparison History", size=22, weight="bold", color=self.colors["text"]["primary"]),
+            content=self._create_content(), # _create_content will now use these stored elements
             actions=[
                 ft.TextButton(
                     "Close",
@@ -36,23 +160,25 @@ class HistoryDialogComponent:
                 )
             ],
             actions_alignment=ft.MainAxisAlignment.END,
+            # bgcolor=self.colors["bg"]["primary"], # Optional: explicit dialog bg
         )
 
     def _create_confirm_clear_dialog(self):
         return ft.AlertDialog(
             modal=True,
             on_dismiss=lambda e: self._handle_clear_response(e, "no"),
-            title=ft.Text("Clear History?"),
+            title=ft.Text("Clear History?", color=self.colors["text"]["primary"]),
             content=ft.Container(
                 content=ft.Column([
                     ft.Icon(
                         ft.icons.WARNING_ROUNDED,
-                        color="#FFA000",
+                        color=self.colors["changes"]["modified"], # Themed color
                         size=36,
                     ),
                     ft.Text(
                         "Are you sure you want to clear all comparison history?",
                         text_align="center",
+                        color=self.colors["text"]["primary"], # Themed color
                     ),
                     ft.Text(
                         "This action cannot be undone.",
@@ -74,30 +200,32 @@ class HistoryDialogComponent:
                 ft.ElevatedButton(
                     "Clear",
                     style=ft.ButtonStyle(
-                        color=ft.colors.WHITE,
-                        bgcolor=ft.colors.RED_400,
+                        color=ft.colors.WHITE, # Or a themed high-contrast text
+                        bgcolor=self.colors["changes"]["removed"],
                     ),
                     on_click=lambda e: self._handle_clear_response(e, "yes"),
                 ),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
+            # bgcolor=self.colors["bg"]["secondary"], # Optional: explicit dialog bg
         )
 
     def _create_confirm_purge_dialog(self):
         return ft.AlertDialog(
             modal=True,
             on_dismiss=lambda e: self._handle_purge_response(e, "no"),
-            title=ft.Text("Purge Old Entries?"),
+            title=ft.Text("Purge Old Entries?", color=self.colors["text"]["primary"]),
             content=ft.Container(
                 content=ft.Column([
                     ft.Icon(
                         ft.icons.AUTO_DELETE,
-                        color="#5C6BC0",
+                        color=self.colors["text"]["secondary"], # Themed color (or accent)
                         size=36,
                     ),
                     ft.Text(
                         "Purge history entries older than 30 days?",
                         text_align="center",
+                        color=self.colors["text"]["primary"], # Themed color
                     ),
                     ft.Text(
                         "This action cannot be undone.",
@@ -119,13 +247,14 @@ class HistoryDialogComponent:
                 ft.ElevatedButton(
                     "Purge",
                     style=ft.ButtonStyle(
-                        color=ft.colors.WHITE,
-                        bgcolor="#5C6BC0",
+                        color=self.colors["text"]["primary"], # Assuming accent is dark enough
+                        bgcolor=self.colors["bg"]["accent"],
                     ),
                     on_click=lambda e: self._handle_purge_response(e, "yes"),
                 ),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
+            # bgcolor=self.colors["bg"]["secondary"], # Optional: explicit dialog bg
         )
 
     def _create_content(self):
@@ -134,7 +263,7 @@ class HistoryDialogComponent:
             expand=True,
             spacing=10,
             padding=10,
-            height=500,  # Increased height for better visibility
+            height=500,
         )
 
         self.empty_state = ft.Column(
@@ -143,7 +272,7 @@ class HistoryDialogComponent:
                     content=ft.Icon(
                         ft.icons.HISTORY,
                         size=64,
-                        color=self.colors["text"]["secondary"],
+                        color=self.colors["text"]["disabled"], # Use disabled for less prominence
                     ),
                     alignment=ft.alignment.center,
                     margin=ft.margin.only(top=40),
@@ -163,58 +292,16 @@ class HistoryDialogComponent:
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-        # Add clear history button with enhanced styling
-        clear_button = ft.IconButton(
-            icon=ft.icons.DELETE_OUTLINE,
-            tooltip="Clear History",
-            icon_color=self.colors["text"]["secondary"],
-            on_click=self._clear_history,
-        )
-
-        # Add purge old entries button
-        purge_button = ft.IconButton(
-            icon=ft.icons.AUTO_DELETE,
-            tooltip="Purge Old Entries (> 30 days)",
-            icon_color=self.colors["text"]["secondary"],
-            on_click=self._purge_old_entries,
-        )
-
+        # Uses instance variables for Text, IconButtons, and Card defined in _create_main_dialog
         return ft.Container(
             content=ft.Column([
                 ft.Container(
-                    content=ft.Text(
-                        "View and manage your comparison history",
-                        color=self.colors["text"]["secondary"],
-                        size=14,
-                    ),
+                    content=self.content_container_main_text, # Use instance variable
                     margin=ft.margin.only(bottom=10),
                 ),
-                ft.Card(
-                    content=ft.Container(
-                        content=ft.Row(
-                            controls=[
-                                ft.Text(
-                                    "History Entries",
-                                    size=16,
-                                    weight="w500",
-                                    color=self.colors["text"]["primary"],
-                                ),
-                                ft.Row(
-                                    controls=[
-                                        clear_button,
-                                        purge_button,
-                                    ],
-                                ),
-                            ],
-                            alignment="spaceBetween",
-                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        ),
-                        padding=10,
-                    ),
-                    color=self.colors["bg"]["secondary"],
-                ),
+                self.history_entries_card, # Use instance variable for the header card
                 ft.Container(
-                    content=ft.Column(
+                    content=ft.Column( # This Column holds the history_list
                         controls=[self.history_list],
                         scroll=ft.ScrollMode.AUTO,
                     ),
@@ -306,7 +393,7 @@ class HistoryDialogComponent:
                         ft.Row([
                             ft.Icon(
                                 ft.icons.COMPARE_ARROWS,
-                                color=self.colors["bg"]["accent"],
+                                color=self.colors["text"]["accent"], # Changed from bg.accent
                                 size=20,
                             ),
                             ft.Text(
@@ -418,7 +505,7 @@ class HistoryDialogComponent:
                                 "View Details",
                                 icon=ft.icons.VISIBILITY,
                                 style=ft.ButtonStyle(
-                                    color=ft.colors.WHITE,
+                                    color=self.colors["text"]["primary"], # Changed from ft.colors.WHITE
                                     bgcolor=self.colors["bg"]["accent"],
                                 ),
                                 on_click=lambda e, text=entry["diff"]: self._show_details(text)
@@ -468,11 +555,11 @@ class HistoryDialogComponent:
 
         # Create the dialog
         dialog = ft.AlertDialog(
-            modal=False,  # changed from True
-            on_dismiss=lambda e: close_handler(e),  # new
+            modal=False,
+            on_dismiss=lambda e: close_handler(e),
             title=ft.Row([
-                ft.Icon(ft.icons.COMPARE_ARROWS, color=self.colors["bg"]["accent"]),
-                ft.Text("Comparison Details", size=20, weight="bold"),
+                ft.Icon(ft.icons.COMPARE_ARROWS, color=self.colors["text"]["secondary"]), # Use text.secondary for less emphasis
+                ft.Text("Comparison Details", size=20, weight="bold", color=self.colors["text"]["primary"]),
             ]),
             content=ft.Container(
                 content=ft.Column([
@@ -564,7 +651,7 @@ class HistoryDialogComponent:
                             ),
                             
                             # Divider
-                            ft.Container(width=20),
+                            ft.Container(width=20), # No specific color, just spacing
                             
                             # Right side - Removed content
                             ft.Container(
@@ -599,15 +686,17 @@ class HistoryDialogComponent:
                     # Raw diff section with toggle
                     ft.Container(
                         content=ft.Column([
-                            ft.Container(
+                            ft.Container( # Header for Raw Diff
                                 content=ft.Row([
                                     ft.Text(
                                         "Raw Diff Output",
                                         weight="bold",
                                         size=14,
+                                        color=self.colors["text"]["primary"] # Themed color
                                     ),
                                     ft.IconButton(
                                         icon=ft.icons.ARROW_DROP_DOWN,
+                                        icon_color=self.colors["text"]["secondary"], # Themed icon color
                                         on_click=lambda e: self._toggle_raw_diff(e),
                                     )
                                 ], alignment="spaceBetween"),
@@ -615,11 +704,11 @@ class HistoryDialogComponent:
                                 bgcolor=self.colors["bg"]["secondary"],
                                 border_radius=ft.border_radius.only(
                                     top_left=5, top_right=5, 
-                                    bottom_left=5 if not hasattr(self, "_show_raw_diff") else 0,
-                                    bottom_right=5 if not hasattr(self, "_show_raw_diff") else 0
+                                    bottom_left=5 if not getattr(self, "_show_raw_diff", False) else 0, # Corrected attribute check
+                                    bottom_right=5 if not getattr(self, "_show_raw_diff", False) else 0 # Corrected attribute check
                                 ),
                             ),
-                            ft.Container(
+                            ft.Container( # Content of Raw Diff (TextField)
                                 content=ft.TextField(
                                     value=diff_text,
                                     multiline=True,
@@ -629,25 +718,28 @@ class HistoryDialogComponent:
                                     text_style=ft.TextStyle(
                                         font_family="Consolas",
                                         size=12,
+                                        color=self.colors["text"]["secondary"] # Themed text color
                                     ),
-                                    border=ft.border.all(color=self.colors["border"]["default"]),
-                                    bgcolor=self.colors["bg"]["input"],
-                                    selection_color=self.colors["bg"]["accent"] + "40",
+                                    border_color=self.colors["border"]["default"], # Themed border
+                                    focused_border_color=self.colors["border"]["accent"], # Themed focus border
+                                    bgcolor=self.colors["bg"]["input"], # Themed background
+                                    selection_color=self.colors["bg"]["accent"] + "40", # Opacity for selection
                                 ),
-                                visible=False if not hasattr(self, "_show_raw_diff") else self._show_raw_diff,
+                                visible=getattr(self, "_show_raw_diff", False), # Corrected attribute check
                                 border_radius=ft.border_radius.only(bottom_left=5, bottom_right=5),
                             )
                         ]),
                         margin=ft.margin.only(top=10),
-                        border=ft.border.all(color=self.colors["border"]["default"]),
+                        # border=ft.border.all(color=self.colors["border"]["default"]), # Outer border for section can be removed if header has bg
                     ),
                 ]),
                 width=900,
                 height=600,
                 padding=20,
             ),
-            actions=[],  # Initialize with empty actions
+            actions=[],
             actions_alignment=ft.MainAxisAlignment.END,
+            # bgcolor=self.colors["bg"]["primary"], # Optional: explicit dialog bg
         )
 
         # Define a custom close handler that captures the dialog as a parameter

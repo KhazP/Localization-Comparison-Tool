@@ -89,17 +89,50 @@ class App:
         # Replace the existing THEMES with the imported one
         self.THEMES = THEMES
 
-        # Load configuration with defaults already merged
-        self.config = ConfigManager.load()
-        self.current_theme = self.config.get("theme", "system")
-        self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
-        self._cached_colors = {self.current_theme: self.COLORS}
+        # Load configuration
+        self.config_manager = ConfigManager() # Use instance for clarity
+        self.config = self.config_manager.load_config() # load_config merges defaults
+
+        # Determine initial theme based on saved configuration or system preference.
+        # - If "system" is configured, it tries to use `darkdetect` to match the OS theme.
+        # - `modern_dark` is the fallback default dark theme if `darkdetect` isn't available or system is dark.
+        # - `light` is used if `darkdetect` indicates a light system theme.
+        # - If a specific theme name is in config and valid, it's used.
+        # - Otherwise, it defaults to `modern_dark`.
+        requested_theme = self.config.get("theme", "system")
+        self.current_theme = requested_theme # Store the user's direct preference (e.g., "system", "modern_dark")
+
+        default_dark_theme_name = "modern_dark"
+        light_theme_name = "light"
+
+        if requested_theme == "system":
+            if HAS_DARKDETECT:
+                system_is_dark = darkdetect.isDark()
+                effective_theme_name = default_dark_theme_name if system_is_dark else light_theme_name
+            else:
+                # Fallback if darkdetect is not available
+                effective_theme_name = default_dark_theme_name
+        elif requested_theme in self.THEMES:
+            effective_theme_name = requested_theme
+        else:
+            # Fallback for invalid theme string in config or if requested_theme is None
+            effective_theme_name = default_dark_theme_name
+
+        self.COLORS = self.THEMES[effective_theme_name]
+        self._cached_colors = {effective_theme_name: self.COLORS} # Cache the resolved theme colors
+
+        # Update Flet page's theme_mode based on the effective theme
+        if effective_theme_name in ["modern_dark", "dark", "amoled"]: # Added modern_dark
+            page.theme_mode = ft.ThemeMode.DARK
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
 
         # Update the snack bar colors now that COLORS is initialized
         self.page.snack_bar.bgcolor = self.COLORS["bg"]["secondary"]
 
         # Create settings dialog using SettingsDialogComponent
-        self.settings_dialog_component = SettingsDialogComponent(page, self, self.config, self.COLORS)
+        # Pass the config_manager instance for settings to save/load through it
+        self.settings_dialog_component = SettingsDialogComponent(page, self, self.config_manager, self.COLORS)
         self.settings_dialog = self.settings_dialog_component.dialog
         
         # Settings button that will use the SettingsDialogComponent
@@ -135,22 +168,23 @@ class App:
         })
 
         # Initialize configuration from defaults then merge saved settings
-        saved_config = ConfigManager.load()
-        if saved_config:
-            self.config.update(saved_config)
+        # This section is now handled by the ConfigManager instance and the logic at the start of __init__
+        # saved_config = ConfigManager.load()
+        # if saved_config:
+        #     self.config.update(saved_config)
         
-        # Set initial theme from config
-        self.current_theme = self.config.get("theme", "system")
-        self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
-        self._cached_colors[self.current_theme] = self.COLORS
+        # Set initial theme from config - This is now handled above
+        # self.current_theme = self.config.get("theme", "system")
+        # self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
+        # self._cached_colors[self.current_theme] = self.COLORS
 
-        # Update page theme mode based on saved theme
-        if self.current_theme == "system":
-            page.theme_mode = ft.ThemeMode.SYSTEM
-        elif self.current_theme in ["dark", "amoled"]:
-            page.theme_mode = ft.ThemeMode.DARK
-        else:
-            page.theme_mode = ft.ThemeMode.LIGHT
+        # Update page theme mode based on saved theme - This is now handled above
+        # if self.current_theme == "system":
+        #    page.theme_mode = ft.ThemeMode.SYSTEM
+        # elif self.current_theme in ["dark", "amoled"]: # modern_dark will also be DARK
+        #    page.theme_mode = ft.ThemeMode.DARK
+        # else:
+        #    page.theme_mode = ft.ThemeMode.LIGHT
 
         # Add keyboard navigation settings to config
         self.config.update({
@@ -480,7 +514,7 @@ class App:
         self.content = Container(
             expand=True,
             height=page.height,
-            padding=32,
+            padding=ft.padding.symmetric(horizontal=32, vertical=24), # Updated padding
             content=Column(
                 expand=True,
                 scroll=ScrollMode.AUTO,
@@ -701,7 +735,7 @@ class App:
         Translate missing keys using machine translation.
         """
         if not self.config["mt_enabled"] or not self.config["mt_api_key"]:
-            self.show_snackbar("Please enable machine translation and set API key in settings")
+            self.show_snackbar("Please enable machine translation and set API key in settings", message_type="warning")
             return
 
         def update_progress(progress):
@@ -737,7 +771,7 @@ class App:
                 error_msg = "\n".join(errors[:5])
                 if len(errors) > 5:
                     error_msg += f"\n...and {len(errors) - 5} more errors"
-                self.show_snackbar(f"Some translations failed: {error_msg}")
+                self.show_snackbar(f"Some translations failed: {error_msg}", message_type="warning")
 
             save_dialog = FilePicker(
                 on_result=lambda result: self.save_translated_file(result, updated_dict)
@@ -746,7 +780,7 @@ class App:
             save_dialog.save_file(file_name=f"new_target{ext_target}")
 
         except (IOError, OSError) as err:
-            self.show_snackbar(f"Translation error: {str(err)}")
+            self.show_snackbar(f"Translation error: {str(err)}", message_type="error")
             self.status_label.value = "Translation failed"
         finally:
             self.loading_ring.visible = False
@@ -820,15 +854,15 @@ class App:
                 
         except FileNotFoundError as e:
             logging.error(f"File not found: {str(e)}")
-            self.show_snackbar("Error: File not found")
+            self.show_snackbar("Error: File not found", message_type="error")
             self.status_label.value = "Comparison failed: File not found"
         except UnicodeError as e:
             logging.error(f"Encoding error: {str(e)}")
-            self.show_snackbar("Error: Unable to read file encoding")
+            self.show_snackbar("Error: Unable to read file encoding", message_type="error")
             self.status_label.value = "Comparison failed: Encoding error"
         except Exception as e:
             logging.error(f"Error during comparison: {str(e)}")
-            self.show_snackbar(f"Error: {str(e)}")
+            self.show_snackbar(f"Error: {str(e)}", message_type="error")
             self.status_label.value = "Comparison failed"
         finally:
             # Hide loading indicator when done
@@ -871,7 +905,7 @@ class App:
             # Process successful result
             comparison_data = result['result']
             if 'error' in comparison_data:
-                self.show_snackbar(comparison_data['error'])
+                self.show_snackbar(comparison_data['error'], message_type="error")
                 return
                 
             file_results = comparison_data['file_results']
@@ -951,7 +985,7 @@ class App:
         
         except Exception as e:
             logging.error(f"Directory comparison error: {str(e)}")
-            self.show_snackbar(f"Error comparing directories: {str(e)}")
+            self.show_snackbar(f"Error comparing directories: {str(e)}", message_type="error")
             self.status_label.value = "Comparison failed"
             self.update_statistics(0, 0, 0)
         finally:
@@ -1014,7 +1048,7 @@ class App:
 
     def show_validation_error(self, error_key: str):
         message = self.user_friendly_errors.get(error_key, "An unknown error occurred.")
-        self.show_snackbar(message)
+        self.show_snackbar(message, message_type="error")
 
     def handle_source_selected(self, file_path: str):
         self.source_file_path = file_path
@@ -1037,8 +1071,28 @@ class App:
         self.compare_button.content.disabled = not (self.source_file_path and self.target_file_path)
         self.page.update()
 
-    def show_snackbar(self, message):
-        self.page.snack_bar.content = Text(message)
+    def show_snackbar(self, message: str, message_type: str = "info"):
+        """
+        Displays a snackbar notification.
+        The `message_type` parameter ("info", "success", "warning", "error")
+        determines the snackbar's background and text color for better visual feedback.
+        """
+        text_color = self.COLORS["text"]["primary"] # Default for info
+        bgcolor = self.COLORS["bg"]["secondary"]    # Default for info
+
+        if message_type == "error":
+            bgcolor = self.COLORS["changes"]["removed"]
+            text_color = ft.colors.BLACK
+        elif message_type == "success":
+            bgcolor = self.COLORS["changes"]["added"]
+            text_color = ft.colors.BLACK
+        elif message_type == "warning":
+            bgcolor = self.COLORS["changes"]["modified"]
+            text_color = ft.colors.BLACK
+        # For "info", defaults are already set
+
+        self.page.snack_bar.content = Text(message, color=text_color)
+        self.page.snack_bar.bgcolor = bgcolor
         self.page.snack_bar.open = True
         self.page.update()
 
@@ -1146,7 +1200,7 @@ class App:
             import traceback
             error_details = traceback.format_exc()
             print("Error details: %s", error_details)
-            self.show_snackbar("Error: %s" % err)
+            self.show_snackbar(f"Error: {str(err)}", message_type="error")
             self.status_label.value = "Comparison failed"
             self.update_statistics(0, 0, 0)
         finally:
@@ -1258,45 +1312,53 @@ class App:
         self.page.update()
 
     def update_theme_colors(self):
-        """Update the colors in the UI using the current theme settings."""
-        # Get current theme and handle system theme - UPDATED
-        theme_key = self.config.get("theme", "system")
+        """
+        Applies the current theme's colors to all core UI elements and relevant components.
+        This method resolves the "system" theme preference using `darkdetect` (if available)
+        and then updates the `self.COLORS` dictionary. It then proceeds to update the
+        visual properties of various UI elements and calls `update_colors` on child components.
+        """
+        # The self.current_theme should reflect the user's preference (e.g., "system", "light", "modern_dark")
+        # The effective theme (resolved from "system") is what's used to fetch colors.
         
-        if theme_key == "system":
+        requested_theme_key = self.config.get("theme", "system") # User's saved preference
+        default_dark_theme_name = "modern_dark" # Default dark theme
+        light_theme_name = "light"
+
+        if requested_theme_key == "system":
             if HAS_DARKDETECT:
-                system_theme = "dark" if darkdetect.isDark() else "light"
+                system_is_dark = darkdetect.isDark()
+                effective_theme_name = default_dark_theme_name if system_is_dark else light_theme_name
             else:
-                system_theme = "dark"
-            self.COLORS = self.THEMES[system_theme]
+                effective_theme_name = default_dark_theme_name # Fallback if darkdetect missing
+        elif requested_theme_key in self.THEMES:
+            effective_theme_name = requested_theme_key
         else:
-            self.COLORS = self.THEMES[theme_key]
+            effective_theme_name = default_dark_theme_name # Fallback for invalid theme string
+
+        # Use the effective_theme_name to get colors
+        self.COLORS = self.THEMES.get(effective_theme_name, self.THEMES[default_dark_theme_name])
             
-        # Cache the colors
-        self._cached_colors[theme_key] = self.COLORS
+        # Cache the colors for the *effective* theme name
+        self._cached_colors[effective_theme_name] = self.COLORS
 
-        # Update page theme colors
+        # Update page theme mode based on the *effective* theme
+        if effective_theme_name in ["modern_dark", "dark", "amoled"]:
+            self.page.theme_mode = ft.ThemeMode.DARK
+        else:
+            self.page.theme_mode = ft.ThemeMode.LIGHT
+
+        # Update page theme colors - Flet themes are more about overall look than specific color overrides here.
+        # self.page.theme = ft.Theme(color_scheme_seed=self.COLORS["bg"]["accent"]) # Example: use accent for seed
+        # self.page.dark_theme = ft.Theme(color_scheme_seed=self.COLORS["bg"]["accent"])
+
+        # Update core UI elements with resolved self.COLORS
         self.page.bgcolor = self.COLORS["bg"]["primary"]
-        self.page.theme = ft.Theme(color_scheme_seed=Colors.GREEN)
-        self.page.dark_theme = ft.Theme(color_scheme_seed=Colors.BLUE)
+        # self.content.bgcolor = self.COLORS["bg"]["secondary"] # Content bgcolor might not be needed if main_card_container handles it
 
-        # Merge custom theme if available
-        custom_theme = self.config.get("custom_theme", {})
-        if isinstance(custom_theme, dict):
-            if "main" in custom_theme:
-                self.COLORS["bg"]["primary"] = custom_theme["main"]
-            if "accent" in custom_theme:
-                self.COLORS["bg"]["accent"] = custom_theme["accent"]
-            if "background" in custom_theme:
-                self.COLORS["bg"]["secondary"] = custom_theme["background"]
-            if "text" in custom_theme:
-                self.COLORS["text"]["primary"] = custom_theme["text"]
-
-        # Update core UI elements with cached colors
-        self.page.bgcolor = self.COLORS["bg"]["primary"]
-        self.content.bgcolor = self.COLORS["bg"]["secondary"]
-        
         # Update status label and progress indicators (core app UI, not components)
-        self.status_label.color = self.COLORS["text"]["secondary"]
+        if hasattr(self, 'status_label'): # Ensure attribute exists
+            self.status_label.color = self.COLORS["text"]["secondary"]
         self.loading_ring.color = self.COLORS["bg"]["accent"]
         
         # Update compare button (core app UI, not component)
@@ -1314,10 +1376,11 @@ class App:
             self.history_button.icon_color = self.COLORS["text"]["secondary"]
 
         # Update main card container background color (core app container)
-        self.main_card_container.bgcolor = self.COLORS["bg"]["secondary"]
+        if hasattr(self, 'main_card_container'): # Ensure attribute exists
+            self.main_card_container.bgcolor = self.COLORS["bg"]["secondary"]
 
         # Update snack bar colors
-        if hasattr(self, 'page') and hasattr(self.page, 'snack_bar'):
+        if hasattr(self, 'page') and hasattr(self.page, 'snack_bar') and self.page.snack_bar: # Check if snack_bar is not None
             self.page.snack_bar.bgcolor = self.COLORS["bg"]["secondary"]
 
         # Delegate component updates to their respective update methods
@@ -1325,19 +1388,19 @@ class App:
         # as it respects encapsulation and allows components to handle their own updates
         
         # Update file input component
-        if hasattr(self, 'file_input'):
+        if hasattr(self, 'file_input') and hasattr(self.file_input, 'update_colors'):
             self.file_input.update_colors(self.COLORS)
 
         # Update results view component
-        if hasattr(self, 'results_view'):
+        if hasattr(self, 'results_view') and hasattr(self.results_view, 'update_colors'):
             self.results_view.update_colors(self.COLORS)
         
         # Update stats panel component
-        if hasattr(self, 'stats_panel_component'):
+        if hasattr(self, 'stats_panel_component') and hasattr(self.stats_panel_component, 'update_colors'):
             self.stats_panel_component.update_colors(self.COLORS)
             
         # Update settings dialog component
-        if hasattr(self, 'settings_dialog_component'):
+        if hasattr(self, 'settings_dialog_component') and hasattr(self.settings_dialog_component, 'update_colors'):
             self.settings_dialog_component.update_colors(self.COLORS)
             
         # Update history dialog component
@@ -1348,7 +1411,7 @@ class App:
         if hasattr(self, 'tutorial') and hasattr(self.tutorial, 'update_colors'):
             self.tutorial.update_colors(self.COLORS)
 
-        logging.info("Theme updated to '%s'. Current COLORS: %s", theme_key, self.COLORS)
+        logging.info("Theme updated to '%s' (effective: '%s'). Current COLORS: %s", requested_theme_key, effective_theme_name, self.COLORS)
 
     def update_statistics(self, total_keys: int, missing_keys: int, obsolete_keys: int):
         """Update statistics panel with current comparison results"""
@@ -1495,19 +1558,19 @@ class App:
 
         except FileNotFoundError:
             logging.error("File not found: %s", self.file_path)
-            self.show_snackbar("Error: File not found")
+            self.show_snackbar("Error: File not found", message_type="error")
             self.status_label.value = "Comparison failed: File not found"
         except UnicodeError as e:
             logging.error("Encoding error: %s", e)
-            self.show_snackbar("Error: Unable to read file encoding")
+            self.show_snackbar("Error: Unable to read file encoding", message_type="error")
             self.status_label.value = "Comparison failed: Encoding error"
         except ValueError as e:
             logging.error("Validation error: %s", e)
-            self.show_snackbar("Error: %s" % e)
+            self.show_snackbar(f"Error: {str(e)}", message_type="error")
             self.status_label.value = "Comparison failed: Invalid content"
         except Exception as e:
             logging.error("Unexpected error during comparison: %s", e)
-            self.show_snackbar("Unexpected error: %s" % e)
+            self.show_snackbar(f"Unexpected error: {str(e)}", message_type="error")
             self.status_label.value = "Comparison failed"
             raise  # Re-raise for debugging
         finally:
@@ -1536,10 +1599,9 @@ class App:
 
     def _on_compare_button_hover(self, e, button):
         """Handle hover effect for compare button"""
-        hover_color = "#60A5FA" if self.page.theme_mode == "dark" else "#E0E7FF"
-        if e.data == "true":
-            button.bgcolor = hover_color
-        else:
+        if e.data == "true": # Hovering
+            button.bgcolor = self.COLORS["bg"]["hover"]
+        else: # Not hovering
             button.bgcolor = self.COLORS["bg"]["accent"]
         button.update()
 
@@ -1589,37 +1651,43 @@ class App:
 
     def handle_theme_change(self, e):
         """Handle theme mode changes"""
-        theme = e.control.value
-        self.current_theme = theme
-        
-        # Update page theme mode based on new theme
-        if theme == "system":
-            if HAS_DARKDETECT:
-                system_theme = "dark" if darkdetect.isDark() else "light"
-            else:
-                system_theme = "dark"
-            self.page.theme_mode = ft.ThemeMode.SYSTEM
-            self.COLORS = self.THEMES[system_theme]
-        elif theme in ["dark", "amoled"]:
-            self.page.theme_mode = ft.ThemeMode.DARK
-            self.COLORS = self.THEMES[theme]
-        else:
-            self.page.theme_mode = ft.ThemeMode.LIGHT
-            self.COLORS = self.THEMES[theme]
-
-        # Cache the colors for this theme
-        self._cached_colors[theme] = self.COLORS
+        requested_theme_preference = e.control.value # This is what the user selected (e.g., "system", "light")
+        self.current_theme = requested_theme_preference # Store user's direct preference
         
         # Update config and save
-        self.config["theme"] = theme
-        ConfigManager.save(self.config)
+        self.config["theme"] = requested_theme_preference
+        # ConfigManager.save(self.config) # Saving is now handled by SettingsDialogComponent through config_manager
+        self.config_manager.save_config(self.config)
+
+
+        # Determine the effective theme and update COLORS and page.theme_mode
+        # This logic is now centralized in update_theme_colors
+        self.update_theme_colors() # This will resolve "system" and apply colors
         
-        # Update UI with new theme colors
-        self.update_theme_colors()
         self.page.update()
 
 def main(page: ft.Page):
-    App(page)
+    # Set initial page properties that are theme-independent or good defaults
+    page.title = "Localization Comparison Tool"
+    page.vertical_alignment = ft.MainAxisAlignment.START
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+
+    app_instance = App(page)
+
+    # Apply initial theme after App is initialized and COLORS are set
+    page.bgcolor = app_instance.COLORS["bg"]["primary"]
+    if app_instance.current_theme == "system": # Check user preference
+        if HAS_DARKDETECT:
+            page.theme_mode = ft.ThemeMode.SYSTEM
+        else: # Fallback if darkdetect not available
+            page.theme_mode = ft.ThemeMode.DARK if "dark" in app_instance.COLORS["bg"]["primary"] else ft.ThemeMode.LIGHT
+    elif app_instance.COLORS["bg"]["primary"].lower() < "#808080": # Heuristic for dark themes
+        page.theme_mode = ft.ThemeMode.DARK
+    else:
+        page.theme_mode = ft.ThemeMode.LIGHT
+
+    page.update()
+
 
 if __name__ == "__main__":
     ft.app(target=main)

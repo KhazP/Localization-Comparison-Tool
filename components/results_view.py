@@ -24,7 +24,11 @@ class ResultsViewComponent:
         self.search_field = TextField(
             hint_text="Search results...",
             on_change=lambda e: self.filter_results(e.control.value),
-            border=border.all(color=colors["border"]["default"]),
+            text_style=TextStyle(color=colors["text"]["primary"]),
+            hint_style=TextStyle(color=colors["text"]["secondary"]),
+            border_color=colors["border"]["default"],
+            focused_border_color=colors["border"]["accent"],
+            bgcolor=colors["bg"]["input"],
             content_padding=padding.all(10),
         )
 
@@ -102,14 +106,14 @@ class ResultsViewComponent:
                         "Results",
                         size=16,
                         weight="w500",
-                        color=self.colors["text"]["secondary"],
+                        color=self.colors["text"]["primary"], # Changed to primary
                     ),
                     Row(
                         controls=[
-                            self.expand_collapse_button,
+                            self.expand_collapse_button, # icon_color already set
                             IconButton(
                                 icon=Icons.COPY,
-                                icon_color=self.colors["text"]["secondary"],
+                                icon_color=self.colors["text"]["secondary"], # Ensure this is set
                                 tooltip="Copy comparison results",
                                 on_click=self.copy_results,
                             ),
@@ -155,7 +159,7 @@ class ResultsViewComponent:
         if hasattr(self.app, 'config') and self.app.config.get("group_by_namespace", True):
             groups = self.group_keys_by_namespace(sorted_lines)
             for namespace, group_lines in groups.items():
-                header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
+                header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold", color=self.colors["text"]["primary"])]) # Added color
                 result_rows.append(header)
                 for line in group_lines:
                     key = line.split(" ", 1)[-1].split(":", 1)[0].strip() if " " in line else ""
@@ -191,20 +195,22 @@ class ResultsViewComponent:
             return Row(controls=[])
             
         if line.startswith("+"):
-            icon = Icon(Icons.ADD, color="green")
+            icon = Icon(Icons.ADD, color=self.colors["changes"]["added"])
         elif line.startswith("-"):
-            icon = Icon(Icons.REMOVE, color="red")
+            icon = Icon(Icons.REMOVE, color=self.colors["changes"]["removed"])
         elif line.startswith("~"):
-            icon = Icon(Icons.WARNING, color="yellow")
+            icon = Icon(Icons.WARNING, color=self.colors["changes"]["modified"])
         else:
-            icon = Icon(Icons.HELP, color="grey")
+            # For lines that are comments or unchanged but contextually relevant (if any)
+            icon = Icon(Icons.HELP, color=self.colors["text"]["disabled"])
         line_num_display = f"[Line {line_number}] " if line_number is not None else ""
+        # Row text color for the actual line content should be consistent
         return Row(
             controls=[
                 icon,
                 Text(f"{line_num_display}{line}", color=self.colors["text"]["secondary"])
             ],
-            spacing=8
+            spacing=8 # Keep spacing consistent
         )
 
     def group_keys_by_namespace(self, lines: list[str]) -> dict:
@@ -269,29 +275,65 @@ class ResultsViewComponent:
         """Update component colors when theme changes"""
         self.colors = colors
         
-        # Update text styles and colors
+        # Update text styles and colors for main output/summary text fields
         for text_field in [self.output_text, self.summary_text]:
-            text_field.text_style = TextStyle(
-                color=colors["text"]["secondary"],
-                size=14,
-                font_family="Consolas",
-                weight=FontWeight.W_400,
-            )
+            if text_field: # Ensure field exists
+                text_field.text_style = TextStyle(
+                    color=colors["text"]["secondary"],
+                    size=14,
+                    font_family="Consolas",
+                    weight=FontWeight.W_400,
+                )
+                text_field.bgcolor = "transparent" # Ensure bgcolor is set
         
         # Update header colors
-        self.results_header.content.controls[0].color = colors["text"]["secondary"]
-        self.expand_collapse_button.icon_color = colors["text"]["secondary"]
+        if self.results_header and self.results_header.content and isinstance(self.results_header.content, Row) and self.results_header.content.controls:
+            # "Results" Text
+            if isinstance(self.results_header.content.controls[0], Text):
+                self.results_header.content.controls[0].color = colors["text"]["primary"]
+            # Expand/Collapse button (already an instance variable)
+            if self.expand_collapse_button:
+                self.expand_collapse_button.icon_color = colors["text"]["secondary"]
+            # Copy button
+            if len(self.results_header.content.controls) > 1 and isinstance(self.results_header.content.controls[1], Row):
+                header_buttons_row = self.results_header.content.controls[1]
+                if len(header_buttons_row.controls) > 1 and isinstance(header_buttons_row.controls[1], IconButton):
+                     header_buttons_row.controls[1].icon_color = colors["text"]["secondary"] # Copy button
         
-        # Update borders and backgrounds
-        self.results_container.bgcolor = "transparent"
+        # Update search field
+        if hasattr(self, 'search_field') and self.search_field:
+            self.search_field.text_style = TextStyle(color=colors["text"]["primary"])
+            self.search_field.hint_style = TextStyle(color=colors["text"]["secondary"])
+            self.search_field.border_color = colors["border"]["default"]
+            self.search_field.focused_border_color = colors["border"]["accent"]
+            self.search_field.bgcolor = colors["bg"]["input"]
 
-        # Safely update search field and results
-        if hasattr(self, 'search_field'):
-            self.search_field.border = border.all(color=colors["border"]["default"])
+        # Update result rows and namespace headers colors
+        for row_control in self.results_content.controls: # Iterate through currently displayed rows
+            if isinstance(row_control, Row) and row_control.controls:
+                first_control = row_control.controls[0]
+                if isinstance(first_control, Text) and getattr(first_control, 'weight', None) == "bold": # Namespace Header
+                    first_control.color = colors["text"]["primary"]
+                elif isinstance(first_control, Icon): # Result Row Icon
+                    # Re-apply icon color based on its type, using new theme colors
+                    icon_name = first_control.name
+                    if icon_name == Icons.ADD:
+                        first_control.color = colors["changes"]["added"]
+                    elif icon_name == Icons.REMOVE:
+                        first_control.color = colors["changes"]["removed"]
+                    elif icon_name == Icons.WARNING:
+                        first_control.color = colors["changes"]["modified"]
+                    elif icon_name == Icons.HELP:
+                        first_control.color = colors["text"]["disabled"]
+
+                    # Update text part of the result row
+                    if len(row_control.controls) > 1 and isinstance(row_control.controls[1], Text):
+                        row_control.controls[1].color = colors["text"]["secondary"]
         
-        # Update result rows text colors
-        for row in self.original_result_rows:
-            if len(row.controls) > 1 and isinstance(row.controls[1], Text):
-                row.controls[1].color = colors["text"]["secondary"]
-        
-        self.page.update()
+        # Update "No comparison results..." text if it's the only control
+        if len(self.results_content.controls) == 1 and isinstance(self.results_content.controls[0], Text) and \
+           self.results_content.controls[0].value == "No comparison results to display":
+            self.results_content.controls[0].color = colors["text"]["secondary"]
+
+        if hasattr(self.page, 'update'): # Check if page has update method
+            self.page.update()

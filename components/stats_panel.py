@@ -46,7 +46,7 @@ class StatsPanelComponent:
             value="0%",
             size=24,
             weight=FontWeight.BOLD,
-            color="lightblue",
+            color=self.colors["text"]["accent"], # Use theme color
         )
         
         # Create the stats panel
@@ -128,4 +128,5 @@ class StatsPanelComponent:
         self.stats_text_total.color = colors["text"]["primary"]
         self.stats_text_missing.color = colors["changes"]["removed"]
         self.stats_text_obsolete.color = colors["changes"]["added"]
+        self.stats_text_percentage.color = colors["text"]["accent"] # Added update for percentage text
         # No need to call page.update() as it will be handled by the main app

@@ -1,9 +1,9 @@
+import logging
 import re
-from typing import Dict, List, Tuple # Added List
-from .base_parser import BaseParser
-from ..core.errors import ParsingError # Corrected import path
+from typing import Dict, Tuple
+from .base_parser import TranslationParser
 
-class PropertiesParser(BaseParser): # Inherit from BaseParser
+class PropertiesParser(TranslationParser):
     """Parser for Java Properties files."""
     
     def __init__(self, trim_whitespace: bool = True, handle_escapes: bool = True):

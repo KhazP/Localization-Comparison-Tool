@@ -1,30 +1,44 @@
-class BaseLocalizerError(Exception):
-    """Base class for exceptions in this application."""
+class ParsingError(Exception):
+    """Base class for parsing related errors."""
     pass
 
-class ParsingError(BaseLocalizerError):
-    """Raised when a file cannot be parsed."""
-    def __init__(self, message, filepath=None, original_exception=None):
-        super().__init__(message)
-        self.filepath = filepath
-        self.original_exception = original_exception
-    
-    def __str__(self):
-        msg = super().__str__()
-        if self.filepath:
-            msg = f"{msg} (File: {self.filepath})"
-        if self.original_exception:
-            msg = f"{msg}\nOriginal error: {self.original_exception}"
-        return msg
+class FileParsingError(ParsingError):
+    """Base exception for file parsing issues."""
+    pass
 
-class UnsupportedFormatError(BaseLocalizerError):
-    """Raised when a file format is not supported by a parser."""
-    def __init__(self, message, filepath=None):
-        super().__init__(message)
-        self.filepath = filepath
+# Format-specific parsing errors
+class CSVParsingError(FileParsingError):
+    """Raised when CSV parsing fails."""
+    pass
 
-    def __str__(self):
-        msg = super().__str__()
-        if self.filepath:
-            msg = f"{msg} (File: {self.filepath})"
-        return msg
+class XMLParsingError(FileParsingError):
+    """Raised when XML parsing fails."""
+    pass
+
+class JSONParsingError(FileParsingError):
+    """Raised when JSON parsing fails."""
+    pass
+
+class YAMLParsingError(FileParsingError):
+    """Raised when YAML parsing fails."""
+    pass
+
+class PropertiesParsingError(FileParsingError):
+    """Raised when .properties file parsing fails."""
+    pass
+
+class ResxParsingError(FileParsingError):
+    """Raised when .resx file parsing fails."""
+    pass
+
+class LangParsingError(FileParsingError):
+    """Raised when .lang file parsing fails."""
+    pass
+
+class XliffParsingError(FileParsingError):
+    """Raised when XLIFF file parsing fails."""
+    pass
+
+class UnknownFormatError(FileParsingError):
+    """Raised when file format is not recognized."""
+    pass

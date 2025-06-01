@@ -117,10 +117,17 @@ class AndroidXMLParser(TranslationParser):
                     
                     value = self._parse_android_text(element)
 
-                    if key in translations:
-                        msg = f"Duplicate string key '{key}' found ({current_item_ref}). Value will be overwritten."
+                    original_key = key
+                    counter = 1
+                    while key in translations:
+                        key = f"{original_key}_{counter}"
+                        counter += 1
+
+                    if key != original_key:
+                        msg = f"Duplicate string key '{original_key}' found ({current_item_ref}). Renamed to '{key}'."
                         logger.warning(msg)
                         parsing_errors.append(msg)
+
                     translations[key] = value
                     line_numbers[key] = processed_elements_count # Approximate order/pseudo-line number
                         
@@ -143,10 +150,18 @@ class AndroidXMLParser(TranslationParser):
                             logger.warning(msg)
                             parsing_errors.append(msg)
                     if current_plurals:
-                        if key in plurals:
-                           msg = f"Duplicate plurals key '{key}' found ({current_item_ref}). Will be overwritten."
-                           logger.warning(msg)
-                           parsing_errors.append(msg)
+                        original_key = key
+                        counter = 1
+                        # Check for duplicates in plurals dict and also in line_numbers to avoid collision with renamed string keys
+                        while key in plurals or f"plurals_{key}" in line_numbers:
+                            key = f"{original_key}_{counter}"
+                            counter += 1
+
+                        if key != original_key:
+                            msg = f"Duplicate plurals key '{original_key}' found ({current_item_ref}). Renamed to '{key}'."
+                            logger.warning(msg)
+                            parsing_errors.append(msg)
+
                         plurals[key] = current_plurals
                         # Also add to line_numbers for plurals parent
                         line_numbers[f"plurals_{key}"] = processed_elements_count
@@ -165,10 +180,18 @@ class AndroidXMLParser(TranslationParser):
                         current_array_items.append(item_value)
 
                     if current_array_items:
-                        if key in string_arrays:
-                           msg = f"Duplicate string-array key '{key}' found ({current_item_ref}). Will be overwritten."
-                           logger.warning(msg)
-                           parsing_errors.append(msg)
+                        original_key = key
+                        counter = 1
+                        # Check for duplicates in string_arrays dict and also in line_numbers to avoid collision
+                        while key in string_arrays or f"string-array_{key}" in line_numbers:
+                            key = f"{original_key}_{counter}"
+                            counter += 1
+
+                        if key != original_key:
+                            msg = f"Duplicate string-array key '{original_key}' found ({current_item_ref}). Renamed to '{key}'."
+                            logger.warning(msg)
+                            parsing_errors.append(msg)
+
                         string_arrays[key] = current_array_items
                         # Also add to line_numbers for string-array parent
                         line_numbers[f"string-array_{key}"] = processed_elements_count

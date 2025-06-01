@@ -6,14 +6,6 @@ class TranslationParser:
     This class defines the common interface that all parser implementations
     must follow. Subclasses should implement the parse method to handle
     specific file formats.
-from core.parsing_result import ParsingResult # Add this import
-
-class TranslationParser:
-    """Base class for all translation file parsers.
-    
-    This class defines the common interface that all parser implementations
-    must follow. Subclasses should implement the parse method to handle
-    specific file formats.
     """
 
     def parse(self, content: str) -> ParsingResult:

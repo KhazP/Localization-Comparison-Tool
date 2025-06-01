@@ -78,6 +78,7 @@ class AndroidXMLParser(TranslationParser):
         plurals: Dict[str, Dict[str, str]] = {}
         string_arrays: Dict[str, List[str]] = {}
         parsing_errors: List[str] = []
+        parsing_warnings: List[str] = [] # New list for warnings
         metadata: Dict[str, Any] = {}
 
         try:
@@ -89,7 +90,7 @@ class AndroidXMLParser(TranslationParser):
 
             if not sanitized_content.strip():
                 parsing_errors.append("XML content is empty or became empty after sanitization.")
-                return ParsingResult(translations={}, errors=parsing_errors)
+                return ParsingResult(translations={}, errors=parsing_errors, warnings=parsing_warnings)
 
             root = ET.fromstring(sanitized_content)
             
@@ -117,10 +118,17 @@ class AndroidXMLParser(TranslationParser):
                     
                     value = self._parse_android_text(element)
 
-                    if key in translations:
-                        msg = f"Duplicate string key '{key}' found ({current_item_ref}). Value will be overwritten."
+                    original_key = key
+                    counter = 1
+                    while key in translations:
+                        key = f"{original_key}_{counter}"
+                        counter += 1
+
+                    if key != original_key:
+                        msg = f"Duplicate string key '{original_key}' found ({current_item_ref}). Renamed to '{key}'."
                         logger.warning(msg)
-                        parsing_errors.append(msg)
+                        parsing_warnings.append(msg) # Add to warnings
+
                     translations[key] = value
                     line_numbers[key] = processed_elements_count # Approximate order/pseudo-line number
                         
@@ -143,10 +151,18 @@ class AndroidXMLParser(TranslationParser):
                             logger.warning(msg)
                             parsing_errors.append(msg)
                     if current_plurals:
-                        if key in plurals:
-                           msg = f"Duplicate plurals key '{key}' found ({current_item_ref}). Will be overwritten."
-                           logger.warning(msg)
-                           parsing_errors.append(msg)
+                        original_key = key
+                        counter = 1
+                        # Check for duplicates in plurals dict and also in line_numbers to avoid collision with renamed string keys
+                        while key in plurals or f"plurals_{key}" in line_numbers:
+                            key = f"{original_key}_{counter}"
+                            counter += 1
+
+                        if key != original_key:
+                            msg = f"Duplicate plurals key '{original_key}' found ({current_item_ref}). Renamed to '{key}'."
+                            logger.warning(msg)
+                            parsing_warnings.append(msg) # Add to warnings
+
                         plurals[key] = current_plurals
                         # Also add to line_numbers for plurals parent
                         line_numbers[f"plurals_{key}"] = processed_elements_count
@@ -165,10 +181,18 @@ class AndroidXMLParser(TranslationParser):
                         current_array_items.append(item_value)
 
                     if current_array_items:
-                        if key in string_arrays:
-                           msg = f"Duplicate string-array key '{key}' found ({current_item_ref}). Will be overwritten."
-                           logger.warning(msg)
-                           parsing_errors.append(msg)
+                        original_key = key
+                        counter = 1
+                        # Check for duplicates in string_arrays dict and also in line_numbers to avoid collision
+                        while key in string_arrays or f"string-array_{key}" in line_numbers:
+                            key = f"{original_key}_{counter}"
+                            counter += 1
+
+                        if key != original_key:
+                            msg = f"Duplicate string-array key '{original_key}' found ({current_item_ref}). Renamed to '{key}'."
+                            logger.warning(msg)
+                            parsing_warnings.append(msg) # Add to warnings
+
                         string_arrays[key] = current_array_items
                         # Also add to line_numbers for string-array parent
                         line_numbers[f"string-array_{key}"] = processed_elements_count
@@ -185,17 +209,18 @@ class AndroidXMLParser(TranslationParser):
                 translations=translations,
                 line_numbers=line_numbers if line_numbers else None,
                 metadata=metadata if metadata else None,
-                errors=parsing_errors if parsing_errors else None
+                errors=parsing_errors if parsing_errors else None,
+                warnings=parsing_warnings if parsing_warnings else None
             )
             
         except ET.ParseError as e:
             error_msg = f"Invalid Android XML syntax: {str(e)}"
             logger.error(error_msg) # Consider adding e.lineno and e.offset if available and useful
             parsing_errors.append(error_msg)
-            return ParsingResult(translations={}, errors=parsing_errors)
+            return ParsingResult(translations={}, errors=parsing_errors, warnings=parsing_warnings)
             
         except Exception as e:
             error_msg = f"Failed to parse Android XML content: {str(e)}"
             logger.error(error_msg, exc_info=True)
             parsing_errors.append(error_msg)
-            return ParsingResult(translations={}, errors=parsing_errors)
+            return ParsingResult(translations={}, errors=parsing_errors, warnings=parsing_warnings)

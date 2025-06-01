@@ -1138,16 +1138,41 @@ class App:
             source_parse_result = logic.parse_content_by_ext(source_content, ext_source, source_parser_config)
             target_parse_result = logic.parse_content_by_ext(target_content, ext_target, target_parser_config)
 
-            if source_parse_result.errors:
+            if source_parse_result.errors: # Check for critical errors first
                 self.show_snackbar(f"Error parsing source file: {source_parse_result.errors[0]}")
                 self.status_label.value = "Comparison failed: Source parsing error"
                 self.loading_ring.visible = False
                 self.page.update()
                 return
+            elif source_parse_result.warnings: # Check for warnings if no critical errors
+                logger.warning(f"Source file parsing warnings: {source_parse_result.warnings}")
+                self.status_label.value = "Source file parsed with warnings."
+                # Allow processing to continue
 
-            if target_parse_result.errors:
+            if target_parse_result.errors: # Check for critical errors first
                 self.show_snackbar(f"Error parsing target file: {target_parse_result.errors[0]}")
                 self.status_label.value = "Comparison failed: Target parsing error"
+                self.loading_ring.visible = False
+                self.page.update()
+                return
+            elif target_parse_result.warnings: # Check for warnings if no critical errors
+                logger.warning(f"Target file parsing warnings: {target_parse_result.warnings}")
+                # Append to status if source also had warnings, or set new
+                if "warnings" in self.status_label.value:
+                    self.status_label.value += " Target file parsed with warnings."
+                else:
+                    self.status_label.value = "Target file parsed with warnings."
+                # Allow processing to continue
+
+            # Ensure that if there were only warnings, the status label might be overwritten
+            # by "Comparison complete..." later, which is fine.
+            # If there were errors, we would have returned.
+
+            # Check again if either had critical errors after warning processing (though current logic returns early)
+            # This is more of a safeguard if the above return statements were ever removed.
+            if source_parse_result.errors or target_parse_result.errors:
+                # This block should ideally not be reached if errors cause returns above.
+                # If it is, ensure loading ring is hidden and UI is updated.
                 self.loading_ring.visible = False
                 self.page.update()
                 return

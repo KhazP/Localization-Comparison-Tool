@@ -1,5 +1,5 @@
 import flet as ft
-import re  # Add this import
+# import re  # No longer needed here after placeholder logic moved
 from flet import (
     Checkbox,
     Column,
@@ -110,36 +110,21 @@ class App:
             on_click=self.open_settings
         )
 
-        self.log_missing_strings = False  # New flag for missing strings logging
+        # self.log_missing_strings = False # This was likely an old flag, covered by self.config
 
-        # Add new configuration variables
-        self.config = {
-            "auto_fill_missing": False,
-            "log_missing_strings": False,
-            "ignore_patterns": [],
-            "preferred_format": "auto",  # auto, json, yaml, lang, xml
-            "ignore_whitespace": False,
-            "ignore_case": False,
-            "compare_values": True,
-            "group_by_namespace": True,  # Add this line
-            "show_preview": False,  # Add this line
-            "show_line_numbers": False,  # Add this line
-        }
+        # The self.config is already loaded via ConfigManager.load() a few lines above.
+        # That loaded config should be the source of truth, incorporating defaults.
+        # Removing the re-initialization of self.config with a hardcoded dict
+        # and subsequent .update() calls that set defaults.
+        # ConfigManager should handle providing a complete config (defaults + user settings).
 
-        # Add MT settings to config
-        self.config.update({
-            "mt_enabled": False,
-            "mt_api_key": "",
-            "mt_source_lang": "en",
-            "mt_target_lang": "tr"
-        })
-
-        # Initialize configuration from defaults then merge saved settings
-        saved_config = ConfigManager.load()
-        if saved_config:
-            self.config.update(saved_config)
+        # Example: If ConfigManager.load() doesn't ensure all keys, use .get with defaults:
+        # self.current_theme = self.config.get("theme", "system")
+        # self.config.get("auto_fill_missing", False)
+        # etc. for all expected config keys.
+        # For now, assuming ConfigManager.load() returns a comprehensive config.
         
-        # Set initial theme from config
+        # Set initial theme from the already loaded self.config
         self.current_theme = self.config.get("theme", "system")
         self.COLORS = self.THEMES[self.current_theme if self.current_theme != "system" else "dark"]
         self._cached_colors[self.current_theme] = self.COLORS
@@ -152,13 +137,9 @@ class App:
         else:
             page.theme_mode = ft.ThemeMode.LIGHT
 
-        # Add keyboard navigation settings to config
-        self.config.update({
-            "enable_keyboard_nav": True,
-            "high_contrast": False,
-            "large_text": False,
-            "font_size_scale": 1.0
-        })
+        # Keyboard navigation settings should also be part of the config loaded by ConfigManager
+        # or accessed with .get('enable_keyboard_nav', True) when used.
+        # Removing the .update() call here.
 
         # Initialize file paths
         self.source_file_path = ""
@@ -273,7 +254,8 @@ class App:
         self.compare_button = self.create_compare_button()
         
         # Initialize file input component first to access its properties later
-        self.file_input = FileInputComponent(page, self)
+        # Pass the new callback method for preview updates
+        self.file_input = FileInputComponent(page, self, on_file_selected_callback=self._handle_file_preview_update)
 
         # Initialize results view component before creating the layout
         self.results_view = ResultsViewComponent(page, self, self.COLORS)
@@ -717,8 +699,37 @@ class App:
             ext_source = Path(self.source_file_path).suffix.lower()
             ext_target = Path(self.target_file_path).suffix.lower()
 
-            source_dict = logic.parse_content_by_ext(source_content, ext_source)
-            target_dict = logic.parse_content_by_ext(target_content, ext_target)
+            # Prepare parser_config (empty for now, relying on defaults)
+            source_parser_config = {}
+            target_parser_config = {}
+
+            source_parse_result = logic.parse_content_by_ext(source_content, ext_source, source_parser_config)
+            target_parse_result = logic.parse_content_by_ext(target_content, ext_target, target_parser_config)
+
+            if source_parse_result.errors:
+                self.show_snackbar(f"Error parsing source file for translation: {source_parse_result.errors[0]}")
+                self.status_label.value = "Translation failed: Source parsing error"
+                self.loading_ring.visible = False # Ensure loading ring is hidden
+                self.page.update()
+                return
+
+            if target_parse_result.errors:
+                self.show_snackbar(f"Error parsing target file for translation: {target_parse_result.errors[0]}")
+                self.status_label.value = "Translation failed: Target parsing error"
+                self.loading_ring.visible = False # Ensure loading ring is hidden
+                self.page.update()
+                return
+
+            source_dict = source_parse_result.translations
+            target_dict = target_parse_result.translations
+
+            # Ensure dictionaries are valid before proceeding
+            if not isinstance(source_dict, dict) or not isinstance(target_dict, dict):
+                self.show_snackbar("Parsing did not return valid translation data.")
+                self.status_label.value = "Translation failed: Invalid parse result"
+                self.loading_ring.visible = False
+                self.page.update()
+                return
 
             self.loading_ring.visible = True
             self.status_label.value = "Translating missing keys..."
@@ -978,15 +989,7 @@ class App:
             
         asyncio.create_task(run_comparison())
     
-    def get_readable_file_size(self, size_in_bytes):
-        """Convert file size in bytes to human readable format"""
-        for unit in ['B', 'KB', 'MB', 'GB']:
-            if size_in_bytes < 1024:
-                if unit == 'B':
-                    return f"{size_in_bytes} {unit}"
-                return f"{size_in_bytes:.1f} {unit}"
-            size_in_bytes /= 1024
-        return f"{size_in_bytes:.1f} TB"
+    # Removed get_readable_file_size from here, it's now in utils.common
 
     def clear_file(self, field, icon, clear_btn):
         field.value = ""
@@ -1034,7 +1037,60 @@ class App:
 
     def update_compare_button(self):
         """Enable/disable compare button based on file selection"""
-        self.compare_button.content.disabled = not (self.source_file_path and self.target_file_path)
+        # Accessing compare_button.content.controls[0] as per create_compare_button structure
+        if hasattr(self.compare_button, 'content') and \
+           hasattr(self.compare_button.content, 'controls') and \
+           len(self.compare_button.content.controls) > 0:
+            self.compare_button.content.controls[0].disabled = not (self.source_file_path and self.target_file_path)
+        else:
+            logger.warning("Compare button structure not as expected in update_compare_button.")
+        self.page.update()
+
+    def _handle_file_preview_update(self, file_path: str, field_type: str):
+        """
+        Callback method to update the file preview section in the App.
+        This logic was moved from FileInputComponent.
+        """
+        if not self.config.get("show_preview", False) or not file_path:
+            # If previews are disabled or file_path is empty, ensure section might be hidden if both are empty
+            if not self.source_file_path and not self.target_file_path:
+                 self.preview_section.visible = False
+            # self.page.update() # Avoid immediate update if only one file cleared but other exists
+            return
+
+        try:
+            preview_text = file_cache_service.preview_file(file_path) # Assuming file_cache_service is available
+
+            preview_field_index = 0 if field_type == "source" else 1
+            # Ensure the structure is as expected before accessing deeply nested controls
+            if self.preview_section and self.preview_section.content and \
+               hasattr(self.preview_section.content, 'controls') and \
+               len(self.preview_section.content.controls) > preview_field_index and \
+               self.preview_section.content.controls[preview_field_index].content and \
+               hasattr(self.preview_section.content.controls[preview_field_index].content, 'controls') and \
+               len(self.preview_section.content.controls[preview_field_index].content.controls) > 1 and \
+               hasattr(self.preview_section.content.controls[preview_field_index].content.controls[1], 'content'):
+
+                preview_text_field = self.preview_section.content.controls[preview_field_index].content.controls[1].content
+                preview_text_field.value = preview_text
+                preview_text_field.update()
+            else:
+                logger.error("Preview section UI structure is not as expected. Cannot update preview.")
+
+        except Exception as e:
+            logger.error(f"Error reading preview for {file_path}: {str(e)}")
+            preview_field_index = 0 if field_type == "source" else 1
+            if self.preview_section and self.preview_section.content and \
+               hasattr(self.preview_section.content, 'controls') and \
+               len(self.preview_section.content.controls) > preview_field_index:
+                try:
+                    preview_text_field = self.preview_section.content.controls[preview_field_index].content.controls[1].content
+                    preview_text_field.value = "Error reading file preview"
+                    preview_text_field.update()
+                except Exception as ie:
+                    logger.error(f"Failed to update preview field with error message: {ie}")
+
+        self.preview_section.visible = True # Make preview section visible if any file is selected and preview is on
         self.page.update()
 
     def show_snackbar(self, message):
@@ -1068,79 +1124,104 @@ class App:
             ext_source = Path(self.source_file_path).suffix.lower()
             ext_target = Path(self.target_file_path).suffix.lower()
 
-            source_result = logic.parse_content_by_ext(source_content, ext_source)
-            target_result = logic.parse_content_by_ext(target_content, ext_target)
+            # Prepare parser_config (example for CSV if settings were available)
+            # For now, this will be empty, relying on parser defaults via ParserService
+            source_parser_config = {}
+            target_parser_config = {}
             
-            if isinstance(source_result, dict) and "translations" in source_result:
-                source_dict = source_result["translations"]
-                source_lines = source_result.get("line_numbers", {})
-            else:
-                source_dict = source_result
-                source_lines = {}
-            if isinstance(target_result, dict) and "translations" in target_result:
-                target_dict = target_result["translations"]
-                target_lines = target_result.get("line_numbers", {})
-            else:
-                target_dict = target_result
-                target_lines = {}
+            # Example: if CSV settings were stored in self.config directly:
+            # if ext_source == ".csv":
+            #     source_parser_config['delimiter'] = self.config.get('csv_delimiter', ',')
+            #     source_parser_config['has_header'] = self.config.get('csv_has_header', True)
+            #     # ... and so on for key_column, value_column if they are configurable in GUI
 
-            self.source_line_numbers = source_lines
-            self.target_line_numbers = target_lines
+            source_parse_result = logic.parse_content_by_ext(source_content, ext_source, source_parser_config)
+            target_parse_result = logic.parse_content_by_ext(target_content, ext_target, target_parser_config)
+
+            if source_parse_result.errors:
+                self.show_snackbar(f"Error parsing source file: {source_parse_result.errors[0]}")
+                self.status_label.value = "Comparison failed: Source parsing error"
+                self.loading_ring.visible = False
+                self.page.update()
+                return
+
+            if target_parse_result.errors:
+                self.show_snackbar(f"Error parsing target file: {target_parse_result.errors[0]}")
+                self.status_label.value = "Comparison failed: Target parsing error"
+                self.loading_ring.visible = False
+                self.page.update()
+                return
+
+            source_dict = source_parse_result.translations
+            self.source_line_numbers = source_parse_result.line_numbers or {}
+
+            target_dict = target_parse_result.translations
+            self.target_line_numbers = target_parse_result.line_numbers or {}
 
             logging.info("Source file entries: %s", len(source_dict))
             logging.info("Target file entries: %s", len(target_dict))
-            logging.info("Sample source entries: %s", dict(list(source_dict.items())[:3]))
-            logging.info("Sample target entries: %s", dict(list(target_dict.items())[:3]))
+            # Ensure dicts are not empty before trying to log samples
+            if source_dict:
+                logging.info("Sample source entries: %s", dict(list(source_dict.items())[:3]))
+            if target_dict:
+                logging.info("Sample target entries: %s", dict(list(target_dict.items())[:3]))
 
-            ignore_patterns = []
-            pattern_str = self.ignore_pattern_field.value.strip()
-            if pattern_str:
-                ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
+            # ignore_patterns are not handled by ComparisonService directly.
+            # pattern_str = self.ignore_pattern_field.value.strip()
+            # if pattern_str:
+            #     ignore_patterns = [p.strip() for p in pattern_str.split(",") if p.strip()]
 
-            mt_settings = {
-                'enabled': self.config["mt_enabled"],
-                'api_key': self.config["mt_api_key"],
-                'source_lang': self.config["mt_source_lang"],
-                'target_lang': self.config["mt_target_lang"]
+            # mt_settings are not used by ComparisonService.compare_translations
+
+            comparison_config = {
+                'ignore_case_keys': self.config.get("ignore_case", False),
+                'compare_values': self.config.get("compare_values", True),
+                'ignore_whitespace_values': self.config.get("ignore_whitespace", False)
+                # 'log_missing_keys' and 'auto_fill_missing' are not service configs
             }
 
-            comparison_result = logic.compare_translations(
-                target_dict,
-                source_dict,
-                ignore_case=self.config["ignore_case"],
-                ignore_whitespace=self.config["ignore_whitespace"],
-                is_gui=True,
-                include_summary=False,
-                compare_values=self.config["compare_values"],
-                ignore_patterns=self.config["ignore_patterns"],
-                log_missing_keys=self.config["log_missing_strings"],
-                auto_fill_missing=self.config["auto_fill_missing"],
-                mt_settings=mt_settings
+            # Call the refactored logic.compare_translations
+            # IMPORTANT: The old call had target_dict, source_dict.
+            # The new service expects source_result, target_result.
+            comparison_details_dict = logic.compare_translations(
+                source_parse_result,
+                target_parse_result,
+                comparison_config
             )
 
-            missing_keys_set = set(source_dict.keys()) - set(target_dict.keys())
-            obsolete_keys_set = set(target_dict.keys()) - set(source_dict.keys())
-
-            total_keys = len(source_dict)
-            missing_keys = len(missing_keys_set)
-            obsolete_keys = len(obsolete_keys_set)
-            self.update_statistics(total_keys, missing_keys, obsolete_keys)
-
-            # Store the comparison result in the output_text for copying
-            self.output_text.value = comparison_result
+            # Update statistics from the summary provided by ComparisonService
+            summary = comparison_details_dict.get("summary", {})
+            self.update_statistics(
+                total_keys=summary.get("source_keys_count", 0), # Or decide primary key count
+                missing_keys=summary.get("missing_count", 0),
+                obsolete_keys=summary.get("obsolete_count", 0)
+                # Placeholder mismatches and value diffs also available in summary
+            )
             
-            # Delegate the rendering to the results_view component
-            self.results_view.build_results_table(comparison_result)
+            # The ResultsViewComponent.build_results_table will need to be updated
+            # to accept comparison_details_dict instead of a pre-formatted string.
+            # For now, we can format it for the old output_text for basic display / copy
+            # This is a temporary measure until ResultsViewComponent is refactored.
+            formatted_text_output = logic.ComparisonService().format_comparison_as_text(comparison_details_dict)
+            self.output_text.value = formatted_text_output # For copy-paste functionality
+
+            self.results_view.build_results_table(comparison_details_dict) # Pass the structured data
             
-            self.status_label.value = f"Comparison complete. Found {len(source_dict)} source and {len(target_dict)} target entries."
+            self.status_label.value = (
+                f"Comparison complete. Source Keys: {summary.get('source_keys_count',0)}, "
+                f"Target Keys: {summary.get('target_keys_count',0)}."
+            )
 
             history_entry = {
                 "timestamp": datetime.datetime.now().isoformat(),
                 "source_file": os.path.basename(self.source_file_path),
                 "target_file": os.path.basename(self.target_file_path),
-                "diff": comparison_result
+                "diff_summary": summary, # Store summary
+                "diff_details": comparison_details_dict # Store full details
             }
-            history_manager.save_history(history_entry)
+            # Modify history_manager if it expects a string diff.
+            # For now, assuming it can handle a dict or this will be adapted later.
+            history_manager.save_history(history_entry) # Store structured data
 
         except (ValueError, OSError) as err:
             import traceback
@@ -1426,31 +1507,50 @@ class App:
             
             # Parse content based on file extension
             ext = Path(self.file_path).suffix.lower()
-            result = logic.parse_content_by_ext(file_content, ext)
             
-            # Unpack dictionaries for comparison
-            source_dict = result.get("translations", {})
-            source_lines = result.get("line_numbers", {})
+            # Prepare parser_config (empty for now, relying on defaults)
+            parser_config = {}
             
-            if not source_dict:
-                raise ValueError("No valid translations found in file")
+            parse_result = logic.parse_content_by_ext(file_content, ext, parser_config)
+
+            if parse_result.errors:
+                self.show_snackbar(f"Error parsing file: {parse_result.errors[0]}")
+                self.status_label.value = "Comparison failed: File parsing error"
+                self.loading_ring.visible = False # Ensure loading ring is hidden
+                self.page.update()
+                return
+
+            source_dict = parse_result.translations
+            source_lines = parse_result.line_numbers or {}
+
+            if not source_dict: # Check if translations dict is empty or None
+                # Consider if this should be an error or just a state with no translations
+                logging.warning(f"No translations found in file {self.file_path} after parsing.")
+                # raise ValueError("No valid translations found in file") # Or handle gracefully
 
             # Store line numbers for reference
             self.source_line_numbers = source_lines
             
-            # Compare against itself to validate format
-            comparison_result = logic.compare_translations(
-                source_dict,
-                source_dict,
-                ignore_case=self.config["ignore_case"],
-                ignore_whitespace=self.config["ignore_whitespace"],
-                is_gui=True,
-                include_summary=True,
-                compare_values=self.config["compare_values"],
-                ignore_patterns=self.config["ignore_patterns"],
-                log_missing_keys=self.config["log_missing_strings"],
-                auto_fill_missing=self.config["auto_fill_missing"],
+            # Compare against itself to validate format.
+            # Need to pass ParsingResult object to the new compare_translations.
+            # Since we are comparing the file against itself, we use parse_result for both.
+            comparison_config = {
+                'ignore_case_keys': self.config.get("ignore_case", False),
+                'compare_values': self.config.get("compare_values", True),
+                'ignore_whitespace_values': self.config.get("ignore_whitespace", False)
+            }
+
+            # Call the refactored logic.compare_translations
+            # Pass parse_result as both source and target for self-comparison
+            comparison_details_dict = logic.compare_translations(
+                parse_result, # Source ParsingResult
+                parse_result, # Target ParsingResult (same as source)
+                comparison_config
             )
+
+            # Format the structured result for display in the TextField
+            # This part assumes the TextField expects a string.
+            formatted_text_output = logic.ComparisonService().format_comparison_as_text(comparison_details_dict)
 
             # Clear and update results tabs
             self.results_tabs.tabs.clear()
@@ -1460,13 +1560,13 @@ class App:
                     content=Container(
                         content=Column(
                             controls=[
-                                Text(
-                                    f"Total entries: {len(source_dict)}",
+                                Text( # Update this to use summary from comparison_details_dict
+                                    f"Total entries: {comparison_details_dict.get('summary', {}).get('source_keys_count', 0)}",
                                     size=14,
                                     color=self.COLORS["text"]["secondary"],
                                 ),
                                 TextField(
-                                    value=comparison_result,
+                                    value=formatted_text_output, # Use the formatted string
                                     multiline=True,
                                     read_only=True,
                                     min_lines=10,

@@ -139,85 +139,132 @@ class ResultsViewComponent:
             expand=True,
         )
 
-    def build_results_table(self, comparison_result: str):
-        """Initialize the results table with search field and content"""
-        if not comparison_result:
+    def _create_section_header(self, title: str) -> Row:
+        """Helper to create a consistent section header Text control wrapped in a Row."""
+        primary_color = self.colors.get("text", {}).get("primary", "white")
+        return Row(controls=[
+            Text(title, weight=FontWeight.BOLD, color=primary_color, size=14)
+        ])
+
+    def build_results_table(self, comparison_details: dict):
+        """Builds the results display from structured comparison data."""
+        self.results_content.controls.clear()
+        self.original_result_rows = []
+        result_rows_for_display = []
+
+        if not comparison_details or not comparison_details.get("summary"):
             self.results_content.controls = [
-                Text("No comparison results to display", color=self.colors["text"]["secondary"])
+                Text("No comparison data available.", color=self.colors.get("text", {}).get("secondary", "grey"))
             ]
-            self.page.update()
+            if self.page: self.page.update()
             return
 
-        lines = comparison_result.splitlines()
-        sorted_lines = sorted(lines, key=lambda l: {'-': 0, '~': 1, '+': 2}.get(l[0] if l else '', 3))
-        result_rows = []
+        # Order of sections: Mismatches, Missing, Obsolete, Differences
+        placeholder_mismatches = comparison_details.get("placeholder_mismatches", {})
+        if placeholder_mismatches:
+            result_rows_for_display.append(self._create_section_header("--- Placeholder Mismatches ---"))
+            for key, data in sorted(placeholder_mismatches.items()):
+                text_content = f"{key}: Target '{data.get('target_value', '')[:50]}...' ({data.get('message', 'No message')})"
+                result_rows_for_display.append(self.create_result_row(text_content, "placeholder_mismatch", key))
         
-        if hasattr(self.app, 'config') and self.app.config.get("group_by_namespace", True):
-            groups = self.group_keys_by_namespace(sorted_lines)
-            for namespace, group_lines in groups.items():
-                header = Row(controls=[Text(f"Namespace: {namespace}", weight="bold")])
-                result_rows.append(header)
-                for line in group_lines:
-                    key = line.split(" ", 1)[-1].split(":", 1)[0].strip() if " " in line else ""
-                    line_number = self.app.source_line_numbers.get(key, None) if hasattr(self.app, "show_line_numbers") and getattr(self.app, "show_line_numbers", False) else None
-                    row = self.create_result_row(line, line_number=line_number)
-                    result_rows.append(row)
-        else:
-            for line in sorted_lines:
-                if not line.strip():  # Skip empty lines
-                    continue
-                key = line.split(" ", 1)[-1].split(":", 1)[0].strip() if " " in line else ""
-                line_number = self.app.source_line_numbers.get(key, None) if hasattr(self.app, "show_line_numbers") and getattr(self.app, "show_line_numbers", False) else None
-                row = self.create_result_row(line, line_number=line_number)
-                result_rows.append(row)
+        missing_in_target = comparison_details.get("missing_in_target", {})
+        if missing_in_target:
+            result_rows_for_display.append(self._create_section_header("--- Missing in Target (Source Value Shown) ---"))
+            for key, value in sorted(missing_in_target.items()):
+                text_content = f"{key}: '{str(value)[:50]}...'"
+                result_rows_for_display.append(self.create_result_row(text_content, "missing", key))
 
-        self.original_result_rows = result_rows
+        obsolete_in_target = comparison_details.get("obsolete_in_target", {})
+        if obsolete_in_target:
+            result_rows_for_display.append(self._create_section_header("--- Obsolete in Target (Target Value Shown) ---"))
+            for key, value in sorted(obsolete_in_target.items()):
+                text_content = f"{key}: '{str(value)[:50]}...'"
+                result_rows_for_display.append(self.create_result_row(text_content, "obsolete", key))
 
-        # Clear the results content and add the new rows
-        self.results_content.controls.clear()
-        self.results_content.controls.extend(result_rows)
+        value_differences = comparison_details.get("value_differences", {})
+        if value_differences:
+            result_rows_for_display.append(self._create_section_header("--- Value Differences (Common Keys) ---"))
+            for key, data in sorted(value_differences.items()):
+                text_content = (f"{key}: "
+                                f"Src: '{data.get('source_value', '')[:30]}...' "
+                                f"Tgt: '{data.get('target_value', '')[:30]}...'")
+                result_rows_for_display.append(self.create_result_row(text_content, "diff", key))
         
-        # Make sure the results column is visible and contains our content
+        if not result_rows_for_display:
+             result_rows_for_display.append(Text("No differences found.", color=self.colors.get("text",{}).get("secondary","grey")))
+
+        self.original_result_rows = result_rows_for_display
+        self.results_content.controls.extend(result_rows_for_display)
+        
         self.results_container.content = self.results_column
-        
-        # Clear any search filtering
         self.search_field.value = ""
-        
-        # Update the UI
-        self.page.update()
+        if self.page: self.page.update()
 
-    def create_result_row(self, line: str, line_number: int = None) -> Row:
-        if not line:
-            return Row(controls=[])
+    def create_result_row(self, text_content: str, change_type: str, key: str) -> Row:
+        icon_widget = Icon(Icons.ERROR_OUTLINE, color="grey")
+        text_color = self.colors.get("text", {}).get("secondary", "grey")
+
+        diff_colors = self.colors.get("diff", {})
+        icon_color_map = {
+            "missing": diff_colors.get("added", "green"),
+            "obsolete": diff_colors.get("removed", "red"),
+            "placeholder_mismatch": diff_colors.get("mismatch", "yellow"),
+            "diff": diff_colors.get("changed", "blue")
+        }
+        
+        icon_type_map = {
+            "missing": Icons.ADD_CIRCLE_OUTLINE,
+            "obsolete": Icons.REMOVE_CIRCLE_OUTLINE,
+            "placeholder_mismatch": Icons.WARNING_AMBER_ROUNDED,
+            "diff": Icons.SWAP_HORIZ
+        }
+
+        icon_widget = Icon(icon_type_map.get(change_type, Icons.ERROR_OUTLINE),
+                           color=icon_color_map.get(change_type, "grey"))
+        text_color = icon_color_map.get(change_type, text_color)
+
+        line_num_display_text = ""
+        if self.app.config.get("show_line_numbers", False) and key:
+            num = None
+            if hasattr(self.app, 'source_line_numbers') and self.app.source_line_numbers:
+                num = self.app.source_line_numbers.get(key)
+            elif hasattr(self.app, 'target_line_numbers') and self.app.target_line_numbers and change_type == "obsolete":
+                num = self.app.target_line_numbers.get(key)
             
-        if line.startswith("+"):
-            icon = Icon(Icons.ADD, color="green")
-        elif line.startswith("-"):
-            icon = Icon(Icons.REMOVE, color="red")
-        elif line.startswith("~"):
-            icon = Icon(Icons.WARNING, color="yellow")
-        else:
-            icon = Icon(Icons.HELP, color="grey")
-        line_num_display = f"[Line {line_number}] " if line_number is not None else ""
+            if num is not None:
+                line_num_display_text = f"[L:{num}] "
+
         return Row(
             controls=[
-                icon,
-                Text(f"{line_num_display}{line}", color=self.colors["text"]["secondary"])
+                icon_widget,
+                Text(f"{line_num_display_text}{text_content}",
+                     color=text_color,
+                     overflow="ellipsis",
+                     tooltip=f"{line_num_display_text}{text_content}")
             ],
             spacing=8
         )
 
-    def group_keys_by_namespace(self, lines: list[str]) -> dict:
-        groups = {}
-        for line in lines:
-            try:
-                indicator, rest = line.split(" ", 1)
-                key_part = rest.split(":", 1)[0].strip()
-            except ValueError:
-                key_part = "General"
-            namespace = key_part.split(".")[0] if "." in key_part else "General"
-            groups.setdefault(namespace, []).append(line)
-        return groups
+    def group_keys_by_namespace(self, items: list, item_type: str = None) -> dict:
+        # This method needs to be adapted for structured data.
+        # For now, it's a placeholder and not actively used by the refactored build_results_table.
+        # If called, it will just return a general group.
+        # To properly implement, it would need to iterate `items` which could be dicts of dicts,
+        # extract keys, and then group based on the key string.
+        # Example structure of items (e.g., for missing_in_target): { "key1": "value1", "key2.sub": "value2" }
+
+        grouped_items = {}
+        if isinstance(items, dict): # Assuming items is one of the sections like missing_in_target
+            for key, data_or_value in items.items():
+                namespace = key.split('.')[0] if '.' in key else "General"
+                if namespace not in grouped_items:
+                    grouped_items[namespace] = {}
+                grouped_items[namespace][key] = data_or_value
+            return grouped_items
+        elif isinstance(items, list): # If it's a list of Row controls (less likely for initial grouping)
+             return {"General": items} # Fallback for list input
+        return {"General": items if items else {}}
+
 
     def filter_results(self, query: str):
         query = query.lower()

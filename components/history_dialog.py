@@ -1,6 +1,7 @@
 import flet as ft
 from utils import history_manager
 import datetime
+from services.comparison_service import ComparisonService # Import ComparisonService
 
 class HistoryDialogComponent:
     def __init__(self, page: ft.Page, app_reference):
@@ -295,9 +296,11 @@ class HistoryDialogComponent:
                 relative_time = ""
 
             # Calculate some stats from the diff for the summary
-            diff_text = entry.get("diff", "")
-            added_count = diff_text.count("\n+")
-            removed_count = diff_text.count("\n-")
+            # diff_text = entry.get("diff", "") # Old: diff was a string
+            # New: diff_summary is a dict, diff_details is also a dict
+            diff_summary = entry.get("diff_summary", {})
+            added_count = diff_summary.get("missing_count", 0) # 'missing_in_target' from comparison perspective
+            removed_count = diff_summary.get("obsolete_count", 0) # 'obsolete_in_target'
 
             # Create visually appealing card for history entry
             history_card = ft.Card(
@@ -412,7 +415,8 @@ class HistoryDialogComponent:
                                 style=ft.ButtonStyle(
                                     color=self.colors["text"]["secondary"],
                                 ),
-                                on_click=lambda e, text=entry["diff"]: self._copy_diff(text)
+                                # Pass the structured details to _copy_diff
+                                on_click=lambda e, details=entry.get("diff_details"): self._copy_diff(details)
                             ),
                             ft.ElevatedButton(
                                 "View Details",
@@ -421,7 +425,8 @@ class HistoryDialogComponent:
                                     color=ft.colors.WHITE,
                                     bgcolor=self.colors["bg"]["accent"],
                                 ),
-                                on_click=lambda e, text=entry["diff"]: self._show_details(text)
+                                # Pass the structured details to _show_details
+                                on_click=lambda e, details=entry.get("diff_details"): self._show_details(details)
                             )
                         ], alignment="end", spacing=10)
                     ]),
@@ -438,15 +443,22 @@ class HistoryDialogComponent:
         # This method could be removed as it's no longer used
         return False
 
-    def _copy_diff(self, diff_text: str):
-        """Copy diff text to clipboard."""
-        self.page.set_clipboard(diff_text)
-        self.app.show_snackbar("Diff copied to clipboard")
+    def _copy_diff(self, comparison_details: dict):
+        """Copy formatted comparison details to clipboard."""
+        if not comparison_details:
+            self.app.show_snackbar("No details to copy.")
+            return
+        formatted_text = ComparisonService().format_comparison_as_text(comparison_details)
+        self.page.set_clipboard(formatted_text)
+        self.app.show_snackbar("Comparison details copied to clipboard")
 
-    def _show_details(self, diff_text: str):
+    def _show_details(self, comparison_details: dict):
         """Show full diff details in a new dialog."""
+        if not comparison_details:
+            self.app.show_snackbar("No details to display.")
+            return
         # Create details dialog on demand since it's content-dependent
-        details_dialog = self._create_details_dialog(diff_text)
+        details_dialog = self._create_details_dialog(comparison_details)
         
         # Hide main dialog and show details
         self.dialog.open = False
@@ -454,17 +466,15 @@ class HistoryDialogComponent:
         details_dialog.open = True
         self.page.update()
 
-    def _create_details_dialog(self, diff_text: str):
-        """Create the details dialog with the provided diff text."""
-        # Process diff text into added/removed lines 
-        added_lines = []
-        removed_lines = []
+    def _create_details_dialog(self, comparison_details: dict): # Changed signature
+        """Create the details dialog with the provided structured comparison details."""
+
+        summary = comparison_details.get("summary", {})
+        missing_in_target = comparison_details.get("missing_in_target", {}) # Added items from source perspective
+        obsolete_in_target = comparison_details.get("obsolete_in_target", {}) # Removed items from source perspective
         
-        for line in diff_text.splitlines():
-            if line.startswith("+"):
-                added_lines.append(line[2:])  # Remove the "+ " prefix
-            elif line.startswith("-"):
-                removed_lines.append(line[2:])  # Remove the "- " prefix
+        # For raw diff text field
+        full_diff_text = ComparisonService().format_comparison_as_text(comparison_details)
 
         # Create the dialog
         dialog = ft.AlertDialog(
@@ -482,12 +492,12 @@ class HistoryDialogComponent:
                             ft.Container(
                                 content=ft.Column([
                                     ft.Text(
-                                        "Added Lines", 
+                                        "Added Lines (Missing in Target)",
                                         size=14,
                                         color=self.colors["text"]["secondary"]
                                     ),
                                     ft.Text(
-                                        f"{len(added_lines)}",
+                                        f"{summary.get('missing_count', 0)}", # Use summary
                                         size=20,
                                         weight="bold",
                                         color=self.colors["changes"]["added"]
@@ -506,12 +516,12 @@ class HistoryDialogComponent:
                             ft.Container(
                                 content=ft.Column([
                                     ft.Text(
-                                        "Removed Lines", 
+                                        "Removed Lines (Obsolete in Target)",
                                         size=14,
                                         color=self.colors["text"]["secondary"]
                                     ),
                                     ft.Text(
-                                        f"{len(removed_lines)}",
+                                        f"{summary.get('obsolete_count', 0)}", # Use summary
                                         size=20,
                                         weight="bold",
                                         color=self.colors["changes"]["removed"]
@@ -552,7 +562,8 @@ class HistoryDialogComponent:
                                         padding=ft.padding.only(bottom=8),
                                     ),
                                     ft.Container(
-                                        content=self._create_diff_view(added_lines, "added"),
+                                        # Pass the dictionary of missing items
+                                        content=self._create_diff_view(missing_in_target, "missing"),
                                         expand=True,
                                     ),
                                 ]),
@@ -582,7 +593,8 @@ class HistoryDialogComponent:
                                         padding=ft.padding.only(bottom=8),
                                     ),
                                     ft.Container(
-                                        content=self._create_diff_view(removed_lines, "removed"),
+                                        # Pass the dictionary of obsolete items
+                                        content=self._create_diff_view(obsolete_in_target, "obsolete"),
                                         expand=True,
                                     ),
                                 ]),
@@ -621,7 +633,7 @@ class HistoryDialogComponent:
                             ),
                             ft.Container(
                                 content=ft.TextField(
-                                    value=diff_text,
+                                    value=full_diff_text, # Use formatted full diff
                                     multiline=True,
                                     read_only=True,
                                     min_lines=5,
@@ -656,12 +668,13 @@ class HistoryDialogComponent:
             
         # Define a custom copy and close handler
         def copy_close_handler(e):
-            self._copy_and_close(diff_text, dialog)
+            # Pass the full structured details for copying
+            self._copy_and_close(comparison_details, dialog)
             
         # Now add the actions with properly bound handlers
         dialog.actions = [
             ft.TextButton(
-                "Copy Raw Diff",
+                "Copy Formatted Diff", # Changed label
                 icon=ft.icons.COPY,
                 on_click=copy_close_handler
             ),
@@ -718,9 +731,9 @@ class HistoryDialogComponent:
         # Update the UI
         self.page.update()
 
-    def _create_diff_view(self, lines, diff_type):
-        """Create a scrollable view for diff content with proper styling."""
-        if not lines:
+    def _create_diff_view(self, items: dict, diff_type: str): # Changed signature to accept dict
+        """Create a scrollable view for diff content (missing or obsolete items)."""
+        if not items:
             return ft.Container(
                 content=ft.Text(
                     "No items to display",
@@ -736,46 +749,30 @@ class HistoryDialogComponent:
             padding=10,
         )
         
-        for line in lines:
-            # Parse the line to separate key from value if possible
-            if ":" in line:
-                parts = line.split(":", 1)
-                key = parts[0].strip()
-                value = parts[1].strip() if len(parts) > 1 else ""
-                
-                list_view.controls.append(
-                    ft.Container(
-                        content=ft.Column([
-                            ft.Text(
-                                key,
-                                weight="bold",
-                                size=12,
-                                color=self.colors["text"]["primary"],
-                            ),
-                            ft.Container(
-                                content=ft.Text(
-                                    value,
-                                    size=12,
-                                    color=self.colors["text"]["secondary"],
-                                ),
-                                margin=ft.margin.only(left=10),
-                            ),
-                        ], spacing=2, tight=True),
-                        padding=ft.padding.only(top=5, bottom=5),
-                        border=ft.border.only(bottom=ft.BorderSide(1, self.colors["border"]["default"])),
-                    )
-                )
-            else:
-                list_view.controls.append(
-                    ft.Container(
-                        content=ft.Text(
-                            line,
+        for key, value in sorted(items.items()):
+            list_view.controls.append(
+                ft.Container(
+                    content=ft.Column([
+                        ft.Text(
+                            key,
+                            weight=FontWeight.BOLD, # Corrected: FontWeight.BOLD
                             size=12,
+                            color=self.colors["text"]["primary"],
                         ),
-                        padding=ft.padding.only(top=5, bottom=5),
-                        border=ft.border.only(bottom=ft.BorderSide(1, self.colors["border"]["default"])),
-                    )
+                        ft.Container(
+                            content=ft.Text(
+                                str(value)[:100] + ('...' if len(str(value)) > 100 else ''), # Show preview of value
+                                size=12,
+                                color=self.colors["text"]["secondary"],
+                                tooltip=str(value), # Full value on hover
+                            ),
+                            margin=ft.margin.only(left=10),
+                        ),
+                    ], spacing=2, tight=True),
+                    padding=ft.padding.only(top=5, bottom=5),
+                    border=ft.border.only(bottom=ft.BorderSide(1, self.colors["border"]["default"])),
                 )
+            )
                 
         return ft.Container(
             content=list_view,
@@ -784,9 +781,14 @@ class HistoryDialogComponent:
             border_radius=5,
         )
 
-    def _copy_and_close(self, text: str, dialog):
-        """Copy text to clipboard and close the dialog."""
-        self.page.set_clipboard(text)
+    def _copy_and_close(self, comparison_details: dict, dialog): # Changed signature
+        """Copy formatted comparison text to clipboard and close the dialog."""
+        if not comparison_details:
+            self.app.show_snackbar("No details to copy.")
+            self._close_details(dialog) # Still close dialog
+            return
+        formatted_text = ComparisonService().format_comparison_as_text(comparison_details)
+        self.page.set_clipboard(formatted_text)
         self.app.show_snackbar("Copied to clipboard")
         self._close_details(dialog)  # Use _close_details to properly restore main dialog
 

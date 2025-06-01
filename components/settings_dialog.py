@@ -540,7 +540,7 @@ class SettingsDialogComponent:
                                     Checkbox(
                                         value=self.config.get("show_preview", True),
                                         label="Show File Preview",
-                                        on_change=self.app.handle_preview_toggle,
+                                        on_change=lambda e: self.handle_setting_change(e, "show_preview"),
                                     ),
                                     Checkbox(
                                         value=self.config.get("show_line_numbers", False),

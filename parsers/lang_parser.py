@@ -10,6 +10,7 @@ class LangParser(TranslationParser):
 
     def parse(self, content: str) -> ParsingResult: # Update return type annotation
         translations: Dict[str, str] = {}
+        line_numbers: Dict[str, int] = {} # Added to store line numbers
         errors: list[str] = [] # To collect non-critical errors/warnings
         
         try:
@@ -32,17 +33,24 @@ class LangParser(TranslationParser):
                             logging.warning(msg)
                             errors.append(msg)
                         translations[key] = value
+                        line_numbers[key] = line_num # Store line number
                     else:
                         msg = f"Empty key found at line {line_num} with value '{value}'."
                         logging.warning(msg)
                         errors.append(msg)
                 else:
                     # Log lines that are not comments, not empty, and don't contain '='
-                    msg = f"Skipping invalid line (no '=' separator) at line {line_num}: '{line_text[:50]}...'"
-                    logging.debug(msg) # Low severity, could be an error if strict parsing is desired
-                    # errors.append(msg) # Optionally add to errors if this should be reported
-                    
-            return ParsingResult(translations=translations, errors=errors if errors else None)
+                    # Only consider it a notable event if the line isn't empty after processing
+                    if processed_line: # Check if the line had content after potential stripping
+                        msg = f"Skipping invalid line (no '=' separator or empty after strip) at line {line_num}: '{line_text[:50]}...'"
+                        logging.debug(msg) # Low severity
+                        # errors.append(msg) # Decide if this should be a reported error
+
+            return ParsingResult(
+                translations=translations,
+                line_numbers=line_numbers if line_numbers else None, # Add line_numbers to result
+                errors=errors if errors else None
+            )
             
         except Exception as e:
             logging.error(f"Lang parse error: {str(e)}")

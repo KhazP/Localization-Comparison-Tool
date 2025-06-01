@@ -6,26 +6,35 @@ from utils.logger_service import logger_service
 # Add parent directory to Python path to find modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import csv
-import xml.etree.ElementTree as ET
+# import csv # No longer needed
+import xml.etree.ElementTree as ET # Still needed for save_translations
 import git  # If you plan on adding git functionality to this module later
 from colorama import init, Fore, Style
-from enum import Enum, auto
-import json
-import requests
-import html
+# from enum import Enum, auto # No longer needed as FileError is removed
+import json # Still needed for json.loads in parse_content_by_ext and save_translations
+# import requests # No longer needed, mt_service handles it
+# import html # No longer needed, mt_service handles it
 from typing import Optional
-import re
-from functools import lru_cache
+# import re # No longer needed as extract_placeholders is removed
+# from functools import lru_cache # No longer needed
 from core.constants import SUPPORTED_FORMATS, USER_MESSAGES
-from core.errors import ParsingError, FileParsingError, CSVParsingError, UnknownFormatError  # Updated import path
+# FileParsingError, CSVParsingError, UnknownFormatError are no longer used in this file.
+from core.errors import ParsingError # ParsingError might be used by other functions if they are ever changed to raise it.
 try:
-    import yaml
+    import yaml # Still needed for yaml.safe_load in parse_content_by_ext and save_translations
 except ImportError:
     yaml = None
 
-# Precompile regex pattern for XML fallback parsing
-_xml_string_pattern = re.compile(r'<string\s+name="([^"]+)">(.*?)</string>', flags=re.DOTALL)
+# Removed _xml_string_pattern
+
+# Import ParserService and ParsingResult (from core)
+from services.parser_service import ParserService
+from core.parsing_result import ParsingResult as CoreParsingResult # Alias to avoid confusion
+# Import ComparisonService
+from services.comparison_service import ComparisonService
+# Import MachineTranslationService
+from services.mt_service import MachineTranslationService # Added import
+from typing import Dict, Any # For type hinting the return of compare_translations
 
 # Get logger from service instead of basic config
 logger = logger_service.get_logger()
@@ -45,401 +54,60 @@ def get_color(color_name):
         return None
     return getattr(Fore, color_name.upper())
 
-class FileError(Enum):
-    EMPTY_FILE = auto()
-    INVALID_XML_SYNTAX = auto()
-    MISSING_XML_ATTRIBUTES = auto()
-    INVALID_CSV_FORMAT = auto()
-    MISSING_CSV_COLUMNS = auto()
-    INVALID_ENCODING = auto()
-    UNKNOWN_FORMAT = auto()
-    FILE_NOT_FOUND = auto()
-    PERMISSION_ERROR = auto()
+# Removed FileError enum
+# Removed local ParsingResult class
+# Removed FileError enum
+# Removed local ParsingResult class
+# Removed local TranslationParser base class and its subclasses (LangParser, JSONParser, YAMLParser)
 
-class ParsingResult:
-    def __init__(self, success=False, translations=None, line_numbers=None, error=None, details=None):
-        self.success = success
-        self.translations = translations or {}
-        self.line_numbers = line_numbers or {}  # Added line_numbers
-        self.error = error
-        self.details = details
+# Removed read_csv_file
+# Removed read_xml_lang_content
+# Removed parse_xliff
+# Removed parse_properties_file
+# Removed parse_resx
+# Removed parse_android_xml
+# Removed parse_angular_translate_json
+
+def parse_content_by_ext(content: str, ext: str, parser_config: Optional[dict] = None) -> CoreParsingResult:
+    """
+    Parses file content using ParserService.
+
+    Args:
+        content: The string content of the file.
+        ext: The file extension (e.g., ".json", ".xml").
+        parser_config: Optional dictionary of configuration options specific to the parser.
+                       (e.g., delimiter for CSV, flatten_nested for Angular JSON).
+
+    Returns:
+        A core.parsing_result.ParsingResult object.
+    """
+    logging.debug(f"GUI/logic.py:parse_content_by_ext called for extension '{ext}'")
     
-    def __bool__(self):
-        return self.success
+    # Ensure content is a string, as ParserService expects it.
+    if not isinstance(content, str):
+        logging.error(f"Content for parsing must be a string, got {type(content)}")
+        # Return a ParsingResult object with an error
+        return CoreParsingResult(errors=[f"Invalid content type: {type(content)}. Expected string."])
 
-# New base class and parser subclasses
-class TranslationParser:
-    def parse(self, content: str) -> dict:
-        raise NotImplementedError
+    service_instance = ParserService()
 
-class LangParser(TranslationParser):
-    def parse(self, content: str) -> dict:
-        # Reuse the existing plain text lang parser function
-        return read_lang_file(content)
-
-class JSONParser(TranslationParser):
-    def parse(self, content: str) -> dict:
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError as e:
-            logging.error(f"JSON parse error: {str(e)}")
-            return {}
-
-class YAMLParser(TranslationParser):
-    def parse(self, content: str) -> dict:
-        if yaml:
-            try:
-                data = yaml.safe_load(content)
-                if isinstance(data, dict):
-                    return data
-                else:
-                    logging.error("YAML content is not a dict")
-                    return {}
-            except yaml.YAMLError as e:
-                logging.error(f"YAML parse error: {str(e)}")
-                return {}
-        else:
-            logging.error("PyYAML not installed")
-            return {}
-
-@lru_cache(maxsize=32)
-def read_csv_file(content, delimiter=',', has_header=True, key_column='key', value_column='value'):
-    """Reads CSV data and returns a ParsingResult with translations and line numbers."""
+    # The 'trim_whitespace' parameter from the old signature is no longer directly used here.
+    # If specific trimming is needed for a parser, it should be part of its configuration
+    # passed via 'parser_config' and handled by the parser itself or within ParserService.
     
-    if not content.strip():
-        return ParsingResult(error=FileError.EMPTY_FILE)
-    
-    content = content.strip().lstrip('\ufeff')  # Remove BOM and whitespace
     try:
-        lines = content.splitlines()
-        if not lines:
-            return ParsingResult(error=FileError.EMPTY_FILE)
-        
-        # Auto-detect header based on expected column names
-        if has_header:
-            fields = [field.strip() for field in lines[0].split(delimiter)]
-            if key_column not in fields or value_column not in fields:
-                logging.debug("CSV header not detected; switching to no-header mode.")
-                has_header = False
-        
-        translations = {}
-        line_numbers = {}  # Track line numbers for each key
-        
-        if has_header:
-            reader = csv.DictReader(lines, delimiter=delimiter)
-            if not reader.fieldnames:
-                return ParsingResult(
-                    error=FileError.MISSING_CSV_COLUMNS,
-                    details=f"Expected columns: {key_column}, {value_column}"
-                )
-            if key_column not in reader.fieldnames or value_column not in reader.fieldnames:
-                return ParsingResult(
-                    error=FileError.MISSING_CSV_COLUMNS,
-                    details=f"Missing required columns. Found: {', '.join(reader.fieldnames)}"
-                )
-            for row_num, row in enumerate(reader, start=2):  # Start from line 2 if header is present
-                key = row[key_column]
-                translations[key] = row[value_column]
-                line_numbers[key] = row_num
-        else:
-            reader = csv.reader(lines, delimiter=delimiter)
-            for row_num, row in enumerate(reader, start=1):
-                if len(row) < 2:
-                    return ParsingResult(
-                        error=FileError.INVALID_CSV_FORMAT,
-                        details=f"Row has insufficient columns: {row}"
-                    )
-                key = row[0]
-                translations[key] = row[1]
-                line_numbers[key] = row_num
-        
-        if not translations:
-            return ParsingResult(
-                error=FileError.EMPTY_FILE,
-                details="No translations found in file"
-            )
-        
-        return ParsingResult(True, translations, line_numbers)
-        
-    except csv.Error as e:
-        raise CSVParsingError(f"CSV parsing error: {str(e)}")
+        # Call the parser service
+        result = service_instance.parse_file_content(content, ext, parser_config)
+        return result
     except Exception as e:
-        raise UnknownFormatError(f"Unexpected CSV error: {str(e)}")
+        # This is a fallback for unexpected errors during the service call itself.
+        # ParserService.parse_file_content is expected to catch its own internal errors
+        # and return a ParsingResult with errors populated.
+        logging.error(f"Unexpected error calling ParserService from GUI/logic.py: {e}", exc_info=True)
+        return CoreParsingResult(errors=[f"Failed to parse content via ParserService: {e}"])
 
-def read_xml_lang_content(content: str, trim_whitespace: bool = False) -> dict:
-    """Parse XML content and extract string elements with their line numbers."""
-    translations = {}
-    line_numbers = {}  # Track line numbers
-    
-    try:
-        # Process content line by line to track line numbers
-        lines = content.splitlines()
-        current_key = None
-        current_line = 0
-        
-        for i, line in enumerate(lines, 1):
-            line = line.strip()
-            if not line or line.startswith('<!--') or line.startswith('//'):
-                continue
-                
-            # Look for string element start
-            key_match = re.search(r'<string\s+name="([^"]+)">', line)
-            if key_match:
-                current_key = key_match.group(1)
-                current_line = i
-                # If the value is on the same line
-                value_match = re.search(r'>([^<]+)</string>', line)
-                if value_match:
-                    translations[current_key] = value_match.group(1)
-                    line_numbers[current_key] = current_line
-                    current_key = None
-            
-            # Handle multi-line values
-            elif current_key and '</string>' in line:
-                value = re.search(r'([^<]+)</string>', line)
-                if value:
-                    translations[current_key] = value.group(1)
-                    line_numbers[current_key] = current_line
-                current_key = None
-
-        # Fallback to regex parsing if needed
-        if not translations and "<string" in content:
-            for match in re.finditer(r'<string\s+name="([^"]+)"[^>]*>([^<]*)', content):
-                key = match.group(1)
-                value = match.group(2)
-                translations[key] = value
-                # Approximate line number by counting newlines before match
-                line_number = content[:match.start()].count('\n') + 1
-                line_numbers[key] = line_number
-
-    except Exception as e:
-        logging.error(f"Error parsing XML content: {str(e)}")
-        
-    return {
-        "translations": translations,
-        "line_numbers": line_numbers
-    }
-
-def parse_xliff(content: str) -> dict:
-    """
-    Parse XLIFF (XML-based) to extract translation units.
-    Returns a {key: value} dict.
-    """
-    translations = {}
-    try:
-        root = ET.fromstring(content)
-        # Typical XLIFF structure uses <trans-unit id="..."><target>...</target>
-        for unit in root.findall('.//trans-unit'):
-            key = unit.get('id')
-            if key:
-                target_elem = unit.find('target')
-                translations[key] = target_elem.text if target_elem is not None else ''
-    except ET.ParseError as e:
-        logging.error(f"XLIFF parse error: {str(e)}")
-    return translations
-
-def parse_properties_file(content: str) -> dict:
-    """
-    Parse Java .properties format (key=value pairs, supporting backslash escapes).
-    Returns a {key: value} dict.
-    """
-    translations = {}
-    for line in content.splitlines():
-        line = line.strip()
-        if not line or line.startswith('#') or '=' not in line:
-            continue
-        key, value = line.split('=', 1)
-        translations[key.strip()] = value.strip()
-    return translations
-
-def parse_resx(content: str) -> dict:
-    """
-    Parse .resx file (XML for .NET resources).
-    Returns a {key: value} dict based on <data name="..."><value>...</value>
-    """
-    translations = {}
-    try:
-        root = ET.fromstring(content)
-        for data_elem in root.findall('.//data'):
-            key = data_elem.get('name')
-            if key:
-                value_elem = data_elem.find('value')
-                translations[key] = value_elem.text if value_elem is not None else ''
-    except ET.ParseError as e:
-        logging.error(f"RESX parse error: {str(e)}")
-    return translations
-
-def parse_android_xml(content: str) -> dict:
-    """
-    Parse Android XML format (<string name="...">...</string>).
-    Returns a {key: value} dict.
-    """
-    translations = {}
-    try:
-        root = ET.fromstring(content)
-        for string_elem in root.findall('.//string'):
-            key = string_elem.get('name')
-            if key:
-                translations[key] = string_elem.text or ''
-    except ET.ParseError as e:
-        logging.error(f"Android XML parse error: {str(e)}")
-    return translations
-
-def parse_angular_translate_json(content: str) -> dict:
-    """
-    Parse Angular Translate JSON or similar JSON-based i18n.
-    Returns a {key: value} dict.
-    """
-    try:
-        data = json.loads(content)
-        # Usually a nested structure, flatten if needed
-        translations = {}
-        def flatten(d, prefix=''):
-            for k, v in d.items():
-                full_key = f"{prefix}.{k}" if prefix else k
-                if isinstance(v, dict):
-                    flatten(v, full_key)
-                else:
-                    translations[full_key] = v
-        flatten(data)
-        return translations
-    except json.JSONDecodeError as e:
-        logging.error(f"Angular JSON parse error: {str(e)}")
-        return {}
-
-def parse_content_by_ext(content: str, ext: str, trim_whitespace: bool = False) -> dict:
-    """Parse content based on file extension and content type."""
-    logging.debug(f"Parsing file with extension: {ext}")
-    logging.debug(f"Content starts with: {content[:100]}")
-    
-    content = content.lstrip()
-
-    try:
-        # New parser-based handling for JSON, YAML, and .lang files.
-        if ext.lower() == '.json' and not content.startswith('<'):
-            logging.debug("Using JSON parser")
-            parser = JSONParser()
-            return parser.parse(content)
-
-        if ext.lower() in ['.yaml', '.yml'] and not content.startswith('<'):
-            logging.debug("Using YAML parser")
-            parser = YAMLParser()
-            return parser.parse(content)
-
-        if ext.lower() == '.lang' and not content.startswith('<'):
-            logging.debug("Using .lang parser")
-            parser = LangParser()
-            # This returns {"translations": {...}, "line_numbers": {...}}
-            return parser.parse(content)
-        
-        if ext.lower() in ['.xliff', '.xlf']:
-            return parse_xliff(content)
-        elif ext.lower() == '.properties':
-            return parse_properties_file(content)
-        elif ext.lower() == '.resx':
-            return parse_resx(content)
-        elif ext.lower() == '.xml' and 'resources' in content:
-            # Heuristic for Android XML
-            return parse_android_xml(content)
-        elif ext.lower() in ['.angular.json', '.ngjson']:
-            return parse_angular_translate_json(content)
-
-        # Fallback for XML
-        if content.startswith(('<?xml', '<lang', '<string')):
-            logging.debug("Content appears to be XML, using XML parser")
-            translations = read_xml_lang_content(content, trim_whitespace)
-            logging.debug(f"XML parser found {len(translations)} entries")
-            return translations
-        
-        # Fallback for CSV
-        if ext.lower() == '.csv' and not content.startswith('<'):
-            logging.debug("Using CSV parser")
-            result = read_csv_file(content)
-            translations = result.translations if result.success else {}
-            logging.debug(f"CSV parser found {len(translations)} entries")
-            return translations
-        
-        # Fallback for plain text
-        if ext.lower() == '.txt' and not content.startswith('<'):
-            logging.debug("Using plain text parser")
-            translations = read_lang_file(content, trim_whitespace)
-            logging.debug(f"Text parser found {len(translations)} entries")
-            return translations
-
-        logging.debug("Trying XML parser as fallback")
-        translations = read_xml_lang_content(content, trim_whitespace)
-        if translations:
-            return translations
-            
-        logging.debug("Falling back to plain text parser")
-        return read_lang_file(content, trim_whitespace)
-    except FileParsingError as e:
-        logging.error(f"ParsingError: {str(e)}")
-        return {"translations": {}, "line_numbers": {}}
-
-def read_lang_file(content, trim_whitespace=False):
-    """Reads a plain text .lang file (key=value format) and returns translations and line numbers."""
-    translations = {}
-    line_numbers = {}  # Track line numbers
-    
-    try:
-        for line_number, line in enumerate(content.splitlines(), start=1):
-            line = line.strip()
-            # Skip blank lines, XML tags and comment lines
-            if not line or line.startswith("<?xml") or line.startswith("<!--") or line.startswith("#"):
-                continue
-                
-            # Handle basic key=value format
-            if "=" in line:
-                try:
-                    key, value = line.split("=", 1)
-                    if trim_whitespace:
-                        key = key.strip()
-                        value = value.strip()
-                    translations[key] = value
-                    line_numbers[key] = line_number  # Store line number for this key
-                except ValueError:
-                    logging.warning(f"Invalid key-value pair at line {line_number}: {line}")
-                    continue
-                    
-    except Exception as e:
-        raise FileParsingError(f"Error in read_lang_file: {str(e)}")
-        
-    return {
-        "translations": translations,
-        "line_numbers": line_numbers
-    }
-
-def read_xml_lang_file(filepath, trim_whitespace=False):
-    """Reads a .lang file (XML format), preprocesses it, and returns a dictionary."""
-    translations = {}
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read()
-        # --- Pre-processing --- 
-        # Replace any '&' that is not already part of a valid entity
-        import re
-        content = re.sub(r'&(?!amp;|lt;|gt;|quot;|apos;)', '&', content)
-        try:
-            root = ET.fromstring(content)
-        except ET.ParseError as e:
-            print(f"Error parsing XML in '{filepath}': {e}")
-            return {}
-        for string_elem in root.findall('string'):
-            key = string_elem.get('name')
-            value = string_elem.text if string_elem.text is not None else ""
-            if key is not None:
-                if trim_whitespace:
-                    key = key.strip()
-                    value = value.strip()
-                translations[key] = value
-    except FileNotFoundError:
-        print(f"Error: File not found: {filepath}")
-        return {}
-    except Exception as e:
-        print(f"An unexpected error occurred in read_xml_lang_file: {e}")
-        return {}
-    return translations
+# Removed read_lang_file
+# Removed read_xml_lang_file
 
 def get_file_content(repo_path, file_path, commit_id):
     """Fetches the content of a file from a Git repository at a specific commit."""
@@ -471,124 +139,79 @@ def get_file_content(repo_path, file_path, commit_id):
         return {}
 
 def machine_translate(text: str, source_lang: str, target_lang: str, api_key: str) -> Optional[str]:
-    """Translate text using Google Cloud Translate API."""
-    if not api_key:
+    """Translate text using MachineTranslationService."""
+    if not api_key: # This check can also be in the service, but keeping it here is fine.
+        logger.warning("Machine translation called with no API key.")
         return None
         
     try:
-        url = "https://translation.googleapis.com/language/translate/v2"
-        payload = {
-            'q': text,
-            'source': source_lang,
-            'target': target_lang,
-            'key': api_key
-        }
-        
-        response = requests.post(url, params=payload)
-        response.raise_for_status()
-        
-        result = response.json()
-        if 'data' in result and 'translations' in result['data']:
-            translated_text = result['data']['translations'][0]['translatedText']
-            # Decode HTML entities that might be in the response
-            return html.unescape(translated_text)
+        mt_service = MachineTranslationService()
+        # Assuming the service method is named 'translate' and handles its own exceptions internally
+        # or may raise specific service-related exceptions.
+        translated_text = mt_service.translate(
+            text=text,
+            source_lang=source_lang,
+            target_lang=target_lang,
+            api_key=api_key
+        )
+        return translated_text # The service should handle html unescaping if it's a general concern
             
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Translation API error: {str(e)}")
-    except (KeyError, IndexError) as e:
-        logging.error(f"Unexpected API response format: {str(e)}")
     except Exception as e:
-        logging.error(f"Unexpected error during translation: {str(e)}")
+        # Catching a broad exception here in case the service call itself fails unexpectedly
+        # or if the service is not found (e.g. ImportError if mt_service.py doesn't exist yet)
+        logger.error(f"Error calling MachineTranslationService: {str(e)}", exc_info=True)
         
     return None
 
-def compare_translations(old_translations, new_translations, ignore_case=False, 
-                       ignore_whitespace=False, is_gui=False, compare_values=False,
-                       ignore_patterns=None, log_missing_keys=False, target_locale="target",
-                       auto_fill_missing=False, mt_settings=None, include_summary=True):
-    """Compares two translation dictionaries with optional machine translation."""
+def compare_translations(source_result: CoreParsingResult,
+                       target_result: CoreParsingResult,
+                       config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Compares two sets of translations using ComparisonService.
     
-    # Filter ignored patterns and normalize keys
-    def normalize_key(k):
-        k = k.strip()  # Always strip whitespace from keys
-        return k.lower() if ignore_case else k
+    Args:
+        source_result: CoreParsingResult object for the source/reference translations.
+        target_result: CoreParsingResult object for the target/new translations.
+        config: Dictionary with comparison settings for ComparisonService.
 
-    # Build normalized key sets
-    source_keys = {normalize_key(k) for k, v in old_translations.items()
-                  if not any(k.startswith(p) for p in (ignore_patterns or []))}
-    target_keys = {normalize_key(k) for k, v in new_translations.items()
-                  if not any(k.startswith(p) for p in (ignore_patterns or []))}
+    Returns:
+        A structured dictionary containing the comparison results from ComparisonService.
+    """
+    logger.debug("GUI/logic.py:compare_translations called")
     
-    # Debug logging
-    logging.debug(f"Source file has {len(source_keys)} keys")
-    logging.debug(f"Target file has {len(target_keys)} keys")
-    logging.debug(f"First few source keys: {sorted(list(source_keys))[:5]}")
-    logging.debug(f"First few target keys: {sorted(list(target_keys))[:5]}")
+    # Ensure results are valid before proceeding
+    if source_result.errors or target_result.errors:
+        # This case should ideally be handled by the caller before even calling compare_translations.
+        # If we reach here, it means parsing succeeded enough to get a result object, but it might contain errors.
+        # ComparisonService might still be able to compare what was successfully parsed.
+        # For now, log and proceed. Caller (e.g., flet_gui) should check individual parsing results first.
+        if source_result.errors:
+            logger.warning(f"Source parsing result contains errors: {source_result.errors}")
+        if target_result.errors:
+            logger.warning(f"Target parsing result contains errors: {target_result.errors}")
 
-    # Find what's missing and what's obsolete
-    missing_in_target = source_keys - target_keys
-    obsolete_in_target = target_keys - source_keys
-    invalid_placeholders = []  # Track keys with placeholder mismatches
+    service_instance = ComparisonService()
 
-    # Check for placeholder consistency in matching keys
-    common_keys = source_keys & target_keys
-    for key in common_keys:
-        source_text = old_translations[key]
-        target_text = new_translations[key]
-        is_valid, error_msg = validate_placeholders(source_text, target_text)
-        if not is_valid:
-            invalid_placeholders.append((key, error_msg))
-            if log_missing_keys:
-                logging.warning(f"Placeholder mismatch in key '{key}': {error_msg}")
+    # The config dict is passed directly to the service.
+    # Keys for config (as expected by ComparisonService):
+    #   'ignore_case_keys': bool
+    #   'compare_values': bool
+    #   'ignore_whitespace_values': bool
+    # GUI/flet_gui.py's compare_files_gui currently builds a config like:
+    #   config = {
+    #       "ignore_case": self.config["ignore_case"], -> should be 'ignore_case_keys' for service
+    #       "ignore_whitespace": self.config["ignore_whitespace"], -> 'ignore_whitespace_values'
+    #       "compare_values": self.config["compare_values"],
+    #       "ignore_patterns": self.config["ignore_patterns"], -> Not used by ComparisonService.compare_translations
+    #       "log_missing_strings": self.config["log_missing_strings"], -> Not used by service
+    #       "auto_fill_missing": self.config["auto_fill_missing"], -> Not used by service
+    #   }
+    # So, flet_gui.py will need to map its config keys to the ones expected by ComparisonService.
+    # For now, this wrapper will just pass it through.
 
-    # Auto-fill missing translations if enabled
-    if auto_fill_missing:
-        for key in missing_in_target:
-            new_translations[key] = ""  # Add empty string for missing keys
-            if log_missing_keys:
-                logging.info(f"Auto-filled missing key: {key}")
+    comparison_dict_result = service_instance.compare_translations(source_result, target_result, config)
 
-    missing_count = len(missing_in_target)
-    obsolete_count = len(obsolete_in_target)
-    placeholder_count = len(invalid_placeholders)
-    output_lines = []
-
-    # Calculate max key length for proper alignment
-    max_key_length = max((len(key) for key in (source_keys | target_keys)), default=0)
-
-    # Report placeholder mismatches
-    for key, error_msg in invalid_placeholders:
-        line = f"~ {key.ljust(max_key_length)} : {new_translations[key]} ({error_msg})"
-        if not is_gui:
-            line = Fore.YELLOW + line + Style.RESET_ALL
-        output_lines.append(line)
-
-    # Log a warning for each missing key if the flag is enabled
-    for key in sorted(missing_in_target):
-        if log_missing_keys:
-            logging.warning(f"Missing translation key '{key}' for locale '{target_locale}'")
-        line = f"+ {key.ljust(max_key_length)} : {old_translations[key]} (missing in source translation)"
-        if not is_gui:
-            line = Fore.GREEN + line + Style.RESET_ALL
-        output_lines.append(line)
-
-    # Report obsolete entries (in target but not source) 
-    for key in sorted(obsolete_in_target):
-        line = f"- {key.ljust(max_key_length)} : {new_translations[key]} (missing in target translation)"
-        if not is_gui:
-            line = Fore.RED + line + Style.RESET_ALL
-        output_lines.append(line)
-
-    # Only add summary section if requested
-    if include_summary:
-        if output_lines:
-            output_lines.append("")
-        output_lines.append("--- Summary ---")
-        output_lines.append(f"Missing in target: {missing_count}")
-        output_lines.append(f"Obsolete in target: {obsolete_count}")
-        output_lines.append(f"Placeholder mismatches: {placeholder_count}")
-
-    return "\n".join(output_lines)
+    return comparison_dict_result
 
 def translate_missing_keys(source_dict: dict, target_dict: dict, 
                          source_lang: str, target_lang: str, 
@@ -674,52 +297,8 @@ def save_translations(translations: dict, filepath: str, format: str = "auto") -
     except Exception as e:
         return False, str(e)
 
-def extract_placeholders(text: str) -> list[str]:
-    """Extract all placeholders from a text string."""
-    # Common placeholder patterns
-    patterns = [
-        r'\{[^}]+\}',          # {name}, {0}, {value}
-        r'%[ds]',              # %s, %d
-        r'%[0-9]*\.[0-9]*[fs]',# %.2f, %3.1f
-        r'%[0-9]+\$[ds]',      # %1$s, %2$d (positional)
-        r'\$[a-zA-Z_][a-zA-Z0-9_]*', # $variable
-        r'#[a-zA-Z_][a-zA-Z0-9_]*#', # #variable#
-        r'\[\[[^\]]+\]\]'      # [[variable]]
-    ]
-    
-    combined_pattern = '|'.join(patterns)
-    placeholders = re.finditer(combined_pattern, text)
-    return [p.group() for p in placeholders]
-
-def validate_placeholders(source_text: str, target_text: str) -> tuple[bool, str]:
-    """
-    Validate that placeholders match between source and target text.
-    Returns (is_valid, error_message).
-    """
-    if not source_text or not target_text:
-        return True, ""  # Consider empty strings valid
-        
-    source_placeholders = extract_placeholders(source_text)
-    target_placeholders = extract_placeholders(target_text)
-    
-    if not source_placeholders and not target_placeholders:
-        return True, ""
-    
-    # Check if lists match (including order for positional placeholders)
-    if source_placeholders == target_placeholders:
-        return True, ""
-        
-    # Check for missing or extra placeholders
-    missing = set(source_placeholders) - set(target_placeholders)
-    extra = set(target_placeholders) - set(source_placeholders)
-    
-    error_msg = []
-    if missing:
-        error_msg.append(f"Missing placeholders: {', '.join(missing)}")
-    if extra:
-        error_msg.append(f"Extra placeholders: {', '.join(extra)}")
-        
-    return False, "; ".join(error_msg)
+# Removed extract_placeholders function (now in ComparisonService)
+# Removed validate_placeholders function (now in ComparisonService)
 
 from core.constants import SUPPORTED_FORMATS, USER_MESSAGES
-from parsers.xml_parser import XMLParser  # Updated import path
+# from parsers.xml_parser import XMLParser  # No longer needed here

@@ -1,3 +1,13 @@
+from core.parsing_result import ParsingResult
+
+class TranslationParser:
+    """Base class for all translation file parsers.
+
+    This class defines the common interface that all parser implementations
+    must follow. Subclasses should implement the parse method to handle
+    specific file formats.
+from core.parsing_result import ParsingResult # Add this import
+
 class TranslationParser:
     """Base class for all translation file parsers.
     
@@ -6,15 +16,15 @@ class TranslationParser:
     specific file formats.
     """
 
-    def parse(self, content: str) -> dict:
-        """Parse the content and return a dictionary of translations.
+    def parse(self, content: str) -> ParsingResult:
+        """Parse the content and return a ParsingResult object.
         
         Args:
             content: The string content of the translation file to parse
             
         Returns:
-            dict: A dictionary containing the parsed translations with keys as
-                 translation identifiers and values as the translated strings
+            ParsingResult: An object containing the parsed translations,
+                           line numbers, metadata, and any errors.
             
         Raises:
             NotImplementedError: This method must be implemented by subclasses

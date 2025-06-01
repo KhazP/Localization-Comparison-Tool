@@ -14,8 +14,7 @@ from parsers.android_xml_parser import AndroidXMLParser
 from parsers.angular_json_parser import AngularJSONParser # For .angular.json etc.
 from parsers.resx_parser import RESXParser
 from parsers.xliff_parser import XLIFFParser
-# Import MixedParser if it's to be integrated here
-# from MixedParser.mixed_parser import parse_mixed_file # Assuming this is its interface
+from MixedParser.mixed_parser import MixedFileParser # Import MixedFileParser
 import csv # Added for CSVParser default config
 
 logger = logging.getLogger(__name__)
@@ -47,6 +46,7 @@ class ParserService:
         # or a config hint to be chosen over the generic JSONParser.
         # Let's assume a distinct extension for now or it's handled by config.
         self.register_parser(".ng.json", AngularJSONParser) # Example for distinct Angular JSON
+        self.register_parser(".mixed-lang", MixedFileParser) # Register MixedFileParser
 
     def register_parser(self, extension: str, parser_class: Type[TranslationParser]):
         """
@@ -140,9 +140,15 @@ class ParserService:
                     source_lang=instance_config.get('source_lang'),
                     target_lang=instance_config.get('target_lang')
                 )
-            elif parser_class == XMLParser:
+            elif parser_class == MixedFileParser: # Add handling for MixedFileParser
+                parser_instance = MixedFileParser(
+                    trim_whitespace=instance_config.get('trim_whitespace', True)
+                )
+            elif parser_class == XMLParser: # XMLParser is generic, currently no special config via this mechanism
                  parser_instance = XMLParser()
-            else: # For JSON, YAML, Properties, RESX - they have simple or no-arg constructors
+            # For JSON, YAML, Properties, RESX - they have simple or no-arg constructors
+            # No specific instance_config handling needed here unless their __init__ changes.
+            else:
                 parser_instance = parser_class()
 
             logger.info(f"Using {parser_class.__name__} for extension '{normalized_ext}'.")

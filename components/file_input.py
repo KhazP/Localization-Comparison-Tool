@@ -8,11 +8,13 @@ from pathlib import Path
 import os
 import logging
 from utils.file_cache_service import file_cache_service
+from utils.common import get_readable_file_size # Import the common utility
 
 class FileInputComponent:
-    def __init__(self, page: ft.Page, app_reference):
+    def __init__(self, page: ft.Page, app_reference, on_file_selected_callback=None): # Added callback
         self.page = page
-        self.app = app_reference
+        self.app = app_reference # Still needed for colors, validate_file, show_snackbar, update_compare_button
+        self.on_file_selected_callback = on_file_selected_callback # Store callback
         self.source_file_path = ""
         self.target_file_path = ""
         
@@ -91,8 +93,9 @@ class FileInputComponent:
                 try:
                     # Start asynchronous file operations
                     def update_file_stats(line_count, error):
-                        file_size = self.get_readable_file_size(os.path.getsize(file_path))
-                        field.value = f"{file_name} ({file_size}, {line_count} lines)"
+                        # Use the imported common utility
+                        file_size_str = get_readable_file_size(float(os.path.getsize(file_path)))
+                        field.value = f"{file_name} ({file_size_str}, {line_count} lines)"
                         
                         if field_type == "source":
                             self.source_file_path = file_path
@@ -105,12 +108,12 @@ class FileInputComponent:
                         icon.color = Colors.BLUE_400
                         self.app.update_compare_button()
                         
-                        # Update preview if enabled
-                        if self.app.config["show_preview"]:
-                            self.update_file_preview(file_path, field_type)
-                            self.app.preview_section.visible = True
+                        # Update preview if enabled by calling the callback
+                        if self.on_file_selected_callback:
+                            self.on_file_selected_callback(file_path, field_type)
+                        # self.app.preview_section.visible = True # App callback will handle visibility
                             
-                        self.page.update()
+                        self.page.update() # page.update might still be needed for label changes
                     
                     # Use async line count to avoid freezing the UI
                     field.value = f"{file_name} (loading...)"
@@ -134,39 +137,11 @@ class FileInputComponent:
                 field.update()
                 icon.update()
     
-    def get_readable_file_size(self, size_in_bytes):
-        """Convert file size in bytes to human readable format"""
-        for unit in ['B', 'KB', 'MB', 'GB']:
-            if size_in_bytes < 1024:
-                if unit == 'B':
-                    return f"{size_in_bytes} {unit}"
-                return f"{size_in_bytes:.1f} {unit}"
-            size_in_bytes /= 1024
-        return f"{size_in_bytes:.1f} TB"
+    # Removed local get_readable_file_size method
     
     # Removed duplicate get_file_lines method - using file_cache_service directly
     
-    def update_file_preview(self, file_path: str, field_type: str):
-        """
-        Update the preview text field with the first few lines of the file.
-        Uses FileCacheService for optimized file reading.
-        """
-        try:
-            # Use the file cache service's preview function
-            preview_text = file_cache_service.preview_file(file_path)
-            
-            # Get the appropriate preview TextField
-            # Fix index for target file - use index 1 instead of 2
-            preview_field = self.app.preview_section.content.controls[0 if field_type == "source" else 1].content.controls[1].content
-            preview_field.value = preview_text
-            preview_field.update()
-            
-        except Exception as e:
-            logging.error(f"Error reading preview: {str(e)}")
-            # Fix index for target file - use index 1 instead of 2
-            preview_field = self.app.preview_section.content.controls[0 if field_type == "source" else 1].content.controls[1].content
-            preview_field.value = "Error reading file preview"
-            preview_field.update()
+    # update_file_preview method is removed from here, its logic will move to the App class via callback.
 
     def open_source_picker(self, _):
         self.source_picker.pick_files()

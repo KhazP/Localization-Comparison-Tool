@@ -23,11 +23,11 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
-LicenseFile=LICENSE
-InfoBeforeFile=README.md
-OutputDir=releases\windows
+LicenseFile=..\LICENSE
+InfoBeforeFile=..\README.md
+OutputDir=..\releases\windows
 OutputBaseFilename=LocalizerApp-1.0.0-Setup
-SetupIconFile=assets\logo\localizerapp.ico
+SetupIconFile=..\assets\logo\localizerapp.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -43,15 +43,15 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1
 
 [Files]
-Source: "releases\windows\LocalizerApp.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "releases\windows\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "releases\windows\desktop_drop_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "releases\windows\libgit2-1.5.0.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "releases\windows\libgit2dart_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "releases\windows\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "releases\windows\README.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\releases\windows\LocalizerApp.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\releases\windows\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\releases\windows\desktop_drop_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\releases\windows\libgit2-1.5.0.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\releases\windows\libgit2dart_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\releases\windows\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\releases\windows\README.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

@@ -1,32 +1,53 @@
-# Python bytecode
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins-dependencies
+build/
+*.iml
+
+# IDE & Editor Files  
+.cursor/
+.vscode/
+.idea/
+localizer_app_main.iml
+
+# Development Tools & Documentation
+.specstory/
+CLAUDE.md
+commit.md
+LocalizerAppMain.md
+settingspage.md
+.gitignore.flutter
+
+# Test Data & Samples
+SampleTranslations/
+
+# Windows Flutter Generated Files
+windows/flutter/ephemeral/
+
+# Legacy Python Files (backward compatibility)
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Distribution/packaging
 dist/
-build/
 *.egg-info/
 localizer.egg-info/
-
-# Testing
 .pytest_cache/
 .coverage
 htmlcov/
-
-# Build artifacts and executables
 *.spec
 *.exe
 *.pkg
+venv/
+env/
+.venv/
+hook-flet.py
 
-# Development and IDE
-.vscode/
-.idea/
+# Development Notes & Personal Files
 code-style.md
 copilot-instructions.md
-
-# Personal TODO list
 docs/TODO.md
+docs/report
+Sample Translation/
 
 # Logs and temporary files
 *.log
@@ -34,19 +55,5 @@ localizer_debug.log
 .DS_Store
 Thumbs.db
 
-# Virtual environments
-venv/
-env/
-.venv/
-.venv/
-
-# Git LFS (if you decide to use it later)
+# Git LFS
 .gitattributes
-
-# Test Files for QA
-Sample Translation/
-
-hook-flet.py
-
-# Documentation
-docs/report

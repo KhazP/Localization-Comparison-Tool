@@ -19,11 +19,15 @@ The Localization Comparison Tool helps developers, translators, and localization
 - **Similarity Analysis**: Advanced algorithms detect how much modified strings have changed
 - **Batch Processing**: Compare entire directories with matching file pairs
 
+<img src="https://github.com/user-attachments/assets/15a392c6-2c9f-4bd9-9ec7-019d9d63fef9" width="800">
+
 ### 🎨 **Modern Interface**
 - **Material Design 3**: Beautiful, intuitive interface that follows platform conventions
 - **Advanced Theming**: Light, Dark, and Amoled modes with customizable accent colors
 - **Drag & Drop**: Simply drag files from your desktop for instant comparison
 - **Responsive Design**: Optimized for different screen sizes and resolutions
+
+<img src="https://github.com/user-attachments/assets/c7cab91c-47a1-4300-b354-dd8a6abfd680" width="800">
 
 ### 🚀 **Performance & Usability**
 - **Real-Time File Watching**: Automatically recompares files when they change on disk
@@ -31,11 +35,15 @@ The Localization Comparison Tool helps developers, translators, and localization
 - **Export Capabilities**: Export comparison results to CSV for documentation
 - **Comparison History**: Keep track of past comparisons with full session history
 
+<img src="https://github.com/user-attachments/assets/2e158bd4-e190-4c93-9c31-665e996ecd14" width="800">
+
 ### ⚙️ **Professional Features**
 - **Advanced Filtering**: Filter results by change type, similarity levels, and custom patterns
 - **Custom Settings**: Configure ignore patterns, case sensitivity, and default file formats
 - **Progress Tracking**: Real-time progress indicators for large file operations
 - **Cross-Platform**: Native desktop performance on Windows, macOS, and Linux
+
+<img src="https://github.com/user-attachments/assets/6cd47c72-4d89-4bb2-87e0-9776417b19dd" width="800">
 
 ## 🔧 Supported File Formats
 
@@ -88,19 +96,6 @@ flutter build windows  # or macos, linux
 ### Windows
 - **OS**: Windows 10 version 1903 (build 18362) or later
 - **Architecture**: x64, ARM64
-- **Memory**: 4GB RAM minimum, 8GB recommended
-- **Storage**: 200MB available space
-
-### macOS
-- **OS**: macOS 10.14 (Mojave) or later
-- **Architecture**: Intel x64, Apple Silicon (M1/M2)
-- **Memory**: 4GB RAM minimum, 8GB recommended
-- **Storage**: 200MB available space
-
-### Linux
-- **Distribution**: Ubuntu 18.04 LTS or equivalent
-- **Desktop**: GNOME, KDE, or other GTK-compatible environment
-- **Dependencies**: GTK 3.0+, required system libraries
 - **Memory**: 4GB RAM minimum, 8GB recommended
 - **Storage**: 200MB available space
 

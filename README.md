@@ -98,20 +98,7 @@ flutter build windows  # or macos, linux
 - **OS**: Windows 10 version 1903 (build 18362) or later
 - **Architecture**: x64, ARM64
 - **Memory**: 4GB RAM minimum, 8GB recommended
-- **Storage**: 200MB available space
-
-### macOS
-- **OS**: macOS 10.14 (Mojave) or later
-- **Architecture**: Intel x64, Apple Silicon (M1/M2)
-- **Memory**: 4GB RAM minimum, 8GB recommended
-- **Storage**: 200MB available space
-
-### Linux
-- **Distribution**: Ubuntu 18.04 LTS or equivalent
-- **Desktop**: GNOME, KDE, or other GTK-compatible environment
-- **Dependencies**: GTK 3.0+, required system libraries
-- **Memory**: 4GB RAM minimum, 8GB recommended
-- **Storage**: 200MB available space
+- **Storage**: ~10MB available space
 
 ## 🎯 Quick Start Guide
 

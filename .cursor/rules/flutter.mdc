@@ -1,0 +1,44 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Never ask to run rebuild or regenerate commands. I will run those myself. You can tell me to rebuild or to regenerate files, but I WILL DO IT MYSELF!
+
+Never do TODOs (unless I say), simulate or use fake data unless I SPECIFICALLY SAY so. Do not be lazy, DO THE ENTIRE IMPLEMENTATION START TO FINISH!
+
+Please do NOT make random guesses on variable names or include paths. Always reference the codebase to see if we have something existing before deciding to randomly make new classes or make up member variable names. DO not hallucinate variable names, feel free to ask if you need context for a file.
+
+If you are the composer, don't be afraid to search the codebase for files you need to.
+
+Try to have a LOT of comments, when refactoring or creating code take the chance to add as many comments as you can, with multi-line, fancy formatting if necessary for explanations. There really should be comments every like 3-6 lines or so, and especially when starting new blocks of code. If you are unsure about names or member variables, feel free to remind me/ask me for full codebase context.. that being said make sure your comments don't make it obvious you are an AI.
+
+If we are designing a UI, try to use Apple's Human Interface Guidelines, let's make something sleek, sexy, modern, and easy to use if we are doing UI stuff, with nice animations too if we can. Really modern and sexy sleek minimal apple style MacOS style UI design, make it sexy, sleek. Animations, UI. Modern, amazing STEVE JOBS LEVEL lets GO! Always reaffirm to me that we are doing it using Apple Guidelines and how we used them in this design (if we are doing UI). When animating, try to use spring animations where possible. Ensure you consider the entire app layout, and how it will work for desktop, tablet, and mobile.
+
+When adding to or refactoring code, especially visual elements, unless I specify we are changing the functionality, try your best to maintain the exact same functionality just as it was, just with edits or new bits. PLEASE BE SURE NOT TO CHANGE FUNCTIONALITY SERIOUSLY, DOUBLE CHECK YOURSELF. Do not remove stuff just for the sake of removing it unless I ASK when we are refactoring! So you don't break things uninentionally.
+
+When doing creative writing, such as app filler text, hero text, calls to action, descriptions, instructions to users, etc: 
+
+Write with confidence. No fluff, no filler—just direct, no-nonsense communication. Every word should be intentional. Keep it sharp, bold, and a little irreverent, but always clear. Inject wit where it fits, but never at the cost of clarity. Assume the user knows what they’re doing and just needs the tool to work—no hand-holding, no corporate nonsense. Speak like a brand that delivers, not one that tries too hard. Straight-up, efficient, and brutally effective. But funny enough to make people laugh when necessary!
+
+When we are debugging, think critically, step by step, consider each possibility, considering and reading each relevant file, and select the most likely resolution, but if we spend a while trying to fix something with no resolution, we should add temporary debug or print statements, and I should copy them to you so you can examine them to understand how the behavior does not align with our goals. Do not suggest the same resolution to a problem if we have previously tried that and it failed, come up with something new.
+
+Do not be afraid to rewrite large swaths of code to fix  or consolidate things, but be very careful not to have us backtrack and lose existing functionality, so always consider the functionality of a function, interface, or class, before, and after your changes, and ensure we do not delete anything we previously needed.
+
+Unless I specifically instruct you otherwise, never do //... or // TODO instead of actually fully implementing something. Actually do the full implementation.
+
+===
+Everything below should only apply to Dart code
+===
+Try not to delete comments or log statements. In Flutter, use cascade operators when you can. Please use the logger library wherever needed (and use info, warn, err, fine, finest etc). If you ever see a print statement replace it with logger. 
+
+useGoogleFonts: false needs to happen anywhere on styles where we use 'sfpro' font family
+
+For animating springs, we can use this:
+import 'package:sprung/sprung.dart';
+
+If we are doing mobile app development in Flutter, try to use Cupertino widgets as much as possible. 
+
+If this is a Flutter project, we should be using Riverpod as the state manager, and always using best state-management practices, and creating providers when needed to ensure we don't repeat code across files.
+
+===

@@ -1,0 +1,1787 @@
+<lang>
+	<!-- Skills -->
+
+
+	<string name="skills.type.dash">Dash</string>
+	<string name="skills.type.dash.upgrade">Dash Upgrade</string>
+	<string name="skills.type.mainhand.attack">Mainhand Attack</string>
+	<string name="skills.type.mainhand.attack.upgrade">Mainhand Attack Upgrade</string>
+	<string name="skills.type.offhand.attack">Offhand Attack</string>
+	<string name="skills.type.offhand.attack.upgrade">Offhand Attack Upgrade</string>
+	<string name="skills.type.offhand.skill">Offhand Skill</string>
+	<string name="skills.type.offhand.skill.upgrade">Offhand Skill Upgrade</string>
+	<string name="skills.type.spell">Spell</string>
+	<string name="skills.type.spell.upgrade">Spell Upgrade</string>
+	<string name="skills.type.passive">Passive</string>
+	<string name="skills.type.passive.upgrade">Passive Upgrade</string>
+	<string name="skills.type.passive.toggle">Passive Toggleable</string>
+
+	<string name="skills.desc.params.mana_cost">Mana Cost:</string>
+	<string name="skills.desc.params.stamina_cost">Stamina Cost:</string>
+	<string name="skills.desc.params.health_cost">Health Cost:</string>
+	<string name="skills.desc.params.cooldown">Cooldown:</string>
+	<string name="skills.desc.params.cooldown.effect">Effect Cooldown:</string>
+	<string name="skills.desc.params.amount">Amount:</string>
+	<string name="skills.desc.params.duration">Duration:</string>
+	<string name="skills.desc.params.duration.min">Min Duration:</string>
+	<string name="skills.desc.params.duration.max">Max Duration:</string>
+	<string name="skills.desc.params.duration.health_lost">Duration per Health Lost:</string>
+	<string name="skills.desc.params.tick_rate">Tick Rate:</string>
+	<string name="skills.desc.params.chance">Chance:</string>
+	<string name="skills.desc.params.range">Range:</string>
+	<string name="skills.desc.params.size">Size:</string>
+	<string name="skills.desc.params.frequency">Frequency:</string>
+	<string name="skills.desc.params.completion">Completion Time:</string>
+	<string name="skills.desc.params.conversion">Conversion Rate:</string>
+	<string name="skills.desc.params.strikes">Strikes:</string>
+
+	<string name="skills.desc.params.health">Health:</string>
+	<string name="skills.desc.params.stamina">Stamina:</string>
+	<string name="skills.desc.params.mana">Mana:</string>
+	<string name="skills.desc.params.healthregen">Health Regen:</string>
+	<string name="skills.desc.params.healthregen.dex">Health Regen per Dexterity:</string>
+	<string name="skills.desc.params.healthregen.int">Health Regen per Intelligence:</string>
+	<string name="skills.desc.params.manaregen">Mana Regen:</string>
+	<string name="skills.desc.params.manaregen.str">Mana Regen per Strength:</string>
+	<string name="skills.desc.params.manaregen.dex">Mana Regen per Dexterity:</string>
+	<string name="skills.desc.params.regenall">All Regen:</string>
+	<string name="skills.desc.params.str">Strength:</string>
+	<string name="skills.desc.params.dex">Dexterity:</string>
+	<string name="skills.desc.params.int">Intelligence:</string>
+	<string name="skills.desc.params.foc">Focus:</string>
+	<string name="skills.desc.params.vit">Vitality:</string>
+	<string name="skills.desc.params.attributes">Attributes:</string>
+	<string name="skills.desc.params.weaponpower">Weapon Power:</string>
+	<string name="skills.desc.params.spellpower">Spell Power:</string>
+
+	<string name="skills.desc.params.damage">Damage:</string>
+	<string name="skills.desc.params.damage.spell">Spell Damage:</string>
+	<string name="skills.desc.params.damage.weapon">Weapon Damage:</string>
+	<string name="skills.desc.params.damage.mainhand">Mainhand Damage:</string>
+	<string name="skills.desc.params.damage.offhand">Offhand Damage:</string>
+	<string name="skills.desc.params.damage.physical">Physical Damage:</string>
+	<string name="skills.desc.params.damage.fire">Fire Damage:</string>
+	<string name="skills.desc.params.damage.ice">Ice Damage:</string>
+	<string name="skills.desc.params.damage.lightning">Lightning Damage:</string>
+	<string name="skills.desc.params.damage.poison">Poison Damage:</string>
+	<string name="skills.desc.params.damage.pure">Pure Damage:</string>
+
+	<string name="skills.desc.params.damage.lvl">Damage per Level:</string>
+	<string name="skills.desc.params.damage.str">Damage per Strength:</string>
+	<string name="skills.desc.params.damage.dex">Damage per Dexterity:</string>
+	<string name="skills.desc.params.damage.int">Damage per Intelligence:</string>
+	<string name="skills.desc.params.damage.stamina.current">Damage per Current Stamina:</string>
+	<string name="skills.desc.params.damage.mana.current">Damage per Current Mana:</string>
+	<string name="skills.desc.params.damage.str.physical">Physical Damage per Strength:</string>
+	<string name="skills.desc.params.damage.int.ice">Ice Damage per Intelligence:</string>
+	<string name="skills.desc.params.damage.int.pure">Pure Damage per Intellgence:</string>
+	<string name="skills.desc.params.damage.missing.health">Damage per missing percent Health:</string>
+	<string name="skills.desc.params.damage.armor">Damage per Armor:</string>
+
+	<string name="skills.desc.params.attack_speed">Attack Speed:</string>
+	<string name="skills.desc.params.weapon_speed">Weapon Speed:</string>
+	<string name="skills.desc.params.cast_speed">Cast Speed:</string>
+	<string name="skills.desc.params.skill_speed">Skill Speed:</string>
+	<string name="skills.desc.params.spell_cost">Spell Cost:</string>
+
+	<string name="skills.desc.params.crit.chance">Crit Chance:</string>
+	<string name="skills.desc.params.crit.chance.attack">Attack Crit Chance:</string>
+	<string name="skills.desc.params.crit.chance.weapon">Weapon Crit Chance:</string>
+	<string name="skills.desc.params.crit.chance.spell">Spell Crit Chance:</string>
+	<string name="skills.desc.params.crit.damage">Crit Damage:</string>
+	<string name="skills.desc.params.crit.damage.attack">Attack Crit Damage:</string>
+	<string name="skills.desc.params.crit.damage.weapon">Weapon Crit Damage:</string>
+	<string name="skills.desc.params.crit.damage.spell">Spell Crit Damage:</string>
+	<string name="skills.desc.params.leech">Life Leech:</string>
+	<string name="skills.desc.params.leech.attack">Attack Life Leech:</string>
+	<string name="skills.desc.params.leech.weapon">Weapon Life Leech:</string>
+	<string name="skills.desc.params.leech.spell">Spell Life Leech:</string>
+	<string name="skills.desc.params.leech.mana">Mana Leech:</string>
+
+	<string name="skills.desc.params.heal">Heal:</string>
+	<string name="skills.desc.params.restore.health.max">Health Restored:</string>
+	<string name="skills.desc.params.restore.mana.max">Mana Restored:</string>
+	<string name="skills.desc.params.restore.stamina.max">Stamina Restored:</string>
+
+	<string name="skills.desc.params.dmg_taken">Damage Taken:</string>
+	<string name="skills.desc.params.dmg_threshold">Damage Threshold:</string>
+
+	<string name="skills.desc.params.armor">Armor:</string>
+	<string name="skills.desc.params.armor.str">Armor per Strength:</string>
+	<string name="skills.desc.params.armor.int">Armor per Intelligence:</string>
+	<string name="skills.desc.params.armor.dex">Armor per Dexterity:</string>
+	<string name="skills.desc.params.resistance">Resistance:</string>
+	<string name="skills.desc.params.resistance.fire">Fire Resistance:</string>
+	<string name="skills.desc.params.resistance.ice">Ice Resistance:</string>
+	<string name="skills.desc.params.resistance.lightning">Lightning Resistance:</string>
+	<string name="skills.desc.params.resistance.poison">Poison Resistance:</string>
+	<string name="skills.desc.params.block">Block Amount:</string>
+	<string name="skills.desc.params.block.instances">Block Instances:</string>
+	<string name="skills.desc.params.block.chance.max">Max Block Chance:</string>
+	<string name="skills.desc.params.block.mana_cost">Mana Lost per Damage Blocked:</string>
+	<string name="skills.desc.params.armor_pen">Armor Penetration:</string>
+	<string name="skills.desc.params.armor_pen.str">Armor Penetration per Strength:</string>
+	<string name="skills.desc.params.fire_pen">Fire Penetration:</string>
+	<string name="skills.desc.params.ice_pen">Ice Penetration:</string>
+	<string name="skills.desc.params.lightning_pen">Lightning Penetration:</string>
+	<string name="skills.desc.params.poison_pen">Poison Penetration:</string>
+	<string name="skills.desc.params.ele_res.lvl">Elemental Resistances per Level:</string>
+	<string name="skills.desc.params.ele_pen">Fire/Ice/Lightning Penetration:</string>
+	
+
+	<string name="skills.desc.params.evasion">Evasion:</string>
+	<string name="skills.desc.params.mspeed">Movement Speed:</string>
+	<string name="skills.desc.params.mspeed.reduction">Movement Speed Reduction:</string>
+	<string name="skills.desc.params.slow_effect">Slow Effect:</string>
+	<string name="skills.desc.params.expgain">Experience Gain:</string>
+
+	<string name="skills.desc.params.chanelling.max">Max Channelling Time:</string>
+	<string name="skills.desc.params.charge.max">Max Charge Time:</string>
+	<string name="skills.desc.params.charge.stamina">Charging Stamina Cost:</string>
+	<string name="skills.desc.params.charge.ttl">Max Lifetime:</string>
+	<string name="skills.desc.params.recharge">Recharge Time:</string>
+
+	<string name="skills.desc.params.stacks">Stacks:</string>
+	<string name="skills.desc.params.stacks.max">Max Stacks:</string>
+	<string name="skills.desc.params.stacks.duration">Stack Duration:</string>
+	<string name="skills.desc.params.stacks.replenish">Stack Replenish Time:</string>
+	<string name="skills.desc.params.stacks.damage">Damage per Stack:</string>
+	<string name="skills.desc.params.stacks.damage.weapon">Weapon Damage per Stack:</string>
+	<string name="skills.desc.params.stacks.crit_damage.weapon">Weapon Crit Damage per Stack:</string>
+	<string name="skills.desc.params.stacks.damage.spell">Spell Damage per Stack:</string>
+	<string name="skills.desc.params.stacks.armor">Armor per Stack:</string>
+	<string name="skills.desc.params.stacks.mspeed">Movement Speed per Stack:</string>
+	<string name="skills.desc.params.stacks.str">Strength per Stack:</string>
+	<string name="skills.desc.params.stacks.dex">Dexterity per Stack:</string>
+	<string name="skills.desc.params.stacks.int">Intellgience per Stack:</string>
+	<string name="skills.desc.params.stacks.attack_speed">Attack Speed per Stack:</string>
+	<string name="skills.desc.params.stacks.weapon_speed">Weapon Speed per Stack:</string>
+	<string name="skills.desc.params.stacks.cast_speed">Cast Speed per Stack:</string>
+	<string name="skills.desc.params.stacks.crit.weapon">Weapon Crit Chance per Stack:</string>
+	<string name="skills.desc.params.stacks.crit.spell">Spell Crit Chance per Stack:</string>
+	<string name="skills.desc.params.stacks.crit">Crit Chance per Stack:</string>
+	<string name="skills.desc.params.stacks.healthregen">Health Regen per Stack:</string>
+	<string name="skills.desc.params.stacks.manaregen">Mana Regen per Stack:</string>
+	<string name="skills.desc.params.stacks.mana_cost">Mana Cost per Stack:</string>
+	<string name="skills.desc.params.stacks.max.regen">Regen at Max Stacks:</string>
+	<string name="skills.desc.params.stacks.max.crit">Crit Chance at Max Stacks:</string>
+	<string name="skills.desc.params.stacks.max.dmg_taken">Damage Taken at Max Stacks:</string>
+	<string name="skills.desc.params.stacks.gain">Stacks Gained:</string>
+	<string name="skills.desc.params.stacks.bleeding">Bleeding Stacks:</string>
+	<string name="skills.desc.params.stacks.fire_res">Fire Resistance per Stack:</string>
+	<string name="skills.desc.params.stacks.fire_pen">Fire Penetration per Stack:</string>
+
+	<string name="skills.desc.params.status_effect">Status Effect:</string>
+	<string name="skills.desc.params.affliction.mul">Affliction Multiplier:</string>
+	<string name="skills.desc.params.aura.range">Aura Range:</string>
+	<string name="skills.desc.params.detection.range">Detection Range:</string>
+
+	<string name="skills.desc.params.health_lost">Health Lost:</string>
+	<string name="skills.desc.params.health_lost.mana">Health Lost based on Mana Cost:</string>
+	<string name="skills.desc.params.health_lost.stamina">Health Lost based on Stamina Cost:</string>
+	<string name="skills.desc.params.mana_lost">Mana Lost:</string>
+	<string name="skills.desc.params.mana.spent.trigger">Mana Spent to Trigger:</string>
+	<string name="skills.desc.params.threshold.mana">Mana Threshold:</string>
+	<string name="skills.desc.params.stamina_cost.max">Skill Stamina Cost:</string>
+
+
+	<string name="skills.desc.params.projectile.pierce">Projectile Piercing:</string>
+	<string name="skills.desc.params.projectile.range_speed">Projectile Range & Speed:</string>
+	<string name="skills.desc.params.projectile.dmg_speed">Projectile Damage & Speed:</string>
+	<string name="skills.desc.params.projectile.number">Projectiles:</string>
+	<string name="skills.desc.params.projectile.lifetime">Projectile Lifetime:</string>
+
+	<string name="skills.desc.params.bounce">Bounces:</string>
+	<string name="skills.desc.params.bounce.damage">Damage per Bounce:</string>
+	<string name="skills.desc.params.jumps">Jumps:</string>
+	<string name="skills.desc.params.jumps.damage">Damage per Jump:</string>
+	<string name="skills.desc.params.chains">Chains:</string>
+	<string name="skills.desc.params.chains.damage">Damage per Chain:</string>
+	<string name="skills.desc.params.cleave.damage">Cleave Damage:</string>
+	<string name="skills.desc.params.cleave.range">Cleave Range:</string>
+	<string name="skills.desc.params.cleave.arc">Cleave Arc:</string>
+	<string name="skills.desc.params.hits.destroy">Hits to Destroy:</string>
+
+
+	<string name="skills.desc.params.pillars.strikes">Additional Explosions:</string>
+	<string name="skills.desc.params.pillars.add">Additional Pillars:</string>
+	<string name="skills.desc.params.wolf.damage">Wolf Damage:</string>
+	<string name="skills.desc.params.wolf.health">Wolf Health:</string>
+	<string name="skills.desc.params.wolf.max">Max Wolves Summoned:</string>
+	<string name="skills.desc.params.lightning_bolts">Lightning Bolts:</string>
+	<string name="skills.desc.params.spirit_wolves">Spirit Wolves:</string>
+	<string name="skills.desc.params.flurry.strikes">Enemies Hit per Strike:</string>
+	<string name="skills.desc.params.traps.max">Max Traps Placed:</string>
+	<string name="skills.desc.params.traps.add">Additional Traps:</string>
+	<string name="skills.desc.params.fiend.health">Fiend Health:</string>
+	<string name="skills.desc.params.fiend.lifetime">Fiend Lifetime:</string>
+	<string name="skills.desc.params.fiend.damage">Fiend Damage:</string>
+	<string name="skills.desc.params.frost_shards">Frost Shards:</string>
+	<string name="skills.desc.params.meteors">Meteors:</string>
+
+	<string name="skills.desc.params.max_placed">Max Placed:</string>
+	<string name="skills.desc.params.end_damage">End Damage:</string>
+	<string name="skills.desc.params.health_prc_per_stack">Health % per stack:</string>
+	<string name="skills.desc.params.mana_prc_per_stack">Mana % per stack:</string>
+
+	<string name="skills.combo.kills.name">Combo: Kills</string>
+	<string name="skills.combo.kills.desc">Triggers combo after 10 kills in quick succession.</string>
+	<string name="skills.combo.dash.name">Combo: Dash</string>
+	<string name="skills.combo.dash.desc">Triggers combo after 3 dashes in quick succession.</string>
+	<string name="skills.combo.parry.name">Combo: Parry</string>
+	<string name="skills.combo.parry.desc">Triggers combo after 8 parries in quick succession.</string>
+	<string name="skills.combo.none.name">Combo: None</string>
+	<string name="skills.combo.none.desc">Disables combo.</string>
+	<string name="skills.combo.selected"> (selected)</string>
+
+	<string name="skills.combo.nova.name">Combo Nova</string>
+	<string name="skills.combo.nova.desc">Shoots a nova of projectiles every second while combo is active.</string>
+
+
+
+
+
+	<!-- Attacks -->
+
+
+	<string name="skills.attacks.mainhand.mace.name">Mace Bash</string>
+	<string name="skills.attacks.mainhand.mace.desc">A powerful swing that deal 100% Weapon damage and has a 15% chance to inflict \cb0dfffStun\d.</string>
+	<string name="skills.attacks.mainhand.axe.name">Axe Slash</string>
+	<string name="skills.attacks.mainhand.axe.desc">A rending slash that deal 100% Weapon damage and has a 20% chance to inflict a stack of \cb0dfffBleeding\d.</string>
+	<string name="skills.attacks.mainhand.sword.name">Sword Swing</string>
+	<string name="skills.attacks.mainhand.sword.desc">A wide arcing swing that deal 100% Weapon damage.</string>
+	<string name="skills.attacks.mainhand.dagger.name">Dagger Slash</string>
+	<string name="skills.attacks.mainhand.dagger.desc">A quick slash that deal 100% Weapon damage and has a 20% chance to inflict a stack of \cb0dfffBleeding\d.</string>
+	<string name="skills.attacks.mainhand.dirk.name">Dirk Stab</string>
+	<string name="skills.attacks.mainhand.dirk.desc">A quick stab that deal 60% Weapon damage.</string>
+	<string name="skills.attacks.mainhand.wand.fire.name">Fire Bolt</string>
+	<string name="skills.attacks.mainhand.wand.fire.desc">Launch a fire bolt that explodes on impact dealing 40% Weapon damage.</string>
+	<string name="skills.attacks.mainhand.wand.ice.name">Ice Shards</string>
+	<string name="skills.attacks.mainhand.wand.ice.desc">Unleash three shards of ice that deal 60% Weapon damage each.</string>
+	<string name="skills.attacks.mainhand.wand.lightning.name">Lightning Bolt</string>
+	<string name="skills.attacks.mainhand.wand.lightning.desc">Discharge a bolt of lightning that can jump between enemies, dealing 40% Weapon damage. The bolt deals 10% less damage for each jump.</string>
+
+	<string name="skills.attacks.offhand.crossbow.name">Quick Shot</string>
+	<string name="skills.attacks.offhand.crossbow.desc">Quickly release a fast bolt that deal 75% Physical damage.</string>
+	<string name="skills.attacks.offhand.shield.name">Shield Bash</string>
+	<string name="skills.attacks.offhand.shield.desc">Bash enemies with your shield inflicting \cb0dfffStun\d.</string>
+	<string name="skills.attacks.offhand.shield.block.desc">Blocks up to %amnt% damage from most projectiles in a 180-degree arc.</string>
+	<string name="skills.attacks.offhand.tome.fire.name">Glyph of Fire</string>
+	<string name="skills.attacks.offhand.tome.fire.desc">Place a glyph at the ground that activates when an enemy gets near, producing an area of flames for 5 seconds, dealing 75% Weapon damage.</string>
+	<string name="skills.attacks.offhand.tome.ice.name">Glyph of Ice</string>
+	<string name="skills.attacks.offhand.tome.ice.desc">Place a glyph at the ground that activates when an enemy gets near, triggering a blast of ice dealing 100% Weapon damage in an area.</string>
+	<string name="skills.attacks.offhand.tome.lightning.name">Glyph of Lightning</string>
+	<string name="skills.attacks.offhand.tome.lightning.desc">Place a glyph at the ground that activates when an enemy gets near, causing three bolts of lightning to strike the area, each dealing 75% Weapon damage.</string>
+
+
+	<string name="skills.attacks.twohanded.shortbow1.name">Quick Shot</string>
+	<string name="skills.attacks.twohanded.shortbow1.desc">Rapidly fires an arrow that deal 50% Weapon damage.</string>
+	<string name="skills.attacks.twohanded.shortbow2.name">Power Shot</string>
+	<string name="skills.attacks.twohanded.shortbow2.desc">Hold to charge up a powerful shot. The range, speed and damage of the projectile is increased by the time charged, dealing up to 150% Weapon damage.</string>
+
+	<string name="skills.attacks.twohanded.longbow1.name">Quick Shot</string>
+	<string name="skills.attacks.twohanded.longbow1.desc">Rapidly fires an arrow that deal 60% Weapon damage.</string>
+	<string name="skills.attacks.twohanded.longbow2.name">Power Shot</string>
+	<string name="skills.attacks.twohanded.longbow2.desc">Hold to charge up a powerful shot. The range, speed and damage of the projectile is increased by the time charged, dealing up to 150% Weapon damage.</string>
+
+	<string name="skills.attacks.twohanded.crossbow1.name">Quick Shot</string>
+	<string name="skills.attacks.twohanded.crossbow1.desc">Quickly unleash a fast bolt that deal 100% Weapon damage.</string>
+	<string name="skills.attacks.twohanded.crossbow2.name">Explosive Shot</string>
+	<string name="skills.attacks.twohanded.crossbow2.desc">Fires an armed bolt that explodes upon impact dealing 150% Weapon damage.</string>
+
+	<string name="skills.attacks.twohanded.maul1.name">Maul Swing</string>
+	<string name="skills.attacks.twohanded.maul1.desc">A slow heavy swing that deal 175% Weapon damage and has a 20% chance to inflict \cb0dfffStun\d.</string>
+	<string name="skills.attacks.twohanded.maul2.name">Ground Slam</string>
+	<string name="skills.attacks.twohanded.maul2.desc">A powerful ground slam that deal 250% Weapon damage in an area and inflicts \cb0dfffStun\d.</string>
+
+	<string name="skills.attacks.twohanded.greataxe1.name">Greataxe Slash</string>
+	<string name="skills.attacks.twohanded.greataxe1.desc">A wide rending slash that deal 125% Weapon damage and has a 20% chance to inflict a stack of \cb0dfffBleeding\d.</string>
+	<string name="skills.attacks.twohanded.greataxe2.name">Whirlwind</string>
+	<string name="skills.attacks.twohanded.greataxe2.desc">Hold to continously spin around with your axe, dealing 75% Weapon damage to any enemies in the area.</string>
+
+	<string name="skills.attacks.twohanded.daggers1.name">Dual Slice</string>
+	<string name="skills.attacks.twohanded.daggers1.desc">Deliver two strikes in quick succession, each dealing 100% Physical damage.</string>
+	<string name="skills.attacks.twohanded.daggers2.name">Lunging Strike</string>
+	<string name="skills.attacks.twohanded.daggers2.desc">A quick lunge forward that strikes all enemies along your path, dealing 200% Weapon damage.</string>
+
+	<string name="skills.attacks.twohanded.staff.fire1.name">Flame Spray</string>
+	<string name="skills.attacks.twohanded.staff.fire1.desc">Hold to continously spew flames dealing 25% Weapon damage.</string>
+	<string name="skills.attacks.twohanded.staff.fire2.name">Fire Blast</string>
+	<string name="skills.attacks.twohanded.staff.fire2.desc">Slam the staff in the ground to unleash a fiery blast dealing 100% Weapon damage in an area.</string>
+
+	<string name="skills.attacks.twohanded.staff.ice1.name">Ice Lance</string>
+	<string name="skills.attacks.twohanded.staff.ice1.desc">Hold to charge up an icy projectile. The range, speed and damage of the projectile is increased by the time charged, dealing up to 75% Weapon damage.</string>
+	<string name="skills.attacks.twohanded.staff.ice2.name">Ice Spikes</string>
+	<string name="skills.attacks.twohanded.staff.ice2.desc">Slam the staff in the ground to cause three consecutive ice spikes to erupt in a forward direction, each dealing 150% Weapon damage.</string>
+
+	<string name="skills.attacks.twohanded.staff.lightning1.name">Lightning Beam</string>
+	<string name="skills.attacks.twohanded.staff.lightning1.desc">Hold to channel a beam of electricity that deal 40% Weapon damage. The beam loses 10% damage with each consecutive enemy pierced.</string>
+	<string name="skills.attacks.twohanded.staff.lightning2.name">Thunderbolts</string>
+	<string name="skills.attacks.twohanded.staff.lightning2.desc">Slam the staff in the ground to conjure two thunderbolts to strike the area in front of you, each dealing 100% Weapon damage.</string>
+
+
+
+	<!-- Paladin -->
+
+
+	<string name="skills.paladin.spell_1.name">Blessed Strike</string>
+	<string name="skills.paladin.spell_1.desc">You strike all enemies in the area in front of you, dealing Physical Damage.</string>
+	<string name="skills.paladin.spell_1.up1.name">Massive Strike</string>
+	<string name="skills.paladin.spell_1.up1.desc">Increases the size of the strike area.</string>
+	<string name="skills.paladin.spell_1.up2.name">Purging Flames</string>
+	<string name="skills.paladin.spell_1.up2.desc">The strike area erupts in flames dealing additional Fire damage for a period.</string>
+	<string name="skills.paladin.spell_1.up3.name">Wrathful Strike</string>
+	<string name="skills.paladin.spell_1.up3.desc">Deals additional Lightning damage that can chain to other nearby enemies.</string>
+
+	<string name="skills.paladin.spell_2.name">Lay on Hands</string>
+	<string name="skills.paladin.spell_2.desc">You heal yourself and all allies around you.</string>
+	<string name="skills.paladin.spell_2.up1.name">Invigorating Touch</string>
+	<string name="skills.paladin.spell_2.up1.desc">Also applies a buff that increases Health and Mana Regen for a short period.</string>
+	<string name="skills.paladin.spell_2.up2.name">Cleansing Touch</string>
+	<string name="skills.paladin.spell_2.up2.desc">Removes all Debuffs and Afflictions. You also gain immunity to all Debuffs for a short period.</string>
+	<string name="skills.paladin.spell_2.up3.name">Turn Undead</string>
+	<string name="skills.paladin.spell_2.up3.desc">Deals Physical damage to all Undead enemies in the area.</string>
+
+	<string name="skills.paladin.passive_1.name">Armored Knight</string>
+	<string name="skills.paladin.passive_1.desc">Increases your Armor, and grants a chance to block 100% Physical Damage.</string>
+	<string name="skills.paladin.passive_1.up1.name">Elemental Bulwark</string>
+	<string name="skills.paladin.passive_1.up1.desc">Increases your Fire, Ice and Lightning resistances.</string>
+	<string name="skills.paladin.passive_1.up2.name">Glancing Blows</string>
+	<string name="skills.paladin.passive_1.up2.desc">You gain an additional chance to block 100% of any damage type.</string>
+	<string name="skills.paladin.passive_1.up3.name">Armor of Wrath</string>
+	<string name="skills.paladin.passive_1.up3.desc">You gain a chance to strike a random nearby enemy with a bolt of lightning when taking damage, dealing Lightning damage based on your Armor value.</string>
+
+	<string name="skills.paladin.passive_2.name">Conviction</string>
+	<string name="skills.paladin.passive_2.desc">Your \cffdfb0Melee Weapon\d hits have a chance to restore some of your Mana.</string>
+	<string name="skills.paladin.passive_2.up1.name">Resolve</string>
+	<string name="skills.paladin.passive_2.up1.desc">While you are below half health your Spells cost less mana.</string>
+	<string name="skills.paladin.passive_2.up2.name">Shield of Faith</string>
+	<string name="skills.paladin.passive_2.up2.desc">While you have more than half of your maximum mana left, you block damage for a cost of mana.</string>
+	<string name="skills.paladin.passive_2.up3.name">Zeal</string>
+	<string name="skills.paladin.passive_2.up3.desc">When \cb0dfffConviction\d triggers you deal additional Physical damage based on your current Mana.</string>
+
+
+	<string name="skills.paladin.mastery_1.name">Justice</string>
+	<string name="skills.paladin.mastery_1.desc"></string>
+
+	<string name="skills.paladin.mastery_1.spell_1.name">Judgement</string>
+	<string name="skills.paladin.mastery_1.spell_1.desc">You pass judgement on random nearby enemies for a duration, striking them with a divine hammer dealing Physical damage. </string>
+	<string name="skills.paladin.mastery_1.spell_1.up1.name">Prolonged Prosecution</string>
+	<string name="skills.paladin.mastery_1.spell_1.up1.desc">While \cb0dfffJudgement\d is active you gain a chance to extend the duration when killing enemies. The duration cannot be extended to more than 7 seconds.</string>
+	<string name="skills.paladin.mastery_1.spell_1.up2.name">Hammer of Wrath</string>
+	<string name="skills.paladin.mastery_1.spell_1.up2.desc">Deals additional Lightning damage.</string>
+
+	<string name="skills.paladin.mastery_1.passive_1.name">Lawbringer</string>
+	<string name="skills.paladin.mastery_1.passive_1.desc">When you block or take damage you have a chance to inflict \cb0dfffDisarm\d and \cb0dfffSilence\d to the attacker.</string>
+	<string name="skills.paladin.mastery_1.passive_1.up1.name">Punish the Wicked</string>
+	<string name="skills.paladin.mastery_1.passive_1.up1.desc">You deal more damage to enemies inflicted by \cb0dfffDisarm\d or \cb0dfffSilence\d.</string>
+	<string name="skills.paladin.mastery_1.passive_1.up2.name">Shackles</string>
+	<string name="skills.paladin.mastery_1.passive_1.up2.desc">\cffdfb0Weapon\d and \cffdfb0Spell\d hits gain a chance to shackle the target and a different nearby enemy. Shackled enemies have reduced movement speed and take continuous Physical damage.</string>
+
+	<string name="skills.paladin.mastery_2.name">Divine</string>
+	<string name="skills.paladin.mastery_2.desc"></string>
+
+	<string name="skills.paladin.mastery_2.spell_1.name">Divine Pillars</string>
+	<string name="skills.paladin.mastery_2.spell_1.desc">You summon pillars of heavenly light to explode at your location, dealing Physical damage and inflicting \cb0dfffBlindness\d.</string>
+	<string name="skills.paladin.mastery_2.spell_1.up1.name">Divine Pattern</string>
+	<string name="skills.paladin.mastery_2.spell_1.up1.desc">Causes additional pillars to strike in succession in a grid like pattern. The pillars deal half as much damage with each consecutive strike.</string>
+	<string name="skills.paladin.mastery_2.spell_1.up2.name">Pillars of Wrath</string>
+	<string name="skills.paladin.mastery_2.spell_1.up2.desc">Deals additional Lightning damage.</string>
+
+	<string name="skills.paladin.mastery_2.passive_1.name">Divine Protection</string>
+	<string name="skills.paladin.mastery_2.passive_1.desc">Taking damage when below half health has a chance to grant you a buff of \cb0dfffInvulnerability\d for a brief period. This effect has a cooldown.</string>
+	<string name="skills.paladin.mastery_2.passive_1.up1.name">Restoration</string>
+	<string name="skills.paladin.mastery_2.passive_1.up1.desc">You gain a massive increase to Health Regen while you have the buff.</string>
+	<string name="skills.paladin.mastery_2.passive_1.up2.name">Divine Retort</string>
+	<string name="skills.paladin.mastery_2.passive_1.up2.desc">When you gain the buff you automatically cast \cb0dfffDivine Pillars\d.</string>
+
+	<string name="skills.paladin.mastery_3.name">Radiance</string>
+	<string name="skills.paladin.mastery_3.desc"></string>
+
+	<string name="skills.paladin.mastery_3.spell_1.name">Immolation</string>
+	<string name="skills.paladin.mastery_3.spell_1.desc">You charge up a massive explosion that is unleashed when you release the spell, dealing Fire damage to all enemies around you.</string>
+	<string name="skills.paladin.mastery_3.spell_1.up1.name">Fuel the Flame</string>
+	<string name="skills.paladin.mastery_3.spell_1.up1.desc">You gain additional stacks of \cb0dfffInner Flames\d when casting \cb0dfffImmolation\d.</string>
+	<string name="skills.paladin.mastery_3.spell_1.up2.name">Blazing Lance</string>
+	<string name="skills.paladin.mastery_3.spell_1.up2.desc">You now unleash a blazing lance projectile that deals additional Fire damage to all enemies in its path.</string>
+
+	<string name="skills.paladin.mastery_3.passive_1.name">Inner Flames</string>
+	<string name="skills.paladin.mastery_3.passive_1.desc">Casting Spells generate stacks of \cb0dfffInner Flames\d. While you have stacks of \cb0dfffInner Flames\d you gain an aura dealing Fire damage to nearby enemies.</string>
+	<string name="skills.paladin.mastery_3.passive_1.up1.name">Flames of Devotion</string>
+	<string name="skills.paladin.mastery_3.passive_1.up1.desc">Each stack of \cb0dfffInner Flames\d adds Fire damage to your weapons.</string>
+	<string name="skills.paladin.mastery_3.passive_1.up2.name">Bringer of Flames</string>
+	<string name="skills.paladin.mastery_3.passive_1.up2.desc">Each stack of \cb0dfffInner Flames\d increases your Fire Resistance and Fire Penetration.</string>
+
+
+
+	<!-- Ranger -->
+
+	<string name="skills.ranger.spell_1.name">Marked Shot</string>
+	<string name="skills.ranger.spell_1.desc">You fire a projectile that deals Physical damage and applies \cb0dfffMarked\d to all enemies in the targeted area. You deal more damage to enemies inflicted by \cb0dfffMarked\d.</string>
+	<string name="skills.ranger.spell_1.up1.name">Hot Pursuit</string>
+	<string name="skills.ranger.spell_1.up1.desc">You gain a short buff of increased Movement Speed when hitting \cb0dfffMarked\d targets.</string>
+	<string name="skills.ranger.spell_1.up2.name">Thrill of the Hunt</string>
+	<string name="skills.ranger.spell_1.up2.desc">Killing enemies inflicted by \cb0dfffMarked\d has a chance to restore some of your Health and Mana.</string>
+	<string name="skills.ranger.spell_1.up3.name">Big Game Hunter</string>
+	<string name="skills.ranger.spell_1.up3.desc">You deal additional damage to \cb0dfffBosses\d and \cb0dfffElites\d inflicted by \cb0dfffMarked\d.</string>
+
+	<string name="skills.ranger.spell_2.name">Trap</string>
+	<string name="skills.ranger.spell_2.desc">Throws a trap that deploys after a brief duration. The traps deal Physical damage in a small area when triggered and inflict \cb0dfffCripple\d.</string>
+	<string name="skills.ranger.spell_2.up1.name">Multiple Deploy</string>
+	<string name="skills.ranger.spell_2.up1.desc">You deploy additional traps with each cast.</string>
+	<string name="skills.ranger.spell_2.up2.name">Serrated Traps</string>
+	<string name="skills.ranger.spell_2.up2.desc">The traps now inflict stacks of \cb0dfffBleeding\d.</string>
+	<string name="skills.ranger.spell_2.up3.name">Frost Traps</string>
+	<string name="skills.ranger.spell_2.up3.desc">The traps deal additional Ice damage.</string>
+
+	<string name="skills.ranger.passive_1.name">Rhythm</string>
+	<string name="skills.ranger.passive_1.desc">You gain Weapon Crit Chance, and scoring Weapon Crits grant you stacks of \cb0dfffRhythm\d. Each stack of \cb0dfffRhythm\d increases your Weapon Crit Chance and Weapon Crit Damage.</string>
+	<string name="skills.ranger.passive_1.up1.name">In the Flow</string>
+	<string name="skills.ranger.passive_1.up1.desc">Each stack of \cb0dfffRhythm\d increases your Weapon Speed.</string>
+	<string name="skills.ranger.passive_1.up2.name">Efficiency</string>
+	<string name="skills.ranger.passive_1.up2.desc">Each stack of \cb0dfffRhythm\d reduces your Mana costs.</string>
+	<string name="skills.ranger.passive_1.up3.name">Momentum</string>
+	<string name="skills.ranger.passive_1.up3.desc">You gain a stack of \cb0dfffRhythm\d when dashing.</string>
+
+	<string name="skills.ranger.passive_2.name">Survivalist</string>
+	<string name="skills.ranger.passive_2.desc">Each time you get hit you gain a buff that reduces damage taken for a short period. This effect has a short cooldown.</string>
+	<string name="skills.ranger.passive_2.up1.name">Evasive Maneuver</string>
+	<string name="skills.ranger.passive_2.up1.desc">Also grants Evasion for the duration of the buff.</string>
+	<string name="skills.ranger.passive_2.up2.name">Tactical Maneuver</string>
+	<string name="skills.ranger.passive_2.up2.desc">You gain a Dash Charge when taking damage. This effect has a short cooldown.</string>
+	<string name="skills.ranger.passive_2.up3.name">Quick Recovery</string>
+	<string name="skills.ranger.passive_2.up3.desc">Increases your Health Regen for the duration of the buff.</string>
+
+
+	<string name="skills.ranger.mastery_1.name">Marksman</string>
+	<string name="skills.ranger.mastery_1.desc"></string>
+
+	<string name="skills.ranger.mastery_1.spell_1.name">Rain of Arrows</string>
+	<string name="skills.ranger.mastery_1.spell_1.desc">You launch a barrage of arrows into the air that strike the ground in a forward direction, dealing Physical damage.</string>
+	<string name="skills.ranger.mastery_1.spell_1.up1.name">Storm of Arrows</string>
+	<string name="skills.ranger.mastery_1.spell_1.up1.desc">Increases the impact area.</string>
+	<string name="skills.ranger.mastery_1.spell_1.up2.name">Thundercaller</string>
+	<string name="skills.ranger.mastery_1.spell_1.up2.desc">The arrows are followed by a sequence of lightning strikes, dealing Lightning damage.</string>
+
+	<string name="skills.ranger.mastery_1.passive_1.name">Archery</string>
+	<string name="skills.ranger.mastery_1.passive_1.desc">The movement speed penalty for using \cffdfb0Bow\d skills is reduced, and you deal increased damage with \cffdfb0Bow\d skills.</string>
+	<string name="skills.ranger.mastery_1.passive_1.up1.name">Fast Shot</string>
+	<string name="skills.ranger.mastery_1.passive_1.up1.desc">You gain increased skill speed with \cffdfb0Bow\d skills.</string>
+	<string name="skills.ranger.mastery_1.passive_1.up2.name">Frost Arrows</string>
+	<string name="skills.ranger.mastery_1.passive_1.up2.desc">Your \cffdfb0Bow\d skills gain a chance to trigger a frost explosion on hit, dealing Ice damage. This effect has a short cooldown.</string>
+
+	<string name="skills.ranger.mastery_2.name">Beastmaster</string>
+	<string name="skills.ranger.mastery_2.desc"></string>
+
+	<string name="skills.ranger.mastery_2.spell_1.name">Spirit Wolves</string>
+	<string name="skills.ranger.mastery_2.spell_1.desc">You unleash spirit wolves that seek out nearby enemies, dealing Physical and Ice damage on impact.</string>
+	<string name="skills.ranger.mastery_2.spell_1.up1.name">Relentless Hunters</string>
+	<string name="skills.ranger.mastery_2.spell_1.up1.desc">The spirit wolves gain a chance to seek out a new target on hit.</string>
+	<string name="skills.ranger.mastery_2.spell_1.up2.name">Restless Spirits</string>
+	<string name="skills.ranger.mastery_2.spell_1.up2.desc">You gain a chance to unleash a spirit wolf when killing enemies. This effect has a short cooldown.</string>
+
+	<string name="skills.ranger.mastery_2.passive_1.name">Wolf Companion</string>
+	<string name="skills.ranger.mastery_2.passive_1.desc">You passively summon a wolf companion to fight by your side that attacks nearby enemies dealing Physical damage.</string>
+	<string name="skills.ranger.mastery_2.passive_1.up1.name">Wolf Pack</string>
+	<string name="skills.ranger.mastery_2.passive_1.up1.desc">You summon additional wolves.</string>
+	<string name="skills.ranger.mastery_2.passive_1.up2.name">Winter Wolf</string>
+	<string name="skills.ranger.mastery_2.passive_1.up2.desc">Your wolves deals additional Ice damage.</string>
+
+	<string name="skills.ranger.mastery_3.name">Warden</string>
+	<string name="skills.ranger.mastery_3.desc"></string>
+
+	<string name="skills.ranger.mastery_3.spell_1.name">Entangle</string>
+	<string name="skills.ranger.mastery_3.spell_1.desc">You conjure roots to sprout in a large area around you that lingers for a duration. Enemies in the area take Physical damage and are inflicted by \cb0dfffCripple\d.</string>
+	<string name="skills.ranger.mastery_3.spell_1.up1.name">Healing Wisps</string>
+	<string name="skills.ranger.mastery_3.spell_1.up1.desc">The roots spawn wisps that attaches to allies entering the area, restoring Health for a period.</string>
+	<string name="skills.ranger.mastery_3.spell_1.up2.name">Poison Ivy</string>
+	<string name="skills.ranger.mastery_3.spell_1.up2.desc">Deals additional Poison damage.</string>
+	
+	<string name="skills.ranger.mastery_3.passive_1.name">Wind Weaver</string>
+	<string name="skills.ranger.mastery_3.passive_1.desc">\cffdfb0Weapon\d hits unleash a gusts of wind in a forward direction dealing Physical damage. This effect has a short cooldown.</string>
+	<string name="skills.ranger.mastery_3.passive_1.up1.name">Winter Winds</string>
+	<string name="skills.ranger.mastery_3.passive_1.up1.desc">The gusts of wind deal additional Ice damage.</string>
+	<string name="skills.ranger.mastery_3.passive_1.up2.name">Wind Runner</string>
+	<string name="skills.ranger.mastery_3.passive_1.up2.desc">You unleash several gusts of wind in all directions when dashing.</string>
+
+
+
+	<!-- Rogue -->
+
+	<string name="skills.rogue.spell_1.name">Fan of Knives</string>
+	<string name="skills.rogue.spell_1.desc">Throws several knives in a cone dealing Physical damage.</string>
+	<string name="skills.rogue.spell_1.up1.name">Ricochet</string>
+	<string name="skills.rogue.spell_1.up1.desc">The projectiles now bounce off walls and collisions. Each bounce reduces speed and damage.</string>
+	<string name="skills.rogue.spell_1.up2.name">Deadly Aim</string>
+	<string name="skills.rogue.spell_1.up2.desc">You gain increased crit chance with \cb0dfffFan of Knives\d.</string>
+	<string name="skills.rogue.spell_1.up3.name">Poisoned Knives</string>
+	<string name="skills.rogue.spell_1.up3.desc">Deals additional Poison damage.</string>
+	<string name="skills.rogue.spell_1.up4.name">Focused Throw</string>
+	<string name="skills.rogue.spell_1.up4.desc">You throw fewer projectiles in a forward direction. The projectiles deal more damage and have a slightly longer lifetime.</string>
+
+	<string name="skills.rogue.spell_2.name">Flurry of Blades</string>
+	<string name="skills.rogue.spell_2.desc">You perform a series of strikes, hitting all enemies in an area around you, dealing Physical damage.</string>
+	<string name="skills.rogue.spell_2.up1.name">Disarming Strikes</string>
+	<string name="skills.rogue.spell_2.up1.desc">Gains a chance to inflict \cb0dfffDisarm\d.</string>
+	<string name="skills.rogue.spell_2.up2.name">Fiery Bolas</string>
+	<string name="skills.rogue.spell_2.up2.desc">Bolas are applied to each target hit plus an additional nearby enemy. Enemies affected are slowed and take Fire damage for a period.</string>
+	<string name="skills.rogue.spell_2.up3.name">Shock Assault</string>
+	<string name="skills.rogue.spell_2.up3.desc">Deals additional Lightning Damage</string>
+
+	<string name="skills.rogue.passive_1.name">Slice and Dice</string>
+	<string name="skills.rogue.passive_1.desc">Hits with \cffdfb0Melee\d skills grant stacks of \cb0dfffSlice and Dice\d. Each stack increases your Weapon Speed. You lose all stacks at once if the duration runs out.</string>
+	<string name="skills.rogue.passive_1.up1.name">Adrenaline</string>
+	<string name="skills.rogue.passive_1.up1.desc">Each stack increases your Mana Regen.</string>
+	<string name="skills.rogue.passive_1.up2.name">Blade Parry</string>
+	<string name="skills.rogue.passive_1.up2.desc">Each stack increases your Parry.</string>
+	<string name="skills.rogue.passive_1.up3.name">Agile Casting</string>
+	<string name="skills.rogue.passive_1.up3.desc">Each stack increases your Cast Speed, and you also gain stacks by casting Spells.</string>
+
+	<string name="skills.rogue.passive_2.name">Sidestep</string>
+	<string name="skills.rogue.passive_2.desc">Grants Evasion and a single stack of guaranteed evasion that is recharged every few seconds.</string>
+	<string name="skills.rogue.passive_2.up1.name">Fleet Footed</string>
+	<string name="skills.rogue.passive_2.up1.desc">Increases your Movement Speed.</string>
+	<string name="skills.rogue.passive_2.up2.name">Lethal Opening</string>
+	<string name="skills.rogue.passive_2.up2.desc">Grants additional Crit Chance for a short period after evading.</string>
+	<string name="skills.rogue.passive_2.up3.name">On the Move</string>
+	<string name="skills.rogue.passive_2.up3.desc">Dashing gains a chance to recharge the guaranteed evasion of \cb0dfffSidestep\d.</string>
+
+
+	<string name="skills.rogue.mastery_1.name">Blades</string>
+	<string name="skills.rogue.mastery_1.desc"></string>
+
+	<string name="skills.rogue.mastery_1.spell_1.name">Mortal Strike</string>
+	<string name="skills.rogue.mastery_1.spell_1.desc">You deliver a quick deadly strike that deals massive Physical damage.</string>
+	<string name="skills.rogue.mastery_1.spell_1.up1.name">Phantasmal Strike</string>
+	<string name="skills.rogue.mastery_1.spell_1.up1.desc">The strike now chains to additional enemies in a cone behind the target. Deals less damage for each consecutive enemy hit.</string>
+	<string name="skills.rogue.mastery_1.spell_1.up2.name">Crimson Strike</string>
+	<string name="skills.rogue.mastery_1.spell_1.up2.desc">You gain a small amount of Life Leech with \cb0dfffMortal Strike\d.</string>
+
+	<string name="skills.rogue.mastery_1.passive_1.name">Assassin</string>
+	<string name="skills.rogue.mastery_1.passive_1.desc">Increases your Weapon Crit Damage and reduces the range of enemies detecting you.</string>
+	<string name="skills.rogue.mastery_1.passive_1.up1.name">Executioner</string>
+	<string name="skills.rogue.mastery_1.passive_1.up1.desc">You gain a chance to instantly kill an enemy on \cb0dfffLow Life\d when scoring crits with \cffdfb0Melee\d skills. Does not work on Bosses.</string>
+	<string name="skills.rogue.mastery_1.passive_1.up2.name">Hidden Cuts</string>
+	<string name="skills.rogue.mastery_1.passive_1.up2.desc">Attacking with \cffdfb0Melee\d weapons strikes a random nearby enemy for Mainhand Weapon damage.</string>
+
+	<string name="skills.rogue.mastery_2.name">Poison</string>
+	<string name="skills.rogue.mastery_2.desc"></string>
+
+	<string name="skills.rogue.mastery_2.spell_1.name">Toxic Cloud</string>
+	<string name="skills.rogue.mastery_2.spell_1.desc">You deploy a large toxic cloud that lingers for a period. The cloud blocks enemy vision and deals Poison damage to any enemies inside the cloud.</string>
+	<string name="skills.rogue.mastery_2.spell_1.up1.name">Billowing Cloud</string>
+	<string name="skills.rogue.mastery_2.spell_1.up1.desc">You and your allies gain Evasion while inside the cloud.</string>
+	<string name="skills.rogue.mastery_2.spell_1.up2.name">Corrosion</string>
+	<string name="skills.rogue.mastery_2.spell_1.up2.desc">Enemies entering the cloud are inflicted by \cb0dfffArmor Break\d.</string>
+
+	<string name="skills.rogue.mastery_2.passive_1.name">Poison Mastery</string>
+	<string name="skills.rogue.mastery_2.passive_1.desc">You deal increased Poison damage and your \cffdfb0Poison\d skills gain a chance to inflict \cb0dfffVulnerability\d.</string>
+	<string name="skills.rogue.mastery_2.passive_1.up1.name">Coated Weapons</string>
+	<string name="skills.rogue.mastery_2.passive_1.up1.desc">Adds Poison damage to your weapons per character level.</string>
+	<string name="skills.rogue.mastery_2.passive_1.up2.name">Deadly Toxins</string>
+	<string name="skills.rogue.mastery_2.passive_1.up2.desc">Increases your Poison Penetration and Poison Resistance.</string>
+
+	<string name="skills.rogue.mastery_3.name">Demolitions</string>
+	<string name="skills.rogue.mastery_3.desc"></string>
+
+	<string name="skills.rogue.mastery_3.spell_1.name">Grenade</string>
+	<string name="skills.rogue.mastery_3.spell_1.desc">You throw a grenade in forward direction that detonates after a brief period, dealing Physical damage.</string>
+	<string name="skills.rogue.mastery_3.spell_1.up1.name">Incendiary Grenades</string>
+	<string name="skills.rogue.mastery_3.spell_1.up1.desc">The grenade now explodes on impact and leaves an area of burning ground for a short period, dealing Fire damage.</string>
+	<string name="skills.rogue.mastery_3.spell_1.up2.name">Shock Grenades</string>
+	<string name="skills.rogue.mastery_3.spell_1.up2.desc">The grenade deals additional Lightning damage that can chain to other nearby enemies.</string>
+	<string name="skills.rogue.mastery_3.spell_1.up3.name">Explosive Exit</string>
+	<string name="skills.rogue.mastery_3.spell_1.up3.desc">If you start a dash near an enemy you drop a grenade. This effect has a short cooldown.</string>
+	
+	<string name="skills.rogue.mastery_3.passive_1.name">Artificer Suit</string>
+	<string name="skills.rogue.mastery_3.passive_1.desc">Increases your Armor and Physical damage. Taking damage causes a flashbang to trigger inflicting nearby enemies with \cb0dfffBlindness\d. This effect has a short cooldown</string>
+	<string name="skills.rogue.mastery_3.passive_1.up1.name">Zzzap</string>
+	<string name="skills.rogue.mastery_3.passive_1.up1.desc">\cffdfb0Weapon\d skills has a chance to trigger a lightning bolt to zap a random nearby enemy, dealing Lightning damage.</string>
+	<string name="skills.rogue.mastery_3.passive_1.up2.name">Shrapnels</string>
+	<string name="skills.rogue.mastery_3.passive_1.up2.desc">Casting spells has a chance of discharging multiple shrapnels in all directions, dealing Physical and Fire damage.</string>
+
+
+
+
+	<!-- Sorcerer -->
+
+	<string name="skills.sorcerer.spell_1.name">Discharge</string>
+	<string name="skills.sorcerer.spell_1.desc">You unleash several arcs of lightning in a cone, dealing Lightning damage. Each enemy can only be hit by one arc.</string>
+	<string name="skills.sorcerer.spell_1.up1.name">Chain Lightning</string>
+	<string name="skills.sorcerer.spell_1.up1.desc">Each arc of lightning can chain to additional targets.</string>
+	<string name="skills.sorcerer.spell_1.up2.name">Extended Discharge</string>
+	<string name="skills.sorcerer.spell_1.up2.desc">Increases the range of the spell.</string>
+	<string name="skills.sorcerer.spell_1.up3.name">Scorching Rays</string>
+	<string name="skills.sorcerer.spell_1.up3.desc">Changes damage type to Fire and the rays now pierce targets.</string>
+	<string name="skills.sorcerer.spell_1.up4.name">Rays of Frost</string>
+	<string name="skills.sorcerer.spell_1.up4.desc">Unleashes fewer rays in a tighter cone, but enemies can now be hit by multiple rays. Changes damage type to Ice.</string>
+
+	<string name="skills.sorcerer.spell_2.name">Elemental Orb</string>
+	<string name="skills.sorcerer.spell_2.desc">You conjure a slow moving orb that continuously deals damage of all elements to nearby enemies.</string>
+	<string name="skills.sorcerer.spell_2.up1.name">Adaptive Orb</string>
+	<string name="skills.sorcerer.spell_2.up1.desc">If you have \cb0dfffElemental Affinity\d when casting the spell the orb will only deal damage of the corresponding element.</string>
+	<string name="skills.sorcerer.spell_2.up2.name">Stable Orb</string>
+	<string name="skills.sorcerer.spell_2.up2.desc">Extends the lifetime of the orb.</string>
+	<string name="skills.sorcerer.spell_2.up3.name">Elemental Torrent</string>
+	<string name="skills.sorcerer.spell_2.up3.desc">The orb now starts spewing smaller projectiles in all directions. These projectiles deal less damage.</string>
+
+	<string name="skills.sorcerer.passive_1.name">Elemental Affinity</string>
+	<string name="skills.sorcerer.passive_1.desc">When casting a \cffdfb0Spell\d you gain \cb0dfffElemental Affinity\d of the same element as the spell cast. You deal more damage of the corresponding element as long as you have \cb0dfffElemental Affinity\d. You can only have one type of element active at a time.</string>
+	<string name="skills.sorcerer.passive_1.up1.name">Elemental Ward</string>
+	<string name="skills.sorcerer.passive_1.up1.desc">Grants additional Fire, Ice and Lightning Resistance per character level.</string>
+	<string name="skills.sorcerer.passive_1.up2.name">Elemental Penetration</string>
+	<string name="skills.sorcerer.passive_1.up2.desc">Grants Fire, Ice and Lightning Penetration.</string>
+	<string name="skills.sorcerer.passive_1.up3.name">Elemental Equilibrium</string>
+	<string name="skills.sorcerer.passive_1.up3.desc">As long as you have \cb0dfffElemental Affinity\d your damage bonus is doubled for the other elements.</string>
+
+	<string name="skills.sorcerer.passive_2.name">Innate Power</string>
+	<string name="skills.sorcerer.passive_2.desc">Grants Spell Crit Chance.</string>
+	<string name="skills.sorcerer.passive_2.up1.name">Uncontrolled Power</string>
+	<string name="skills.sorcerer.passive_2.up1.desc">You deal increased Spell Crit Damage.</string>
+	<string name="skills.sorcerer.passive_2.up2.name">Power Surge</string>
+	<string name="skills.sorcerer.passive_2.up2.desc">You gain a buff of increased Weapon, Cast and Movement Speed when scoring a Spell Crit.</string>
+	<string name="skills.sorcerer.passive_2.up3.name">Mana Surge</string>
+	<string name="skills.sorcerer.passive_2.up3.desc">You restore some of your Mana when scoring a Spell Crit.</string>
+
+
+	<string name="skills.sorcerer.mastery_1.name">Fire</string>
+	<string name="skills.sorcerer.mastery_1.desc"></string>
+
+	<string name="skills.sorcerer.mastery_1.spell_1.name">Flame Wall</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.desc">You produce a blazing wall of flames in front of you, dealing Fire damage to all enemies near it.</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up1.name">Flamewalker</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up1.desc">You and your allies entering the wall are ignited with a temporary aura that deals Fire damage to nearby enemies.</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up2.name">Flamestep</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up2.desc">You spawn a single wall instance when dashing.</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up3.name">Wall Placement</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up3.desc">The placement of the wall can now be targeted.</string>
+
+	<string name="skills.sorcerer.mastery_1.passive_1.name">Fire Mastery</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.desc">You deal increased Fire damage, and your \cffdfb0Fire\d skills gain a chance to inflict \cb0dfffWeakness\d.</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up1.name">Volatile Flames</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up1.desc">Your \cffdfb0Fire\d skills gain a chance to trigger an explosion dealing additional Fire damage. This effect has a short cooldown.</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up2.name">Healing Flames</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up2.desc">You restore some of your Health when scoring a Spell Crit.</string>
+
+	<string name="skills.sorcerer.mastery_2.name">Ice</string>
+	<string name="skills.sorcerer.mastery_2.desc"></string>
+
+	<string name="skills.sorcerer.mastery_2.spell_1.name">Frost Nova</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.desc">You unleash multiple frost shards in all directions, dealing Ice damage.</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up1.name">Frost Seekers</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up1.desc">The projectiles gain the chance to seek out new targets on hit.</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up2.name">Frost Splinters</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up2.desc">The projectiles gain a chance to unleash a new smaller nova of projectiles when killing enemies.</string>
+
+	<string name="skills.sorcerer.mastery_2.passive_1.name">Ice Mastery</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.desc">You deal increased Ice damage and your \cffdfb0Ice\d skills gain a chance to inflict \cb0dfffFreeze\d.</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up1.name">Shatter</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up1.desc">Killing enemies with \cffdfb0Ice\d skills have a chance to trigger an explosion dealing Ice damage.</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up2.name">Ice Block</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up2.desc">You gain a chance to block Physical and Ice damage.</string>
+
+	<string name="skills.sorcerer.mastery_3.name">Lightning</string>
+	<string name="skills.sorcerer.mastery_3.desc"></string>
+
+	<string name="skills.sorcerer.mastery_3.spell_1.name">Lightning Ball</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.desc">You charge up a ball of lightning that is unleashed when cast, dealing Lightning damage to all enemies in its path. The damage of the projectile is based on how long you charge the spell.</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up1.name">Energized Ball</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up1.desc">Each enemy hit extends the lifetime of the projectile.</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up2.name">Static Field</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up2.desc">You leave behind a field of electricity that lingers for a period, dealing additional Lightning damage.</string>
+	
+	<string name="skills.sorcerer.mastery_3.passive_1.name">Lightning Mastery</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.desc">You deal increased Lightning damage and your \cffdfb0Lightning\d skills gain a chance to inflict \cb0dfffStun\d.</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up1.name">Arc Lightning</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up1.desc">Your \cffdfb0Lightning\d skills gain a chance to trigger an arc of electricity that chain between enemies, dealing Lightning damage.</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up2.name">Null Field</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up2.desc">You gain a chance to block most projectiles. This effect has a short cooldown.</string>
+
+
+
+
+
+
+
+
+
+
+
+	<!-- Warlock -->
+
+	<string name="skills.warlock.spell_1.name">Demon's Tail</string>
+	<string name="skills.warlock.spell_1.desc">Conjures a diabolical whip to lash out in a forward direction, dealing Physical damage and inflicting \cb0dfffSlow\d.</string>
+	<string name="skills.warlock.spell_1.up1.name">Crackling Lash</string>
+	<string name="skills.warlock.spell_1.up1.desc">Crackling arcs of lightning are discharged at nearby enemies, dealing Lightning damage.</string>
+	<string name="skills.warlock.spell_1.up2.name">Fiery Lash</string>
+	<string name="skills.warlock.spell_1.up2.desc">Flames erupt along the lash that lingers for a short period, dealing Fire damage.</string>
+	<string name="skills.warlock.spell_1.up3.name">Heavy Impact</string>
+	<string name="skills.warlock.spell_1.up3.desc">Enemies hit by the end of the whip are now also inflicted by \cb0dfffStun\d.</string>
+
+	<string name="skills.warlock.spell_2.name">Dark Ritual</string>
+	<string name="skills.warlock.spell_2.desc">You start performing a ritual that completes after a few seconds. Enemies take Physical damage while inside the area and even more damage when it completes. The ritual is terminated if you leave the area before it is completed.</string>
+	<string name="skills.warlock.spell_2.up1.name">Blood Ritual</string>
+	<string name="skills.warlock.spell_2.up1.desc">Enemies inside the area now has a chance to be inflicted with stacks of Bleeding.</string>
+	<string name="skills.warlock.spell_2.up2.name">Conflagration</string>
+	<string name="skills.warlock.spell_2.up2.desc">The damage type is changed to Fire and the ritual deals even more damage when it is completed.</string>
+	<string name="skills.warlock.spell_2.up3.name">Leeching Ritual</string>
+	<string name="skills.warlock.spell_2.up3.desc">You and your allies gain \cb0dfffLife Leech\d while inside the area.</string>
+
+	<string name="skills.warlock.passive_1.name">Drain Essence</string>
+	<string name="skills.warlock.passive_1.desc">You gain stacks of \cb0dfffEssence\d when hitting enemies with \cffdfb0Melee\d skills. Each stack increases your max Health and Mana. This effect has a short cooldown.</string>
+	<string name="skills.warlock.passive_1.up1.name">Life Siphon</string>
+	<string name="skills.warlock.passive_1.up1.desc">When you gain stacks of \cb0dfffEssence\d you restore a percentage of your Health.</string>
+	<string name="skills.warlock.passive_1.up2.name">Energy Siphon</string>
+	<string name="skills.warlock.passive_1.up2.desc">When you gain stacks of \cb0dfffEssence\d you restore a percentage of your Mana.</string>
+	<string name="skills.warlock.passive_1.up3.name">Drain Blood</string>
+	<string name="skills.warlock.passive_1.up3.desc">You now also inflict stacks of \cb0dfffBleeding\d to the targets you gain \cb0dfffEssence\d from.</string>
+	<string name="skills.warlock.passive_1.up4.name">Essence Harvester</string>
+	<string name="skills.warlock.passive_1.up4.desc">You gain a chance to gain stacks of \cb0dfffEssence\d when killing enemies.</string>
+
+	<string name="skills.warlock.passive_2.name">Aura of Atrophy</string>
+	<string name="skills.warlock.passive_2.desc">You project an aura around you that makes enemies deal less damage.</string>
+	<string name="skills.warlock.passive_2.up1.name">Agony</string>
+	<string name="skills.warlock.passive_2.up1.desc">Enemies in your aura also take more damage.</string>
+	<string name="skills.warlock.passive_2.up2.name">Spreading Corruption</string>
+	<string name="skills.warlock.passive_2.up2.desc">\cffdfb0Melee\d weapon hits deal additional Poison damage to a different nearby enemy.</string>
+	<string name="skills.warlock.passive_2.up3.name">Spontaneous Combustion</string>
+	<string name="skills.warlock.passive_2.up3.desc">Casting a \cffdfb0Spell\d deals Fire damage to all enemies affected by your aura.</string>
+
+
+	<string name="skills.warlock.mastery_1.name">Summoning</string>
+	<string name="skills.warlock.mastery_1.desc"></string>
+
+	<string name="skills.warlock.mastery_1.spell_1.name">Summon Fiends</string>
+	<string name="skills.warlock.mastery_1.spell_1.desc">Channel the spell to summon fiends by consuming stacks of \cb0dfffEssence\d. Fiends attack nearby enemies, dealing Physical damage.</string>
+	<string name="skills.warlock.mastery_1.spell_1.up1.name">Infernal Fiends</string>
+	<string name="skills.warlock.mastery_1.spell_1.up1.desc">Your fiends deal additional Fire damage and gain the ability to spew fireballs at their targets.</string>
+	<string name="skills.warlock.mastery_1.spell_1.up2.name">Explosive Demise</string>
+	<string name="skills.warlock.mastery_1.spell_1.up2.desc">Your fiends explode upon death, dealing Physical damage in a small area.</string>
+
+	<string name="skills.warlock.mastery_1.passive_1.name">Gargoyle Servant</string>
+	<string name="skills.warlock.mastery_1.passive_1.desc">Passively summons a gargoyle to fight by your side. The gargoyle attacks enemies with its claws and trident, dealing Physical damage.</string>
+	<string name="skills.warlock.mastery_1.passive_1.up1.name">Flaming Strikes</string>
+	<string name="skills.warlock.mastery_1.passive_1.up1.desc">Your gargoyle deals additional Fire damage with its claws.</string>
+	<string name="skills.warlock.mastery_1.passive_1.up2.name">Lightning Trident</string>
+	<string name="skills.warlock.mastery_1.passive_1.up2.desc">Your gargoyle's trident now continously zap enemies for additional Lightning damage.</string>
+
+	<string name="skills.warlock.mastery_2.name">Souls</string>
+	<string name="skills.warlock.mastery_2.desc"></string>
+
+	<string name="skills.warlock.mastery_2.spell_1.name">Soul Vortex</string>
+	<string name="skills.warlock.mastery_2.spell_1.desc">You conjure a swirling vortex of soul energy around you, dealing Physical and Poison damage to all enemies in the area.</string>
+	<string name="skills.warlock.mastery_2.spell_1.up1.name">Lightning Vortex</string>
+	<string name="skills.warlock.mastery_2.spell_1.up1.desc">The vortex now continously trigger bolts of lightning to randomly strike the area around you, dealing additional Lightning damage.</string>
+	<string name="skills.warlock.mastery_2.spell_1.up2.name">Vortex Shroud</string>
+	<string name="skills.warlock.mastery_2.spell_1.up2.desc">You gain Evasion for the duration of the spell.</string>
+
+	<string name="skills.warlock.mastery_2.passive_1.name">Soul Shaper</string>
+	<string name="skills.warlock.mastery_2.passive_1.desc">As long as you have stacks of \cb0dfffEssence\d your Mainhand Weapon attacks unleash a soul projectile towards a random nearby enemy, dealing Mainhand damage.</string>
+	<string name="skills.warlock.mastery_2.passive_1.up1.name">Soul Cleave</string>
+	<string name="skills.warlock.mastery_2.passive_1.up1.desc">The projectiles gain a chance to explode for additional damage. This effect has a short cooldown.</string>
+	<string name="skills.warlock.mastery_2.passive_1.up2.name">Relentless Souls</string>
+	<string name="skills.warlock.mastery_2.passive_1.up2.desc">The projectiles jumps to additional targets on hit.</string>
+
+	<string name="skills.warlock.mastery_3.name">Chaos</string>
+	<string name="skills.warlock.mastery_3.desc"></string>
+
+	<string name="skills.warlock.mastery_3.spell_1.name">Chaos Blade</string>
+	<string name="skills.warlock.mastery_3.spell_1.desc">You conjure a magical blade to slash the area in front of you, dealing Physical and Lightning damage.</string>
+	<string name="skills.warlock.mastery_3.spell_1.up1.name">Blade Arcs</string>
+	<string name="skills.warlock.mastery_3.spell_1.up1.desc">The spell now also unleashes a number of projectiles in arc in front of you.</string>
+	<string name="skills.warlock.mastery_3.spell_1.up2.name">Rupture</string>
+	<string name="skills.warlock.mastery_3.spell_1.up2.desc">The blade slash now inflict stacks of \cb0dfffBleeding\d.</string>
+	
+	<string name="skills.warlock.mastery_3.passive_1.name">Chaos Rifts</string>
+	<string name="skills.warlock.mastery_3.passive_1.desc">Casting a \cffdfb0Spell\d spawns a rift that deals Physical and Lightning damage to nearby enemies. Rifts spawned close to each other create streams of energy between them, dealing additional damage.</string>
+	<string name="skills.warlock.mastery_3.passive_1.up1.name">Chaos Reaper</string>
+	<string name="skills.warlock.mastery_3.passive_1.up1.desc">Killing an enemy has a chance to spawn a rift. This effect has a short cooldown.</string>
+	<string name="skills.warlock.mastery_3.passive_1.up2.name">Rift Blade</string>
+	<string name="skills.warlock.mastery_3.passive_1.up2.desc">Hits with \cb0dfffChaos Blade\d gains a chance to spawn a rift. This effect has a short cooldown.</string>
+
+
+
+
+
+
+
+
+	<!-- Warrior -->
+
+
+	<string name="skills.warrior.spell_1.name">Whirling Axes</string>
+	<string name="skills.warrior.spell_1.desc">You throw two spinning axes that deal Physical damage to all enemies in their paths.</string>
+	<string name="skills.warrior.spell_1.up1.name">Revolving Axes</string>
+	<string name="skills.warrior.spell_1.up1.desc">The axes now returns to you after a period.</string>
+	<string name="skills.warrior.spell_1.up2.name">Burning Axes</string>
+	<string name="skills.warrior.spell_1.up2.desc">The axes deal additional Fire damage.</string>
+	<string name="skills.warrior.spell_1.up3.name">Culling Axes</string>
+	<string name="skills.warrior.spell_1.up3.desc">The axes gain a chance to instantly kill an enemy on \cb0dfffLow Life\d. Does not work on Bosses.</string>
+
+	<string name="skills.warrior.spell_2.name">War Cry</string>
+	<string name="skills.warrior.spell_2.desc">You and all allies in the area gain a buff that increases Weapon and Movement Speed for a period.</string>
+	<string name="skills.warrior.spell_2.up1.name">Intimidating Cry</string>
+	<string name="skills.warrior.spell_2.up1.desc">Enemies around you are inflicted by \cb0dfffWeakness\d when casting War Cry.</string>
+	<string name="skills.warrior.spell_2.up2.name">Second Wind</string>
+	<string name="skills.warrior.spell_2.up2.desc">You regain a portion of your Health when casting War Cry.</string>
+	<string name="skills.warrior.spell_2.up3.name">Battle Cry</string>
+	<string name="skills.warrior.spell_2.up3.desc">You gain stacks of \cb0dfffKilling Spree\d for each enemy around you when casting War Cry.</string>
+
+	<string name="skills.warrior.passive_1.name">Warrior's Constitution</string>
+	<string name="skills.warrior.passive_1.desc">Increases your Health and Poison Resistance.</string>
+	<string name="skills.warrior.passive_1.up1.name">Combat Training</string>
+	<string name="skills.warrior.passive_1.up1.desc">You deal increased damage with \cffdfb0Melee\d skills.</string>
+	<string name="skills.warrior.passive_1.up2.name">Toughness</string>
+	<string name="skills.warrior.passive_1.up2.desc">You take less damage.</string>
+	<string name="skills.warrior.passive_1.up3.name">Mighty Strength</string>
+	<string name="skills.warrior.passive_1.up3.desc">Increases your Armor Penetration.</string>
+
+	<string name="skills.warrior.passive_2.name">Killing Spree</string>
+	<string name="skills.warrior.passive_2.desc">You gain stacks of \cb0dfffKilling Spree\d by killing enemies. Each stack increases your damage. You lose all stacks at once if the duration runs out.</string>
+	<string name="skills.warrior.passive_2.up1.name">Brutality</string>
+	<string name="skills.warrior.passive_2.up1.desc">Each stack now also grants Weapon and Spell Crit Chance.</string>
+	<string name="skills.warrior.passive_2.up2.name">Killer Physique</string>
+	<string name="skills.warrior.passive_2.up2.desc">Each stack increases your Health Regen.</string>
+	<string name="skills.warrior.passive_2.up3.name">Dauntless</string>
+	<string name="skills.warrior.passive_2.up3.desc">\cffdfb0Melee\d hits against \cb0dfffBosses\d and \cb0dfffElites\d gain a chance to add stacks of \cb0dfffKilling Spree\d.</string>
+
+	
+	
+	
+	<string name="skills.warrior.mastery_1.name">Berserker</string>
+	<string name="skills.warrior.mastery_1.desc"></string>
+
+	<string name="skills.warrior.mastery_1.spell_1.name">Leap</string>
+	<string name="skills.warrior.mastery_1.spell_1.desc">You leap towards the target location, landing with a slam dealing Physical damage and inflicting \cb0dfffStun\d to enemies in the area.</string>
+	<string name="skills.warrior.mastery_1.spell_1.up1.name">Trembling Impact</string>
+	<string name="skills.warrior.mastery_1.spell_1.up1.desc">After landing you set off a series of tremors that erupt after a short delay, dealing additional Physical damage.</string>
+	<string name="skills.warrior.mastery_1.spell_1.up2.name">Fiery Leap</string>
+	<string name="skills.warrior.mastery_1.spell_1.up2.desc">You ignite the ground at the location form where you leap and land, dealing Fire damage for period of time.</string>
+
+	<string name="skills.warrior.mastery_1.passive_1.name">Rage</string>
+	<string name="skills.warrior.mastery_1.passive_1.desc">Taking damage will grant you a temporary \cb0dfffRage\d buff for a period, increasing your Crit Chance and Crit Damage with \cffdfb0Physical\d skills.</string>
+	<string name="skills.warrior.mastery_1.passive_1.up1.name">Unyielding Rage</string>
+	<string name="skills.warrior.mastery_1.passive_1.up1.desc">You automatically gain rage when on \cb0dfffLow Life\d, you also take less damage when on \cb0dfffLow Life\d.</string>
+	<string name="skills.warrior.mastery_1.passive_1.up2.name">Furious Cry</string>
+	<string name="skills.warrior.mastery_1.passive_1.up2.desc">You gain \cb0dfffRage\d when casting \cb0dfffWar Cry\d. Your cooldowns are also reduced during \cb0dfffRage\d.</string>
+
+	<string name="skills.warrior.mastery_2.name">Primalist</string>
+	<string name="skills.warrior.mastery_2.desc"></string>
+
+	<string name="skills.warrior.mastery_2.spell_1.name">Ancient Totems</string>
+	<string name="skills.warrior.mastery_2.spell_1.desc">You place a totem at the target location that deals Physical damage to nearby enemies for a period.</string>
+	<string name="skills.warrior.mastery_2.spell_1.up1.name">Shock Totems</string>
+	<string name="skills.warrior.mastery_2.spell_1.up1.desc">The totems periodically shock nearby enemies dealing Lightning damage. If the totems are placed close to eachother they create barriers of lightning between them dealing additional damage.</string>
+	<string name="skills.warrior.mastery_2.spell_1.up2.name">Frostbite Totems</string>
+	<string name="skills.warrior.mastery_2.spell_1.up2.desc">Changes the damage type to Ice and gains a chance to inflict \cb0dfffFreeze\d.</string>
+
+	<string name="skills.warrior.mastery_2.passive_1.name">Tremor Strikes</string>
+	<string name="skills.warrior.mastery_2.passive_1.desc">Your \cffdfb0Melee Weapon\d attacks causes tremors around you dealing Physical damage in the area. This effect has a short cooldown.</string>
+	<string name="skills.warrior.mastery_2.passive_1.up1.name">Tempest Strikes</string>
+	<string name="skills.warrior.mastery_2.passive_1.up1.desc">Your \cffdfb0Melee Weapon\d hits gain a chance to deal additional Lightning damage to the target and a random different nearby enemy.</string>
+	<string name="skills.warrior.mastery_2.passive_1.up2.name">Glacial Strikes</string>
+	<string name="skills.warrior.mastery_2.passive_1.up2.desc">Your \cffdfb0Melee Weapon\d hits gain a chance to trigger a small explosion dealing additional Ice damage. This effect has a short cooldown.</string>
+
+	<string name="skills.warrior.mastery_3.name">Tyrant</string>
+	<string name="skills.warrior.mastery_3.desc"></string>
+
+	<string name="skills.warrior.mastery_3.spell_1.name">Chains</string>
+	<string name="skills.warrior.mastery_3.spell_1.desc">You throw out chains all around you, dealing Physical damage and inflicting enemies with \cb0dfffCripple\d.</string>
+	<string name="skills.warrior.mastery_3.spell_1.up1.name">Barbed Chains</string>
+	<string name="skills.warrior.mastery_3.spell_1.up1.desc">The chains now inflict stacks of \cb0dfffBleeding\d.</string>
+	<string name="skills.warrior.mastery_3.spell_1.up2.name">Spiked Chains</string>
+	<string name="skills.warrior.mastery_3.spell_1.up2.desc">Spike projectiles are now released at the end of the chains.</string>
+	
+	<string name="skills.warrior.mastery_3.passive_1.name">Ruthlessness</string>
+	<string name="skills.warrior.mastery_3.passive_1.desc">You deal increased Physical damage and your \cffdfb0Physical\d skills gain a chance to inflict stacks of \cb0dfffBleeding\d.</string>
+	<string name="skills.warrior.mastery_3.passive_1.up1.name">Exploding Gibs</string>
+	<string name="skills.warrior.mastery_3.passive_1.up1.desc">Killing enemies with \cffdfb0Physical\d skills have a chance to trigger an explosion of gibs dealing Physical damage in the area.</string>
+	<string name="skills.warrior.mastery_3.passive_1.up2.name">Slayer</string>
+	<string name="skills.warrior.mastery_3.passive_1.up2.desc">You deal increased damage to enemies based on their missing health.</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<!-- Wizard -->
+
+	<string name="skills.wizard.spell_1.name">Magic Missiles</string>
+	<string name="skills.wizard.spell_1.desc">Discharges several magic missiles that seek out nearby enemies and deal Physical damage on impact.</string>
+	<string name="skills.wizard.spell_1.up1.name">Missile Barrage</string>
+	<string name="skills.wizard.spell_1.up1.desc">Fires additional projectiles per cast.</string>
+	<string name="skills.wizard.spell_1.up2.name">Rebounding Missiles</string>
+	<string name="skills.wizard.spell_1.up2.desc">The projectiles gain the ability to jump to additional targets on hit.</string>
+	<string name="skills.wizard.spell_1.up3.name">Concussive Impacts</string>
+	<string name="skills.wizard.spell_1.up3.desc">The projectiles gain a chance to inflict \cb0dfffStun\d.</string>
+
+	<string name="skills.wizard.spell_2.name">Fireball</string>
+	<string name="skills.wizard.spell_2.desc">Unleash a fireball towards the targeted location that explodes dealing Fire damage.</string>
+	<string name="skills.wizard.spell_2.up1.name">Enhanced Fireball</string>
+	<string name="skills.wizard.spell_2.up1.desc">Increases the size of the explosion.</string>
+	<string name="skills.wizard.spell_2.up2.name">Blastwave</string>
+	<string name="skills.wizard.spell_2.up2.desc">Enemies hit by the fireball are inflicted by \cb0dfffSlow\d.</string>
+	<string name="skills.wizard.spell_2.up3.name">Bouncing Fireball</string>
+	<string name="skills.wizard.spell_2.up3.desc">The fireball now bounces and triggers an explosion with each bounce.</string>
+
+	<string name="skills.wizard.passive_1.name">Arcane Intellect</string>
+	<string name="skills.wizard.passive_1.desc">Increases your Mana and Intelligence.</string>
+	<string name="skills.wizard.passive_1.up1.name">Savant</string>
+	<string name="skills.wizard.passive_1.up1.desc">Reduces your spell cooldowns.</string>
+	<string name="skills.wizard.passive_1.up2.name">Arcane Weaponry</string>
+	<string name="skills.wizard.passive_1.up2.desc">You deal increased damage with \cffdfb0Arcane\d weapons.</string>
+	<string name="skills.wizard.passive_1.up3.name">Learning</string>
+	<string name="skills.wizard.passive_1.up3.desc">Increases your Experience Gain.</string>
+
+	<string name="skills.wizard.passive_2.name">Barrier</string>
+	<string name="skills.wizard.passive_2.desc">You generate protective stacks of \cb0dfffBarrier\d over time. When taking damage a stack is expended, lowering the damage taken.</string>
+	<string name="skills.wizard.passive_2.up1.name">Flame Shield</string>
+	<string name="skills.wizard.passive_2.up1.desc">Taking damage while having stacks of \cb0dfffBarrier\d ignites the air around yourself for a duration, dealing Fire damage to nearby enemies.</string>
+	<string name="skills.wizard.passive_2.up2.name">Frost Shell</string>
+	<string name="skills.wizard.passive_2.up2.desc">As long as you have stacks of \cb0dfffBarrier\d you have increased Armor and Ice Resistance. You also inflict \cb0dfffFreeze\d to any attackers.</string>
+	<string name="skills.wizard.passive_2.up3.name">Protective Warding</string>
+	<string name="skills.wizard.passive_2.up3.desc">Casting a \cffdfb0Spell\d gains a chance to generate stacks of Barrier. This effect has a short cooldown.</string>
+
+
+	<string name="skills.wizard.mastery_1.name">Evocation</string>
+	<string name="skills.wizard.mastery_1.desc"></string>
+
+	<string name="skills.wizard.mastery_1.spell_1.name">Meteor Shower</string>
+	<string name="skills.wizard.mastery_1.spell_1.desc">You summon meteors to fall in the area for a duration, dealing both Physical and Fire damage.</string>
+	<string name="skills.wizard.mastery_1.spell_1.up1.name">Burning Ground</string>
+	<string name="skills.wizard.mastery_1.spell_1.up1.desc">The meteors create an area of burning ground on impact, dealing additional Fire damage for a period.</string>
+	<string name="skills.wizard.mastery_1.spell_1.up2.name">Comet</string>
+	<string name="skills.wizard.mastery_1.spell_1.up2.desc">Changes the damage type to Ice and Physical, and gains a chance to inflict \cb0dfffFreeze\d.</string>
+
+	<string name="skills.wizard.mastery_1.passive_1.name">Incanter's Cadence</string>
+	<string name="skills.wizard.mastery_1.passive_1.desc">Casting \cffdfb0Spells\d generate stacks of \cb0dfffIncanter's Cadence\d. Each stack increases your Cast Speed and reduces the Mana Cost of spells.</string>
+	<string name="skills.wizard.mastery_1.passive_1.up1.name">Rising Crescendo</string>
+	<string name="skills.wizard.mastery_1.passive_1.up1.desc">Each stack of \cb0dfffIncanter's Cadence\d increases your Spell Crit Chance.</string>
+	<string name="skills.wizard.mastery_1.passive_1.up2.name">Incanter's Flow</string>
+	<string name="skills.wizard.mastery_1.passive_1.up2.desc">Each stack of Incanter's Cadence increases your Weapon Speed.</string>
+
+	<string name="skills.wizard.mastery_2.name">Conjuration</string>
+	<string name="skills.wizard.mastery_2.desc"></string>
+
+	<string name="skills.wizard.mastery_2.spell_1.name">Conjure Hydras</string>
+	<string name="skills.wizard.mastery_2.spell_1.desc">You conjure multiple hydra that spew fire at nearby enemies dealing Fire damage.</string>
+	<string name="skills.wizard.mastery_2.spell_1.up1.name">Greater Hydra</string>
+	<string name="skills.wizard.mastery_2.spell_1.up1.desc">You conjure additional hydra heads with each cast.</string>
+	<string name="skills.wizard.mastery_2.spell_1.up2.name">Frost Breath</string>
+	<string name="skills.wizard.mastery_2.spell_1.up2.desc">Changes damage type to Ice.</string>
+
+	<string name="skills.wizard.mastery_2.passive_1.name">Animated Sword</string>
+	<string name="skills.wizard.mastery_2.passive_1.desc">You conjure a magical sword that follows you around at all times. The sword slashes at nearby enemies dealing Physical damage.</string>
+	<string name="skills.wizard.mastery_2.passive_1.up1.name">Flame Blade</string>
+	<string name="skills.wizard.mastery_2.passive_1.up1.desc">The sword is now engulfed in flames and continously deal Fire damage to nearby enemies.</string>
+	<string name="skills.wizard.mastery_2.passive_1.up2.name">Ice Blade</string>
+	<string name="skills.wizard.mastery_2.passive_1.up2.desc">The sword now deals Ice damage and gains a chance to inflict \cb0dfffFreeze\d.</string>
+
+	<string name="skills.wizard.mastery_3.name">Transmutation</string>
+	<string name="skills.wizard.mastery_3.desc"></string>
+
+	<string name="skills.wizard.mastery_3.spell_1.name">Haste</string>
+	<string name="skills.wizard.mastery_3.spell_1.desc">You gain a temporary buff that increases your Weapon, Cast and Movement Speed.</string>
+	<string name="skills.wizard.mastery_3.spell_1.up1.name">Blur</string>
+	<string name="skills.wizard.mastery_3.spell_1.up1.desc">You also gain Evasion for the duration of the buff.</string>
+	<string name="skills.wizard.mastery_3.spell_1.up2.name">Temporal Shift</string>
+	<string name="skills.wizard.mastery_3.spell_1.up2.desc">For the duration of the buff you inflict nearby enemies with \cb0dfffSlow\d.</string>
+	
+	<string name="skills.wizard.mastery_3.passive_1.name">Enhanced Physique</string>
+	<string name="skills.wizard.mastery_3.passive_1.desc">Grants additional Strength, Dexterity and Intelligence per character level.</string>
+	<string name="skills.wizard.mastery_3.passive_1.up1.name">Enhanced Strength</string>
+	<string name="skills.wizard.mastery_3.passive_1.up1.desc">Grants Spell Power per Strength.</string>
+	<string name="skills.wizard.mastery_3.passive_1.up2.name">Enhanced Dexterity</string>
+	<string name="skills.wizard.mastery_3.passive_1.up2.desc">Grants Spell Power per Dexterity.</string>
+	<string name="skills.wizard.mastery_3.passive_1.up3.name">Free Movement</string>
+	<string name="skills.wizard.mastery_3.passive_1.up3.desc">You gain immunity to \cb0dfffSlow\d and \cb0dfffCripple\d.</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<!-- Crafting -->
+
+
+	<string name="menu.crafting.potion.title">Potion Brewing</string>
+	<string name="menu.crafting.food.title">Cooking</string>
+	<string name="menu.crafting.workbench.title">Workbench</string>
+	<string name="menu.crafting.cloth.title">Seamstress</string>
+	<string name="menu.crafting.leather.title">Leatherworker</string>
+	<string name="menu.crafting.metal.title">Blacksmith</string>
+	<string name="menu.crafting.armor.title">Armorer</string>
+	<string name="menu.crafting.weaponsmith.title">Weapon Smith</string>
+	<string name="menu.crafting.scales.title">Scale Armorer</string>
+
+	<string name="menu.crafting.slot.tier.name">Tier</string>
+	<string name="menu.crafting.slot.tier.desc">Select what tier of item to craft.</string>
+	<string name="menu.crafting.slot.quality.name">Quality</string>
+	<string name="menu.crafting.slot.quality.desc">Select what quality of item to craft.</string>
+	<string name="menu.crafting.slot.blueprint.name">Blueprint</string>
+	<string name="menu.crafting.slot.blueprint.desc">Select what item to craft.</string>
+	<string name="menu.crafting.slot.meal.name">Meal Recipe</string>
+	<string name="menu.crafting.slot.meal.desc">Select what meal to cook.</string>
+	<string name="menu.crafting.slot.potion.name">Potion Recipe</string>
+	<string name="menu.crafting.slot.potion.desc">Select what potion to craft.</string>
+	<string name="menu.crafting.slot.bottle.name">Bottle</string>
+	<string name="menu.crafting.slot.bottle.desc">Select what bottle to use for the potion.</string>
+
+	<string name="menu.enchanting.title">Enchanting</string>
+	<string name="menu.enchanting.slot.equipment.name">Enchant</string>
+	<string name="menu.enchanting.slot.equipment.desc">Upgrade the selected equipment to add a random modifier.</string>
+	<string name="menu.enchanting.slot.component.name">Component</string>
+	<string name="menu.enchanting.slot.component.desc">Apply a component to the enchantment to add a pre-determined modifier. </string>
+	<string name="menu.disenchanting.title">Disenchanting</string>
+	<string name="menu.disenchanting.slot.equipment.name">Disenchant</string>
+	<string name="menu.disenchanting.slot.equipment.desc">Destroy the selected equipment to gain elven runes.</string>
+	<string name="menu.reenchanting.title">Re-enchanting</string>
+	<string name="menu.reenchanting.slot.equipment.name">Re-enchant</string>
+	<string name="menu.reenchanting.slot.equipment.desc">Re-rolls the modifiers on the selected equipment.</string>
+
+	<string name="crafting.blueprint.apprentice.name">Apprentice</string>
+	<string name="crafting.blueprint.apprentice.desc">Craft an Apprentice tier item.</string>
+	<string name="crafting.blueprint.adept.name">Adept</string>
+	<string name="crafting.blueprint.adept.desc">Craft an Adept tier item.</string>
+	<string name="crafting.blueprint.expert.name">Expert</string>
+	<string name="crafting.blueprint.expert.desc">Craft an Expert tier item.</string>
+	<string name="crafting.blueprint.master.name">Master</string>
+	<string name="crafting.blueprint.master.desc">Craft a Master tier item.</string>
+	<string name="crafting.blueprint.common.name">Common</string>
+	<string name="crafting.blueprint.common.desc">Craft a Common quality item.</string>
+	<string name="crafting.blueprint.uncommon.name">Uncommon</string>
+	<string name="crafting.blueprint.uncommon.desc">Craft a Uncommon quality item.</string>
+	<string name="crafting.blueprint.rare.name">Rare</string>
+	<string name="crafting.blueprint.rare.desc">Craft a Rare quality item.</string>
+	<string name="crafting.blueprint.epic.name">Epic</string>
+	<string name="crafting.blueprint.epic.desc">Craft a Epic quality item.</string>
+
+	<string name="crafting.blueprint.chest_str.name">Plate Armor</string>
+	<string name="crafting.blueprint.chest_dex.name">Leather Armor</string>
+	<string name="crafting.blueprint.chest_int.name">Robe</string>
+	<string name="crafting.blueprint.head_str.name">Plate Helmet</string>
+	<string name="crafting.blueprint.head_dex.name">Hood</string>
+	<string name="crafting.blueprint.head_int.name">Circlet</string>
+	<string name="crafting.blueprint.hands_str.name">Plate Gauntlets</string>
+	<string name="crafting.blueprint.hands_dex.name">Leather Bracers</string>
+	<string name="crafting.blueprint.hands_int.name">Gloves</string>
+	<string name="crafting.blueprint.feet_str.name">Plate Greaves</string>
+	<string name="crafting.blueprint.feet_dex.name">Leather Boots</string>
+	<string name="crafting.blueprint.feet_int.name">Slippers</string>
+
+	<string name="crafting.blueprint.acc_belt.name">Leather Belt</string>
+
+	<string name="crafting.blueprint.paladin.mainhand.name">Paladin Mainhand</string>
+	<string name="crafting.blueprint.paladin.offhand.name">Paladin Offhand</string>
+	<string name="crafting.blueprint.ranger.mainhand.name">Ranger Mainhand</string>
+	<string name="crafting.blueprint.ranger.offhand.name">Ranger Offhand</string>
+	<string name="crafting.blueprint.rogue.mainhand.name">Rogue Mainhand</string>
+	<string name="crafting.blueprint.rogue.offhand.name">Rogue Offhand</string>
+	<string name="crafting.blueprint.warlock.mainhand.name">Warlock Mainhand</string>
+	<string name="crafting.blueprint.warlock.offhand.name">Warlock Offhand</string>
+	<string name="crafting.blueprint.wizard.mainhand.name">Wizard Mainhand</string>
+	<string name="crafting.blueprint.wizard.offhand.name">Wizard Offhand</string>
+
+	<string name="crafting.blueprint.potion.health.name">Healing Potion</string>
+	<string name="crafting.blueprint.potion.health.desc">Restores Health.</string>
+	<string name="crafting.blueprint.potion.mana.name">Mana Potion</string>
+	<string name="crafting.blueprint.potion.mana.desc">Restores Mana.</string>
+	<string name="crafting.blueprint.potion.rejuvenation.name">Rejuvenation Potion</string>
+	<string name="crafting.blueprint.potion.rejuvenation.desc">Restores a small amount of Health, Mana and Stamina.</string>
+
+	<string name="crafting.blueprint.leather.name">Leather (%type%)</string>
+
+
+
+	<!-- Modifiers -->
+
+
+	<string name="modifiers.attributes.all.prefix"></string>
+	<string name="modifiers.attributes.all.suffix">of Talent</string>
+	<string name="modifiers.attributes.str.prefix">Brawny</string>
+	<string name="modifiers.attributes.str.suffix">of Might</string>
+	<string name="modifiers.attributes.dex.prefix">Nimble</string>
+	<string name="modifiers.attributes.dex.suffix">of Agility</string>
+	<string name="modifiers.attributes.int.prefix">Keen</string>
+	<string name="modifiers.attributes.int.suffix">of Intellect</string>
+	<string name="modifiers.attributes.vit.prefix">Hale</string>
+	<string name="modifiers.attributes.vit.suffix">of Vitality</string>
+	<string name="modifiers.attributes.foc.prefix">Insightful</string>
+	<string name="modifiers.attributes.foc.suffix">of Focus</string>
+	<string name="modifiers.attributes.str_pct.prefix"></string>
+	<string name="modifiers.attributes.str_pct.suffix">of the Ox</string>
+	<string name="modifiers.attributes.dex_pct.prefix"></string>
+	<string name="modifiers.attributes.dex_pct.suffix">of the Cat</string>
+	<string name="modifiers.attributes.int_pct.prefix"></string>
+	<string name="modifiers.attributes.int_pct.suffix">of the Owl</string>
+
+	<string name="modifiers.defences.damage.prefix">Guardian</string>
+	<string name="modifiers.defences.damage.suffix">of Protection</string>
+	<string name="modifiers.defences.damage.desc">%desc%% reduced damage taken.</string>
+	<string name="modifiers.defences.damage.stand.desc">%desc%% reduced damage taken while not moving.</string>
+
+	<string name="modifiers.defences.evasion.prefix">Slippery</string>
+	<string name="modifiers.defences.evasion.suffix">of Evasion</string>
+	<string name="modifiers.defences.block.physical.prefix">Defender's</string>
+	<string name="modifiers.defences.block.physical.suffix">of the Defender</string>
+	<string name="modifiers.defences.block.physical.desc">Blocks %value% Physical Damage.</string>
+	<string name="modifiers.defences.block.fire.desc">Blocks %value% Fire Damage.</string>
+	<string name="modifiers.defences.block.ice.desc">Blocks %value% Ice Damage.</string>
+	<string name="modifiers.defences.block.lightning.desc">Blocks %value% Lightning Damage.</string>
+	<string name="modifiers.defences.block.poison.desc">Blocks %value% Poison Damage.</string>
+	<string name="modifiers.defences.block.any.desc">Blocks %value% Damage.</string>
+	<string name="modifiers.defences.block_chance.physical.desc">%chance%% to block %value% Physical Damage.</string>
+	<string name="modifiers.defences.block_chance.fire.desc">%chance%% to block %value% Fire Damage.</string>
+	<string name="modifiers.defences.block_chance.ice.desc">%chance%% to block %value% Ice Damage.</string>
+	<string name="modifiers.defences.block_chance.lightning.desc">%chance%% to block %value% Lightning Damage.</string>
+	<string name="modifiers.defences.block_chance.poison.desc">%chance%% to block %value% Poison Damage.</string>
+	<string name="modifiers.defences.block_chance.any.desc">%chance%% to block %value% Damage.</string>
+
+	<string name="modifiers.damage.all.prefix"></string>
+	<string name="modifiers.damage.all.suffix">of Annihilation</string>
+	<string name="modifiers.damage.all.desc">%desc%% increased damage.</string>
+	<string name="modifiers.damage.attack.prefix"></string>
+	<string name="modifiers.damage.attack.suffix">of Slaughter</string>
+	<string name="modifiers.damage.attack.desc">%desc%% increased damage with Attacks.</string>
+
+	<string name="modifiers.damage.spell.prefix"></string>
+	<string name="modifiers.damage.spell.suffix">of Prowess</string>
+	<string name="modifiers.damage.spell.desc">%desc%% increased damage with Spells.</string>
+	<string name="modifiers.damage.beast.prefix">Trapper's</string>
+	<string name="modifiers.damage.beast.suffix">of the Hunter</string>
+	<string name="modifiers.damage.beast.desc">%desc%% increased damage done to Beasts.</string>
+	<string name="modifiers.damage.human.prefix">Despot's</string>
+	<string name="modifiers.damage.human.suffix">of the Tyrant</string>
+	<string name="modifiers.damage.human.desc">%desc%% increased damage done to Humans.</string>
+	<string name="modifiers.damage.undead.prefix">Saint's</string>
+	<string name="modifiers.damage.undead.suffix">of the Seraph</string>
+	<string name="modifiers.damage.undead.desc">%desc%% increased damage done to Undead.</string>
+	<string name="modifiers.damage.elites.prefix">Challenger's</string>
+	<string name="modifiers.damage.elites.suffix">of the Duelist</string>
+	<string name="modifiers.damage.elites.desc">%desc%% increased damage done to Elite and Superior enemies.</string>
+	<string name="modifiers.damage.bosses.prefix">Hero's</string>
+	<string name="modifiers.damage.bosses.suffix">of the Champion</string>
+	<string name="modifiers.damage.bosses.desc">%desc%% increased damage done to Bosses.</string>
+	<string name="modifiers.damage.physical.prefix">Carnage</string>
+	<string name="modifiers.damage.physical.suffix">of War</string>
+	<string name="modifiers.damage.fire.prefix">Hellfire</string>
+	<string name="modifiers.damage.fire.suffix">of Inferno</string>
+	<string name="modifiers.damage.ice.prefix">Blizzard</string>
+	<string name="modifiers.damage.ice.suffix">of Winter</string>
+	<string name="modifiers.damage.lightning.prefix">Tempest</string>
+	<string name="modifiers.damage.lightning.suffix">of Storm</string>
+	<string name="modifiers.damage.poison.prefix">Plague</string>
+	<string name="modifiers.damage.poison.suffix">of Decay</string>
+	<string name="modifiers.penetration.physical.prefix">Puncturing</string>
+	<string name="modifiers.penetration.physical.suffix">of Sundering</string>
+	<string name="modifiers.penetration.fire.prefix">Incinerating</string>
+	<string name="modifiers.penetration.fire.suffix">of Conflagration</string>
+	<string name="modifiers.penetration.ice.prefix">Biting</string>
+	<string name="modifiers.penetration.ice.suffix">of Frostbite</string>
+	<string name="modifiers.penetration.lightning.prefix">Electrocution</string>
+	<string name="modifiers.penetration.lightning.suffix">of Discharge</string>
+	<string name="modifiers.penetration.poison.prefix">Infestation</string>
+	<string name="modifiers.penetration.poison.suffix">of Rot</string>
+
+	<string name="modifiers.misc.mspeed.prefix">Swift</string>
+	<string name="modifiers.misc.mspeed.suffix">of Speed</string>
+	<string name="modifiers.misc.experience.prefix">Academic's</string>
+	<string name="modifiers.misc.experience.suffix">of Enlightenment</string>
+	<string name="modifiers.misc.kill_health.prefix">Predator's</string>
+	<string name="modifiers.misc.kill_health.suffix">of the Predator</string>
+	<string name="modifiers.misc.kill_health.desc">Restore %value% Health on Kill.</string>
+	<string name="modifiers.misc.kill_stamina.prefix">Juggernaut's</string>
+	<string name="modifiers.misc.kill_stamina.suffix">of the Juggernaut</string>
+	<string name="modifiers.misc.kill_stamina.desc">Restores %value% Stamina on Kill.</string>
+	<string name="modifiers.misc.kill_mana.prefix">Witch's</string>
+	<string name="modifiers.misc.kill_mana.suffix">of the Witch</string>
+	<string name="modifiers.misc.kill_mana.desc">Restores %value% Mana on Kill.</string>
+	<string name="modifiers.misc.kill_mana_undead.desc">Restores %value% Mana when killing Undead</string>
+	<string name="modifiers.misc.slow_effect.desc">Slow effects reduced by %value%%.</string>
+	<string name="modifiers.misc.miss.attack.desc">%value%% Attack miss chance.</string>
+
+	<string name="modifiers.full_health.damage.desc">%value%% increased damage done on full Health.</string>
+	<string name="modifiers.full_health.damage.attack.desc">%value%% increased damage with Attacks on full Health.</string>
+	<string name="modifiers.full_health.damage.spell.desc">%value%% increased damage with Spell on full Health.</string>
+	<string name="modifiers.full_health.damage_taken.desc">%value%% reduced damage taken on full Health.</string>
+
+	<string name="modifiers.low_health.damage.desc">%value%% increased damage done on Low Health.</string>
+	<string name="modifiers.low_health.damage.attack.desc">%value%% increased damage with Attacks on Low Health.</string>
+	<string name="modifiers.low_health.damage.spell.desc">%value%% increased damage with Spells on Low Health.</string>
+	<string name="modifiers.low_health.damage_taken.desc">%value%% reduced damage taken on Low Health.</string>
+	<string name="modifiers.low_health.health_regen.desc">%value% increased Health Regen on Low Health.</string>
+
+	<string name="modifiers.resistances.all.prefix"></string>
+	<string name="modifiers.resistances.all.suffix">of Resistance</string>
+	<string name="modifiers.resistances.armor.prefix">Durable</string>
+	<string name="modifiers.resistances.armor.suffix">of Fortification</string>
+	<string name="modifiers.resistances.fire.prefix">Fiery</string>
+	<string name="modifiers.resistances.fire.suffix">of Embers</string>
+	<string name="modifiers.resistances.ice.prefix">Icy</string>
+	<string name="modifiers.resistances.ice.suffix">of Frost</string>
+	<string name="modifiers.resistances.lightning.prefix">Static</string>
+	<string name="modifiers.resistances.lightning.suffix">of Cracking</string>
+	<string name="modifiers.resistances.poison.prefix">Cleansing</string>
+	<string name="modifiers.resistances.poison.suffix">of Remedy</string>
+	<string name="modifiers.resistances.armor_pct.prefix"></string>
+	<string name="modifiers.resistances.armor_pct.suffix">of the Turtle</string>
+	<string name="modifiers.resistances.fire_pct.prefix"></string>
+	<string name="modifiers.resistances.fire_pct.suffix">of the Drake</string>
+	<string name="modifiers.resistances.ice_pct.prefix"></string>
+	<string name="modifiers.resistances.ice_pct.suffix">of the Yeti</string>
+	<string name="modifiers.resistances.lightning_pct.prefix"></string>
+	<string name="modifiers.resistances.lightning_pct.suffix">of the Eel</string>
+	<string name="modifiers.resistances.poison_pct.prefix"></string>
+	<string name="modifiers.resistances.poison_pct.suffix">of the Serpent</string>
+
+	<string name="modifiers.skills.attack_speed.prefix">Berserker's</string>
+	<string name="modifiers.skills.attack_speed.suffix">of the Fencer</string>
+	<string name="modifiers.skills.attack_crit.prefix">Assassins's</string>
+	<string name="modifiers.skills.attack_crit.suffix">of the Marksman</string>
+	<string name="modifiers.skills.attack_crit_dmg.prefix">Lethal</string>
+	<string name="modifiers.skills.attack_crit_dmg.suffix">of the Butcher</string>
+	<string name="modifiers.skills.attack_power.prefix">Mighty</string>
+	<string name="modifiers.skills.attack_power.suffix">of Might</string>
+	<string name="modifiers.skills.spell_speed.prefix">Spellslinger's</string>
+	<string name="modifiers.skills.spell_speed.suffix">of Alacrity</string>
+	<string name="modifiers.skills.spell_power.prefix">Powerful</string>
+	<string name="modifiers.skills.spell_power.suffix">of Power</string>
+	<string name="modifiers.skills.spell_crit.prefix">Exalted</string>
+	<string name="modifiers.skills.spell_crit.suffix">of Excellence</string>
+	<string name="modifiers.skills.spell_crit_dmg.prefix">Deadly</string>
+	<string name="modifiers.skills.spell_crit_dmg.suffix">of Supremacy</string>
+	<string name="modifiers.skills.spell_cost.prefix">Spellcaster's</string>
+	<string name="modifiers.skills.spell_cost.suffix">of Efficiency</string>
+	<string name="modifiers.skills.spell_cost.desc">Reduces Spell Cost by %desc%%.</string>
+	<string name="modifiers.skills.spell_cooldown.prefix">Spellweaver's</string>
+	<string name="modifiers.skills.spell_cooldown.suffix">of Celerity</string>
+	<string name="modifiers.skills.spell_cooldown.desc">Reduces Spell Cooldown by %cd%%.</string>
+
+	<string name="modifiers.skills.leech.health.desc">%value%% Life Leech.</string>
+	<string name="modifiers.skills.leech.mana.desc">%value%% Mana Leech.</string>
+	<string name="modifiers.skills.leech.stamina.desc">%value%% Stamina Leech.</string>
+	<string name="modifiers.skills.leech.attack_health.desc">%value%% Attack Life Leech.</string>
+	<string name="modifiers.skills.leech.attack_mana.desc">%value%% Attack Mana Leech.</string>
+	<string name="modifiers.skills.leech.attack_stamina.desc">%value%% Attack Stamina Leech.</string>
+	<string name="modifiers.skills.leech.spell_health.desc">%value%% Spell Life Leech.</string>
+	<string name="modifiers.skills.leech.spell_mana.desc">%value%% Spell Mana Leech.</string>
+	<string name="modifiers.skills.leech.spell_stamina.desc">%value%% Spell Stamina Leech.</string>
+
+	<string name="modifiers.skills.leech.attack_health.crit.desc">%value%% Life Leech with Attack Critical Hits.</string>
+	<string name="modifiers.skills.leech.attack_health.bleeding.desc">%value%% Attack Life Leech against targets inflicted by %c-highlight%Bleeding\d.</string>
+
+	<string name="modifiers.stats.health.prefix">Stout</string>
+	<string name="modifiers.stats.health.suffix">of Toughness</string>
+	<string name="modifiers.stats.stamina.prefix">Hardy</string>
+	<string name="modifiers.stats.stamina.suffix">of Fitness</string>
+	<string name="modifiers.stats.mana.prefix">Astute</string>
+	<string name="modifiers.stats.mana.suffix">of Focus</string>
+	<string name="modifiers.stats.health_regen.prefix">Revivifying</string>
+	<string name="modifiers.stats.health_regen.suffix">of Recovery</string>
+	<string name="modifiers.stats.stamina_regen.prefix">Rejuvenating</string>
+	<string name="modifiers.stats.stamina_regen.suffix">of Refreshment</string>
+	<string name="modifiers.stats.mana_regen.prefix">Rejuvenating</string>
+	<string name="modifiers.stats.mana_regen.suffix">of Concentration</string>
+	<string name="modifiers.stats.health_pct.prefix">Wrestler's</string>
+	<string name="modifiers.stats.health_pct.suffix">of the Wrestler</string>
+	<string name="modifiers.stats.stamina_pct.prefix">Acrobat's</string>
+	<string name="modifiers.stats.stamina_pct.suffix">of the Acrobat</string>
+	<string name="modifiers.stats.mana_pct.prefix">Scholar's</string>
+	<string name="modifiers.stats.mana_pct.suffix">of the Scholar</string>
+	<string name="modifiers.stats.health_regen_pct.prefix">Veteran's</string>
+	<string name="modifiers.stats.health_regen_pct.suffix">of the Veteran</string>
+	<string name="modifiers.stats.stamina_regen_pct.prefix">Athlete's</string>
+	<string name="modifiers.stats.stamina_regen_pct.suffix">of the Athlete</string>
+	<string name="modifiers.stats.mana_regen_pct.prefix">Sage's</string>
+	<string name="modifiers.stats.mana_regen_pct.suffix">of the Sage</string>
+
+	<string name="modifiers.weapons.speed.prefix">Nimble</string>
+	<string name="modifiers.weapons.speed.suffix">of Quickness</string>
+	<string name="modifiers.weapons.crit.prefix">Precise</string>
+	<string name="modifiers.weapons.crit.suffix">of Accuracy</string>
+	<string name="modifiers.weapons.physical.prefix">Crushing</string>
+	<string name="modifiers.weapons.physical.suffix">of Battering</string>
+	<string name="modifiers.weapons.fire.prefix">Scorching</string>
+	<string name="modifiers.weapons.fire.suffix">of Blazing</string>
+	<string name="modifiers.weapons.ice.prefix">Chilling</string>
+	<string name="modifiers.weapons.ice.suffix">of Shivering</string>
+	<string name="modifiers.weapons.lightning.prefix">Shocking</string>
+	<string name="modifiers.weapons.lightning.suffix">of Sparking</string>
+	<string name="modifiers.weapons.poison.prefix">Venomous</string>
+	<string name="modifiers.weapons.poison.suffix">of Venom</string>
+	<string name="modifiers.weapons.pure.prefix">Disintegrating</string>
+	<string name="modifiers.weapons.pure.suffix">of Disintegration</string>
+
+	<string name="modifiers.equipment.damage.weapon.suffix">of Combat</string>
+	<string name="modifiers.equipment.damage.weapon.desc">%amnt% Weapon Attack Damage</string>
+	<string name="modifiers.equipment.damage.spell.suffix">of Prowess</string>
+	<string name="modifiers.equipment.damage.spell.desc">%amnt% Spell Damage</string>
+	<string name="modifiers.equipment.damage.elites.suffix">of Ascendancy</string>
+	<string name="modifiers.equipment.damage.elites.desc">%amnt% Damage against \cb0dfffElites\d</string>
+	<string name="modifiers.equipment.damage.bosses.suffix">of Supremancy</string>
+	<string name="modifiers.equipment.damage.bosses.desc">%amnt% Damage against \cb0dfffBosses\d</string>
+	<string name="modifiers.equipment.crit_hit.suffix">of Precision</string>
+	<string name="modifiers.equipment.crit_chance.suffix">of Destruction</string>
+	<string name="modifiers.equipment.attack_speed.suffix">of Quickness</string>
+	<string name="modifiers.equipment.cast_speed.suffix">of Alacrity</string>
+	<string name="modifiers.equipment.move_speed.suffix">of Speed</string>
+	<string name="modifiers.equipment.dash_amount.suffix">of Dashing</string>
+	<string name="modifiers.equipment.dash_amount.desc">%amnt% Dash Charge</string>
+	<string name="modifiers.equipment.dash_recovery.suffix">of Recovery</string>
+	<string name="modifiers.equipment.dash_recovery.desc">%amnt% Dash Recovery Time</string>
+	<string name="modifiers.equipment.evasion.suffix">of Evasion</string>
+	<string name="modifiers.equipment.parry.suffix">of Deflection</string>
+	<string name="modifiers.equipment.damage_reduction.suffix">of Protection</string>
+	<string name="modifiers.equipment.damage_reduction.desc">%amnt% Damage Taken</string>
+	<string name="modifiers.equipment.spell_cost.suffix">of Efficiency</string>
+	<string name="modifiers.equipment.spell_cost.desc">%amnt% Spell Mana Cost</string>
+	<string name="modifiers.equipment.spell_cooldown.suffix">of Celerity</string>
+	<string name="modifiers.equipment.spell_cooldown.desc">%amnt% Spell Cooldown</string>
+	<string name="modifiers.equipment.potion_charge.suffix">of Tonics</string>
+	<string name="modifiers.equipment.potion_charge.desc">%amnt% Potion Charge</string>
+	<string name="modifiers.equipment.shadow_curse.suffix">of Zeal</string>
+
+	<string name="modifiers.equipment.goldgain.suffix">of Wealth</string>
+	<string name="modifiers.equipment.goldgain.desc">%amnt% Gold Gain</string>
+	<string name="modifiers.equipment.expgain.suffix">of Learning</string>
+	<string name="modifiers.equipment.expgain.desc">%amnt% Experience Gain</string>
+	<string name="modifiers.equipment.armor_pen.suffix">of Sundering</string>
+	<string name="modifiers.equipment.poison_pen.suffix">of Corrosion</string>
+	<string name="modifiers.equipment.fire_pen.suffix">of Conflagration</string>
+	<string name="modifiers.equipment.ice_pen.suffix">of Frostbite</string>
+	<string name="modifiers.equipment.lightning_pen.suffix">of Electrocution</string>
+	<string name="modifiers.equipment.thorns.suffix">of Thorns</string>
+	<string name="modifiers.equipment.thorns.desc">Returns %amnt% Physical Damage when taking damage</string>
+	<string name="modifiers.equipment.kill_health.suffix">of Reaping</string>
+	<string name="modifiers.equipment.kill_health.desc">Restores %amnt% Health on Kill</string>
+	<string name="modifiers.equipment.kill_mana.suffix">of Siphoning</string>
+	<string name="modifiers.equipment.kill_mana.desc">Restores %amnt% Mana on Kill</string>
+	<string name="modifiers.equipment.mainhand.hit_health.suffix">of Craving</string>
+	<string name="modifiers.equipment.mainhand.hit_health.desc">Restores %amnt% Health on Hit</string>
+	<string name="modifiers.equipment.offhand.hit_health.suffix">of Craving</string>
+	<string name="modifiers.equipment.offhand.hit_health.desc">Restores %amnt% Health on Hit</string>
+	<string name="modifiers.equipment.twohand.hit_health.suffix">of Craving</string>
+	<string name="modifiers.equipment.twohand.hit_health.desc">Restores %amnt% Health on Hit</string>
+	<string name="modifiers.equipment.mainhand.hit_mana.suffix">of Draining</string>
+	<string name="modifiers.equipment.mainhand.hit_mana.desc">Restores %amnt% Mana on Hit</string>
+	<string name="modifiers.equipment.offhand.hit_mana.suffix">of Draining</string>
+	<string name="modifiers.equipment.offhand.hit_mana.desc">Restores %amnt% Mana on Hit</string>
+	<string name="modifiers.equipment.twohand.hit_mana.suffix">of Draining</string>
+	<string name="modifiers.equipment.twohand.hit_mana.desc">Restores %amnt% Mana on Hit</string>
+	<string name="modifiers.equipment.mainhand.stun.suffix">of Stunning</string>
+	<string name="modifiers.equipment.mainhand.stun.desc">%amnt% chance to inflict \cb0dfffStun\d</string>
+	<string name="modifiers.equipment.offhand.stun.suffix">of Stunning</string>
+	<string name="modifiers.equipment.offhand.stun.desc">%amnt% chance to inflict \cb0dfffStun\d</string>
+	<string name="modifiers.equipment.twohand.stun.suffix">of Stunning</string>
+	<string name="modifiers.equipment.twohand.stun.desc">%amnt% chance to inflict \cb0dfffStun\d</string>
+	<string name="modifiers.equipment.mainhand.disarm.suffix">of Disarming</string>
+	<string name="modifiers.equipment.mainhand.disarm.desc">%amnt% chance to inflict \cb0dfffDisarm\d</string>
+	<string name="modifiers.equipment.offhand.disarm.suffix">of Disarming</string>
+	<string name="modifiers.equipment.offhand.disarm.desc">%amnt% chance to inflict \cb0dfffDisarm\d</string>
+	<string name="modifiers.equipment.twohand.disarm.suffix">of Disarming</string>
+	<string name="modifiers.equipment.twohand.disarm.desc">%amnt% chance to inflict \cb0dfffDisarm\d</string>
+	<string name="modifiers.equipment.mainhand.slow.suffix">of Slowing</string>
+	<string name="modifiers.equipment.mainhand.slow.desc">%amnt% chance to inflict \cb0dfffSlow\d</string>
+	<string name="modifiers.equipment.offhand.slow.suffix">of Slowing</string>
+	<string name="modifiers.equipment.offhand.slow.desc">%amnt% chance to inflict \cb0dfffSlow\d</string>
+	<string name="modifiers.equipment.twohand.slow.suffix">of Slowing</string>
+	<string name="modifiers.equipment.twohand.slow.desc">%amnt% chance to inflict \cb0dfffSlow\d</string>
+	<string name="modifiers.equipment.mainhand.silence.suffix">of Silence</string>
+	<string name="modifiers.equipment.mainhand.silence.desc">%amnt% chance to inflict \cb0dfffSilence\d</string>
+	<string name="modifiers.equipment.offhand.silence.suffix">of Silence</string>
+	<string name="modifiers.equipment.offhand.silence.desc">%amnt% chance to inflict \cb0dfffSilence\d</string>
+	<string name="modifiers.equipment.twohand.silence.suffix">of Silence</string>
+	<string name="modifiers.equipment.twohand.silence.desc">%amnt% chance to inflict \cb0dfffSilence\d</string>
+	<string name="modifiers.equipment.mainhand.blindness.suffix">of Blindness</string>
+	<string name="modifiers.equipment.mainhand.blindness.desc">%amnt% chance to inflict \cb0dfffBlindness\d</string>
+	<string name="modifiers.equipment.offhand.blindness.suffix">of Blindness</string>
+	<string name="modifiers.equipment.offhand.blindness.desc">%amnt% chance to inflict \cb0dfffBlindness\d</string>
+	<string name="modifiers.equipment.twohand.blindness.suffix">of Blindness</string>
+	<string name="modifiers.equipment.twohand.blindness.desc">%amnt% chance to inflict \cb0dfffBlindness\d</string>
+	<string name="modifiers.equipment.mainhand.confusion.suffix">of Confusion</string>
+	<string name="modifiers.equipment.mainhand.confusion.desc">%amnt% chance to inflict \cb0dfffConfusion\d</string>
+	<string name="modifiers.equipment.offhand.confusion.suffix">of Confusion</string>
+	<string name="modifiers.equipment.offhand.confusion.desc">%amnt% chance to inflict \cb0dfffConfusion\d</string>
+	<string name="modifiers.equipment.twohand.confusion.suffix">of Confusion</string>
+	<string name="modifiers.equipment.twohand.confusion.desc">%amnt% chance to inflict \cb0dfffConfusion\d</string>
+	<string name="modifiers.equipment.mainhand.weakness.suffix">of Weakness</string>
+	<string name="modifiers.equipment.mainhand.weakness.desc">%amnt% chance to inflict \cb0dfffWeakness\d</string>
+	<string name="modifiers.equipment.offhand.weakness.suffix">of Weakness</string>
+	<string name="modifiers.equipment.offhand.weakness.desc">%amnt% chance to inflict \cb0dfffWeakness\d</string>
+	<string name="modifiers.equipment.twohand.weakness.suffix">of Weakness</string>
+	<string name="modifiers.equipment.twohand.weakness.desc">%amnt% chance to inflict \cb0dfffWeakness\d</string>
+	<string name="modifiers.equipment.mainhand.vulnerability.suffix">of Vulnerability</string>
+	<string name="modifiers.equipment.mainhand.vulnerability.desc">%amnt% chance to inflict \cb0dfffVulnerability\d</string>
+	<string name="modifiers.equipment.offhand.vulnerability.suffix">of Vulnerability</string>
+	<string name="modifiers.equipment.offhand.vulnerability.desc">%amnt% chance to inflict \cb0dfffVulnerability\d</string>
+	<string name="modifiers.equipment.twohand.vulnerability.suffix">of Vulnerability</string>
+	<string name="modifiers.equipment.twohand.vulnerability.desc">%amnt% chance to inflict \cb0dfffVulnerability\d</string>
+
+
+	<string name="modifiers.debuff.armor_break.prefix">Armor Break</string>
+	<string name="modifiers.debuff.armor_break.suffix">of Armor Break</string>
+	<string name="modifiers.debuff.bleeding.desc">%value%% chance to inflict %c-highlight%Armor Break\d.</string>
+	<string name="modifiers.debuff.bleeding.prefix">Bleeding</string>
+	<string name="modifiers.debuff.bleeding.suffix">of Bleeding</string>
+	<string name="modifiers.debuff.bleeding.desc">%value%% chance to inflict %c-highlight%Bleeding\d.</string>
+	<string name="modifiers.debuff.cripple.prefix">Crippling</string>
+	<string name="modifiers.debuff.cripple.suffix">of Crippling</string>
+	<string name="modifiers.debuff.cripple.desc">%value%% chance to inflict %c-highlight%Cripple\d.</string>
+	<string name="modifiers.debuff.disarm.prefix">Disarming</string>
+	<string name="modifiers.debuff.disarm.suffix">of Disarming</string>
+	<string name="modifiers.debuff.disarm.desc">%value%% chance to inflict %c-highlight%Disarm\d.</string>
+	<string name="modifiers.debuff.freeze.prefix">Freezing</string>
+	<string name="modifiers.debuff.freeze.suffix">of Freezing</string>
+	<string name="modifiers.debuff.freeze.desc">%value%% chance to inflict %c-highlight%Freezing\d.</string>
+	<string name="modifiers.debuff.immobilize.prefix">Immobilizing</string>
+	<string name="modifiers.debuff.immobilize.suffix">of Immobilize</string>
+	<string name="modifiers.debuff.immobilize.desc">%value%% chance to inflict %c-highlight%Immobilize\d.</string>
+	<string name="modifiers.debuff.marked.prefix">Marking</string>
+	<string name="modifiers.debuff.marked.suffix">of Marking</string>
+	<string name="modifiers.debuff.marked.desc">%value%% chance to inflict %c-highlight%Marked\d.</string>
+	<string name="modifiers.debuff.silence.prefix">Silencing</string>
+	<string name="modifiers.debuff.silence.suffix">of Silence</string>
+	<string name="modifiers.debuff.silence.desc">%value%% chance to inflict %c-highlight%Silence\d.</string>
+	<string name="modifiers.debuff.slow.prefix">Slowing</string>
+	<string name="modifiers.debuff.slow.suffix">of Slow</string>
+	<string name="modifiers.debuff.slow.desc">%value%% chance to inflict %c-highlight%Slow\d.</string>
+	<string name="modifiers.debuff.stun.prefix">Stunning</string>
+	<string name="modifiers.debuff.stun.suffix">of Stunning</string>
+	<string name="modifiers.debuff.stun.desc">%value%% chance to inflict %c-highlight%Stun\d.</string>
+	<string name="modifiers.debuff.stun_minor.desc">%value%% chance to inflict %c-highlight%Minor Stun\d.</string>
+	<string name="modifiers.debuff.stun_greater.desc">%value%% chance to inflict %c-highlight%Greater Stun\d.</string>
+	<string name="modifiers.debuff.vulnerability.prefix">Vulnerability</string>
+	<string name="modifiers.debuff.vulnerability.suffix">of Vulnerability</string>
+	<string name="modifiers.debuff.vulnerability.desc">%value%% chance to inflict %c-highlight%Vulnerability\d.</string>
+	<string name="modifiers.debuff.weakness.prefix">Weakening</string>
+	<string name="modifiers.debuff.weakness.suffix">of Weakness</string>
+	<string name="modifiers.debuff.weakness.desc">%value%% chance to inflict %c-highlight%Weakness\d.</string>
+
+	<string name="modifiers.debuff.immune.armor_break.desc">You gain immunity to %c-highlight%Armor Break\d.</string>
+	<string name="modifiers.debuff.immune.bleeding.desc">You gain immunity to %c-highlight%Bleeding\d.</string>
+	<string name="modifiers.debuff.immune.blindness.desc">You gain immunity to %c-highlight%Blindness\d.</string>
+	<string name="modifiers.debuff.immune.cripple.desc">You gain immunity to %c-highlight%Cripple\d.</string>
+	<string name="modifiers.debuff.immune.disarm.desc">You gain immunity to %c-highlight%Disarm\d.</string>
+	<string name="modifiers.debuff.immune.freeze.desc">You gain immunity to %c-highlight%Freeze\d.</string>
+	<string name="modifiers.debuff.immune.immobilize.desc">You gain immunity to %c-highlight%Immobilize\d.</string>
+	<string name="modifiers.debuff.immune.marked.desc">You gain immunity to %c-highlight%Marked\d.</string>
+	<string name="modifiers.debuff.immune.silence">You gain immunity to %c-highlight%Silence\d.</string>
+	<string name="modifiers.debuff.immune.slow.desc">You gain immunity to %c-highlight%Slow\d.</string>
+	<string name="modifiers.debuff.immune.stun.desc">You gain immunity to %c-highlight%Stun\d.</string>
+	<string name="modifiers.debuff.immune.vulnerability.desc">You gain immunity to %c-highlight%Vulnerability\d.</string>
+	<string name="modifiers.debuff.immune.weakness.desc">You gain immunity to %c-highlight%Weakness\d.</string>
+
+	<string name="modifiers.projectiles.piercing.prefix">Piercing</string>
+	<string name="modifiers.projectiles.piercing.suffix">of Piercing</string>
+	<string name="modifiers.projectiles.piercing.desc">%desc% projectile piercing.</string>
+	<string name="modifiers.projectiles.bouncing.prefix">Bouncing</string>
+	<string name="modifiers.projectiles.bouncing.suffix">of Bouncing</string>
+	<string name="modifiers.projectiles.bouncing.desc">%desc% projectile bouncing.</string>
+
+	<string name="modifiers.return.physical.desc">Return %value% Physical damage to the attacker when taking damage.</string>
+	<string name="modifiers.return.fire.desc">Return %value% Fire damage to the attacker when taking damage.</string>
+	<string name="modifiers.return.ice.desc">Return %value% Ice damage to the attacker when taking damage.</string>
+	<string name="modifiers.return.lightning.desc">Return %value% Lightning damage to the attacker when taking damage.</string>
+	<string name="modifiers.return.poison.desc">Return %value% Poison damage to the attacker when taking damage.</string>
+	<string name="modifiers.return.pure.desc">Return %value% Pure damage to the attacker when taking damage.</string>
+
+	<string name="modifiers.enchant.gemstone_blue.prefix">Aquamarine</string>
+	<string name="modifiers.enchant.gemstone_blue.suffix">of Ice Protection</string>
+	<string name="modifiers.enchant.gemstone_green.prefix">Peridot</string>
+	<string name="modifiers.enchant.gemstone_green.suffix">of Poison Protection</string>
+	<string name="modifiers.enchant.gemstone_purple.prefix">Amethyst</string>
+	<string name="modifiers.enchant.gemstone_purple.suffix">of Lightning Protection</string>
+	<string name="modifiers.enchant.gemstone_red.prefix">Topaz</string>
+	<string name="modifiers.enchant.gemstone_red.suffix">of Fire Resistance</string>
+	<string name="modifiers.enchant.iron_ore.prefix">Reinforced</string>
+	<string name="modifiers.enchant.iron_ore.suffix">of Iron</string>
+	<string name="modifiers.enchant.nails.prefix">Spiked</string>
+	<string name="modifiers.enchant.nails.suffix">of Nails</string>
+	<string name="modifiers.enchant.wolf_liver.prefix">Feral</string>
+	<string name="modifiers.enchant.wolf_liver.suffix">of the Wolf</string>
+	<string name="modifiers.enchant.wolf_liver_2.suffix">of the Hunt</string>
+	<string name="modifiers.enchant.boar_tusk.prefix">Ferocious</string>
+	<string name="modifiers.enchant.boar_tusk.suffix">of the Boar</string>
+	<string name="modifiers.enchant.maggot_gland.prefix">Virulent</string>
+	<string name="modifiers.enchant.maggot_gland.suffix">of the Maggot</string>
+	<string name="modifiers.enchant.maggot_gland_2.suffix">of Infestation</string>
+	<string name="modifiers.enchant.wasp_stinger.prefix">Stinging</string>
+	<string name="modifiers.enchant.wasp_stinger.suffix">of the Wasp</string>
+	<string name="modifiers.enchant.wasp_stinger_2.suffix">of the Hornet</string>
+	<string name="modifiers.enchant.spider_silk.prefix">Webbing</string>
+	<string name="modifiers.enchant.spider_silk.suffix">of the Spider</string>
+	<string name="modifiers.enchant.spider_silk_2.suffix">of the Arachnid</string>
+	<string name="modifiers.enchant.bone_dust.prefix">Tomb</string>
+	<string name="modifiers.enchant.bone_dust.suffix">of the Grave</string>
+	<string name="modifiers.enchant.ectoplasm.prefix">Ghastly</string>
+	<string name="modifiers.enchant.ectoplasm.suffix">of the Spectre</string>
+	<string name="modifiers.enchant.troll_skin.prefix">Raging</string>
+	<string name="modifiers.enchant.troll_skin.suffix">of the Troll</string>
+	<string name="modifiers.enchant.troll_skin_2.suffix">of the Brute</string>
+	<string name="modifiers.enchant.shambler_claw.prefix">Crackling</string>
+	<string name="modifiers.enchant.shambler_claw.suffix">of the Shambler</string>
+	<string name="modifiers.enchant.archon_essence.prefix">Essence</string>
+	<string name="modifiers.enchant.archon_essence.suffix">of the Archons</string>
+	<string name="modifiers.enchant.thunderbird_feather.prefix">Tempest</string>
+	<string name="modifiers.enchant.thunderbird_feather.suffix">of the Thunderbird</string>
+
+	<string name="modifiers.class.ranger.wolf_add.desc">You can summon %value% additional %c-highlight%Wolf Companion\d.</string>
+	<string name="modifiers.class.rogue.knives_speed.desc">%value%% Attack Speed with %c-highlight%Throwing Knives\d.</string>
+
+	<string name="modifiers.unique.potion_health.desc">Restores %amount% of your Health when using a Potion.</string>
+
+
+
+	<!-- Epic Names -->
+
+
+
+	<string name="epic.name.agony">Agony</string>
+	<string name="epic.name.apocalypse">Apocalypse</string>
+	<string name="epic.name.armageddon">Armageddon</string>
+	<string name="epic.name.beast">Beast</string>
+	<string name="epic.name.behemoth">Behemoth</string>
+	<string name="epic.name.blood">Blood</string>
+	<string name="epic.name.bramble">Bramble</string>
+	<string name="epic.name.brimstone">Brimstone</string>
+	<string name="epic.name.brood">Brood</string>
+	<string name="epic.name.carrion">Carrion</string>
+	<string name="epic.name.cataclysm">Cataclysm</string>
+	<string name="epic.name.chimeric">Chimeric</string>
+	<string name="epic.name.corpse">Corpse</string>
+	<string name="epic.name.corruption">Corruption</string>
+	<string name="epic.name.damnation">Damnation</string>
+	<string name="epic.name.death">Death</string>
+	<string name="epic.name.demon">Demon</string>
+	<string name="epic.name.dire">Dire</string>
+	<string name="epic.name.dragon">Dragon</string>
+	<string name="epic.name.dread">Dread</string>
+	<string name="epic.name.doom">Doom</string>
+	<string name="epic.name.dusk">Dusk</string>
+	<string name="epic.name.eagle">Eagle</string>
+	<string name="epic.name.empyrean">Empyrean</string>
+	<string name="epic.name.fate">Fate</string>
+	<string name="epic.name.foe">Foe</string>
+	<string name="epic.name.gale">Gale</string>
+	<string name="epic.name.ghoul">Ghoul</string>
+	<string name="epic.name.gloom">Gloom</string>
+	<string name="epic.name.glyph">Glyph</string>
+	<string name="epic.name.golem">Golem</string>
+	<string name="epic.name.grim">Grim</string>
+	<string name="epic.name.hate">Hate</string>
+	<string name="epic.name.havoc">Havoc</string>
+	<string name="epic.name.horror">Horror</string>
+	<string name="epic.name.hypnotic">Hypnotic</string>
+	<string name="epic.name.kraken">Kraken</string>
+	<string name="epic.name.loath">Loath</string>
+	<string name="epic.name.malestrom">Maelstrom</string>
+	<string name="epic.name.mind">Mind</string>
+	<string name="epic.name.miracle">Miracle</string>
+	<string name="epic.name.morbid">Morbid</string>
+	<string name="epic.name.oblivion">Oblivion</string>
+	<string name="epic.name.onslaught">Onslaught</string>
+	<string name="epic.name.pain">Pain</string>
+	<string name="epic.name.pandemonium">Pandemonium</string>
+	<string name="epic.name.phoenix">Phoenix</string>
+	<string name="epic.name.plague">Plague</string>
+	<string name="epic.name.rage">Rage</string>
+	<string name="epic.name.rapture">Rapture</string>
+	<string name="epic.name.rune">Rune</string>
+	<string name="epic.name.skull">Skull</string>
+	<string name="epic.name.soul">Soul</string>
+	<string name="epic.name.sorrow">Sorrow</string>
+	<string name="epic.name.spirit">Spirit</string>
+	<string name="epic.name.storm">Storm</string>
+	<string name="epic.name.tempest">Tempest</string>
+	<string name="epic.name.torment">Torment</string>
+	<string name="epic.name.vengeance">Vengeance</string>
+	<string name="epic.name.victory">Victory</string>
+	<string name="epic.name.viper">Viper</string>
+	<string name="epic.name.vortex">Vortex</string>
+	<string name="epic.name.woe">Woe</string>
+	<string name="epic.name.wrath">Wrath</string>
+
+	<string name="epic.name.piece">Piece</string>
+
+
+	<string name="epic.name.bane">Bane</string>
+
+	<string name="epic.name.trinket">Trinket</string>
+	<string name="epic.name.ornament">Ornament</string>
+
+
+	<string name="epic.name.guardian">Guardian</string>
+	<string name="epic.name.keep">Keep</string>
+	<string name="epic.name.salvation">Salvation</string>
+	<string name="epic.name.sanctuary">Sanctuary</string>
+	<string name="epic.name.shell">Shell</string>
+	<string name="epic.name.shelter">Shelter</string>
+	<string name="epic.name.ward">Ward</string>
+
+	<string name="epic.name.attire">Attire</string>
+	<string name="epic.name.carapace">Carapace</string>
+	<string name="epic.name.coat">Coat</string>
+	<string name="epic.name.curtain">Curtain</string>
+	<string name="epic.name.guardian">Guardian</string>
+	<string name="epic.name.hide">Hide</string>
+	<string name="epic.name.jack">Jack</string>
+	<string name="epic.name.mantle">Mantle</string>
+	<string name="epic.name.pelt">Pelt</string>
+	<string name="epic.name.shroud">Shroud</string>
+	<string name="epic.name.skin">Skin</string>
+	<string name="epic.name.suit">Suit</string>
+	<string name="epic.name.veil">Veil</string>
+	<string name="epic.name.wrap">Wrap</string>
+
+	<string name="epic.name.caress">Caress</string>
+	<string name="epic.name.claw">Claw</string>
+	<string name="epic.name.clutches">Clutches</string>
+	<string name="epic.name.fingers">Fingers</string>
+	<string name="epic.name.fist">Fist</string>
+	<string name="epic.name.grasp">Grasp</string>
+	<string name="epic.name.grip">Grip</string>
+	<string name="epic.name.hand">Hand</string>
+	<string name="epic.name.hold">Hold</string>
+	<string name="epic.name.knuckle">Knuckle</string>
+	<string name="epic.name.mitts">Mitts</string>
+	<string name="epic.name.nails">Nails</string>
+	<string name="epic.name.palm">Palm</string>
+	<string name="epic.name.paw">Paw</string>
+	<string name="epic.name.talons">Talons</string>
+	<string name="epic.name.touch">Touch</string>
+	<string name="epic.name.vise">Vise</string>
+
+	<string name="epic.name.brow">Brow</string>
+	<string name="epic.name.corona">Corona</string>
+	<string name="epic.name.cowl">Cowl</string>
+	<string name="epic.name.crest">Crest</string>
+	<string name="epic.name.crown">Crown</string>
+	<string name="epic.name.dome">Dome</string>
+	<string name="epic.name.glance">Glance</string>
+	<string name="epic.name.halo">Halo</string>
+	<string name="epic.name.horn">Horn</string>
+	<string name="epic.name.peak">Peak</string>
+	<string name="epic.name.veil">Veil</string>
+	<string name="epic.name.visage">Visage</string>
+	<string name="epic.name.visor">Visor</string>
+
+	<string name="epic.name.dash">Dash</string>
+	<string name="epic.name.goad">Goad</string>
+	<string name="epic.name.hoof">Hoof</string>
+	<string name="epic.name.league">League</string>
+	<string name="epic.name.march">March</string>
+	<string name="epic.name.pace">Pace</string>
+	<string name="epic.name.road">Road</string>
+	<string name="epic.name.slippers">Slippers</string>
+	<string name="epic.name.sole">Sole</string>
+	<string name="epic.name.span">Span</string>
+	<string name="epic.name.spark">Spark</string>
+	<string name="epic.name.spur">Spur</string>
+	<string name="epic.name.stride">Stride</string>
+	<string name="epic.name.track">Track</string>
+	<string name="epic.name.trail">Trail</string>
+	<string name="epic.name.tread">Tread</string>
+	<string name="epic.name.urge">Urge</string>
+
+
+
+	<!-- Status Effects -->
+
+
+	<string name="status_effect.armor_break">Armor Break</string>
+	<string name="status_effect.armor_break_minor">Minor Armor Break</string>
+	<string name="status_effect.armor_break_greater">Greater Armor Break</string>
+	<string name="status_effect.bleeding">Bleeding</string>
+	<string name="status_effect.bleeding_minor">Minor Bleeding</string>
+	<string name="status_effect.bleeding_greater">Greater Bleeding</string>
+	<string name="status_effect.blindness">Blindness</string>
+	<string name="status_effect.blindness_minor">Minor Blindness</string>
+	<string name="status_effect.blindness_greater">Greater Blindness</string>
+	<string name="status_effect.cripple">Cripple</string>
+	<string name="status_effect.cripple_minor">Minor Cripple</string>
+	<string name="status_effect.cripple_greater">Greater Cripple</string>
+	<string name="status_effect.disarm">Disarm</string>
+	<string name="status_effect.disarm_minor">Minor Disarm</string>
+	<string name="status_effect.disarm_greater">Greater Disarm</string>
+	<string name="status_effect.freeze">Freeze</string>
+	<string name="status_effect.freeze_minor">Minor Freeze</string>
+	<string name="status_effect.freeze_greater">Greater Freeze</string>
+	<string name="status_effect.immobilize">Immobilize</string>
+	<string name="status_effect.immobilize_minor">Minor Immobilize</string>
+	<string name="status_effect.immobilize_greater">Greater Immobilize</string>
+	<string name="status_effect.marked">Marked</string>
+	<string name="status_effect.marked_minor">Minor Marked</string>
+	<string name="status_effect.marked_greater">Greater Marked</string>
+	<string name="status_effect.silence">Silence</string>
+	<string name="status_effect.silence_minor">Minor Silence</string>
+	<string name="status_effect.silence_greater">Greater Silence</string>
+	<string name="status_effect.slow">Slow</string>
+	<string name="status_effect.slow_minor">Minor Slow</string>
+	<string name="status_effect.slow_greater">Greater Slow</string>
+	<string name="status_effect.stun">Stun</string>
+	<string name="status_effect.stun_minor">Minor Stun</string>
+	<string name="status_effect.stun_greater">Greater Stun</string>
+	<string name="status_effect.vulnerability">Vulnerability</string>
+	<string name="status_effect.vulnerability_minor">Minor Vulnerability</string>
+	<string name="status_effect.vulnerability_greater">Greater Vulnerability</string>
+	<string name="status_effect.weakness">Weakness</string>
+	<string name="status_effect.weakness_minor">Minor Weakness</string>
+	<string name="status_effect.weakness_greater">Greater Weakness</string>
+
+
+
+
+
+
+	<string name="stacks.paladin.inner_flame.name">Inner Flame</string>
+	<string name="stacks.paladin.inner_flame.desc">Aura that deals Fire damage to nearby enemies.</string>
+	<string name="stacks.ranger.rhythm.name">Rhythm</string>
+	<string name="stacks.ranger.rhythm.desc">Each stack of Rhythm increases your Weapon Crit Chance and Damage.</string>
+	<string name="stacks.warlock.essence.name">Essence</string>
+	<string name="stacks.warlock.essence.desc">Each stack increases your max Health and Mana.</string>
+	<string name="stacks.warrior.killing_spree.name">Killing Spree</string>
+	<string name="stacks.warrior.killing_spree.desc">Each stack increases your damage.</string>
+	<string name="stacks.wizard.barrier.name">Barrier</string>
+	<string name="stacks.wizard.barrier.desc">Each stack lowers damage taken from a hit.</string>
+	<string name="stacks.wizard.incanters_flow.name">Incanter's Flow</string>
+	<string name="stacks.wizard.incanters_flow.desc">Each stack increases your Cast Speed and reduces the Mana Cost of Spells.</string>
+
+</lang>
+
+
+
+

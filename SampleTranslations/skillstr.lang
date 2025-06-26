@@ -1,0 +1,1762 @@
+<lang name="Turkish" fonts="unicode">
+	<!-- Skills -->
+
+
+	<string name="skills.type.dash">Dash</string>
+	<string name="skills.type.dash.upgrade">Dash Geliştirmesi</string>
+	<string name="skills.type.mainhand.attack">Ana El Saldırısı</string>
+	<string name="skills.type.mainhand.attack.upgrade">Ana El Saldırısı Geliştirmesi</string>
+	<string name="skills.type.offhand.attack">İkincil El Saldırısı</string>
+	<string name="skills.type.offhand.attack.upgrade">İkincil El Saldırısı Geliştirmesi</string>
+	<string name="skills.type.offhand.skill">İkincil El Yeteneği</string>
+	<string name="skills.type.offhand.skill.upgrade">İkincil El Yeteneği Geliştirmesi</string>
+	<string name="skills.type.spell">Büyü</string>
+	<string name="skills.type.spell.upgrade">Büyü Geliştirmesi</string>
+	<string name="skills.type.passive">Pasif</string>
+	<string name="skills.type.passive.upgrade">Pasif Geliştirme</string>
+	<string name="skills.type.passive.toggle">Değiştirilebilir Pasif</string>
+
+	<string name="skills.desc.params.mana_cost">Mana Maliyeti:</string>
+	<string name="skills.desc.params.stamina_cost">Stamina Maliyeti:</string>
+	<string name="skills.desc.params.health_cost">Can Maliyeti:</string>
+	<string name="skills.desc.params.cooldown">Bekleme Süresi:</string>
+	<string name="skills.desc.params.cooldown.effect">Efekt Bekleme Süresi:</string>
+	<string name="skills.desc.params.amount">Miktar:</string>
+	<string name="skills.desc.params.duration">Süre:</string>
+	<string name="skills.desc.params.duration.min">Minimum Süre:</string>
+	<string name="skills.desc.params.duration.max">Maksimum Süre:</string>
+	<string name="skills.desc.params.duration.health_lost">Kaybedilen Can Başına Süre:</string>
+	<string name="skills.desc.params.tick_rate">Yenileme Sıklığı:</string>
+	<string name="skills.desc.params.chance">Şans:</string>
+	<string name="skills.desc.params.range">Menzil:</string>
+	<string name="skills.desc.params.size">Boyut:</string>
+	<string name="skills.desc.params.frequency">Sıklık:</string>
+	<string name="skills.desc.params.completion">Tamamlama Süresi:</string>
+	<string name="skills.desc.params.conversion">Dönüşüm Oranı:</string>
+	<string name="skills.desc.params.strikes">Vuruş:</string>
+
+	<string name="skills.desc.params.health">Can:</string>
+	<string name="skills.desc.params.stamina">Stamina:</string>
+	<string name="skills.desc.params.mana">Mana:</string>
+	<string name="skills.desc.params.healthregen">Can Yenilenme:</string>
+	<string name="skills.desc.params.healthregen.dex">Çeviklik Başına Can Yenilenme:</string>
+	<string name="skills.desc.params.healthregen.int">Zeka Başına Can Yenilenme:</string>
+	<string name="skills.desc.params.manaregen">Mana Yenilenme:</string>
+	<string name="skills.desc.params.manaregen.str">Güç Başına Mana Yenilenme:</string>
+	<string name="skills.desc.params.manaregen.dex">Çeviklik Başına Mana Yenilenme:</string>
+	<string name="skills.desc.params.regenall">Tüm Yenilenme:</string>
+	<string name="skills.desc.params.str">Güç:</string>
+	<string name="skills.desc.params.dex">Çeviklik:</string>
+	<string name="skills.desc.params.int">Zeka:</string>
+	<string name="skills.desc.params.foc">Odaklanma:</string>
+	<string name="skills.desc.params.vit">Dayanıklılık:</string>
+	<string name="skills.desc.params.attributes">Nitelikler:</string>
+	<string name="skills.desc.params.weaponpower">Silah Gücü:</string>
+	<string name="skills.desc.params.spellpower">Büyü Gücü:</string>
+
+	<string name="skills.desc.params.damage">Hasar:</string>
+	<string name="skills.desc.params.damage.spell">Büyü Hasarı:</string>
+	<string name="skills.desc.params.damage.weapon">Silah Hasarı:</string>
+	<string name="skills.desc.params.damage.mainhand">Ana El Hasarı:</string>
+	<string name="skills.desc.params.damage.offhand">İkincil El Hasarı:</string>
+	<string name="skills.desc.params.damage.physical">Fiziksel Hasar:</string>
+	<string name="skills.desc.params.damage.fire">Ateş Hasarı:</string>
+	<string name="skills.desc.params.damage.ice">Buz Hasarı:</string>
+	<string name="skills.desc.params.damage.lightning">Yıldırım Hasarı:</string>
+	<string name="skills.desc.params.damage.poison">Zehir Hasarı:</string>
+	<string name="skills.desc.params.damage.pure">Saf Hasar:</string>
+
+	<string name="skills.desc.params.damage.lvl">Seviye Başına Hasar:</string>
+	<string name="skills.desc.params.damage.str">Güç Başına Hasar:</string>
+	<string name="skills.desc.params.damage.dex">Çeviklik Başına Hasar:</string>
+	<string name="skills.desc.params.damage.int">Zeka Başına Hasar:</string>
+	<string name="skills.desc.params.damage.stamina.current">Mevcut Stamina Başına Hasar:</string>
+	<string name="skills.desc.params.damage.mana.current">Mevcut Mana Başına Hasar:</string>
+	<string name="skills.desc.params.damage.str.physical">Güç Başına Fiziksel Hasar:</string>
+	<string name="skills.desc.params.damage.int.ice">Zeka Başına Buz Hasarı:</string>
+	<string name="skills.desc.params.damage.int.pure">Zeka Başına Saf Hasar:</string>
+	<string name="skills.desc.params.damage.missing.health">Eksik Can Yüzdesi Başına Hasar:</string>
+	<string name="skills.desc.params.damage.armor">Zırh Başına Hasar:</string>
+
+	<string name="skills.desc.params.attack_speed">Saldırı Hızı:</string>
+	<string name="skills.desc.params.weapon_speed">Silah Hızı:</string>
+	<string name="skills.desc.params.cast_speed">Büyü Kullanım Hızı:</string>
+	<string name="skills.desc.params.skill_speed">Yetenek Kullanım Hızı:</string>
+	<string name="skills.desc.params.spell_cost">Büyü Bedeli:</string>
+
+	<string name="skills.desc.params.crit.chance">Kritik Şansı:</string>
+	<string name="skills.desc.params.crit.chance.attack">Saldırı Kritik Şansı:</string>
+	<string name="skills.desc.params.crit.chance.weapon">Silah Kritik Şansı:</string>
+	<string name="skills.desc.params.crit.chance.spell">Büyü Kritik Şansı:</string>
+	<string name="skills.desc.params.crit.damage">Kritik Hasarı:</string>
+	<string name="skills.desc.params.crit.damage.attack">Saldırı Kritik Hasarı:</string>
+	<string name="skills.desc.params.crit.damage.weapon">Silah Kritik Hasarı:</string>
+	<string name="skills.desc.params.crit.damage.spell">Büyü Kritik Hasarı:</string>
+	<string name="skills.desc.params.leech">Yaşam Çalma:</string>
+	<string name="skills.desc.params.leech.attack">Saldırı Yaşam Çalma:</string>
+	<string name="skills.desc.params.leech.weapon">Silah Yaşam Çalma:</string>
+	<string name="skills.desc.params.leech.spell">Büyü Yaşam Çalma:</string>
+	<string name="skills.desc.params.leech.mana">Mana Çalma:</string>
+
+	<string name="skills.desc.params.heal">İyileştirme:</string>
+	<string name="skills.desc.params.restore.health.max">Geri Kazanılan Can:</string>
+	<string name="skills.desc.params.restore.mana.max">Geri Kazanılan Mana:</string>
+	<string name="skills.desc.params.restore.stamina.max">Geri Kazanılan Stamina:</string>
+
+	<string name="skills.desc.params.dmg_taken">Alınan Hasar:</string>
+	<string name="skills.desc.params.dmg_threshold">Hasar Eşiği:</string>
+
+	<string name="skills.desc.params.armor">Zırh:</string>
+	<string name="skills.desc.params.armor.str">Güç Başına Zırh:</string>
+	<string name="skills.desc.params.armor.int">Zeka Başına Zırh:</string>
+	<string name="skills.desc.params.armor.dex">Çeviklik Başına Zırh:</string>
+	<string name="skills.desc.params.resistance">Defans:</string>
+	<string name="skills.desc.params.resistance.fire">Ateş Defansı:</string>
+	<string name="skills.desc.params.resistance.ice">Buz Defansı:</string>
+	<string name="skills.desc.params.resistance.lightning">Yıldırım Defansı:</string>
+	<string name="skills.desc.params.resistance.poison">Zehir Defansı:</string>
+	<string name="skills.desc.params.block">Blok Miktarı:</string>
+	<string name="skills.desc.params.block.instances">Blok Sayısı:</string>
+	<string name="skills.desc.params.block.chance.max">Maksimum Blok Şansı:</string>
+	<string name="skills.desc.params.block.mana_cost">Bloklanan Hasar Başına Kaybedilen Mana:</string>
+	<string name="skills.desc.params.armor_pen">Zırh Penetrasyonu:</string>
+	<string name="skills.desc.params.armor_pen.str">Güç Başına Zırh Penetrasyonu:</string>
+	<string name="skills.desc.params.lightning_pen">Yıldırım Penetrasyonu:</string>
+	<string name="skills.desc.params.poison_pen">Zehir Penetrasyonu:</string>
+
+	<string name="skills.desc.params.ele_res.lvl">Seviye Başına Element Defansı:</string>
+	<string name="skills.desc.params.evasion">Sıyrılma:</string>
+	<string name="skills.desc.params.mspeed">Hareket Hızı:</string>
+	<string name="skills.desc.params.mspeed.reduction">Hareket Hızı Azaltma:</string>
+	<string name="skills.desc.params.slow_effect">Yavaşlatma Etkisi:</string>
+	<string name="skills.desc.params.expgain">Deneyim Kazanımı:</string>
+
+	<string name="skills.desc.params.chanelling.max">En Uzun Kanalize Süresi:</string>
+	<string name="skills.desc.params.charge.max">En Uzun Şarj Süresi:</string>
+	<string name="skills.desc.params.charge.stamina">Şarj Stamina Bedeli:</string>
+	<string name="skills.desc.params.charge.ttl">En Uzun Süre:</string>
+	<string name="skills.desc.params.recharge">Yeniden Dolma Süresi:</string>
+
+	<string name="skills.desc.params.stacks">Yığın:</string>
+	<string name="skills.desc.params.stacks.max">Maksimum Yığın:</string>
+	<string name="skills.desc.params.stacks.duration">Yığın Süresi:</string>
+	<string name="skills.desc.params.stacks.replenish">Yığın Dolma Süresi:</string>
+	<string name="skills.desc.params.stacks.damage">Yığın Başına Hasar:</string>
+	<string name="skills.desc.params.stacks.damage.weapon">Yığın Başına Silah Hasarı:</string>
+	<string name="skills.desc.params.stacks.crit_damage.weapon">Yığın Başına Silah Kritik Hasarı:</string>
+    <string name="skills.desc.params.stacks.crit.weapon">Yığın Başına Silah Kritik Şansı:</string>
+	<string name="skills.desc.params.stacks.damage.spell">Yığın Başına Büyü Hasarı:</string>
+	<string name="skills.desc.params.stacks.armor">Yığın Başına Zırh:</string>
+	<string name="skills.desc.params.stacks.mspeed">Yığın Başına Hareket Hızı:</string>
+	<string name="skills.desc.params.stacks.str">Yığın Başına Güç:</string>
+	<string name="skills.desc.params.stacks.dex">Yığın Başına Çeviklik:</string>
+	<string name="skills.desc.params.stacks.int">Yığın Başına Zeka:</string>
+	<string name="skills.desc.params.stacks.attack_speed">Yığın Başına Saldırı Hızı:</string>
+	<string name="skills.desc.params.stacks.weapon_speed">Yığın Başına Silah Hızı:</string>
+	<string name="skills.desc.params.stacks.cast_speed">Yığın Başına Yetenek Hızı:</string>
+	<string name="skills.desc.params.stacks.crit.weapon">Yığın Başına Silah Kritik Şansı:</string>
+	<string name="skills.desc.params.stacks.crit">Yığın Başına Kritik Şansı:</string>
+	<string name="skills.desc.params.stacks.crit.spell">Yığın Başına Büyü Kritik Şansı:</string>
+	<string name="skills.desc.params.stacks.healthregen">Yığın Başına Can Yenilenmesi:</string>
+	<string name="skills.desc.params.stacks.manaregen">Yığın Başına Mana Yenilenmesi:</string>
+	<string name="skills.desc.params.stacks.mana_cost">Yığın Başına Mana Maliyeti:</string>
+	<string name="skills.desc.params.stacks.max.regen">Maksimum Yığın Yenilenme:</string>
+	<string name="skills.desc.params.stacks.max.crit">Maksimum Yığın Kritik Şansı:</string>
+	<string name="skills.desc.params.stacks.max.dmg_taken">Maksimum Yığında Alınan Hasar:</string>
+	<string name="skills.desc.params.stacks.gain">Kazanılan Yığın:</string>
+	<string name="skills.desc.params.stacks.bleeding">Kanama Yığınları:</string>
+
+	<string name="skills.desc.params.status_effect">Durum Etkisi:</string>
+    <string name="skills.desc.params.stacks.fire_pen">Yığın Başına Ateş Penetrasyonu:</string>
+	<string name="skills.desc.params.stacks.fire_res">Yığın Başına Ateş Defansı:</string>
+	<string name="skills.desc.params.affliction.mul">Rahatsızlık Çarpanı:</string>
+	<string name="skills.desc.params.aura.range">Aura Menzili:</string>
+	<string name="skills.desc.params.detection.range">Algılama Menzili:</string>
+
+	<string name="skills.desc.params.health_lost">Kaybedilen Can:</string>
+	<string name="skills.desc.params.health_lost.mana">Mana Maliyetine Göre Kaybedilen Can:</string>
+	<string name="skills.desc.params.health_lost.stamina">Stamina Maliyetine Göre Kaybedilen Can:</string>
+	<string name="skills.desc.params.mana_lost">Kaybedilen Mana:</string>
+	<string name="skills.desc.params.mana.spent.trigger">Tetiklemek İçin Gereken Mana:</string>
+	<string name="skills.desc.params.threshold.mana">Mana Eşiği:</string>
+	<string name="skills.desc.params.stamina_cost.max">En Yüksek Stamina Maliyeti:</string>
+
+
+	<string name="skills.desc.params.projectile.pierce">Menzilli Silah Penetrasyonu:</string>
+	<string name="skills.desc.params.projectile.range_speed">Menzilli Silah Menzili ve Hızı:</string>
+	<string name="skills.desc.params.projectile.dmg_speed">Menzilli Silah Hasarı ve Hızı:</string>
+	<string name="skills.desc.params.projectile.number">Menzilli Silah Sayısı:</string>
+	<string name="skills.desc.params.projectile.lifetime">Menzilli Silah Ömrü:</string>
+
+	<string name="skills.desc.params.bounce">Sekme:</string>
+	<string name="skills.desc.params.bounce.damage">Sekme Başına Hasar:</string>
+	<string name="skills.desc.params.jumps">Sıçrama:</string>
+	<string name="skills.desc.params.jumps.damage">Sıçrama Başına Hasar:</string>
+	<string name="skills.desc.params.chains">Zincir:</string>
+	<string name="skills.desc.params.chains.damage">Zincir Başına Hasar:</string>
+	<string name="skills.desc.params.cleave.damage">Yarma Hasarı:</string>
+	<string name="skills.desc.params.cleave.range">Yarma Menzili:</string>
+	<string name="skills.desc.params.cleave.arc">Yarma Açısı:</string>
+	<string name="skills.desc.params.hits.destroy">Yok Etmek İçin Gereken Vuruş:</string>
+
+
+	<string name="skills.desc.params.pillars.strikes">Ek Patlamalar:</string>
+	<string name="skills.desc.params.pillars.add">Ek Sütunlar:</string>
+	<string name="skills.desc.params.wolf.damage">Kurt Hasarı:</string>
+	<string name="skills.desc.params.wolf.health">Kurt Canı:</string>
+	<string name="skills.desc.params.lightning_bolts">Yıldırım Çakması:</string>
+	<string name="skills.desc.params.wolf.max">Çağrılabilen Maksimum Kurt:</string>
+	<string name="skills.desc.params.spirit_wolves">Ruh Kurtları:</string>
+	<string name="skills.desc.params.flurry.strikes">Vuruş Başına Düşman İsabeti:</string>
+	<string name="skills.desc.params.traps.max">Maksimum Tuzak Sayısı:</string>
+	<string name="skills.desc.params.traps.add">Ek Tuzaklar:</string>
+	<string name="skills.desc.params.fiend.health">İblis Canı:</string>
+	<string name="skills.desc.params.fiend.lifetime">İblis Ömrü:</string>
+	<string name="skills.desc.params.fiend.damage">İblis Hasarı:</string>
+	<string name="skills.desc.params.frost_shards">Buz Parçacıkları:</string>
+	<string name="skills.desc.params.meteors">Göktaşları:</string>
+
+	<string name="skills.desc.params.max_placed">Maksimum Yerleştirilen:</string>
+	<string name="skills.desc.params.end_damage">Son Hasar:</string>
+	<string name="skills.desc.params.health_prc_per_stack">Yığın Başına Can %:</string>
+	<string name="skills.desc.params.mana_prc_per_stack">Yığın Başına Mana %:</string>
+
+	<string name="skills.combo.kills.name">Kombo: Öldürme</string>
+	<string name="skills.combo.kills.desc">Kısa sürede 10 düşman öldürünce kombo tetiklenir.</string>
+	<string name="skills.combo.dash.name">Kombo: Dash</string>
+	<string name="skills.combo.dash.desc">Arka arkaya 3 dash yapınca kombo tetiklenir.</string>
+	<string name="skills.combo.parry.name">Kombo: Savuşturma</string>
+	<string name="skills.combo.parry.desc">Arka arkaya 8 savuşturmadan sonra kombo tetiklenir.</string>
+	<string name="skills.combo.none.name">Kombo: Yok</string>
+	<string name="skills.combo.none.desc">Komboyu kapatır.</string>
+	<string name="skills.combo.selected"> (seçili)</string>
+
+
+	<!-- Attacks -->
+
+
+	<string name="skills.attacks.mainhand.mace.name">Topuz Vuruşu</string>
+	<string name="skills.attacks.mainhand.mace.desc">%100 Fiziksel hasar veren ve %15 şansla \cb0dfffSersemletme\d uygulayan güçlü bir vuruş.</string>
+	<string name="skills.attacks.mainhand.axe.name">Balta Darbesi</string>
+	<string name="skills.attacks.mainhand.axe.desc">%100 Fiziksel hasar veren ve %20 şansla \cb0dfffKanama\d yığını uygulayan yırtıcı bir darbe.</string>
+	<string name="skills.attacks.mainhand.sword.name">Kılıç Darbesi</string>
+	<string name="skills.attacks.mainhand.sword.desc">%100 Fiziksel hasar veren geniş açılı bir vuruş.</string>
+	<string name="skills.combo.nova.desc">Kombo aktifken her saniye 360 derece enerji dalgası fırlatır.</string>
+	<string name="skills.attacks.mainhand.dagger.name">Hançer Darbesi</string>
+	<string name="skills.attacks.mainhand.dagger.desc">%100 Fiziksel hasar veren ve %20 şansla \cb0dfffKanama\d yığını uygulayan hızlı bir darbe.</string>
+	<string name="skills.attacks.mainhand.dirk.name">Kama Saplama</string>
+	<string name="skills.attacks.mainhand.dirk.desc">%60 Fiziksel hasar veren hızlı bir saplama.</string>
+	<string name="skills.attacks.mainhand.wand.fire.name">Ateş Oku</string>
+	<string name="skills.attacks.mainhand.wand.fire.desc">Çarpışmada patlayarak %40 Fiziksel hasar veren bir ateş oku fırlat.</string>
+	<string name="skills.attacks.mainhand.wand.ice.name">Buz Parçaları</string>
+	<string name="skills.attacks.mainhand.wand.lightning.name">Yıldırım Oku</string>
+	<string name="skills.attacks.mainhand.wand.lightning.desc">%40 Fiziksel hasar veren ve düşmanlar arasında sıçrayabilen bir yıldırım oku fırlat. Her sıçramada %10 daha az hasar verir.</string>
+
+	<string name="skills.attacks.offhand.crossbow.name">Hızlı Atış</string>
+	<string name="skills.attacks.offhand.crossbow.desc">%75 Fiziksel hasar veren hızlı bir ok fırlat.</string>
+	<string name="skills.attacks.offhand.shield.desc">Düşmanlara kalkanınla vurarak \cb0dfffSersemletme\d uygula.</string>
+	<string name="skills.attacks.offhand.tome.fire.name">Ateş Glifi</string>
+	<string name="skills.attacks.offhand.tome.fire.desc">Yere bir glif yerleştir. Bir düşman yaklaştığında etkinleşerek 5 saniye boyunca %75 Fiziksel hasar veren bir alev alanı oluşturur.</string>
+	<string name="skills.attacks.offhand.tome.ice.name">Buz Glifi</string>
+	<string name="skills.attacks.offhand.tome.ice.desc">Yere bir glif yerleştir. Bir düşman yaklaştığında etkinleşerek bir alanda %100 Fiziksel hasar veren bir buz patlaması tetikler.</string>
+	<string name="skills.attacks.offhand.tome.lightning.desc">Yere bir glif yerleştir. Bir düşman yaklaştığında etkinleşerek alana üç yıldırım çakması gönderir. Her biri %75 Fiziksel hasar verir.</string>
+
+	<string name="skills.attacks.twohanded.shortbow1.name">Hızlı Atış</string>
+	<string name="skills.attacks.twohanded.shortbow1.desc">%50 Fiziksel hasar veren hızlı bir ok fırlat.</string>
+	<string name="skills.attacks.twohanded.shortbow2.name">Güçlü Atış</string>
+	<string name="skills.attacks.twohanded.shortbow2.desc">Güçlü bir atış için basılı tut. Okun menzili, hızı ve hasarı şarj süresine göre artar, en fazla %150 Fiziksel hasar verir.</string>
+
+	<string name="skills.attacks.twohanded.longbow1.name">Hızlı Atış</string>
+	<string name="skills.attacks.twohanded.longbow1.desc">%60 Fiziksel hasar veren hızlı bir ok fırlat.</string>
+	<string name="skills.attacks.offhand.shield.block.desc">180 derecelik bir açıda çoğu hasara karşı %amnt% hasara kadar koruma sağlar.</string>
+	<string name="skills.attacks.twohanded.longbow2.name">Güçlü Atış</string>
+	<string name="skills.attacks.twohanded.longbow2.desc">Güçlü bir atış için basılı tut. Okun menzili, hızı ve hasarı şarj süresine göre artar, en fazla %150 Fiziksel hasar verir.</string>
+
+	<string name="skills.attacks.twohanded.crossbow1.name">Hızlı Atış</string>
+	<string name="skills.attacks.twohanded.crossbow1.desc">%100 Fiziksel hasar veren hızlı bir ok fırlat.</string>
+	<string name="skills.attacks.twohanded.crossbow2.name">Patlayıcı Atış</string>
+	<string name="skills.attacks.twohanded.crossbow2.desc">Çarpışmada patlayarak %150 Fiziksel hasar veren bir ok fırlat.</string>
+
+	<string name="skills.attacks.twohanded.maul1.name">Topuz Savurma</string>
+	<string name="skills.attacks.twohanded.maul1.desc">%175 Fiziksel hasar veren ve %20 şansla \cb0dfffSersemletme\d uygulayan yavaş, ağır bir savurma.</string>
+	<string name="skills.attacks.twohanded.maul2.name">Yere Vurma</string>
+	<string name="skills.attacks.twohanded.maul2.desc">Bir alanda %250 Fiziksel hasar veren ve \cb0dfffSersemletme\d uygulayan güçlü bir yere vurma.</string>
+
+	<string name="skills.attacks.twohanded.greataxe1.name">Büyük Balta Darbesi</string>
+	<string name="skills.attacks.twohanded.greataxe1.desc">%125 Fiziksel hasar veren ve %20 şansla \cb0dfffKanama\d yığını uygulayan geniş bir yırtıcı darbe.</string>
+	<string name="skills.attacks.twohanded.greataxe2.name">Kasırga Darbesi</string>
+	<string name="skills.attacks.twohanded.greataxe2.desc">Baltanla sürekli dönmek için basılı tut. Alandaki tüm düşmanlara %75 Fiziksel hasar verir.</string>
+
+	<string name="skills.attacks.twohanded.daggers1.name">Çift Dilim</string>
+	<string name="skills.attacks.twohanded.daggers1.desc">Her biri %100 Fiziksel hasar veren iki hızlı darbe indir.</string>
+	<string name="skills.attacks.twohanded.daggers2.name">Dash Vuruşu</string>
+	<string name="skills.attacks.twohanded.daggers2.desc">Yolundaki tüm düşmanlara %200 Fiziksel hasar veren hızlı bir ileri dash yapma.</string>
+
+	<string name="skills.attacks.twohanded.staff.fire1.name">Alev Püskürtme</string>
+	<string name="skills.attacks.twohanded.staff.fire1.desc">%25 Fiziksel hasar veren sürekli alev püskürtmek için basılı tut.</string>
+	<string name="skills.attacks.twohanded.staff.fire2.name">Ateş Patlaması</string>
+	<string name="skills.attacks.twohanded.staff.fire2.desc">Asayı yere vurarak bir alanda %100 Fiziksel hasar veren ateşli bir patlama yarat.</string>
+
+	<string name="skills.attacks.twohanded.staff.ice1.name">Buz Mızrağı</string>
+	<string name="skills.attacks.twohanded.staff.ice1.desc">Buz fırlatmak için basılı tut. Buzun menzili, hızı ve hasarı tusa basma süresine göre artar, en fazla %75 Fiziksel hasar verir.</string>
+	<string name="skills.attacks.twohanded.staff.ice2.name">Buz Dikenleri</string>
+	<string name="skills.attacks.twohanded.staff.ice2.desc">Asayı yere vurarak ileri yönde her biri %150 Fiziksel hasar veren üç buz dikeni fışkırt.</string>
+
+	<string name="skills.attacks.twohanded.staff.lightning1.name">Yıldırım Işını</string>
+	<string name="skills.attacks.twohanded.staff.lightning1.desc">%40 Fiziksel hasar veren bir elektrik ışını için basılı tut. Işın, deldiği her düşman için %10 hasar kaybeder.</string>
+	<string name="skills.attacks.twohanded.staff.lightning2.name">Gök Gürültüleri</string>
+	<string name="skills.attacks.twohanded.staff.lightning2.desc">Asayı yere vurarak önündeki alana her biri %100 Fiziksel hasar veren iki yıldırım çaktır.</string>
+
+
+
+	<!-- Paladin -->
+
+
+	<string name="skills.paladin.spell_1.name">Kutsal Darbe</string>
+	<string name="skills.paladin.spell_1.desc">Kutsal güçle kuşanmış darbeler indirerek önündeki düşmanlara Fiziksel Hasar verirsin.</string>
+	<string name="skills.paladin.spell_1.up1.name">Kutsal Vuruş</string>
+	<string name="skills.paladin.spell_1.up1.desc">Darbenin etki alanı genişler.</string>
+	<string name="skills.paladin.spell_1.up2.name">Arındıran Alevler</string>
+	<string name="skills.paladin.spell_1.up2.desc">Darbe alanında kutsal alevler parlayarak sürekli Ateş hasarı verir.</string>
+	<string name="skills.paladin.spell_1.up3.name">Kutsal Gazap</string>
+	<string name="skills.paladin.spell_1.up3.desc">Yakındaki düşmanlar arasında zincirlenebilen ek Yıldırım hasarı verir.</string>
+
+	<string name="skills.paladin.spell_2.name">Şifa Dairesi</string>
+	<string name="skills.paladin.spell_2.desc">Kutsal ışıkla kendini ve müttefiklerini iyileştirirsin.</string>
+	<string name="skills.paladin.spell_2.up1.name">Kutsanmış Dokunuş</string>
+	<string name="skills.paladin.spell_2.up1.desc">Ayrıca kısa süreliğine Can ve Mana Yenilenmesini artıran bir kutsama bahşeder.</string>
+	<string name="skills.paladin.spell_2.up2.name">Arındıran Dokunuş</string>
+	<string name="skills.paladin.spell_2.up2.desc">Tüm lanetleri ve hastalıkları arındırır. Kısa süreliğine tüm kötü etkilere karşı bağışıklık kazanırsın.</string>
+	<string name="skills.paladin.spell_2.up3.name">Kutsal Ateş</string>
+	<string name="skills.paladin.spell_2.up3.desc">Alandaki tüm İskeletlere kutsal ateşle Fiziksel hasar verir.</string>
+
+	<string name="skills.paladin.passive_1.name">Kutsal Zırhlanma</string>
+	<string name="skills.paladin.passive_1.desc">Kutsal güçler zırhını güçlendirir ve %100 Fiziksel Hasarı engelleme şansı verir.</string>
+	<string name="skills.paladin.passive_1.up1.name">Kutsal Kalkan</string>
+	<string name="skills.paladin.passive_1.up1.desc">Ateş, Buz ve Yıldırım defansını artırır.</string>
+	<string name="skills.paladin.passive_1.up2.name">Kutsal Refleks</string>
+	<string name="skills.paladin.passive_1.up2.desc">Herhangi bir hasar türünün %100'ünü engelleme şansın artar.</string>
+	<string name="skills.paladin.passive_1.up3.name">Kutsal İntikam</string>
+	<string name="skills.paladin.passive_1.up3.desc">Hasar aldığında, zırh değerine göre yakındaki bir düşmana Yıldırım hasarı veren kutsal bir ok fırlatma şansı kazanırsın.</string>
+
+	<string name="skills.paladin.passive_2.name">Kutsal Lütuf</string>
+	<string name="skills.paladin.passive_2.desc">\cffdfb0Yakın Dövüş Silahı\d vuruşların kutsal güçle mananı yenileme şansı kazanır.</string>
+	<string name="skills.paladin.passive_2.up1.name">Kutsal İrade</string>
+	<string name="skills.paladin.passive_2.up1.desc">Canın yarıdan azken büyülerin daha az mana harcar.</string>
+	<string name="skills.paladin.passive_2.up2.name">İnanç Bariyeri</string>
+	<string name="skills.paladin.passive_2.up2.desc">Maksimum mananın yarısından fazlasına sahipken, mana harcayarak gelen hasarı engellersin.</string>
+	<string name="skills.paladin.passive_2.up3.name">Kutsal Gayret</string>
+	<string name="skills.paladin.passive_2.up3.desc">\cb0dfffİlahi Lütuf\d tetiklendiğinde mevcut manana göre ek Fiziksel hasar verirsin.</string>
+
+
+	<string name="skills.paladin.mastery_1.name">Kutsal Adalet</string>
+	<string name="skills.paladin.mastery_1.desc"></string>
+
+	<string name="skills.paladin.mastery_1.spell_1.name">Kutsal Yargı</string>
+	<string name="skills.paladin.mastery_1.spell_1.desc">Kutsal çekicinle seçilmiş düşmanlarına hüküm verir, bir süre boyunca Fiziksel hasar indirirsin.</string>
+	<string name="skills.paladin.mastery_1.spell_1.up1.name">Uzatılmış Yargı</string>
+	<string name="skills.paladin.mastery_1.spell_1.up1.desc">\cb0dfffİlahi Yargı\d etkisi altındaki düşmanları öldürdüğünde süreyi uzatma şansı kazanırsın. Süre 7 saniyeden fazla uzatılamaz.</string>
+	<string name="skills.paladin.mastery_1.spell_1.up2.name">Kutsal Gazap Çekici</string>
+	<string name="skills.paladin.mastery_1.spell_1.up2.desc">Yargı çekicin ek Yıldırım hasarı verir.</string>
+
+	<string name="skills.paladin.mastery_1.passive_1.name">Adaletin Bekçisi</string>
+	<string name="skills.paladin.mastery_1.passive_1.desc">Saldırıları blokladığında veya hasar aldığında, saldırgana \cb0dfffSilahsızlandırma\d ve \cb0dfffSuskunluk\d etkisi uygulama şansı kazanırsın.</string>
+	<string name="skills.paladin.mastery_1.passive_1.up1.name">Günahkarların Cezası</string>
+	<string name="skills.paladin.mastery_1.passive_1.up1.desc">\cb0dfffSilahsızlandırma\d veya \cb0dfffSuskunluk\d etkisi altındaki düşmanlara daha fazla hasar verirsin.</string>
+	<string name="skills.paladin.mastery_1.passive_1.up2.name">Kutsal Prangalar</string>
+	<string name="skills.paladin.mastery_1.passive_1.up2.desc">\cffdfb0Silah\d ve \cffdfb0Büyü\d vuruşların hedefi ve yakınındaki başka bir düşmanı kutsal zincirlerle bağlama şansı kazanır. Zincirlenmiş düşmanların hareket hızı düşer ve sürekli Fiziksel hasar alırlar.</string>
+
+	<string name="skills.paladin.mastery_2.name">Kutsal Işık</string>
+	<string name="skills.paladin.mastery_2.desc"></string>
+
+	<string name="skills.paladin.mastery_2.spell_1.name">Kutsal Sütunlar</string>
+	<string name="skills.paladin.mastery_2.spell_1.desc">Göklerden kutsal ışık sütunları çağırarak düşmanlarına Fiziksel hasar verir ve onları \cb0dfffKör Eder\d.</string>
+	<string name="skills.paladin.mastery_2.spell_1.up1.name">Kutsal Düzen</string>
+	<string name="skills.paladin.mastery_2.spell_1.up1.desc">Kutsal bir düzende art arda inen ek sütunlar çağırırsın. Her ardışık vuruş gücünün yarısını korur.</string>
+	<string name="skills.paladin.mastery_2.spell_1.up2.name">Gazap Sütunları</string>
+	<string name="skills.paladin.mastery_2.spell_1.up2.desc">Kutsal sütunlar ek Yıldırım hasarı verir.</string>
+
+	<string name="skills.paladin.mastery_2.passive_1.name">Kutsal Muhafız</string>
+	<string name="skills.paladin.mastery_2.passive_1.desc">Canın yarıdan azken hasar aldığında, kısa süreliğine \cb0dfffYenilmezlik\d kutsanması kazanma şansın olur. Bu kutsamanın bir bekleme süresi vardır.</string>
+	<string name="skills.paladin.mastery_2.passive_1.up1.name">Kutsal Şifa</string>
+	<string name="skills.paladin.mastery_2.passive_1.up1.desc">Kutsama etkisi altındayken Can Yenilenmen büyük ölçüde artar.</string>
+	<string name="skills.paladin.mastery_2.passive_1.up2.name">Kutsal Misilleme</string>
+	<string name="skills.paladin.mastery_2.passive_1.up2.desc">Kutsama kazandığında otomatik olarak \cb0dfffKutsal Sütunlar\d büyüsünü kullanırsın.</string>
+
+	<string name="skills.paladin.mastery_3.name">Kutsal Alev</string>
+	<string name="skills.paladin.mastery_3.desc"></string>
+
+	<string name="skills.paladin.mastery_3.spell_1.name">Arındıran Alev</string>
+	<string name="skills.paladin.mastery_3.spell_1.desc">Kutsal ateşle yoğurulmuş güçlü bir patlama hazırlarsın. Serbest bıraktığında çevrende bulunan tüm düşmanlara Ateş hasarı verir.</string>
+	<string name="skills.paladin.mastery_3.spell_1.up1.name">Kutsal Körük</string>
+	<string name="skills.paladin.mastery_3.spell_1.up1.desc">\cb0dfffArındıran Alev\d büyüsünü kullanırken ek \cb0dfffKutsal Ateş\d yığınları kazanırsın.</string>
+	<string name="skills.paladin.mastery_3.spell_1.up2.name">Kutsal Mızrak</string>
+
+	<string name="skills.paladin.mastery_3.passive_1.name">Kutsal Alevler</string>
+	<string name="skills.paladin.mastery_3.passive_1.desc">Büyü kullandığında \cb0dfffKutsal Ateş\d yığınları oluşturursun. Bu yığınlara sahipken etrafındaki düşmanlara Ateş hasarı veren kutsal bir aura yayarsın.</string>
+	<string name="skills.paladin.mastery_3.passive_1.up1.name">Kutsanmış Silahlar</string>
+	<string name="skills.paladin.mastery_3.passive_1.up1.desc">Her \cb0dfffKutsal Ateş\d yığını silahlarına Ateş hasarı katar.</string>
+	<string name="skills.paladin.mastery_3.passive_1.up2.desc">Her \cb0dfffKutsal Ateş\d yığını Ateş Direncini ve Ateş Nüfuzunu artırır.</string>
+
+
+
+	<!-- Ranger -->
+
+	<string name="skills.ranger.spell_1.name">Avcının İşareti</string>
+	<string name="skills.ranger.spell_1.desc">Hedef bölgedeki düşmanları işaretleyerek Fiziksel hasar veren bir ok fırlatırsın. \cb0dfffİşaretli\d düşmanlara daha fazla hasar verirsin.</string>
+	<string name="skills.ranger.spell_1.up1.name">İz Sürücü</string>
+	<string name="skills.ranger.spell_1.up1.desc">\cb0dfffİşaretli\d düşmanlara vurduğunda kısa süreliğine Hareket Hızı artışı kazanırsın.</string>
+	<string name="skills.ranger.spell_1.up2.name">Avcı İçgüdüsü</string>
+	<string name="skills.ranger.spell_1.up2.desc">\cb0dfffİşaretli\d düşmanları avladığında Can ve Mana yenileme şansı kazanırsın.</string>
+	<string name="skills.ranger.spell_1.up3.name">Usta Avcı</string>
+	<string name="skills.ranger.spell_1.up3.desc">\cb0dfffİşaretli\d \cb0dfffBoss\d ve \cb0dfffElit\d düşmanlara daha fazla hasar verirsin.</string>
+
+	<string name="skills.ranger.spell_2.desc">Kısa süre sonra tetiklenen bir tuzak yerleştirirsin. Tuzaklar patladığında dar bir alanda Fiziksel hasar verir ve düşmanları \cb0dfffYavaşlatır\d.</string>
+	<string name="skills.ranger.spell_2.up1.name">Tuzak Ustası</string>
+	<string name="skills.ranger.spell_2.up1.desc">Her kullanımda birden fazla tuzak yerleştirirsin.</string>
+	<string name="skills.ranger.spell_2.up2.name">Dikenli Tuzak</string>
+	<string name="skills.ranger.spell_2.up2.desc">Tuzaklar artık \cb0dfffKanama\d etkisi uygular.</string>
+	<string name="skills.ranger.spell_2.up3.name">Dondurucu Tuzak</string>
+	<string name="skills.ranger.spell_2.up3.desc">Tuzaklar ek Buz hasarı verir.</string>
+
+	<string name="skills.ranger.passive_1.name">Avcı Ritmi</string>
+	<string name="skills.ranger.passive_1.desc">Silah Kritik Şansı kazanır ve Kritik Vuruşların sana \cb0dfffAvcı Ritmi\d yığınları sağlar. Her \cb0dfffAvcı Ritmi\d yığını Silah Kritik Şansını ve Kritik Hasarını artırır.</string>
+	<string name="skills.ranger.passive_1.up1.name">Akıcı Hareket</string>
+	<string name="skills.ranger.passive_1.up1.desc">Her \cb0dfffAvcı Ritmi\d yığını Silah Hızını artırır.</string>
+	<string name="skills.ranger.passive_1.up2.name">Doğal Akış</string>
+	<string name="skills.ranger.passive_1.up2.desc">\cb0dfffAvcı Ritmi\d'nin her yığını Mana maliyetlerini azaltır.</string>
+	<string name="skills.ranger.passive_1.up3.name">Avcı Çevikliği</string>
+	<string name="skills.ranger.passive_1.up3.desc">Dash yaptığında bir \cb0dfffAvcı Ritmi\d kazanırsın.</string>
+
+	<string name="skills.ranger.passive_2.name">Doğada Yaşam</string>
+	<string name="skills.ranger.passive_2.desc">Her hasar aldığında kısa süreliğine alınan hasarı azaltan bir içgüdü kazanırsın. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.ranger.passive_2.up1.name">Çevik Manevra</string>
+	<string name="skills.ranger.passive_2.up1.desc">İçgüdü etkisi süresince Sıyrılma yeteneği kazanırsın.</string>
+	<string name="skills.ranger.passive_2.up2.name">Avcı Manevraları</string>
+	<string name="skills.ranger.passive_2.up2.desc">Hasar aldığında bir dash hakkı kazanırsın. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.ranger.passive_2.up3.name">Doğal İyileşme</string>
+	<string name="skills.ranger.passive_2.up3.desc">İçgüdü etkisi süresince Can Yenilenmen artar.</string>
+
+
+	<string name="skills.ranger.mastery_1.name">Nişancı</string>
+	<string name="skills.ranger.mastery_1.desc"></string>
+
+	<string name="skills.ranger.mastery_1.spell_1.name">Ok Yağmuru</string>
+	<string name="skills.ranger.mastery_1.spell_1.desc">İleri yönde, yere çarparak Fiziksel hasar veren bir ok yağmuru başlatırsın.</string>
+	<string name="skills.ranger.mastery_1.spell_1.up1.name">Ok Fırtınası</string>
+	<string name="skills.ranger.mastery_1.spell_1.up1.desc">Ok Yağmuru'nun etki alanını artırır.</string>
+	<string name="skills.ranger.mastery_1.spell_1.up2.name">Yıldırım Okları</string>
+	<string name="skills.ranger.mastery_1.spell_1.up2.desc">Ok Yağmuru'nu, Yıldırım hasarı veren yıldırım çakmaları takip eder.</string>
+
+	<string name="skills.ranger.mastery_1.passive_1.name">Usta Okçuluk</string>
+	<string name="skills.ranger.mastery_1.passive_1.desc">\cffdfb0Yay\d yeteneklerini kullanırken hareket hızı cezası azalır ve \cffdfb0Yay\d yetenekleriyle daha fazla hasar verirsin.</string>
+	<string name="skills.ranger.mastery_1.passive_1.up1.name">Hızlı Nişan</string>
+	<string name="skills.ranger.mastery_1.passive_1.up1.desc">\cffdfb0Yay\d yetenekleriyle artırılmış yetenek hızı kazanırsın.</string>
+	<string name="skills.ranger.mastery_1.passive_1.up2.name">Buz Okları</string>
+	<string name="skills.ranger.mastery_1.passive_1.up2.desc">\cffdfb0Yay\d yeteneklerin vuruşta bir buz patlaması tetikleme şansı kazanır ve Buz hasarı verir. Bu etkinin kısa bir bekleme süresi vardır.</string>
+
+	<string name="skills.ranger.mastery_2.name">Hayvan Ustası</string>
+	<string name="skills.ranger.mastery_2.desc"></string>
+
+	<string name="skills.ranger.mastery_2.spell_1.name">Ruh Kurtları</string>
+	<string name="skills.ranger.mastery_2.spell_1.desc">Yakındaki düşmanları avlayan ve çarptığında Fiziksel ve Buz hasarı veren ruh kurtları çağırırsın.</string>
+	<string name="skills.ranger.mastery_2.spell_1.up1.name">Azılı Avcılar</string>
+	<string name="skills.ranger.mastery_2.spell_1.up1.desc">Ruh kurtları vuruşta yeni bir düşmana saldırma şansı kazanır.</string>
+	<string name="skills.ranger.mastery_2.spell_1.up2.name">Vahşi Ruhlar</string>
+	<string name="skills.ranger.mastery_2.spell_1.up2.desc">Düşmanları öldürdüğünde bir ruh kurdu çağırma şansı kazanırsın. Bu etkinin kısa bir bekleme süresi vardır.</string>
+
+	<string name="skills.ranger.mastery_2.passive_1.name">Kurt Yoldaşı</string>
+	<string name="skills.ranger.mastery_2.passive_1.desc">Yakındaki düşmanlara Fiziksel hasar veren sadık bir kurt çağırırsın.</string>
+	<string name="skills.ranger.mastery_2.passive_1.up1.name">Kurt Sürüsü</string>
+	<string name="skills.ranger.mastery_2.passive_1.up1.desc">Ek kurtlar çağırırsın.</string>
+	<string name="skills.ranger.mastery_2.passive_1.up2.name">Kış Kurdu</string>
+	<string name="skills.ranger.mastery_2.passive_1.up2.desc">Kurtların ek Buz hasarı verir.</string>
+
+	<string name="skills.ranger.mastery_3.name">Orman Muhafızı</string>
+	<string name="skills.ranger.mastery_3.desc"></string>
+
+	<string name="skills.ranger.mastery_3.spell_1.name">Sarmaşık Tuzağı</string>
+	<string name="skills.ranger.mastery_3.spell_1.desc">Etrafında geniş bir alanda filizlenen ve bir süre kalan kökler çağırırsın. Alandaki düşmanlar Fiziksel hasar alır ve \cb0dfffYavaşlar\d.</string>
+	<string name="skills.ranger.mastery_3.spell_1.up1.name">Doğanın Şifası</string>
+	<string name="skills.ranger.mastery_3.spell_1.up1.desc">Kökler, alana giren müttefiklere yapışan ve sürekli Can yenileyen doğa özü salar.</string>
+	<string name="skills.ranger.mastery_3.spell_1.up2.name">Zehirli Sarmaşıklar</string>
+	<string name="skills.ranger.mastery_3.spell_1.up2.desc">Ek Zehir hasarı verir.</string>
+
+	<string name="skills.ranger.mastery_3.passive_1.name">Rüzgar Ustası</string>
+	<string name="skills.ranger.mastery_3.passive_1.desc">\cffdfb0Silah\d vuruşların ileri yönde Fiziksel hasar veren bir rüzgar dalgası oluşturur. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.ranger.mastery_3.passive_1.up1.name">Kış Rüzgarı</string>
+	<string name="skills.ranger.mastery_3.passive_1.up1.desc">Rüzgar dalgaları ek Buz hasarı verir.</string>
+	<string name="skills.ranger.mastery_3.passive_1.up2.name">Rüzgar Avcısı</string>
+	<string name="skills.ranger.mastery_3.passive_1.up2.desc">Dash yaptığında her yöne rüzgar dalgaları yayarsın.</string>
+
+
+
+	<!-- Rogue -->
+
+	<string name="skills.rogue.spell_1.name">Hançer Yelpazesi</string>
+	<string name="skills.rogue.spell_1.desc">Koni şeklinde bir alanda birden fazla hançer fırlatarak Fiziksel hasar verirsin.</string>
+	<string name="skills.rogue.spell_1.up1.name">Rikoşet</string>
+	<string name="skills.rogue.spell_1.up1.desc">Hançerler duvarlardan ve hedeflerden seker. Her sekmede hız ve hasar azalır.</string>
+	<string name="skills.rogue.spell_1.up2.name">Ölümcül İsabet</string>
+	<string name="skills.rogue.spell_1.up2.desc">\cb0dfffHançer Yelpazesi\d ile daha yüksek kritik vuruş şansı kazanırsın.</string>
+	<string name="skills.rogue.spell_1.up3.name">Zehirli Hançerler</string>
+	<string name="skills.rogue.spell_1.up3.desc">Ek Zehir hasarı verir.</string>
+	<string name="skills.rogue.spell_1.up4.name">Keskin Nişan</string>
+	<string name="skills.rogue.spell_1.up4.desc">Daha az ama daha güçlü hançerler fırlatırsın. Hançerler daha uzun mesafe kat eder.</string>
+
+	<string name="skills.rogue.spell_2.name">Ölüm Dansı</string>
+	<string name="skills.rogue.spell_2.desc">Çevrende hızlı bir dizi vuruş gerçekleştirerek tüm düşmanlara Fiziksel hasar verirsin.</string>
+	<string name="skills.rogue.spell_2.up1.name">Silah Kıran Vuruşlar</string>
+	<string name="skills.rogue.spell_2.up1.desc">\cb0dfffSilahsızlandırma\d etkisi uygulama şansı kazanır.</string>
+	<string name="skills.rogue.spell_2.up2.name">Alev Topu Saldırısı</string>
+	<string name="skills.rogue.spell_2.up2.desc">Vurulan hedeflere ve yakınlarındaki bir düşmana alev topları isabet eder. Etkilenen düşmanlar yavaşlar ve sürekli Ateş hasarı alır.</string>
+	<string name="skills.rogue.spell_2.up3.name">Yıldırım Vuruşu</string>
+	<string name="skills.rogue.spell_2.up3.desc">Ek Yıldırım Hasarı verir.</string>
+
+	<string name="skills.rogue.passive_1.name">Keskin Bıçaklar</string>
+	<string name="skills.rogue.passive_1.desc">\cffdfb0Yakın Dövüş\d vuruşların \cb0dfffKeskin Bıçaklar\d yığınları kazandırır. Her yığın Silah Hızını artırır. Süre bittiğinde tüm yığınları aynı anda kaybedersin.</string>
+	<string name="skills.rogue.passive_1.up1.name">Kan Coşkusu</string>
+	<string name="skills.rogue.passive_1.up1.desc">Her yığın Mana Yenilenmeni artırır.</string>
+	<string name="skills.rogue.passive_1.up2.name">Çevik Savunma</string>
+	<string name="skills.rogue.passive_1.up2.desc">Her yığın Sıyrılma şansını artırır.</string>
+	<string name="skills.rogue.passive_1.up3.name">Hızlı Teknik</string>
+	<string name="skills.rogue.passive_1.up3.desc">Her yığın Yetenek Hızını artırır ve büyü kullanarak da yığın kazanırsın.</string>
+
+	<string name="skills.rogue.passive_2.name">Gölge Adımı</string>
+	<string name="skills.rogue.passive_2.desc">Sıyrılma yeteneği ve birkaç saniyede bir yenilenen garantili bir sıyrılma yığını kazanırsın.</string>
+	<string name="skills.rogue.passive_2.up1.name">Kedi Adımı</string>
+	<string name="skills.rogue.passive_2.up1.desc">Hareket Hızını artırır.</string>
+	<string name="skills.rogue.passive_2.up2.name">Gölgeden Saldırı</string>
+	<string name="skills.rogue.passive_2.up2.desc">Sıyrıldıktan sonra kısa süreliğine ek Kritik Şansı kazanırsın.</string>
+	<string name="skills.rogue.passive_2.up3.name">Akıcı Hareket</string>
+	<string name="skills.rogue.passive_2.up3.desc">Dash yapmak, \cb0dfffGölge Adımı\d'nın garantili sıyrılmasını yenileme şansı verir.</string>
+
+
+	<string name="skills.rogue.mastery_1.name">Suikastçi</string>
+	<string name="skills.rogue.mastery_1.desc"></string>
+
+	<string name="skills.rogue.mastery_1.spell_1.name">Ölümcül Darbe</string>
+	<string name="skills.rogue.mastery_1.spell_1.desc">Yüksek Fiziksel hasar veren hızlı ve ölümcül bir darbe indirirsin.</string>
+	<string name="skills.rogue.mastery_1.spell_1.up1.name">Gölge Darbesi</string>
+	<string name="skills.rogue.mastery_1.spell_1.up1.desc">Darbe, hedefin arkasındaki koni şeklindeki alanda ki düşmanlara da hasar verir. Her zincirlenen hedefte hasar azalır.</string>
+	<string name="skills.rogue.mastery_1.spell_1.up2.name">Kanlı Darbe</string>
+	<string name="skills.rogue.mastery_1.spell_1.up2.desc">\cb0dfffÖlümcül Darbe\d ile Can Çalma özelliği kazanırsın.</string>
+
+	<string name="skills.rogue.mastery_1.passive_1.name">Gölge Suikastçısı</string>
+	<string name="skills.rogue.mastery_1.passive_1.desc">Silah Kritik Hasarını artırır ve düşmanların seni fark etme menzilini azaltır.</string>
+	<string name="skills.rogue.mastery_1.passive_1.up1.name">Gölge İnfazcısı</string>
+	<string name="skills.rogue.mastery_1.passive_1.up1.desc">\cffdfb0Yakın Dövüş\d kritik vuruşların \cb0dfffDüşük Can\d'daki düşmanları anında öldürme şansı kazanır. Bosslar'a karşı etkisizdir.</string>
+	<string name="skills.rogue.mastery_1.passive_1.up2.desc">\cffdfb0Yakın Dövüş\d saldırıların yakındaki rastgele bir düşmana Ana El Silah hasarı verir.</string>
+
+	<string name="skills.rogue.mastery_2.name">Zehir Ustası</string>
+	<string name="skills.rogue.mastery_2.desc"></string>
+
+	<string name="skills.rogue.mastery_2.spell_1.name">Zehir Bulutu</string>
+	<string name="skills.rogue.mastery_2.spell_1.desc">Kalıcı bir zehir bulutu oluşturursun. Bulut düşman görüşünü engeller ve içindeki düşmanlara Zehir hasarı verir.</string>
+	<string name="skills.rogue.mastery_2.spell_1.up1.name">Gizleyen Bulut</string>
+	<string name="skills.rogue.mastery_2.spell_1.up1.desc">Sen ve müttefiklerin bulutun içindeyken Sıyrılma kazanırsınız.</string>
+	<string name="skills.rogue.mastery_2.spell_1.up2.name">Aşındıran Zehir</string>
+	<string name="skills.rogue.mastery_2.spell_1.up2.desc">Buluta giren düşmanlara \cb0dfffZırh Kırma\d etkisi uygulanır.</string>
+
+	<string name="skills.rogue.mastery_2.passive_1.name">Zehir Hakimiyeti</string>
+	<string name="skills.rogue.mastery_2.passive_1.desc">Zehir hasarın artar ve \cffdfb0Zehir\d yeteneklerin \cb0dfffSavunmasızlık\d uygulama şansı kazanır.</string>
+	<string name="skills.rogue.mastery_2.passive_1.up1.name">Zehirli Kılıç</string>
+	<string name="skills.rogue.mastery_2.passive_1.up1.desc">Her seviye başına silahlarına Zehir hasarı eklenir.</string>
+	<string name="skills.rogue.mastery_2.passive_1.up2.name">Ölümcül Zehir</string>
+	<string name="skills.rogue.mastery_2.passive_1.up2.desc">Zehir Penetrasyonunu ve Zehir Defansını artırır.</string>
+
+	<string name="skills.rogue.mastery_3.name">Sabotaj Ustası</string>
+	<string name="skills.rogue.mastery_3.desc"></string>
+
+	<string name="skills.rogue.mastery_3.spell_1.name">Gölge Bombası</string>
+	<string name="skills.rogue.mastery_3.spell_1.desc">İleri doğru, kısa sürede patlayarak Fiziksel hasar veren bir bomba fırlatırsın.</string>
+	<string name="skills.rogue.mastery_3.spell_1.up1.name">Alev Bombası</string>
+	<string name="skills.rogue.mastery_3.spell_1.up1.desc">Bomba temas anında patlar ve kısa süreliğine Ateş hasarı veren bir alev sahası oluşturur.</string>
+	<string name="skills.rogue.mastery_3.spell_1.up2.name">Şok Bombası</string>
+	<string name="skills.rogue.mastery_3.spell_1.up2.desc">Bomba, yakındaki düşmanlara zincirlenen ek Yıldırım hasarı verir.</string>
+	<string name="skills.rogue.mastery_3.spell_1.up3.name">Kaçış Bombası</string>
+	<string name="skills.rogue.mastery_3.spell_1.up3.desc">Bir düşmanın yakınında dash kullandığında otomatik olarak bir bomba bırakırsın. Bu etkinin kısa bir bekleme süresi vardır.</string>
+
+	<string name="skills.rogue.mastery_3.passive_1.name">Gizli Teçhizat</string>
+	<string name="skills.rogue.mastery_3.passive_1.desc">Zırhın ve Fiziksel hasarın artar. Hasar aldığında yakındaki düşmanlara \cb0dfffKörlük\d uygulayan bir flaş bombası atarsın. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.rogue.mastery_3.passive_1.up1.name">Şok Aygıtı</string>
+	<string name="skills.rogue.mastery_3.passive_1.up1.desc">\cffdfb0Silah\d yeteneklerin yakındaki rastgele bir düşmanı sersemletecek bir yıldırım oku fırlatma şansı kazanır ve Yıldırım hasarı verir.</string>
+	<string name="skills.rogue.mastery_3.passive_1.up2.name">Şarapnel Yağmuru</string>
+	<string name="skills.rogue.mastery_3.passive_1.up2.desc">Büyü kullanımın her yöne şarapnel fırlatma şansı kazanır ve Fiziksel ve Ateş hasarı verir.</string>
+
+
+
+
+	<!-- Sorcerer -->
+
+	<string name="skills.sorcerer.spell_1.name">Enerji Patlaması</string>
+	<string name="skills.sorcerer.spell_1.desc">Koni şeklinde bir alanda yıldırım fırlatarak Yıldırım hasarı verirsin.</string>
+	<string name="skills.sorcerer.spell_1.up1.name">Zincir Yıldırım</string>
+	<string name="skills.sorcerer.spell_1.up1.desc">Yıldırım ek hedeflere sıçrar.</string>
+	<string name="skills.sorcerer.spell_1.up2.name">Güçlü Deşarj</string>
+	<string name="skills.sorcerer.spell_1.up2.desc">Büyünün menzili artar.</string>
+	<string name="skills.sorcerer.spell_1.up3.name">Alev Işınları</string>
+	<string name="skills.sorcerer.spell_1.up3.desc">Hasar türü Ateş'e dönüşür ve ışınlar hedeflere penetre eder.</string>
+	<string name="skills.sorcerer.spell_1.up4.name">Buz Işınları</string>
+	<string name="skills.sorcerer.spell_1.up4.desc">Daha dar bir alanda daha az ışın fırlatır, ancak düşmanlar birden fazla ışından hasar alabilir. Hasar türü Buz'a dönüşür.</string>
+
+	<string name="skills.sorcerer.spell_2.name">Elementler Küresi</string>
+	<string name="skills.sorcerer.spell_2.desc">Yavaşça hareket eden ve yakındaki düşmanlara tüm element hasarlarını veren bir küre çağırırsın.</string>
+	<string name="skills.sorcerer.spell_2.up1.name">Odaklanmış Küre</string>
+	<string name="skills.sorcerer.spell_2.up1.desc">Büyüyü kullanırken \cb0dfffElement Uyumu\d'na sahipsen küre sadece o elementin hasarını verir.</string>
+	<string name="skills.sorcerer.spell_2.up2.name">Kalıcı Küre</string>
+	<string name="skills.sorcerer.spell_2.up2.desc">Kürenin süresi uzar.</string>
+	<string name="skills.sorcerer.spell_2.up3.name">Element Fırtınası</string>
+	<string name="skills.sorcerer.spell_2.up3.desc">Küre her yöne daha küçük büyüler fırlatmaya başlar. Bu büyüler daha az hasar verir.</string>
+
+	<string name="skills.sorcerer.passive_1.name">Element Uyumu</string>
+	<string name="skills.sorcerer.passive_1.desc">\cffdfb0Büyü\d kullandığında, o büyünün elementi ile \cb0dfffElement Uyumu\d kazanırsın. \cb0dfffElement Uyumu\d süresince o elementin hasarını artırırsın. Aynı anda tek bir element aktif olabilir.</string>
+	<string name="skills.sorcerer.passive_1.up1.name">Elementlerin Kalkanı</string>
+	<string name="skills.sorcerer.passive_1.up1.desc">Her seviye başına Ateş, Buz ve Yıldırım Direnci kazanırsın.</string>
+	<string name="skills.sorcerer.passive_1.up2.name">Elementlerin Nüfuzu</string>
+	<string name="skills.sorcerer.passive_1.up2.desc">Ateş, Buz ve Yıldırım Penetrasyonu kazanırsın.</string>
+	<string name="skills.sorcerer.passive_1.up3.name">Elementlerin Dengesi</string>
+	<string name="skills.sorcerer.passive_1.up3.desc">\cb0dfffElement Uyumu\d süresince diğer elementlerin hasar bonusu ikiye katlanır.</string>
+
+	<string name="skills.sorcerer.passive_2.name">Büyücü Kanı</string>
+	<string name="skills.sorcerer.passive_2.desc">Büyü Kritik Şansı kazanırsın.</string>
+	<string name="skills.sorcerer.passive_2.up1.name">Dizginsiz Güç</string>
+	<string name="skills.sorcerer.passive_2.up1.desc">Büyü Kritik Hasarın artar.</string>
+	<string name="skills.sorcerer.passive_2.up2.name">Güç Dalgası</string>
+	<string name="skills.sorcerer.passive_2.up2.desc">Büyü Kritik Vuruşu yaptığında Silah, Yetenek ve Hareket Hızı artışı kazanırsın.</string>
+	<string name="skills.sorcerer.passive_2.up3.name">Mana Dalgası</string>
+	<string name="skills.sorcerer.passive_2.up3.desc">Büyü Kritik Vuruşu yaptığında mananın bir kısmını geri kazanırsın.</string>
+
+
+	<string name="skills.sorcerer.mastery_1.name">Ateş Büyücüsü</string>
+	<string name="skills.sorcerer.mastery_1.desc"></string>
+
+	<string name="skills.sorcerer.mastery_1.spell_1.name">Alev Duvarı</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.desc">Önünde yakıcı bir alev duvarı oluşturarak yakındaki düşmanlara Ateş hasarı verirsin.</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up1.name">Alev Yürüyüşü</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up1.desc">Duvardan geçerken sen ve müttefiklerin, çevredeki düşmanlara Ateş hasarı veren geçici bir alev aurası kazanır.</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up2.name">Alev İzi</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up2.desc">Dash yaptığında bir alev duvarı oluşturursun.</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up3.name">Duvar Kontrolü</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up3.name">Duvarın konumunu hedefleyebilirsin.</string>
+
+	<string name="skills.sorcerer.mastery_1.passive_1.name">Ateş Hakimiyeti</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.desc">Ateş hasarın artar ve \cffdfb0Ateş\d büyülerin \cb0dfffZayıflık\d uygulama şansı kazanır.</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up1.name">Patlayan Alevler</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up1.desc">\cffdfb0Ateş\d büyülerin ek Ateş hasarı veren bir patlama tetikleme şansı kazanır. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.sorcerer.mastery_1.spell_1.up3.desc">Duvarın konumu artık hedeflenebilir.</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up2.name">Şifa Alevleri</string>
+	<string name="skills.sorcerer.mastery_1.passive_1.up2.desc">Büyü Kritik Vuruşu yaptığında canının bir kısmını geri kazanırsın.</string>
+
+	<string name="skills.sorcerer.mastery_2.name">Buz Büyücüsü</string>
+	<string name="skills.sorcerer.mastery_2.desc"></string>
+
+	<string name="skills.sorcerer.mastery_2.spell_1.name">Buz Patlaması</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.desc">Her yöne buz parçacıkları fırlatarak Buz hasarı verirsin.</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up1.name">Buz Füzeleri</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up1.desc">Buz parçacıkları, hedefine çarptıktan sonra yeni hedefler arar.</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up2.name">Buz Serpintisi</string>
+	<string name="skills.sorcerer.mastery_2.spell_1.up2.desc">Buz parçacıkları düşmanları öldürdüğünde daha küçük bir buz patlaması yaratma şansı kazanır.</string>
+
+	<string name="skills.sorcerer.mastery_2.passive_1.name">Buz Hakimiyeti</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.desc">Buz hasarın artar ve \cffdfb0Buz\d büyülerin \cb0dfffDondurma\d uygulama şansı kazanır.</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up1.name">Kristal Parçalanması</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up1.desc">\cffdfb0Buz\d büyüleriyle düşmanları öldürdüğünde Buz hasarı veren bir patlama yaratma şansı kazanırsın.</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up2.name">Buz Zırhı</string>
+	<string name="skills.sorcerer.mastery_2.passive_1.up2.desc">Fiziksel ve Buz hasarını engelleme şansı kazanırsın.</string>
+
+	<string name="skills.sorcerer.mastery_3.name">Yıldırım Büyücüsü</string>
+	<string name="skills.sorcerer.mastery_3.desc"></string>
+
+	<string name="skills.sorcerer.mastery_3.spell_1.name">Yıldırım Küresi</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.desc">Yolundaki tüm düşmanlara Yıldırım hasarı veren bir enerji küresi şarj edersin. Kürenin hasarı şarj süresine göre artar.</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up1.name">Güçlenen Küre</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up1.desc">Vurulan her düşman enerji küresinin süresini uzatır.</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up2.name">Elektrik Alanı</string>
+	<string name="skills.sorcerer.mastery_3.spell_1.up2.desc">Kalıcı ve ek Yıldırım hasarı veren bir elektrik alanı oluşturursun.</string>
+
+	<string name="skills.sorcerer.mastery_3.passive_1.name">Yıldırım Hakimiyeti</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.desc">Yıldırım hasarın artar ve \cffdfb0Yıldırım\d büyülerin \cb0dfffSersemletme\d uygulama şansı kazanır.</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up1.name">Ark Yıldırımı</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up1.desc">\cffdfb0Yıldırım\d büyülerin düşmanlar arasında zincirlenip Yıldırım hasarı veren bir elektrik arkı oluşturma şansı kazanır.</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up2.name">Statik Alan</string>
+	<string name="skills.sorcerer.mastery_3.passive_1.up2.desc">Menzilli saldırıları engelleme şansı kazanırsın. Bu etkinin kısa bir bekleme süresi vardır.</string>
+
+
+
+
+
+
+
+
+
+
+
+	<!-- Warlock -->
+
+	<string name="skills.warlock.spell_1.name">İblis Kırbacı</string>
+	<string name="skills.warlock.spell_1.desc">Şeytani bir kırbaç çağırarak ileri doğru savurur, Fiziksel hasar verir ve \cb0dfffYavaşlatma\d uygularsın.</string>
+	<string name="skills.warlock.spell_1.up1.name">Yıldırım Kırbacı</string>
+	<string name="skills.warlock.spell_1.up1.desc">Yakındaki düşmanlara yıldırım arkları sıçrayarak Yıldırım hasarı verir.</string>
+	<string name="skills.warlock.spell_1.up2.name">Cehennem Kırbacı</string>
+	<string name="skills.warlock.spell_1.up2.desc">Kırbaç yolunda kalıcı alevler bırakarak Ateş hasarı verir.</string>
+	<string name="skills.warlock.spell_1.up3.name">Şeytan Darbesi</string>
+	<string name="skills.warlock.spell_1.up3.desc">Kırbacın ucuna çarpan düşmanlar \cb0dfffSersemletme\d etkisi alır.</string>
+
+	<string name="skills.warlock.spell_2.name">Karanlık Ayin</string>
+	<string name="skills.warlock.spell_2.desc">Birkaç saniye süren karanlık bir ayin başlatırsın. Alandaki düşmanlar sürekli Fiziksel hasar alır ve ayin tamamlandığında güçlü bir son darbe vurulur. Ayini tamamlamadan alandan ayrılırsan büyü sona erer.</string>
+	<string name="skills.warlock.spell_2.up1.name">Kan Ayini</string>
+	<string name="skills.warlock.spell_2.up1.desc">Alandaki düşmanlara Kanama yığınları uygulama şansı kazanırsın.</string>
+	<string name="skills.warlock.spell_2.up2.name">Cehennem Ateşi</string>
+	<string name="skills.warlock.spell_2.up2.desc">Hasar türü Ateş'e dönüşür ve ayin tamamlandığında daha güçlü bir patlama yaratır.</string>
+	<string name="skills.warlock.spell_2.up3.name">Ruh Emme Ayini</string>
+	<string name="skills.warlock.spell_2.up3.desc">Sen ve müttefiklerin ayin alanında \cb0dfffYaşam Çalma\d kazanırsınız.</string>
+
+	<string name="skills.warlock.passive_1.name">Ruh Emme</string>
+	<string name="skills.warlock.passive_1.desc">\cffdfb0Yakın Dövüş\d vuruşların \cb0dfffÖz\d yığınları kazandırır. Her yığın Maksimum Can ve Mananı artırır. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.warlock.passive_1.up1.name">Can Emici</string>
+	<string name="skills.warlock.passive_1.up1.desc">\cb0dfffÖz\d yığınları kazandığında Canının bir kısmını geri kazanırsın.</string>
+	
+	<string name="skills.warlock.passive_1.up3.desc">\cb0dfffÖz\d çektiğin hedeflere \cb0dfffKanama\d yığınları uygularsın.</string>
+	<string name="skills.warlock.passive_1.up4.name">Ruh Hasatı</string>
+	<string name="skills.warlock.passive_1.up4.desc">Düşmanları öldürdüğünde \cb0dfffÖz\d yığınları kazanma şansın olur.</string>
+
+	<string name="skills.warlock.passive_2.name">Lanet Aurası</string>
+	<string name="skills.warlock.passive_2.desc">Aurandaki düşmanlar daha fazla hasar alır.</string>
+	<string name="skills.warlock.passive_2.up1.name">İşkence Aurası</string>
+	<string name="skills.warlock.passive_2.up1.desc">Aurandaki düşmanlar da daha fazla hasar alır.</string>
+	<string name="skills.warlock.passive_2.up2.name">Çürüme Yayılımı</string>
+	<string name="skills.warlock.passive_2.up2.desc">\cffdfb0Yakın Dövüş\d vuruşların yakındaki başka bir düşmana ek Zehir hasarı verir.</string>
+	<string name="skills.warlock.passive_2.up3.name">Cehennem Ateşi</string>
+	<string name="skills.warlock.passive_2.up3.desc">\cffdfb0Büyü\d kullanımın aurandaki tüm düşmanlara Ateş hasarı verir.</string>
+
+
+	<string name="skills.warlock.mastery_1.name">İblis Terbiyecisi</string>
+	<string name="skills.warlock.mastery_1.desc"></string>
+
+	<string name="skills.warlock.mastery_1.spell_1.name">İblis Çağrısı</string>
+	<string name="skills.warlock.mastery_1.spell_1.desc">\cb0dfffÖz\d yığınlarını harcayarak iblisleri çağırmak için büyü yaparsın. İblisler yakındaki düşmanlara saldırarak Fiziksel hasar verir.</string>
+	<string name="skills.warlock.mastery_1.spell_1.up1.name">Cehennem İblisleri</string>
+	<string name="skills.warlock.mastery_1.spell_1.up1.desc">İblisler ek Ateş hasarı verir ve hedeflerine alev topları fırlatır.</string>
+	<string name="skills.warlock.mastery_1.spell_1.up2.name">Ölüm Patlaması</string>
+	<string name="skills.warlock.mastery_1.spell_1.up2.desc">İblisler öldüklerinde patlayarak çevrelerine Fiziksel hasar verir.</string>
+
+	<string name="skills.warlock.mastery_1.passive_1.name">Gargoyle Kölesi</string>
+	<string name="skills.warlock.mastery_1.passive_1.desc">Yanında savaşan bir gargoyle çağırırsın. Gargoyle pençeleri ve üçlü mızrağıyla düşmanlara Fiziksel hasar verir.</string>
+	<string name="skills.warlock.mastery_1.passive_1.up1.name">Cehennem Pençeleri</string>
+	<string name="skills.warlock.mastery_1.passive_1.up1.desc">Gargoyle'ın pençe saldırıları ek Ateş hasarı verir.</string>
+	<string name="skills.warlock.mastery_1.passive_1.up2.name">Fırtına Mızrağı</string>
+	<string name="skills.warlock.mastery_1.passive_1.up2.desc">Gargoyle'ın üçlü mızrağı düşmanları sürekli sersemletir ve ek Yıldırım hasarı verir.</string>
+
+	<string name="skills.warlock.mastery_2.name">Ruh Büyücüsü</string>
+	<string name="skills.warlock.mastery_2.desc"></string>
+
+	<string name="skills.warlock.mastery_2.spell_1.name">Ruh Kasırgası</string>
+	<string name="skills.warlock.mastery_2.spell_1.desc">Etrafında dönen lanetli bir ruh kasırgası oluşturarak alandaki tüm düşmanlara Fiziksel ve Zehir hasarı verirsin.</string>
+	<string name="skills.warlock.mastery_2.spell_1.up1.name">Fırtına Kasırgası</string>
+	<string name="skills.warlock.mastery_2.spell_1.up1.desc">Kasırga çevresine yıldırım çakmaları çağırarak ek Yıldırım hasarı verir.</string>
+	<string name="skills.warlock.mastery_2.spell_1.up2.name">Ruh Örtüsü</string>
+	<string name="skills.warlock.mastery_2.spell_1.up2.desc">Büyü süresince Sıyrılma kazanırsın.</string>
+
+	<string name="skills.warlock.mastery_2.passive_1.name">Ruh Efendisi</string>
+	<string name="skills.warlock.mastery_2.passive_1.desc">\cb0dfffÖz\d yığınların varken Ana El Silahınla yakındaki rastgele bir düşmana Ana El hasarı veren bir ruh fırlatırsın.</string>
+	<string name="skills.warlock.mastery_2.passive_1.up1.name">Ruh Patlaması</string>
+	<string name="skills.warlock.mastery_2.passive_1.up1.desc">Ruhlar ek hasar veren bir patlama yaratma şansı kazanır. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.warlock.mastery_2.passive_1.up2.name">Hırslı Ruhlar</string>
+	<string name="skills.warlock.mastery_2.passive_1.up2.desc">Ruhlar hedefine çarptıktan sonra ek hedeflere sıçrar.</string>
+
+	<string name="skills.warlock.mastery_3.name">Kaos Büyücüsü</string>
+	<string name="skills.warlock.mastery_3.desc"></string>
+
+	<string name="skills.warlock.mastery_3.spell_1.name">Kaos Kılıcı</string>
+	<string name="skills.warlock.mastery_3.spell_1.desc">Önündeki alanı biçmek için karanlık bir kılıç çağırarak Fiziksel ve Yıldırım hasarı verirsin.</string>
+	<string name="skills.warlock.mastery_3.spell_1.up1.name">Kaos Bıçakları</string>
+	<string name="skills.warlock.mastery_3.spell_1.up1.desc">Büyü artık önünde koni şeklinde bıçaklar fırlatır.</string>
+	<string name="skills.warlock.mastery_3.spell_1.up2.name">Kan Kılıcı</string>
+	<string name="skills.warlock.mastery_3.spell_1.up2.desc">Kılıç darbeleri \cb0dfffKanama\d yığınları uygular.</string>
+
+	<string name="skills.warlock.mastery_3.passive_1.name">Kaos Portalları</string>
+	<string name="skills.warlock.mastery_3.passive_1.desc">\cffdfb0Büyü\d kullanımın yakındaki düşmanlara Fiziksel ve Yıldırım hasarı veren kaos portalları açar. Yakın portallar aralarında ek hasar veren enerji bağları oluşturur.</string>
+	<string name="skills.warlock.mastery_3.passive_1.up1.name">Kaos Hasatçısı</string>
+	<string name="skills.warlock.mastery_3.passive_1.up1.desc">Düşman öldürdüğünde bir kaos portalı açma şansın olur. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.warlock.mastery_3.passive_1.up2.name">Portal Kılıcı</string>
+	<string name="skills.warlock.mastery_3.passive_1.up2.desc">\cb0dfffKaos Kılıcı\d vuruşların bir kaos portalı açma şansı kazanır. Bu etkinin kısa bir bekleme süresi vardır.</string>
+
+
+
+
+
+
+
+
+	<!-- Warrior -->
+
+
+	<string name="skills.warrior.spell_1.name">Çift Balta Fırlatma</string>
+	<string name="skills.warrior.spell_1.desc">Önündeki tüm düşmanlara Fiziksel hasar veren iki savaş baltası fırlatırsın.</string>
+	<string name="skills.warrior.spell_1.up1.name">Dönen Baltalar</string>
+	<string name="skills.warrior.spell_1.up1.desc">Baltalar bir süre sonra sana geri döner.</string>
+	<string name="skills.warrior.spell_1.up2.name">Alev Baltaları</string>
+	<string name="skills.warrior.spell_1.up2.desc">Baltalar ek Ateş hasarı verir.</string>
+	<string name="skills.warrior.spell_1.up3.name">İnfaz Baltaları</string>
+	<string name="skills.warrior.spell_1.up3.desc">Baltalar \cb0dfffDüşük Can\d'daki bir düşmanı anında öldürme şansı kazanır. Bosslar'a karşı etkisizdir.</string>
+
+	<string name="skills.warrior.spell_2.name">Savaş Çığlığı</string>
+	<string name="skills.warrior.spell_2.desc">Sen ve yakındaki müttefiklerin bir süreliğine Silah ve Hareket Hızı artışı kazanır.</string>
+	<string name="skills.warrior.spell_2.up1.name">Yıldıran Çığlık</string>
+	<string name="skills.warrior.spell_2.up1.desc">Savaş Çığlığı kullandığında çevrendeki düşmanlara \cb0dfffZayıflık\d uygularsın.</string>
+	<string name="skills.warrior.spell_2.up2.name">Savaşçı Ruhu</string>
+	<string name="skills.warrior.spell_2.up2.desc">Savaş Çığlığı kullandığında Canının bir kısmını geri kazanırsın.</string>
+	<string name="skills.warrior.spell_2.up3.name">Savaş Gazabı</string>
+	<string name="skills.warrior.spell_2.up3.name">Savaş Çığlığı kullandığında etrafındaki her düşman için \cb0dfffKatliam\d yığını kazanırsın.</string>
+
+	<string name="skills.warrior.passive_1.name">Savaşçı Gücü</string>
+	<string name="skills.warrior.passive_1.desc">Canını ve Zehir defansını artırır.</string>
+	<string name="skills.warrior.passive_1.up1.name">Savaş Sanatı</string>
+	
+	<string name="skills.warrior.passive_1.up2.desc">Aldığın hasar azalır.</string>
+	<string name="skills.warrior.passive_1.up3.name">Ezici Güç</string>
+	<string name="skills.warrior.passive_1.up3.desc">Zırh Penetrasyonun artar.</string>
+
+	<string name="skills.warrior.passive_2.name">Katliam</string>
+	<string name="skills.warrior.passive_2.desc">Düşman öldürdükçe \cb0dfffKatliam\d yığınları kazanırsın. Her yığın hasarını artırır. Süre dolduğunda tüm yığınları kaybedersin.</string>
+	<string name="skills.warrior.passive_2.up1.name">Kan Çılgınlığı</string>
+	<string name="skills.warrior.passive_2.up1.desc">Her yığın Silah ve Büyü Kritik Şansını artırır.</string>
+	<string name="skills.warrior.passive_2.up2.name">Savaşçı Direnci</string>
+	<string name="dialogue.shadowface_cultist.laugh">Hehehe....</string>
+	<string name="skills.warrior.passive_2.up2.desc">Her yığın Can Yenilenmeni artırır.</string>
+	<string name="skills.warrior.passive_2.up3.name">Yenilmez</string>
+	<string name="skills.warrior.passive_2.up3.desc">\cb0dfffBosslar\d ve \cb0dfffElitler\d'e karşı \cffdfb0Yakın Dövüş\d vuruşların \cb0dfffKatliam\d yığını kazanma şansı verir.</string>
+
+
+
+	<string name="skills.warrior.mastery_1.name">Vahşi Savaşçı</string>
+	<string name="skills.warrior.mastery_1.desc"></string>
+
+	<string name="skills.warrior.mastery_1.spell_1.name">Paramparça</string>
+	<string name="skills.warrior.mastery_1.spell_1.desc">Hedef konuma dash yaparak çevredeki düşmanlara Fiziksel hasar verir ve \cb0dfffSersemletme\d uygulayan bir darbe indirirsin.</string>
+	<string name="skills.warrior.mastery_1.spell_1.up1.name">Sarsıcı Darbe</string>
+	<string name="skills.warrior.mastery_1.spell_1.up1.desc">Yere indikten sonra kısa bir süre içinde patlayan ve ek Fiziksel hasar veren şok dalgaları yayarsın.</string>
+	<string name="skills.warrior.mastery_1.spell_1.up2.name">Alev Sıçrayışı</string>
+	<string name="skills.warrior.mastery_1.spell_1.up2.desc">Sıçradığın ve indiğin yerde zemini tutuşturarak sürekli Ateş hasarı verirsin.</string>
+
+	<string name="skills.warrior.mastery_1.passive_1.name">Savaş Öfkesi</string>
+	<string name="skills.warrior.mastery_1.passive_1.desc">Hasar aldığında kısa süreliğine \cb0dfffÖfke\d kazanırsın ve \cffdfb0Fiziksel\d becerilerle Kritik Şansın ve Kritik Hasarın artar.</string>
+	<string name="skills.warrior.mastery_1.passive_1.up1.name">Dizginlenemeyen Öfke</string>
+	<string name="skills.warrior.mastery_1.passive_1.up1.desc">\cb0dfffDüşük Can\d'dayken otomatik olarak öfke kazanırsın ve daha az hasar alırsın.</string>
+	<string name="skills.warrior.mastery_1.passive_1.up2.name">Öfke Çığlığı</string>
+	<string name="skills.warrior.mastery_1.passive_1.up2.desc">\cb0dfffSavaş Çığlığı\d kullandığında \cb0dfffÖfke\d kazanırsın. \cb0dfffÖfke\d süresince bekleme sürelerin azalır.</string>
+
+	<string name="skills.warrior.mastery_2.name">Kabile Savaşçısı</string>
+	<string name="skills.warrior.mastery_2.desc"></string>
+
+	<string name="skills.warrior.mastery_2.spell_1.name">Savaş Totemleri</string>
+	<string name="skills.warrior.mastery_2.spell_1.desc">Hedef konuma, çevresindeki düşmanlara sürekli Fiziksel hasar veren bir totem yerleştirirsin.</string>
+	<string name="skills.warrior.mastery_2.spell_1.up1.name">Yıldırım Totemleri</string>
+	<string name="skills.warrior.mastery_2.spell_1.up1.desc">Totemler düzenli olarak yakındaki düşmanlara Yıldırım hasarı verir. Yakın yerleştirilen totemler aralarında ek hasar veren yıldırım duvarları oluşturur.</string>
+	<string name="skills.warrior.mastery_2.spell_1.up2.name">Buz Totemleri</string>
+	<string name="skills.warrior.mastery_2.spell_1.up2.desc">Hasar türü Buz'a dönüşür ve \cb0dfffDondurma\d uygulama şansı kazanır.</string>
+
+	<string name="skills.warrior.mastery_2.passive_1.name">Yer Sarsıcı</string>
+	<string name="skills.warrior.mastery_2.passive_1.desc">\cffdfb0Yakın Dövüş Silahı\d saldırıların çevrede Fiziksel hasar veren sarsıntılar yaratır. Bu etkinin kısa bir bekleme süresi vardır.</string>
+	<string name="skills.warrior.mastery_2.passive_1.up1.name">Yıldırım Darbesi</string>
+	<string name="skills.warrior.mastery_2.passive_1.up1.desc">\cffdfb0Yakın Dövüş Silahı\d vuruşların hedefe ve yakındaki başka bir düşmana ek Yıldırım hasarı verme şansı kazanır.</string>
+	<string name="skills.warrior.mastery_2.passive_1.up2.name">Buz Darbesi</string>
+	<string name="skills.warrior.mastery_2.passive_1.up2.desc">\cffdfb0Yakın Dövüş Silahı\d vuruşların ek Buz hasarı veren bir patlama yaratma şansı kazanır. Bu etkinin kısa bir bekleme süresi vardır.</string>
+
+	<string name="skills.warrior.mastery_3.name">Katliam Lordu</string>
+	<string name="skills.warrior.mastery_3.desc"></string>
+
+	<string name="skills.warrior.mastery_3.spell_1.name">Çelik Zincirler</string>
+	<string name="skills.warrior.mastery_3.spell_1.desc">Etrafına zincirler savurarak Fiziksel hasar verir ve düşmanları \cb0dfffYavaşlatır\d.</string>
+	<string name="skills.warrior.mastery_3.spell_1.up1.desc">Zincirler \cb0dfffKanama\d yığınları uygular.</string>
+	<string name="skills.warrior.mastery_3.spell_1.up2.name">Parçalayan Zincirler</string>
+	<string name="skills.warrior.mastery_3.spell_1.up2.desc">Zincirlerin ucunda parçalayıcı çiviler oluşur.</string>
+
+	<string name="skills.warrior.mastery_3.passive_1.name">Kan Dökücü</string>
+	<string name="skills.warrior.mastery_3.passive_1.desc">Fiziksel hasarın artar ve \cffdfb0Fiziksel\d becerilerin \cb0dfffKanama\d yığınları uygulama şansı kazanır.</string>
+	<string name="skills.warrior.mastery_3.passive_1.up1.name">Kanlı Patlama</string>
+	<string name="skills.warrior.mastery_3.passive_1.up1.desc">\cffdfb0Fiziksel\d becerilerle düşman öldürdüğünde çevreye Fiziksel hasar veren bir patlama yaratma şansın olur.</string>
+	<string name="skills.warrior.mastery_3.passive_1.up2.name">Cellat</string>
+	<string name="skills.warrior.mastery_3.passive_1.up2.desc">Düşmanların eksik canına göre daha fazla hasar verirsin.</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<!-- Wizard -->
+
+	<string name="skills.wizard.spell_1.name">Büyü Mermileri</string>
+	<string name="skills.wizard.spell_1.desc">Düşmanları takip eden ve çarptığında Fiziksel hasar veren enerji topları fırlatırsın.</string>
+	<string name="skills.wizard.spell_1.up1.name">Çoklu Mermi</string>
+	<string name="skills.wizard.spell_1.up1.desc">Her kullanımda daha fazla enerji topu fırlatırsın.</string>
+	<string name="skills.wizard.spell_1.up2.name">Sıçrayan Mermiler</string>
+	<string name="skills.wizard.spell_1.up2.desc">Enerji topları hedefine çarptıktan sonra yakındaki düşmanlara sıçrar.</string>
+	<string name="skills.wizard.spell_1.up3.name">Sersemletici Vuruş</string>
+	<string name="skills.wizard.spell_1.up3.desc">Enerji topları \cb0dfffSersemletme\d şansı kazanır.</string>
+
+	<string name="skills.wizard.spell_2.name">Ateş Topu</string>
+	<string name="skills.wizard.spell_2.desc">Hedef bölgede patlayarak Ateş hasarı veren bir ateş topu fırlatırsın.</string>
+	<string name="skills.wizard.spell_2.up1.name">Büyük Ateş Topu</string>
+	<string name="skills.wizard.spell_2.up1.desc">Patlamanın etki alanı genişler.</string>
+	<string name="skills.wizard.spell_2.up2.name">Alev Dalgası</string>
+	<string name="skills.wizard.spell_2.up2.desc">Ateş topundan etkilenen düşmanlar \cb0dfffYavaşlar\d.</string>
+	<string name="skills.wizard.spell_2.up3.name">Seken Ateş Topu</string>
+	<string name="skills.wizard.spell_2.up3.desc">Ateş topu yere çarptıkça sekerek her sekmede patlama yaratır.</string>
+
+	<string name="skills.wizard.passive_1.name">Büyü Zekası</string>
+	<string name="skills.wizard.passive_1.desc">Mananı ve Zekanı artırır.</string>
+	<string name="skills.wizard.passive_1.up1.name">Büyü Ustası</string>
+	<string name="skills.wizard.passive_1.up1.desc">Büyü bekleme sürelerini azaltır.</string>
+	<string name="skills.wizard.passive_1.up2.name">Büyülü Silahlar</string>
+	<string name="skills.wizard.passive_1.up2.desc">\cffdfb0Büyülü\d silahlarla daha fazla hasar verirsin.</string>
+	<string name="skills.wizard.passive_1.up3.name">Bilge</string>
+	<string name="skills.wizard.passive_1.up3.desc">Deneyim Kazanımını artırır.</string>
+
+	<string name="skills.wizard.passive_2.name">Enerji Kalkanı</string>
+	<string name="skills.wizard.passive_2.desc">Zamanla koruyucu \cb0dfffKalkan\d yığınları oluşturursun. Hasar aldığında bir yığın harcanır ve alınan hasarı azaltır.</string>
+	<string name="skills.wizard.passive_2.up1.name">Alev Kalkanı</string>
+	<string name="skills.wizard.passive_2.up1.desc">\cb0dfffKalkan\d yığınların varken hasar aldığında, çevrende alev aurası oluşturarak yakındaki düşmanlara Ateş hasarı verirsin.</string>
+	<string name="skills.wizard.passive_2.up2.name">Buz Kalkanı</string>
+	<string name="skills.wizard.passive_2.up2.desc">\cb0dfffKalkan\d yığınların varken Zırh ve Buz Defansın artar. Ayrıca sana vuran düşmanları \cb0dfffDondurur\d.</string>
+	<string name="skills.wizard.passive_2.up3.name">Büyü Kalkanı</string>
+	<string name="skills.wizard.passive_2.up3.desc">\cffdfb0Büyü\d kullanımın Kalkan yığınları oluşturma şansı kazanır. Bu etkinin kısa bir bekleme süresi vardır.</string>
+
+
+	<string name="skills.wizard.mastery_1.name">Göksel Büyücü</string>
+	<string name="skills.wizard.mastery_1.desc"></string>
+
+	<string name="skills.wizard.mastery_1.spell_1.name">Meteor Yağmuru</string>
+	<string name="skills.wizard.mastery_1.spell_1.desc">Bir süre boyunca alana düşen meteorlar çağırarak hem Fiziksel hem de Ateş hasarı verirsin.</string>
+	<string name="skills.wizard.mastery_1.spell_1.up1.name">Yanık Toprak</string>
+	<string name="skills.wizard.mastery_1.spell_1.up1.desc">Meteorlar düştükleri yere alev salarak sürekli Ateş hasarı verir.</string>
+	<string name="skills.wizard.mastery_1.spell_1.up2.name">Buz Meteorları</string>
+	<string name="skills.wizard.mastery_1.spell_1.up2.desc">Hasar türü Buz ve Fiziksel'e dönüşür ve \cb0dfffDondurma\d şansı kazanır.</string>
+
+	<string name="skills.wizard.mastery_1.passive_1.name">Büyücünün Ritmi</string>
+	<string name="skills.wizard.mastery_1.passive_1.desc">\cffdfb0Büyü\d kullanımların \cb0dfffBüyücünün Ritmi\d yığınları kazandırır. Her yığın Yetenek Hızını artırır ve büyülerin Mana Maliyetini azaltır.</string>
+	<string name="skills.wizard.mastery_1.passive_1.up1.name">Güç Artışı</string>
+	<string name="skills.wizard.mastery_1.passive_1.up1.desc">\cb0dfffBüyücünün Ritmi\d'nin her yığını Büyü Kritik Şansını artırır.</string>
+	<string name="skills.wizard.mastery_1.passive_1.up2.name">Büyü Akışı</string>
+	<string name="skills.wizard.mastery_1.passive_1.up2.desc">Büyücünün Ritmi'nin her yığını Silah Hızını artırır.</string>
+
+	<string name="skills.wizard.mastery_2.name">Yaratık Çağırıcı</string>
+	<string name="skills.wizard.mastery_2.desc"></string>
+
+	<string name="skills.wizard.mastery_2.spell_1.name">Hidra Çağırma</string>
+	<string name="skills.wizard.mastery_2.spell_1.desc">Yakındaki düşmanlara ateş püskürten ve Ateş hasarı veren hidralar çağırırsın.</string>
+	<string name="skills.wizard.mastery_2.spell_1.up1.name">Çok Başlı Hidra</string>
+	<string name="skills.wizard.mastery_2.spell_1.up1.desc">Her kullanımda daha fazla hidra başı çağırırsın.</string>
+	<string name="skills.wizard.mastery_2.spell_1.up2.name">Buz Hidrası</string>
+	<string name="skills.wizard.mastery_2.spell_1.up2.desc">Hasar türü Buz'a dönüşür.</string>
+
+	<string name="skills.wizard.mastery_2.passive_1.name">Büyülü Kılıç</string>
+	<string name="skills.wizard.mastery_2.passive_1.desc">Etrafında sürekli dönen büyülü bir kılıç çağırırsın. Kılıç yakındaki düşmanlara saldırarak Fiziksel hasar verir.</string>
+	<string name="skills.wizard.mastery_2.passive_1.up1.name">Alev Kılıcı</string>
+	<string name="skills.wizard.mastery_2.passive_1.up1.desc">Kılıç alevlerle kaplanır ve yakındaki düşmanlara sürekli Ateş hasarı verir.</string>
+	<string name="skills.wizard.mastery_2.passive_1.up2.name">Buz Kılıcı</string>
+	<string name="skills.wizard.mastery_2.passive_1.up2.desc">Kılıç Buz hasarı verir ve \cb0dfffDondurma\d şansı kazanır.</string>
+
+	<string name="skills.wizard.mastery_3.name">Güç Ustası</string>
+	<string name="skills.wizard.mastery_3.desc"></string>
+
+	<string name="skills.wizard.mastery_3.spell_1.name">Hız Büyüsü</string>
+	<string name="skills.wizard.mastery_3.spell_1.desc">Silah, Yetenek ve Hareket Hızını artıran geçici bir güçlendirme kazanırsın.</string>
+	<string name="skills.wizard.mastery_3.spell_1.up1.name">Bulanık Görüntü</string>
+	<string name="skills.wizard.mastery_3.spell_1.up1.desc">Güçlendirme süresince Sıyrılma kazanırsın.</string>
+	<string name="skills.wizard.mastery_3.spell_1.up2.name">Zaman Büyüsü</string>
+	<string name="skills.wizard.mastery_3.spell_1.up2.desc">Güçlendirme süresince yakındaki düşmanları \cb0dfffYavaşlatır\d.</string>
+
+	<string name="skills.wizard.mastery_3.passive_1.name">Büyü Dönüşümü</string>
+	<string name="skills.wizard.mastery_3.passive_1.desc">Her seviye başına ek Güç, Çeviklik ve Zeka kazanırsın.</string>
+	<string name="skills.wizard.mastery_3.passive_1.up1.name">Güç Dönüşümü</string>
+	<string name="skills.wizard.mastery_3.passive_1.up1.desc">Güç değerin Büyü Gücüne dönüşür.</string>
+	<string name="skills.wizard.mastery_3.passive_1.up2.name">Çeviklik Dönüşümü</string>
+	<string name="skills.wizard.mastery_3.passive_1.up2.desc">Çeviklik değerin Büyü Gücüne dönüşür.</string>
+	<string name="skills.wizard.mastery_3.passive_1.up3.name">Büyü Direnci</string>
+	<string name="skills.wizard.mastery_3.passive_1.up3.desc">\cb0dfffYavaşlatma\d ve \cb0dfffTopallama\d etkilerine karşı bağışıklık kazanırsın.</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<!-- Crafting -->
+
+
+	<string name="menu.crafting.potion.title">İksir Yapımı</string>
+	<string name="menu.crafting.food.title">Yemek Pişirme</string>
+	<string name="menu.crafting.workbench.title">Çalışma Tezgahı</string>
+	<string name="menu.crafting.cloth.title">Terzilik</string>
+	<string name="menu.crafting.leather.title">Deri İşçiliği</string>
+	<string name="menu.crafting.metal.title">Demircilik</string>
+	<string name="menu.crafting.armor.title">Zırh Ustası</string>
+	<string name="menu.crafting.weaponsmith.title">Silah Ustası</string>
+	<string name="menu.crafting.scales.title">Pul Zırh Ustası</string>
+
+	<string name="menu.crafting.slot.tier.name">Seviye</string>
+	<string name="menu.crafting.slot.tier.desc">Üretilecek eşyanın seviyesini seç.</string>
+	<string name="menu.crafting.slot.quality.name">Kalite</string>
+	<string name="menu.crafting.slot.quality.desc">Üretilecek eşyanın kalitesini seç.</string>
+	<string name="menu.crafting.slot.blueprint.name">Şema</string>
+	<string name="menu.crafting.slot.blueprint.desc">Üretilecek eşyayı seç.</string>
+	<string name="menu.crafting.slot.meal.name">Yemek Tarifi</string>
+	<string name="menu.crafting.slot.meal.desc">Pişirilecek yemeği seç.</string>
+	<string name="menu.crafting.slot.potion.name">İksir Tarifi</string>
+	<string name="menu.crafting.slot.potion.desc">Yapılacak iksiri seç.</string>
+	<string name="menu.crafting.slot.bottle.name">Şişe</string>
+	<string name="menu.crafting.slot.bottle.desc">İksir için kullanılacak şişeyi seç.</string>
+
+	<string name="menu.enchanting.title">Büyü İşleme</string>
+	<string name="menu.enchanting.slot.equipment.name">Büyü İşle</string>
+	<string name="menu.enchanting.slot.equipment.desc">Seçili ekipmana rastgele bir güçlendirme eklemek için yükselt.</string>
+	<string name="menu.enchanting.slot.component.name">Bileşen</string>
+	<string name="menu.enchanting.slot.component.desc">Önceden belirlenmiş bir güçlendirme eklemek için büyüye bileşen uygula.</string>
+	<string name="menu.disenchanting.title">Büyü Sökme</string>
+	<string name="menu.disenchanting.slot.equipment.name">Büyü Sök</string>
+	<string name="menu.disenchanting.slot.equipment.desc">Elf rünleri kazanmak için seçilen ekipmanı yok et.</string>
+	<string name="menu.reenchanting.title">Yeniden Büyüleme</string>
+	<string name="menu.reenchanting.slot.equipment.name">Yeniden Büyüle</string>
+	<string name="menu.reenchanting.slot.equipment.desc">Seçili ekipmanın güçlendirmelerini yeniden belirle.</string>
+
+	<string name="crafting.blueprint.apprentice.name">Çırak</string>
+	<string name="crafting.blueprint.apprentice.desc">Çırak kademesinde bir eşya üret.</string>
+	<string name="crafting.blueprint.adept.name">Usta Çırak</string>
+	<string name="crafting.blueprint.adept.desc">Usta Çırak kademesinde bir eşya üret.</string>
+	<string name="crafting.blueprint.expert.name">Usta</string>
+	<string name="crafting.blueprint.expert.desc">Usta kademesinde bir eşya üret.</string>
+	<string name="crafting.blueprint.master.name">Üstat</string>
+	<string name="crafting.blueprint.master.desc">Üstat kademesinde bir eşya üret.</string>
+	<string name="crafting.blueprint.common.name">Sıradan</string>
+	<string name="crafting.blueprint.common.desc">Sıradan kalitede bir eşya üret.</string>
+	<string name="crafting.blueprint.uncommon.name">Gelişmiş Olmayan</string>
+	<string name="crafting.blueprint.uncommon.desc">Gelişmiş Olmayan kalitede bir eşya üret.</string>
+	<string name="crafting.blueprint.rare.name">Nadir</string>
+	<string name="crafting.blueprint.rare.desc">Nadir kalitede bir eşya üret.</string>
+	<string name="crafting.blueprint.epic.name">Destansı</string>
+	<string name="crafting.blueprint.epic.desc">Destansı kalitede bir eşya üret.</string>
+
+	<string name="crafting.blueprint.chest_str.name">Plaka Zırh</string>
+	<string name="crafting.blueprint.chest_dex.name">Deri Zırh</string>
+	<string name="crafting.blueprint.chest_int.name">Cüppe</string>
+	<string name="crafting.blueprint.head_str.name">Plaka Miğfer</string>
+	<string name="crafting.blueprint.head_dex.name">Başlık</string>
+	<string name="crafting.blueprint.head_int.name">Taç</string>
+	<string name="crafting.blueprint.hands_str.name">Plaka Eldiven</string>
+	<string name="crafting.blueprint.hands_dex.name">Deri Bileklik</string>
+	<string name="crafting.blueprint.hands_int.name">Eldiven</string>
+	<string name="crafting.blueprint.feet_str.name">Plaka Dizlik</string>
+	<string name="crafting.blueprint.feet_dex.name">Deri Bot</string>
+	<string name="crafting.blueprint.feet_int.name">Ayakkabı</string>
+
+	<string name="crafting.blueprint.acc_belt.name">Deri Kemer</string>
+
+	<string name="crafting.blueprint.paladin.mainhand.name">Şövalye Ana Silahı</string>
+	<string name="crafting.blueprint.paladin.offhand.name">Şövalye İkincil Silahı</string>
+	<string name="crafting.blueprint.ranger.mainhand.name">Okçu Ana Silahı</string>
+	<string name="crafting.blueprint.ranger.offhand.name">Okçu İkincil Silahı</string>
+	<string name="crafting.blueprint.rogue.mainhand.name">Haydut Ana Silahı</string>
+	<string name="crafting.blueprint.rogue.offhand.name">Haydut İkincil Silahı</string>
+	<string name="crafting.blueprint.warlock.mainhand.name">Karanlık Büyücü Ana Silahı</string>
+	<string name="crafting.blueprint.warlock.offhand.name">Karanlık Büyücü İkincil Silahı</string>
+	<string name="crafting.blueprint.wizard.mainhand.name">Ateş Büyücüsü Ana Silahı</string>
+	<string name="crafting.blueprint.wizard.offhand.name">Ateş Büyücüsü İkincil Silahı</string>
+
+	<string name="crafting.blueprint.potion.health.name">Can İksiri</string>
+	<string name="crafting.blueprint.potion.health.desc">Can verir.</string>
+	<string name="crafting.blueprint.potion.mana.name">Mana İksiri</string>
+	<string name="crafting.blueprint.potion.mana.desc">Mana verir.</string>
+	<string name="crafting.blueprint.potion.rejuvenation.name">Canlanma İksiri</string>
+	<string name="crafting.blueprint.potion.rejuvenation.desc">Az miktarda Can, Mana ve Stamina verir.</string>
+
+	<string name="crafting.blueprint.leather.name">Deri (%type%)</string>
+
+
+
+	<!-- Modifiers -->
+
+
+	<string name="modifiers.attributes.all.prefix"></string>
+	<string name="modifiers.attributes.all.suffix">- Yetenekli</string>
+	<string name="modifiers.attributes.str.prefix">Güçlü</string>
+	<string name="modifiers.attributes.str.suffix">- Kudretli</string>
+	<string name="modifiers.attributes.dex.prefix">Çevik</string>
+	<string name="modifiers.attributes.dex.suffix">- Atik</string>
+	<string name="modifiers.attributes.int.prefix">Bilge</string>
+	<string name="modifiers.attributes.int.suffix">- Akıllı</string>
+	<string name="modifiers.attributes.str_pct.prefix"></string>
+	<string name="modifiers.attributes.str_pct.suffix">- Öküzün</string>
+	<string name="modifiers.attributes.dex_pct.prefix"></string>
+	<string name="modifiers.attributes.dex_pct.suffix">- Kedinin</string>
+	<string name="modifiers.attributes.int_pct.prefix"></string>
+	<string name="modifiers.attributes.int_pct.suffix">- Baykuşun</string>
+
+	<string name="modifiers.defences.damage.prefix">Koruyucu</string>
+	<string name="modifiers.defences.damage.suffix">- Muhafız</string>
+	<string name="modifiers.defences.damage.desc">Alınan hasar %desc%% azaltıldı.</string>
+	<string name="modifiers.defences.damage.stand.desc">Hareketsizken alınan hasar %desc%% azaltıldı.</string>
+
+	<string name="modifiers.defences.evasion.prefix">Kaygan</string>
+	<string name="modifiers.defences.evasion.suffix">- Kaçak</string>
+	<string name="modifiers.defences.block.physical.prefix">Savunucu</string>
+	<string name="modifiers.defences.block.physical.suffix">- Koruyucu</string>
+	<string name="modifiers.defences.block.physical.desc">%value% Fiziksel Hasar engeller.</string>
+	<string name="modifiers.defences.block.fire.desc">%value% Ateş Hasarı engeller.</string>
+	<string name="modifiers.attributes.foc.prefix">Uyanık</string>
+	<string name="modifiers.attributes.foc.suffix">- Odaklı</string>
+	<string name="modifiers.attributes.vit.prefix">Sağlam</string>
+	<string name="modifiers.attributes.vit.suffix">- Dayanıklı</string>
+	<string name="modifiers.defences.block.ice.desc">%value% Buz Hasarı engeller.</string>
+	<string name="modifiers.defences.block.lightning.desc">%value% Yıldırım Hasarı engeller.</string>
+	<string name="modifiers.defences.block.poison.desc">%value% Zehir Hasarı engeller.</string>
+	<string name="modifiers.defences.block.any.desc">%value% Hasar engeller.</string>
+	<string name="modifiers.defences.block_chance.physical.desc">%chance%% şansla %value% Fiziksel Hasar engeller.</string>
+	<string name="modifiers.defences.block_chance.fire.desc">%chance%% şansla %value% Ateş Hasarı engeller.</string>
+	<string name="modifiers.defences.block_chance.ice.desc">%chance%% şansla %value% Buz Hasarı engeller.</string>
+	<string name="modifiers.defences.block_chance.lightning.desc">%chance%% şansla %value% Yıldırım Hasarı engeller.</string>
+	<string name="modifiers.defences.block_chance.poison.desc">%chance%% şansla %value% Zehir Hasarı engeller.</string>
+	<string name="modifiers.defences.block_chance.any.desc">%chance%% şansla %value% Hasar engeller.</string>
+
+	<string name="modifiers.damage.all.prefix"></string>
+	<string name="modifiers.damage.all.suffix">- Yok Edici</string>
+	<string name="modifiers.damage.all.desc">Verilen hasar %desc%% arttı.</string>
+	<string name="modifiers.damage.attack.prefix"></string>
+	<string name="modifiers.damage.attack.suffix">- Katliamcı</string>
+	<string name="modifiers.damage.attack.desc">Saldırılarla verilen hasar %desc%% arttı.</string>
+
+	<string name="modifiers.damage.spell.prefix"></string>
+	<string name="modifiers.damage.spell.suffix">- Büyü Ustası</string>
+	<string name="modifiers.damage.spell.desc">Büyülerle verilen hasar %desc%% arttı.</string>
+	<string name="modifiers.damage.beast.prefix">Avcı</string>
+	<string name="modifiers.damage.beast.suffix">- Canavar Avcısı</string>
+	<string name="modifiers.damage.beast.desc">Canavarlara verilen hasar %desc%% arttı.</string>
+	<string name="modifiers.damage.human.prefix">Zalim</string>
+	<string name="modifiers.damage.human.suffix">- Tiran</string>
+	<string name="modifiers.damage.human.desc">İnsanlara verilen hasar %desc%% arttı.</string>
+	<string name="modifiers.damage.undead.prefix">Kutsal</string>
+	<string name="modifiers.damage.undead.suffix">- Melek</string>
+	<string name="modifiers.damage.undead.desc">İskeletlere verilen hasar %desc%% arttı.</string>
+	<string name="modifiers.damage.elites.prefix">Meydan Okuyan</string>
+	<string name="modifiers.damage.elites.suffix">- Düellocu</string>
+	<string name="modifiers.damage.elites.desc">Elit ve Üstün düşmanlara verilen hasar %desc%% arttı.</string>
+	<string name="modifiers.damage.bosses.prefix">Kahraman</string>
+	<string name="modifiers.damage.bosses.suffix">- Şampiyon</string>
+	<string name="modifiers.damage.bosses.desc">Bosslara verilen hasar %desc%% arttı.</string>
+	<string name="modifiers.damage.physical.prefix">Kıyım</string>
+	<string name="modifiers.damage.physical.suffix">- Savaşçı</string>
+	<string name="modifiers.damage.fire.prefix">Cehennem</string>
+	<string name="modifiers.damage.fire.suffix">- Ateş</string>
+	<string name="modifiers.damage.ice.prefix">Buz Fırtınası</string>
+	<string name="modifiers.damage.ice.suffix">- Kış</string>
+	<string name="modifiers.damage.lightning.prefix">Kasırga</string>
+	<string name="modifiers.damage.lightning.suffix">- Fırtına</string>
+	<string name="modifiers.damage.poison.prefix">Veba</string>
+	<string name="modifiers.damage.poison.suffix">- Çürüme</string>
+	<string name="modifiers.penetration.physical.prefix">Delici</string>
+	<string name="modifiers.penetration.physical.suffix">- Parçalayıcı</string>
+	<string name="modifiers.penetration.fire.prefix">Yakıcı</string>
+	<string name="modifiers.penetration.fire.suffix">- Alev</string>
+	<string name="modifiers.penetration.ice.prefix">Dondurucu</string>
+	<string name="modifiers.penetration.ice.suffix">- Ayaz</string>
+	<string name="modifiers.penetration.lightning.prefix">Çarpıcı</string>
+	<string name="modifiers.penetration.lightning.suffix">- Yıldırım</string>
+	<string name="modifiers.penetration.poison.prefix">Zehirli</string>
+	<string name="modifiers.penetration.poison.suffix">- Çürüten</string>
+
+	<string name="modifiers.misc.mspeed.prefix">Hızlı</string>
+	<string name="modifiers.misc.mspeed.suffix">- Sürat</string>
+	<string name="modifiers.misc.experience.prefix">Bilgin</string>
+	<string name="modifiers.misc.experience.suffix">- Aydınlanma</string>
+	<string name="modifiers.misc.kill_health.prefix">Avcı</string>
+	<string name="modifiers.misc.kill_health.suffix">- Yırtıcı</string>
+	<string name="modifiers.misc.kill_health.desc">Öldürme başına %value% Can yeniler.</string>
+	<string name="modifiers.misc.kill_stamina.prefix">Yorulmaz</string>
+	<string name="modifiers.misc.kill_stamina.suffix">- Güç</string>
+	<string name="modifiers.misc.kill_stamina.desc">Öldürme başına %value% Stamina yeniler.</string>
+	<string name="modifiers.misc.kill_mana.prefix">Büyücü</string>
+	<string name="modifiers.misc.kill_mana.suffix">- Cadı</string>
+	<string name="modifiers.misc.kill_mana.desc">Öldürme başına %value% Mana yeniler.</string>
+	<string name="modifiers.misc.kill_mana_undead.desc">İskelet öldürdüğünde %value% Mana yeniler.</string>
+	<string name="modifiers.misc.slow_effect.desc">Yavaşlatma etkileri %value%% azaltıldı.</string>
+	<string name="modifiers.misc.miss.attack.desc">%value%% Saldırı ıskalama şansı.</string>
+
+	<string name="modifiers.full_health.damage.desc">Can tam doluyken verilen hasar %value%% artar.</string>
+	<string name="modifiers.full_health.damage.attack.desc">Can tam doluyken saldırılarla verilen hasar %value%% artar.</string>
+	<string name="modifiers.full_health.damage.spell.desc">Can tam doluyken büyülerle verilen hasar %value%% artar.</string>
+	<string name="modifiers.full_health.damage_taken.desc">Can tam doluyken alınan hasar %value%% azalır.</string>
+
+	<string name="modifiers.low_health.damage.desc">Can düşükken verilen hasar %value%% artar.</string>
+	<string name="modifiers.low_health.damage.attack.desc">Can düşükken saldırılarla verilen hasar %value%% artar.</string>
+	<string name="modifiers.low_health.damage.spell.desc">Can düşükken büyülerle verilen hasar %value%% artar.</string>
+	<string name="modifiers.low_health.damage_taken.desc">Can düşükken alınan hasar %value%% azalır.</string>
+	<string name="modifiers.low_health.health_regen.desc">Can düşükken Can Yenilenmesi %value% artar.</string>
+
+	<string name="modifiers.resistances.all.prefix"></string>
+	<string name="modifiers.resistances.all.suffix">- Dirençli</string>
+	<string name="modifiers.resistances.armor.prefix">Dayanıklı</string>
+	<string name="modifiers.resistances.armor.suffix">- Sağlam</string>
+	<string name="modifiers.resistances.fire.prefix">Alevli</string>
+	<string name="modifiers.resistances.fire.suffix">- Kor</string>
+	<string name="modifiers.resistances.ice.prefix">Buzlu</string>
+	<string name="modifiers.resistances.ice.suffix">- Ayaz</string>
+	<string name="modifiers.resistances.lightning.prefix">Elektrikli</string>
+	<string name="modifiers.resistances.lightning.suffix">- Şimşek</string>
+	<string name="modifiers.resistances.poison.prefix">Arındırıcı</string>
+	<string name="modifiers.resistances.poison.suffix">- Şifa</string>
+	<string name="modifiers.resistances.armor_pct.prefix"></string>
+	<string name="modifiers.resistances.armor_pct.suffix">- Kaplumbağa</string>
+	<string name="modifiers.resistances.fire_pct.prefix"></string>
+	<string name="modifiers.resistances.fire_pct.suffix">- Ejderha</string>
+	<string name="modifiers.resistances.ice_pct.prefix"></string>
+	<string name="modifiers.resistances.ice_pct.suffix">- Kar Canavarı</string>
+	<string name="modifiers.resistances.lightning_pct.prefix"></string>
+	<string name="modifiers.resistances.lightning_pct.suffix">- Yılan Balığı</string>
+	<string name="modifiers.resistances.poison_pct.prefix"></string>
+	<string name="modifiers.resistances.poison_pct.suffix">- Yılan</string>
+
+	<string name="modifiers.skills.attack_speed.prefix">Dövüşçü</string>
+	<string name="modifiers.skills.attack_speed.suffix">- Kılıç Ustası</string>
+	<string name="modifiers.skills.attack_crit.prefix">Suikastçı</string>
+	<string name="modifiers.skills.attack_crit.suffix">- Keskin Nişancı</string>
+	<string name="modifiers.skills.attack_crit_dmg.prefix">Öldürücü</string>
+	<string name="modifiers.skills.attack_crit_dmg.suffix">- Cellat</string>
+	<string name="modifiers.skills.spell_speed.prefix">Büyü Ustası</string>
+	<string name="modifiers.skills.spell_speed.suffix">- Çeviklik</string>
+	<string name="modifiers.skills.spell_power.prefix">Kudretli</string>
+	<string name="modifiers.skills.spell_power.suffix">- Güç</string>
+	<string name="modifiers.skills.spell_crit.prefix">Yüce</string>
+	<string name="modifiers.skills.spell_crit.suffix">- Üstünlük</string>
+	<string name="modifiers.skills.spell_crit_dmg.prefix">Ölümcül</string>
+	<string name="modifiers.skills.spell_crit_dmg.suffix">- Hâkimiyet</string>
+	<string name="modifiers.skills.spell_cost.prefix">Büyücünün</string>
+	<string name="modifiers.skills.spell_cost.suffix">- Verimlilik</string>
+	<string name="modifiers.skills.spell_cost.desc">Büyü Mana maliyeti %desc%% azaltıldı.</string>
+	<string name="modifiers.skills.spell_cooldown.prefix">Büyü Dokuyucu</string>
+	<string name="modifiers.skills.spell_cooldown.suffix">- Çabukluk</string>
+	<string name="modifiers.skills.spell_cooldown.desc">Büyü bekleme süresi %cd%% azaltıldı.</string>
+
+	<string name="modifiers.skills.leech.health.desc">%value%% Can Çalma.</string>
+	<string name="modifiers.skills.leech.mana.desc">%value%% Mana Çalma.</string>
+	<string name="modifiers.skills.attack_power.prefix">Güçlü</string>
+	<string name="modifiers.skills.attack_power.suffix">- Kudret</string>
+	<string name="modifiers.skills.leech.stamina.desc">%value%% Stamina Çalma.</string>
+	<string name="modifiers.skills.leech.attack_health.desc">%value%% Saldırı Can Çalma.</string>
+	<string name="modifiers.skills.leech.attack_mana.desc">%value%% Saldırı Mana Çalma.</string>
+	<string name="modifiers.skills.leech.attack_stamina.desc">%value%% Saldırı Stamina Çalma.</string>
+	<string name="modifiers.skills.leech.spell_health.desc">%value%% Büyü Can Çalma.</string>
+	<string name="modifiers.skills.leech.spell_mana.desc">%value%% Büyü Mana Çalma.</string>
+	<string name="modifiers.skills.leech.spell_stamina.desc">%value%% Büyü Stamina Çalma.</string>
+
+	<string name="modifiers.skills.leech.attack_health.crit.desc">Kritik Vuruşlarda %value%% Can Çalma.</string>
+	<string name="modifiers.skills.leech.attack_health.bleeding.desc">%c-highlight%Kanama\d etkisi altındaki hedeflere karşı %value%% Saldırı Can Çalma.</string>
+
+	<string name="modifiers.stats.health.prefix">Sağlam</string>
+	<string name="modifiers.stats.health.suffix">- Dayanıklılık</string>
+	<string name="modifiers.stats.stamina.prefix">Dinç</string>
+	<string name="modifiers.stats.stamina.suffix">- Güç</string>
+	<string name="modifiers.stats.mana.prefix">Bilge</string>
+	<string name="modifiers.stats.mana.suffix">- Odak</string>
+	<string name="modifiers.stats.health_regen.prefix">Canlandırıcı</string>
+	<string name="modifiers.stats.health_regen.suffix">- İyileşme</string>
+	<string name="modifiers.stats.stamina_regen.prefix">Tazeleyici</string>
+	<string name="modifiers.stats.stamina_regen.suffix">- Yenilenme</string>
+	<string name="modifiers.stats.mana_regen.prefix">Yenileyici</string>
+	<string name="modifiers.stats.mana_regen.suffix">- Konsantrasyon</string>
+	<string name="modifiers.stats.health_pct.prefix">Güreşçi</string>
+	<string name="modifiers.stats.health_pct.suffix">- Pehlivan</string>
+	<string name="modifiers.stats.stamina_pct.prefix">Akrobat</string>
+	<string name="modifiers.stats.stamina_pct.suffix">- Cambaz</string>
+	<string name="modifiers.stats.mana_pct.prefix">Âlim</string>
+	<string name="modifiers.stats.mana_pct.suffix">- Bilgin</string>
+	<string name="modifiers.stats.health_regen_pct.prefix">Tecrübeli</string>
+	<string name="modifiers.stats.health_regen_pct.suffix">- Usta</string>
+	<string name="modifiers.stats.stamina_regen_pct.prefix">Atletik</string>
+	<string name="modifiers.stats.stamina_regen_pct.suffix">- Sporcu</string>
+	<string name="modifiers.stats.mana_regen_pct.prefix">Bilge</string>
+	<string name="modifiers.stats.mana_regen_pct.suffix">- Filozof</string>
+
+	<string name="modifiers.weapons.speed.prefix">Hızlı</string>
+	<string name="modifiers.weapons.speed.suffix">- Çeviklik</string>
+	<string name="modifiers.weapons.crit.prefix">Ölümcül</string>
+	<string name="modifiers.weapons.crit.suffix">- Hassasiyet</string>
+	<string name="modifiers.weapons.physical.prefix">Kırıcı</string>
+	<string name="modifiers.weapons.physical.suffix">- Yıkım</string>
+	<string name="modifiers.weapons.fire.prefix">Ateş</string>
+	<string name="modifiers.weapons.fire.suffix">- Alev</string>
+	<string name="modifiers.weapons.ice.prefix">Buz</string>
+	<string name="modifiers.weapons.ice.suffix">- Soğuk</string>
+	<string name="modifiers.weapons.lightning.prefix">Yıldırım</string>
+	<string name="modifiers.weapons.lightning.suffix">- Fırtına</string>
+	<string name="modifiers.weapons.poison.prefix">Zehir</string>
+	<string name="modifiers.weapons.poison.suffix">- Toksin</string>
+	<string name="modifiers.weapons.pure.prefix">Kutsal</string>
+	<string name="modifiers.weapons.pure.suffix">- Yok Edici</string>
+
+	<string name="modifiers.equipment.damage.weapon.suffix">- Savaşçı</string>
+	<string name="modifiers.equipment.damage.weapon.desc">%amnt% Silah Hasarı</string>
+	<string name="modifiers.equipment.damage.spell.suffix">- Büyücü</string>
+	<string name="modifiers.equipment.damage.spell.desc">%amnt% Büyü Hasarı</string>
+	<string name="modifiers.equipment.damage.elites.suffix">- Kral Katili</string>
+	<string name="modifiers.equipment.damage.elites.desc">\cb0dfffElitler\d'e karşı %amnt% Hasar</string>
+	<string name="modifiers.equipment.damage.bosses.suffix">- Boss Avcısı</string>
+	<string name="modifiers.equipment.damage.bosses.desc">\cb0dfffBosslar\d'a karşı %amnt% Hasar</string>
+	<string name="modifiers.equipment.crit_hit.suffix">- Keskinlik</string>
+	<string name="modifiers.equipment.crit_chance.suffix">- Yıkım</string>
+	<string name="modifiers.equipment.attack_speed.suffix">- Çeviklik</string>
+	<string name="modifiers.equipment.cast_speed.suffix">- Akıcılık</string>
+	<string name="modifiers.equipment.move_speed.suffix">- Sürat</string>
+	<string name="modifiers.equipment.dash_amount.suffix">- Sıçrayış</string>
+	<string name="modifiers.equipment.dash_amount.desc">%amnt% Dash Hakkı</string>
+	<string name="modifiers.equipment.dash_recovery.suffix">- Çeviklik</string>
+	<string name="modifiers.equipment.dash_recovery.desc">%amnt% Dash Yenilenme Süresi</string>
+	<string name="modifiers.equipment.evasion.suffix">- Kaçış</string>
+	<string name="modifiers.equipment.parry.suffix">- Savuşturma</string>
+	<string name="modifiers.equipment.damage_reduction.suffix">- Koruma</string>
+	<string name="modifiers.equipment.damage_reduction.desc">%amnt% Alınan Hasar</string>
+	<string name="modifiers.equipment.spell_cost.suffix">- Verimlilik</string>
+	<string name="modifiers.equipment.spell_cost.desc">%amnt% Büyü Mana Maliyeti</string>
+	<string name="modifiers.equipment.spell_cooldown.suffix">- Çabukluk</string>
+	<string name="modifiers.equipment.spell_cooldown.desc">%amnt% Büyü Bekleme Süresi</string>
+	<string name="modifiers.equipment.potion_charge.suffix">- İksir</string>
+	<string name="modifiers.equipment.potion_charge.desc">%amnt% İksir Hakkı</string>
+	<string name="modifiers.equipment.shadow_curse.suffix">- İnanç</string>
+	<string name="modifiers.equipment.shadow_curse.desc">%amnt% Gölge Laneti Kazanımı</string>
+	<string name="modifiers.equipment.goldgain.suffix">- Zenginlik</string>
+	<string name="modifiers.equipment.goldgain.desc">%amnt% Altın Kazanımı</string>
+	<string name="modifiers.equipment.expgain.suffix">- Bilgelik</string>
+	<string name="modifiers.equipment.expgain.desc">Deneyim Kazanımı</string>
+	<string name="modifiers.equipment.armor_pen.suffix">- Penetrasyon</string>
+	<string name="modifiers.equipment.poison_pen.suffix">- Zehir</string>
+	<string name="modifiers.equipment.fire_pen.suffix">- Yakıcı</string>
+	<string name="modifiers.equipment.ice_pen.suffix">- Dondurucu</string>
+	<string name="modifiers.equipment.lightning_pen.suffix">- Çarpıcı</string>
+	<string name="modifiers.equipment.thorns.suffix">- Dikenler</string>
+	<string name="modifiers.equipment.thorns.desc">Hasar alındığında %amnt% Fiziksel Hasar yansıtır</string>
+	<string name="modifiers.equipment.kill_health.suffix">- Hasat</string>
+	<string name="modifiers.equipment.kill_health.desc">Öldürme başına %amnt% Can yeniler</string>
+	<string name="modifiers.equipment.kill_mana.suffix">- Ruh Emici</string>
+	<string name="modifiers.equipment.kill_mana.desc">Öldürme başına %amnt% Mana yeniler</string>
+	<string name="modifiers.equipment.mainhand.hit_health.suffix">- Vampir</string>
+	<string name="modifiers.equipment.mainhand.hit_health.desc">Vuruş başına %amnt% Can çalar</string>
+	<string name="modifiers.equipment.offhand.hit_health.suffix">- Vampir</string>
+	<string name="modifiers.equipment.offhand.hit_health.desc">Vuruş başına %amnt% Can çalar</string>
+	<string name="modifiers.equipment.twohand.hit_health.suffix">- Vampir</string>
+	<string name="modifiers.equipment.twohand.hit_health.desc">Vuruş başına %amnt% Can çalar</string>
+	<string name="modifiers.equipment.mainhand.hit_mana.suffix">- Büyü Emici</string>
+	<string name="modifiers.equipment.mainhand.hit_mana.desc">Vuruş başına %amnt% Mana çalar</string>
+	<string name="modifiers.equipment.offhand.hit_mana.suffix">- Büyü Emici</string>
+	<string name="modifiers.equipment.offhand.hit_mana.desc">Vuruş başına %amnt% Mana çalar</string>
+	<string name="modifiers.equipment.twohand.hit_mana.suffix">- Büyü Emici</string>
+	<string name="modifiers.equipment.twohand.hit_mana.desc">Vuruş başına %amnt% Mana çalar</string>
+	<string name="modifiers.equipment.mainhand.stun.suffix">- Sersemletici</string>
+	<string name="modifiers.equipment.mainhand.stun.desc">%amnt% şansla \cb0dfffSersemletme\d uygular</string>
+	<string name="modifiers.equipment.offhand.stun.suffix">- Sersemletici</string>
+	<string name="modifiers.equipment.offhand.stun.desc">%amnt% şansla \cb0dfffSersemletme\d uygular</string>
+	<string name="modifiers.equipment.twohand.stun.suffix">- Sersemletici</string>
+	<string name="modifiers.equipment.twohand.stun.desc">%amnt% şansla \cb0dfffSersemletme\d uygular</string>
+	<string name="modifiers.equipment.mainhand.disarm.suffix">- Silahsızlandırıcı</string>
+	<string name="modifiers.equipment.mainhand.disarm.desc">%amnt% şansla \cb0dfffSilahsızlandırma\d uygular</string>
+	<string name="modifiers.equipment.offhand.disarm.suffix">- Silahsızlandırıcı</string>
+	<string name="modifiers.equipment.offhand.disarm.desc">%amnt% şansla \cb0dfffSilahsızlandırma\d uygular</string>
+	<string name="modifiers.equipment.twohand.disarm.suffix">- Silahsızlandırıcı</string>
+	<string name="modifiers.equipment.twohand.disarm.desc">%amnt% şansla \cb0dfffSilahsızlandırma\d uygular</string>
+	<string name="modifiers.equipment.mainhand.slow.suffix">- Yavaşlatıcı</string>
+	<string name="modifiers.equipment.mainhand.slow.desc">%amnt% şansla \cb0dfffYavaşlatma\d uygular</string>
+	<string name="modifiers.equipment.offhand.slow.suffix">- Yavaşlatıcı</string>
+	<string name="modifiers.equipment.offhand.slow.desc">%amnt% şansla \cb0dfffYavaşlatma\d uygular</string>
+	<string name="modifiers.equipment.twohand.slow.suffix">- Yavaşlatıcı</string>
+	<string name="modifiers.equipment.twohand.slow.desc">%amnt% şansla \cb0dfffYavaşlatma\d uygular</string>
+	<string name="modifiers.equipment.mainhand.silence.suffix">- Susturucu</string>
+	<string name="modifiers.equipment.mainhand.silence.desc">%amnt% şansla \cb0dfffSusturma\d uygular</string>
+	<string name="modifiers.equipment.offhand.silence.suffix">- Susturucu</string>
+	<string name="modifiers.equipment.offhand.silence.desc">%amnt% şansla \cb0dfffSusturma\d uygular</string>
+	<string name="modifiers.equipment.twohand.silence.suffix">- Susturucu</string>
+	<string name="modifiers.equipment.twohand.silence.desc">%amnt% şansla \cb0dfffSusturma\d uygular</string>
+	<string name="modifiers.equipment.mainhand.blindness.suffix">- Köreltici</string>
+	<string name="modifiers.equipment.mainhand.blindness.desc">%amnt% şansla \cb0dfffKörlük\d uygular</string>
+	<string name="modifiers.equipment.offhand.blindness.suffix">- Köreltici</string>
+	<string name="modifiers.equipment.offhand.blindness.desc">%amnt% şansla \cb0dfffKörlük\d uygular</string>
+	<string name="modifiers.equipment.twohand.blindness.suffix">- Köreltici</string>
+	<string name="modifiers.equipment.twohand.blindness.desc">%amnt% şansla \cb0dfffKörlük\d uygular</string>
+	<string name="modifiers.equipment.mainhand.confusion.suffix">- Şaşırtıcı</string>
+	<string name="modifiers.equipment.mainhand.confusion.desc">%amnt% şansla \cb0dfffKarışıklık\d uygular</string>
+	<string name="modifiers.equipment.offhand.confusion.suffix">- Şaşırtıcı</string>
+	<string name="modifiers.equipment.offhand.confusion.desc">%amnt% şansla \cb0dfffKarışıklık\d uygular</string>
+	<string name="modifiers.equipment.twohand.confusion.suffix">- Şaşırtıcı</string>
+	<string name="modifiers.equipment.twohand.confusion.desc">%amnt% şansla \cb0dfffKarışıklık\d uygular</string>
+	<string name="modifiers.equipment.mainhand.weakness.suffix">- Zayıflatıcı</string>
+	<string name="modifiers.equipment.mainhand.weakness.desc">%amnt% şansla \cb0dfffZayıflık\d uygular</string>
+	<string name="modifiers.equipment.offhand.weakness.suffix">- Zayıflatıcı</string>
+	<string name="modifiers.equipment.offhand.weakness.desc">%amnt% şansla \cb0dfffZayıflık\d uygular</string>
+	<string name="modifiers.equipment.twohand.weakness.suffix">- Zayıflatıcı</string>
+	<string name="modifiers.equipment.twohand.weakness.desc">%amnt% şansla \cb0dfffZayıflık\d uygular</string>
+	<string name="modifiers.equipment.mainhand.vulnerability.suffix">- Savunmasızlık</string>
+	<string name="modifiers.equipment.mainhand.vulnerability.desc">%amnt% şansla \cb0dfffSavunmasızlık\d uygular</string>
+	<string name="modifiers.equipment.offhand.vulnerability.suffix">- Savunmasızlık</string>
+	<string name="modifiers.equipment.offhand.vulnerability.desc">%amnt% şansla \cb0dfffSavunmasızlık\d uygular</string>
+	<string name="modifiers.equipment.twohand.vulnerability.suffix">- Savunmasızlık</string>
+	<string name="modifiers.equipment.twohand.vulnerability.desc">%amnt% şansla \cb0dfffSavunmasızlık\d uygular</string>
+
+
+	<string name="modifiers.debuff.armor_break.prefix">Zırh Kırıcı</string>
+	<string name="modifiers.debuff.armor_break.suffix">- Zırh Kırıcı</string>
+	<string name="modifiers.debuff.bleeding.desc">%value% şansla \cb0dfffZırh Kırma\d uygular.</string>
+	<string name="modifiers.debuff.bleeding.prefix">Kanatıcı</string>
+	<string name="modifiers.debuff.bleeding.suffix">- Kanama</string>
+	<string name="modifiers.debuff.bleeding.desc">%value% şansla \cb0dfffKanama\d uygular.</string>
+	<string name="modifiers.debuff.cripple.prefix">Sakatlayıcı</string>
+	<string name="modifiers.debuff.cripple.suffix">- Sakatlama</string>
+	<string name="modifiers.debuff.cripple.desc">%value% şansla \cb0dfffSakatlama\d uygular.</string>
+	<string name="modifiers.debuff.disarm.prefix">Silahsızlandırıcı</string>
+	<string name="modifiers.debuff.disarm.suffix">- Silahsızlandırma</string>
+	<string name="modifiers.debuff.disarm.desc">%value% şansla \cb0dfffSilahsızlandırma\d uygular.</string>
+	<string name="modifiers.debuff.freeze.prefix">Dondurucu</string>
+	<string name="modifiers.debuff.freeze.suffix">- Dondurma</string>
+	<string name="modifiers.debuff.freeze.desc">%value% şansla \cb0dfffDondurma\d uygular.</string>
+	<string name="modifiers.debuff.immobilize.prefix">Sabitleyen</string>
+	<string name="modifiers.debuff.immobilize.suffix">- Sabitleme</string>
+	<string name="modifiers.debuff.immobilize.desc">%value% şansla \cb0dfffSabitleme\d uygular.</string>
+	<string name="modifiers.debuff.marked.prefix">İşaretleyici</string>
+	<string name="modifiers.debuff.marked.suffix">- İşaretleme</string>
+	<string name="modifiers.debuff.marked.desc">%value% şansla \cb0dfffİşaretleme\d uygular.</string>
+	<string name="modifiers.debuff.silence.prefix">Susturucu</string>
+	<string name="modifiers.debuff.silence.suffix">- Susturma</string>
+	<string name="modifiers.debuff.silence.desc">%value% şansla \cb0dfffSusturma\d uygular.</string>
+	<string name="modifiers.debuff.slow.prefix">Yavaşlatıcı</string>
+	<string name="modifiers.debuff.slow.suffix">- Yavaşlatma</string>
+	<string name="modifiers.debuff.slow.desc">%value% şansla \cb0dfffYavaşlatma\d uygular.</string>
+	<string name="modifiers.debuff.stun.prefix">Sersemletici</string>
+	<string name="modifiers.debuff.stun.suffix">- Sersemletme</string>
+	<string name="modifiers.debuff.stun.desc">%value% şansla \cb0dfffSersemletme\d uygular.</string>
+	<string name="modifiers.debuff.stun_minor.desc">%value% şansla \cb0dfffHafif Sersemletme\d uygular.</string>
+	<string name="modifiers.debuff.stun_greater.desc">%value% şansla \cb0dfffGüçlü Sersemletme\d uygular.</string>
+	<string name="modifiers.debuff.vulnerability.prefix">Kırılganlaştırıcı</string>
+	<string name="modifiers.debuff.vulnerability.suffix">- Kırılganlık</string>
+	<string name="modifiers.debuff.vulnerability.desc">%value%% şansla %c-highlight%Kırılganlık\d uygular.</string>
+	<string name="modifiers.debuff.weakness.prefix">Zayıflatıcı</string>
+	<string name="modifiers.debuff.weakness.suffix">- Zayıflık</string>
+	<string name="modifiers.debuff.weakness.desc">%value%% şansla %c-highlight%Zayıflık\d uygular.</string>
+
+    <string name="modifiers.debuff.immune.armor_break.desc">\cb0dfffZırh Kırma\d'ya karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.bleeding.desc">\cb0dfffKanama\d'ya karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.blindness.desc">\cb0dfffKörlük\d'e karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.cripple.desc">\cb0dfffSakatlama\d'ya karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.disarm.desc">\cb0dfffSilahsızlandırma\d'ya karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.freeze.desc">\cb0dfffDondurma\d'ya karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.immobilize.desc">\cb0dfffSabitleme\d'ye karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.marked.desc">\cb0dfffİşaretleme\d'ye karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.silence.desc">\cb0dfffSusturma\d'ya karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.slow.desc">\cb0dfffYavaşlatma\d'ya karşı bağışıklık kazanırsın.</string>
+    <string name="modifiers.debuff.immune.stun.desc">\cb0dfffSersemletme\d'ye karşı bağışıklık kazanırsın.</string>
+
+	<string name="modifiers.projectiles.piercing.prefix">Delici</string>
+	<string name="modifiers.projectiles.piercing.suffix">- Penetrasyon</string>
+	<string name="modifiers.projectiles.piercing.desc">%desc% menzilli silah penetrasyonu.</string>
+	<string name="modifiers.projectiles.bouncing.prefix">Seken</string>
+	<string name="modifiers.projectiles.bouncing.suffix">- Sekme</string>
+	<string name="modifiers.projectiles.bouncing.desc">%desc% menzilli silah sekmesi.</string>
+
+    <string name="modifiers.return.physical.desc">Hasar alındığında saldırgana %value% Fiziksel hasar yansıtır.</string>
+    <string name="modifiers.return.fire.desc">Hasar alındığında saldırgana %value% Ateş hasarı yansıtır.</string>
+    <string name="modifiers.return.ice.desc">Hasar alındığında saldırgana %value% Buz hasarı yansıtır.</string>
+    <string name="modifiers.return.lightning.desc">Hasar alındığında saldırgana %value% Yıldırım hasarı yansıtır.</string>
+    <string name="modifiers.return.poison.desc">Hasar alındığında saldırgana %value% Zehir hasarı yansıtır.</string>
+    <string name="modifiers.return.pure.desc">Hasar alındığında saldırgana %value% Saf hasar yansıtır.</string>
+
+	<string name="modifiers.enchant.gemstone_blue.prefix">Akuamarin</string>
+	<string name="modifiers.enchant.gemstone_blue.suffix">- Buz Koruması</string>
+	<string name="modifiers.enchant.gemstone_green.prefix">Peridot</string>
+	<string name="modifiers.enchant.gemstone_green.suffix">- Zehir Koruması</string>
+	<string name="modifiers.enchant.gemstone_purple.prefix">Ametist</string>
+	<string name="modifiers.enchant.gemstone_purple.suffix">- Yıldırım Koruması</string>
+	<string name="modifiers.enchant.gemstone_red.prefix">Topaz</string>
+	<string name="modifiers.enchant.gemstone_red.suffix">- Ateş Direnci</string>
+	<string name="modifiers.enchant.iron_ore.prefix">Güçlendirilmiş</string>
+	<string name="modifiers.enchant.iron_ore.suffix">- Demir</string>
+	<string name="modifiers.enchant.nails.prefix">Dikenli</string>
+	<string name="modifiers.enchant.nails.suffix">- Çivili</string>
+	<string name="modifiers.enchant.wolf_liver.prefix">Vahşi</string>
+	<string name="modifiers.enchant.wolf_liver.suffix">- Kurt</string>
+	<string name="modifiers.enchant.wolf_liver_2.suffix">- Avcı</string>
+	<string name="modifiers.enchant.boar_tusk.prefix">Yabani</string>
+	<string name="modifiers.enchant.boar_tusk.suffix">- Domuz</string>
+	<string name="modifiers.enchant.maggot_gland.prefix">Bulaşıcı</string>
+	<string name="modifiers.enchant.maggot_gland.suffix">- Kurtçuk</string>
+	<string name="modifiers.enchant.maggot_gland_2.suffix">- Hastalık</string>
+	<string name="modifiers.enchant.wasp_stinger.prefix">Zehirli</string>
+	<string name="modifiers.enchant.wasp_stinger.suffix">- Arı</string>
+	<string name="modifiers.enchant.wasp_stinger_2.suffix">- Eşekarısı</string>
+	<string name="modifiers.enchant.spider_silk.prefix">Ağcı</string>
+	<string name="modifiers.enchant.spider_silk.suffix">- Örümcek</string>
+	<string name="modifiers.enchant.spider_silk_2.suffix">- Avcı</string>
+	<string name="modifiers.enchant.bone_dust.prefix">Ölümcül</string>
+	<string name="modifiers.enchant.bone_dust.suffix">- Mezar</string>
+	<string name="modifiers.enchant.ectoplasm.prefix">Hayaletsi</string>
+	<string name="modifiers.enchant.ectoplasm.suffix">- Ruh</string>
+	<string name="modifiers.enchant.troll_skin.prefix">Güçlü</string>
+	<string name="modifiers.enchant.troll_skin.suffix">- Trol</string>
+	<string name="modifiers.enchant.troll_skin_2.suffix">- Canavar</string>
+	<string name="modifiers.enchant.shambler_claw.prefix">Karanlık</string>
+	<string name="modifiers.enchant.shambler_claw.suffix">- Avcı</string>
+	<string name="modifiers.enchant.archon_essence.prefix">Kutsal</string>
+	<string name="modifiers.enchant.archon_essence.suffix">- Archon</string>
+	<string name="modifiers.enchant.thunderbird_feather.prefix">Fırtına</string>
+	<string name="modifiers.enchant.thunderbird_feather.suffix">- Gökkuşu</string>
+
+	<string name="modifiers.class.ranger.wolf_add.desc">%value% ek %c-highlight%Kurt\d çağırabilirsin</string>
+	<string name="modifiers.class.rogue.knives_speed.desc">%c-highlight%Bıçak Fırlatma\d hızın %value%% artar.</string>
+
+	<string name="modifiers.unique.potion_health.desc">İksir kullandığında Canının %amount% kadarını yeniler.</string>
+
+
+
+	<!-- Epic Names -->
+
+
+
+	<string name="epic.name.agony">Işkence</string>
+	<string name="epic.name.apocalypse">Kıyamet</string>
+	<string name="epic.name.armageddon">Mahşer</string>
+	<string name="epic.name.beast">Canavar</string>
+	<string name="epic.name.behemoth">Dev</string>
+	<string name="epic.name.blood">Kan</string>
+	<string name="epic.name.bramble">Diken</string>
+	<string name="epic.name.brimstone">Kükürt</string>
+	<string name="epic.name.brood">Sürü</string>
+	<string name="epic.name.carrion">Leş</string>
+	<string name="epic.name.cataclysm">Felaket</string>
+	<string name="epic.name.chimeric">Kimera</string>
+	<string name="epic.name.corpse">Ceset</string>
+	<string name="epic.name.corruption">Yozlaşma</string>
+	<string name="epic.name.damnation">Lanet</string>
+	<string name="epic.name.death">Ölüm</string>
+	<string name="epic.name.demon">İblis</string>
+	<string name="epic.name.dire">Uğursuz</string>
+	<string name="epic.name.dragon">Ejder</string>
+	<string name="epic.name.dread">Dehşet</string>
+	<string name="epic.name.doom">Kader</string>
+	<string name="epic.name.dusk">Alacakaranlık</string>
+	<string name="epic.name.eagle">Kartal</string>
+	<string name="epic.name.empyrean">Semavi</string>
+	<string name="epic.name.fate">Kader</string>
+	<string name="epic.name.foe">Düşman</string>
+	<string name="epic.name.gale">Fırtına</string>
+	<string name="epic.name.ghoul">Gulyabani</string>
+	<string name="epic.name.gloom">Karanlık</string>
+	<string name="epic.name.glyph">Simge</string>
+	<string name="epic.name.golem">Golem</string>
+	<string name="epic.name.grim">Kasvetli</string>
+	<string name="epic.name.hate">Nefret</string>
+	<string name="epic.name.havoc">Kaos</string>
+	<string name="epic.name.horror">Korku</string>
+	<string name="epic.name.hypnotic">Hipnotik</string>
+	<string name="epic.name.kraken">Kraken</string>
+	<string name="epic.name.loath">İğrenç</string>
+	<string name="epic.name.malestrom">Girdap</string>
+	<string name="epic.name.mind">Zihin</string>
+	<string name="epic.name.miracle">Mucize</string>
+	<string name="epic.name.morbid">Hastalıklı</string>
+	<string name="epic.name.oblivion">Hiçlik</string>
+	<string name="epic.name.onslaught">Saldırı</string>
+	<string name="epic.name.pain">Acı</string>
+	<string name="epic.name.pandemonium">Kargaşa</string>
+	<string name="epic.name.phoenix">Anka</string>
+	<string name="epic.name.plague">Veba</string>
+	<string name="epic.name.rage">Öfke</string>
+	<string name="epic.name.rapture">Vecd</string>
+	<string name="epic.name.rune">Rün</string>
+	<string name="epic.name.skull">Kafatası</string>
+	<string name="epic.name.soul">Ruh</string>
+	<string name="epic.name.sorrow">Keder</string>
+	<string name="epic.name.spirit">Tin</string>
+	<string name="epic.name.storm">Fırtına</string>
+	<string name="epic.name.tempest">Kasırga</string>
+	<string name="epic.name.torment">Azap</string>
+	<string name="epic.name.vengeance">İntikam</string>
+	<string name="epic.name.victory">Zafer</string>
+	<string name="epic.name.viper">Engerek</string>
+	<string name="epic.name.vortex">Kasırga</string>
+	<string name="epic.name.woe">Çile</string>
+	<string name="epic.name.wrath">Gazap</string>
+
+	<string name="epic.name.piece">Parça</string>
+
+
+	<string name="epic.name.bane">Bela</string>
+
+	<string name="epic.name.trinket">Nazarlık</string>
+	<string name="epic.name.ornament">Süs</string>
+
+
+	<string name="epic.name.guardian">Muhafız</string>
+	<string name="epic.name.keep">Kale</string>
+	<string name="epic.name.salvation">Kurtuluş</string>
+	<string name="epic.name.sanctuary">Sığınak</string>
+	<string name="epic.name.shell">Kabuk</string>
+	<string name="epic.name.shelter">Barınak</string>
+	<string name="epic.name.ward">Koruma</string>
+
+	<string name="epic.name.attire">Giysi</string>
+	<string name="epic.name.carapace">Kabuk</string>
+	<string name="epic.name.coat">Palto</string>
+	<string name="epic.name.curtain">Perde</string>
+	<string name="epic.name.guardian">Muhafız</string>
+	<string name="epic.name.hide">Post</string>
+	<string name="epic.name.jack">Ceket</string>
+	<string name="epic.name.mantle">Pelerin</string>
+	<string name="epic.name.pelt">Kürk</string>
+	<string name="epic.name.shroud">Örtü</string>
+	<string name="epic.name.skin">Deri</string>
+	<string name="epic.name.suit">Takım</string>
+	<string name="epic.name.veil">Tül</string>
+	<string name="epic.name.wrap">Sarmal</string>
+
+	<string name="epic.name.caress">Okşayış</string>
+	<string name="epic.name.claw">Pençe</string>
+	<string name="epic.name.clutches">Kavrayış</string>
+	<string name="epic.name.fingers">Parmaklar</string>
+	<string name="epic.name.fist">Yumruk</string>
+	<string name="epic.name.grasp">Kavrama</string>
+	<string name="epic.name.grip">Tutuş</string>
+	<string name="epic.name.hand">El</string>
+	<string name="epic.name.hold">Tutuş</string>
+	<string name="epic.name.knuckle">Mafsal</string>
+	<string name="epic.name.mitts">Eldiven</string>
+	<string name="epic.name.nails">Tırnak</string>
+	<string name="epic.name.palm">Avuç</string>
+	<string name="epic.name.paw">Pati</string>
+	<string name="epic.name.talons">Penceler</string>
+	<string name="epic.name.touch">Dokunuş</string>
+	<string name="epic.name.vise">Mengene</string>
+
+	<string name="epic.name.brow">Alın</string>
+	<string name="epic.name.corona">Taç</string>
+	<string name="epic.name.cowl">Başlık</string>
+	<string name="epic.name.crest">Sorguç</string>
+	<string name="epic.name.crown">Taç</string>
+	<string name="epic.name.dome">Kubbe</string>
+	<string name="epic.name.glance">Bakış</string>
+	<string name="epic.name.halo">Hale</string>
+	<string name="epic.name.horn">Boynuz</string>
+	<string name="epic.name.peak">Tepe</string>
+	<string name="epic.name.veil">Peçe</string>
+	<string name="epic.name.visage">Sima</string>
+	<string name="epic.name.visor">Vizör</string>
+
+	<string name="epic.name.dash">Dash</string>
+	<string name="epic.name.goad">Dürtü</string>
+	<string name="epic.name.hoof">Toynak</string>
+	<string name="epic.name.league">Mesafe</string>
+	<string name="epic.name.march">Yürüyüş</string>
+	<string name="epic.name.pace">Adım</string>
+	<string name="epic.name.road">Yol</string>
+	<string name="epic.name.slippers">Terlik</string>
+	<string name="epic.name.sole">Taban</string>
+	<string name="epic.name.span">Açıklık</string>
+	<string name="epic.name.spark">Kıvılcım</string>
+	<string name="epic.name.spur">Mahmuz</string>
+	<string name="epic.name.stride">Adım</string>
+	<string name="epic.name.track">İz</string>
+	<string name="epic.name.trail">Patika</string>
+	<string name="epic.name.tread">Ayak İzi</string>
+	<string name="epic.name.urge">Dürtü</string>
+
+
+
+	<!-- Status Effects -->
+
+
+	<string name="status_effect.armor_break">Zırh Kırma</string>
+	<string name="status_effect.armor_break_minor">Hafif Zırh Kırma</string>
+	<string name="status_effect.armor_break_greater">Güçlü Zırh Kırma</string>
+	<string name="status_effect.bleeding">Kanama</string>
+	<string name="status_effect.bleeding_minor">Hafif Kanama</string>
+	<string name="status_effect.bleeding_greater">Şiddetli Kanama</string>
+	<string name="status_effect.blindness">Körlük</string>
+	<string name="status_effect.blindness_minor">Hafif Körlük</string>
+	<string name="status_effect.blindness_greater">Tam Körlük</string>
+	<string name="status_effect.cripple">Sakatlama</string>
+	<string name="status_effect.cripple_minor">Hafif Topallama</string>
+	<string name="status_effect.cripple_greater">Ağır Topallama</string>
+	<string name="status_effect.disarm">Silahsızlandırma</string>
+	<string name="status_effect.disarm_minor">Kısa Silahsızlandırma</string>
+	<string name="status_effect.disarm_greater">Uzun Silahsızlandırma</string>
+	<string name="status_effect.freeze">Dondurma</string>
+	<string name="status_effect.freeze_minor">Hafif Dondurma</string>
+	<string name="status_effect.freeze_greater">Tam Dondurma</string>
+	<string name="status_effect.immobilize">Hareketsizleştirme</string>
+	<string name="status_effect.immobilize_minor">Hafif Hareketsizleştirme</string>
+	<string name="status_effect.immobilize_greater">Tam Hareketsizleştirme</string>
+	<string name="status_effect.marked">İşaretli</string>
+	<string name="status_effect.marked_minor">Hafif İşaretli</string>
+	<string name="status_effect.marked_greater">Güçlü İşaretli</string>
+	<string name="status_effect.silence">Susturma</string>
+	<string name="status_effect.silence_minor">Kısa Sessizlik</string>
+	<string name="status_effect.silence_greater">Uzun Sessizlik</string>
+	<string name="status_effect.slow">Yavaşlatma</string>
+	<string name="status_effect.slow_minor">Hafif Yavaşlatma</string>
+	<string name="status_effect.slow_greater">Ağır Yavaşlatma</string>
+	<string name="status_effect.stun">Sersemletme</string>
+	<string name="status_effect.stun_minor">Kısa Sersemletme</string>
+	<string name="status_effect.stun_greater">Uzun Sersemletme</string>
+	<string name="status_effect.vulnerability">Savunmasızlık</string>
+	<string name="status_effect.vulnerability_minor">Hafif Savunmasızlık</string>
+	<string name="status_effect.vulnerability_greater">Tam Savunmasızlık</string>
+	<string name="status_effect.weakness">Zayıflık</string>
+	<string name="status_effect.weakness_minor">Hafif Zayıflık</string>
+	<string name="status_effect.weakness_greater">Tam Zayıflık</string>
+
+
+
+
+
+
+	<string name="stacks.paladin.inner_flame.name">Kutsal Alev</string>
+	<string name="stacks.paladin.inner_flame.desc">Yakındaki düşmanlara Ateş hasarı veren kutsal aura.</string>
+	<string name="stacks.ranger.rhythm.name">Avcı Ritmi</string>
+	<string name="stacks.ranger.rhythm.desc">Her Avcı Ritmi yığını Silah Kritik Şansını ve Hasarını artırır.</string>
+	<string name="stacks.warlock.essence.name">Karanlık Öz</string>
+	<string name="stacks.warlock.essence.desc">Her yığın Maksimum Can ve Mana değerlerini artırır.</string>
+	<string name="stacks.warrior.killing_spree.name">Katliam</string>
+	<string name="stacks.warrior.killing_spree.desc">Her yığın verilen hasarı artırır.</string>
+	<string name="stacks.wizard.barrier.name">Enerji Kalkanı</string>
+	<string name="stacks.wizard.barrier.desc">Her yığın tek bir saldırıdan alınan hasarı azaltır.</string>
+	<string name="stacks.wizard.incanters_flow.name">Büyü Akışı</string>
+	<string name="stacks.wizard.incanters_flow.desc">Her yığın Yetenek Hızını artırır ve Büyü Mana maliyetlerini azaltır.</string>
+
+</lang>

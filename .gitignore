@@ -4,6 +4,9 @@
 build/
 *.iml
 
+# Release builds and distribution packages
+releases/
+
 # IDE & Editor Files  
 .cursor/
 .vscode/

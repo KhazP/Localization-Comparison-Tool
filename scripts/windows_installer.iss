@@ -44,9 +44,12 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "releases\windows\LocalizerApp.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "releases\windows\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "releases\windows\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists(ExpandConstant('{app}\..\..\..\releases\windows\data'))
-Source: "SampleTranslations\*"; DestDir: "{app}\SampleTranslations"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "releases\windows\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "releases\windows\desktop_drop_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "releases\windows\libgit2-1.5.0.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "releases\windows\libgit2dart_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "releases\windows\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "releases\windows\README.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

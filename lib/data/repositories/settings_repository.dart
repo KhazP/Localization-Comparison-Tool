@@ -6,21 +6,37 @@ class SettingsRepository {
 
   Future<void> init() async {
     if (!Hive.isBoxOpen(_boxName)) {
-      await Hive.openBox<AppSettings>(_boxName);
+      try {
+        await Hive.openBox<AppSettings>(_boxName);
+      } catch (e) {
+        // If box fails to open (likely due to schema mismatch/Null cast error),
+        // delete it and start fresh with defaults.
+        await Hive.deleteBoxFromDisk(_boxName);
+        await Hive.openBox<AppSettings>(_boxName);
+      }
     }
   }
 
   Future<AppSettings> loadSettings() async {
     await init(); // Ensure box is open
     final box = Hive.box<AppSettings>(_boxName);
-    // Load settings; if not found, return default settings
-    // We store only one AppSettings object in the box, using a fixed key.
-    AppSettings? settings = box.get('current_settings');
-    if (settings == null) {
-      settings = AppSettings.defaultSettings();
-      await saveSettings(settings); // Save defaults if nothing is there
+    
+    try {
+      AppSettings? settings = box.get('current_settings');
+      if (settings == null) {
+        settings = AppSettings.defaultSettings();
+        await saveSettings(settings); 
+      }
+      return settings;
+    } catch (e) {
+      print('SettingsRepository: Error loading settings (likely migration issue): $e');
+      // Corrupted data - delete and reset
+      await Hive.deleteBoxFromDisk(_boxName);
+      await init(); // Re-open fresh
+      final defaults = AppSettings.defaultSettings();
+      await saveSettings(defaults);
+      return defaults;
     }
-    return settings;
   }
 
   Future<void> saveSettings(AppSettings settings) async {

@@ -164,4 +164,123 @@ class ResetComparisonSettings extends SettingsEvent {}
 
 class ResetAppearanceSettings extends SettingsEvent {}
 
-class ResetAllSettings extends SettingsEvent {} 
+class ResetAllSettings extends SettingsEvent {}
+
+// AI Services Events
+class UpdateAiTranslationService extends SettingsEvent {
+  final String service;
+  const UpdateAiTranslationService(this.service);
+  @override
+  List<Object> get props => [service];
+}
+
+class UpdateGoogleTranslateApiKey extends SettingsEvent {
+  final String apiKey;
+  const UpdateGoogleTranslateApiKey(this.apiKey);
+  @override
+  List<Object> get props => [apiKey];
+}
+
+class UpdateDeeplApiKey extends SettingsEvent {
+  final String apiKey;
+  const UpdateDeeplApiKey(this.apiKey);
+  @override
+  List<Object> get props => [apiKey];
+}
+
+class UpdateEnableAiTranslation extends SettingsEvent {
+  final bool enabled;
+  const UpdateEnableAiTranslation(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateTranslationConfidenceThreshold extends SettingsEvent {
+  final double threshold;
+  const UpdateTranslationConfidenceThreshold(this.threshold);
+  @override
+  List<Object> get props => [threshold];
+}
+
+class UpdateGeminiApiKey extends SettingsEvent {
+  final String apiKey;
+  const UpdateGeminiApiKey(this.apiKey);
+  @override
+  List<Object> get props => [apiKey];
+}
+
+class UpdateOpenAiApiKey extends SettingsEvent {
+  final String apiKey;
+  const UpdateOpenAiApiKey(this.apiKey);
+  @override
+  List<Object> get props => [apiKey];
+}
+
+class UpdateDefaultAiModel extends SettingsEvent {
+  final String model;
+  const UpdateDefaultAiModel(this.model);
+  @override
+  List<Object> get props => [model];
+}
+
+class UpdateSystemTranslationContext extends SettingsEvent {
+  final String context;
+  const UpdateSystemTranslationContext(this.context);
+  @override
+  List<Object> get props => [context];
+}
+
+class UpdateContextStringsCount extends SettingsEvent {
+  final int count;
+  const UpdateContextStringsCount(this.count);
+  @override
+  List<Object> get props => [count];
+}
+
+class UpdateIncludeContextStrings extends SettingsEvent {
+  final bool include;
+  const UpdateIncludeContextStrings(this.include);
+  @override
+  List<Object> get props => [include];
+}
+
+// Version Control Events
+class UpdateDefaultGitRepositoryPath extends SettingsEvent {
+  final String path;
+  const UpdateDefaultGitRepositoryPath(this.path);
+  @override
+  List<Object> get props => [path];
+}
+
+class UpdateAutoCommitOnSave extends SettingsEvent {
+  final bool enabled;
+  const UpdateAutoCommitOnSave(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateGitUserName extends SettingsEvent {
+  final String userName;
+  const UpdateGitUserName(this.userName);
+  @override
+  List<Object> get props => [userName];
+}
+
+class UpdateGitUserEmail extends SettingsEvent {
+  final String userEmail;
+  const UpdateGitUserEmail(this.userEmail);
+  @override
+  List<Object> get props => [userEmail];
+}
+
+class UpdateEnableGitIntegration extends SettingsEvent {
+  final bool enabled;
+  const UpdateEnableGitIntegration(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+// Reset events for new categories
+class ResetAiServicesSettings extends SettingsEvent {}
+
+class ResetVersionControlSettings extends SettingsEvent {} 

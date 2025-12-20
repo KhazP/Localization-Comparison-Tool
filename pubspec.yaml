@@ -30,7 +30,12 @@ dependencies:
   watcher: ^1.1.0 # For file system watching
   desktop_drop: ^0.4.4 # For drag & drop file support
   cross_file: ^0.3.3+8 # For XFile type used in drag & drop
-  # flutter_secure_storage: # For secure API key storage (for AI Translation)
+  url_launcher: ^6.2.5 # For opening URLs and email links
+  package_info_plus: ^6.0.0 # For dynamic app version information
+  device_info_plus: ^10.1.0 # For platform detection
+  flutter_secure_storage: ^9.0.0 # For secure API key storage (for AI Translation)
+  google_fonts: ^6.1.0 # For custom fonts (Inter)
+  get_it: ^7.6.7 # Service locator for dependency injection
   # google_mlkit_translation: # For AI Translation (will be added with AI Translation feature)
   # window_manager: # For native desktop integration (as per Tech Design)
 
@@ -39,7 +44,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0 # Or your preferred linter version
   hive_generator: ^2.0.1 # For Hive model generation
-  build_runner: ^2.4.8 # For running code generators
+  build_runner: ^2.4.14 # For running code generators
   bloc_test: ^9.1.0   # Or your current/latest compatible version
   mocktail: ^1.0.0    # Or your current/latest compatible version
 

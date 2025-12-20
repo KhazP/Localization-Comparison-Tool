@@ -12,7 +12,14 @@ class AddToHistory extends HistoryEvent {
   AddToHistory(this.session);
 }
 
+class DeleteHistoryItem extends HistoryEvent {
+  final String sessionId;
+  DeleteHistoryItem(this.sessionId);
+}
+
 class ClearHistory extends HistoryEvent {}
+
+class UndoDeleteHistoryItem extends HistoryEvent {}
 
 // States
 abstract class HistoryState {}
@@ -34,11 +41,14 @@ class HistoryError extends HistoryState {
 // BLoC
 class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   final HistoryRepository historyRepository;
+  ComparisonSession? _lastDeletedSession;
 
   HistoryBloc({required this.historyRepository}) : super(HistoryInitial()) {
     on<LoadHistory>(_onLoadHistory);
     on<AddToHistory>(_onAddToHistory);
+    on<DeleteHistoryItem>(_onDeleteHistoryItem);
     on<ClearHistory>(_onClearHistory);
+    on<UndoDeleteHistoryItem>(_onUndoDeleteHistoryItem);
   }
 
   Future<void> _onLoadHistory(LoadHistory event, Emitter<HistoryState> emit) async {
@@ -52,16 +62,42 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   }
 
   Future<void> _onAddToHistory(AddToHistory event, Emitter<HistoryState> emit) async {
-    // No loading state for add, or a specific 'AddingToHistory' state if preferred
     try {
       await historyRepository.addComparisonToHistory(event.session);
-      // After adding, reload the history to reflect the change
       add(LoadHistory()); 
     } catch (e) {
       emit(HistoryError('Failed to add to history: ${e.toString()}'));
-      // Optionally, re-emit previous loaded state if available
     }
   }
+
+  Future<void> _onDeleteHistoryItem(DeleteHistoryItem event, Emitter<HistoryState> emit) async {
+    try {
+      // Find the session before deleting it to allow for Undo
+      if (state is HistoryLoaded) {
+          final sessions = (state as HistoryLoaded).history;
+          _lastDeletedSession = sessions.firstWhere((s) => s.id == event.sessionId);
+      }
+
+      await historyRepository.deleteSession(event.sessionId);
+      add(LoadHistory());
+    } catch (e) {
+      emit(HistoryError('Failed to delete history item: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onUndoDeleteHistoryItem(UndoDeleteHistoryItem event, Emitter<HistoryState> emit) async {
+    if (_lastDeletedSession != null) {
+      try {
+        await historyRepository.addComparisonToHistory(_lastDeletedSession!);
+        _lastDeletedSession = null;
+        add(LoadHistory());
+      } catch (e) {
+        emit(HistoryError('Failed to undo delete: ${e.toString()}'));
+      }
+    }
+  }
+
+
 
   Future<void> _onClearHistory(ClearHistory event, Emitter<HistoryState> emit) async {
     emit(HistoryLoading()); // Or a specific 'ClearingHistory' state

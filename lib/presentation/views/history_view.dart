@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
-import 'package:localizer_app_main/data/models/comparison_history.dart';
-import 'dart:io'; // For Platform.pathSeparator
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'dart:io';
 
 class HistoryView extends StatefulWidget {
-  final Function(int) onNavigateToTab; // Callback to navigate tabs
+  final Function(int) onNavigateToTab;
 
   const HistoryView({super.key, required this.onNavigateToTab});
 
@@ -16,33 +17,37 @@ class HistoryView extends StatefulWidget {
   State<HistoryView> createState() => _HistoryViewState();
 }
 
-class _HistoryViewState extends State<HistoryView> {
+class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStateMixin {
   final TextEditingController _filterController = TextEditingController();
   List<ComparisonSession> _allHistory = [];
   List<ComparisonSession> _filteredHistory = [];
-  // Remove _sortColumnIndex, _sortAscending, and _dataSource as PaginatedDataTable is being replaced
-  // int _sortColumnIndex = 0;
-  // bool _sortAscending = true;
-  // _HistoryDataSource? _dataSource;
-
-  // Map to track expansion state of each history item
   final Map<String, bool> _expandedStates = {};
-  String _sortBy = 'timestamp'; // Default sort
-  bool _sortAscending = false; // Default to descending for timestamp
-
+  String _sortBy = 'timestamp';
+  bool _sortAscending = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _filterController.addListener(_filterHistory);
-    // Initial load of history
     context.read<HistoryBloc>().add(LoadHistory());
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+    _animationController.forward();
   }
 
   @override
   void dispose() {
     _filterController.removeListener(_filterHistory);
     _filterController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -53,7 +58,7 @@ class _HistoryViewState extends State<HistoryView> {
         return session.file1Path.toLowerCase().contains(filter) ||
                session.file2Path.toLowerCase().contains(filter);
       }).toList();
-      _applySort(); // Re-apply sort after filtering
+      _applySort();
     });
   }
 
@@ -76,350 +81,237 @@ class _HistoryViewState extends State<HistoryView> {
     });
   }
 
-
   void _setSort(String sortBy) {
     setState(() {
       if (_sortBy == sortBy) {
         _sortAscending = !_sortAscending;
       } else {
         _sortBy = sortBy;
-        _sortAscending = true; // Default to ascending for new column
-        if (sortBy == 'timestamp') _sortAscending = false; // Default to descending for timestamp
+        _sortAscending = sortBy != 'timestamp';
       }
       _applySort();
     });
   }
-  
-  // Removed _updateDataSource as PaginatedDataTable is no longer used.
-
-  // _formatSummary is no longer needed here as it will be part of the list item widget
-  // String _formatSummary(ComparisonSession session) { ... }
 
   void _onViewDetails(ComparisonSession session) {
-    // Navigate to Basic Comparison View (index 0)
     widget.onNavigateToTab(0);
-    // Dispatch event to ComparisonBloc to load the files
-    context.read<ComparisonBloc>().add(
-          CompareFilesFromHistoryRequested(session.file1Path, session.file2Path),
-        );
+    final settingsState = context.read<SettingsBloc>().state;
+    if (settingsState.status == SettingsStatus.loaded) {
+      context.read<ComparisonBloc>().add(
+        CompareFilesFromHistoryRequested(
+          file1Path: session.file1Path,
+          file2Path: session.file2Path,
+          settings: settingsState.appSettings,
+        ),
+      );
+    }
   }
 
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<SettingsBloc, SettingsState>(
-      builder: (context, settingsState) {
-        final theme = Theme.of(context);
-        final bool isDarkMode = theme.brightness == Brightness.dark;
-        final bool isAmoled = isDarkMode &&
-                              settingsState.status == SettingsStatus.loaded &&
-                              settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-
-        final Color appBarBgColor = isAmoled
-            ? Colors.black
-            : (isDarkMode ? const Color(0xFF2A2D3E) : Colors.grey[50]!);
-        final Color appBarContentColor = isAmoled
-            ? Colors.white70
-            : (isDarkMode ? Colors.white : Colors.black);
-        
-        final Color mainContentBgColor = isAmoled
-            ? Colors.black
-            : (isDarkMode ? const Color(0xFF2A2D3E) : Colors.grey[100]!);
-        
-        final Color searchFieldFillColor = isAmoled
-            ? Colors.grey[900]! // Very dark grey for field itself on black background
-            : (isDarkMode ? const Color(0xFF3A3D4E) : Colors.white);
-        final Color searchFieldHintColor = isAmoled
-            ? Colors.grey[600]!
-            : (isDarkMode ? Colors.grey[400]! : Colors.grey[700]!);
-        final Color searchFieldTextColor = isAmoled
-            ? Colors.grey[300]!
-            : (isDarkMode ? Colors.white : Colors.black);
-        final Color searchFieldIconColor = isAmoled
-            ? Colors.grey[500]!
-            : (isDarkMode ? Colors.grey[300]! : Colors.grey[600]!);
-        
-        final Color popupMenuBgColor = isAmoled
-            ? Colors.grey[900]! // Consistent with search field
-            : (isDarkMode ? const Color(0xFF3A3D4E) : Colors.white);
-        final Color popupMenuIconColor = isAmoled
-            ? Colors.grey[400]!
-            : (isDarkMode ? Colors.white70 : Colors.black54);
-
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Comparison History', style: TextStyle(color: appBarContentColor)),
-            backgroundColor: appBarBgColor,
-            elevation: isAmoled ? 0.2 : 1.0,
-            iconTheme: IconThemeData(color: appBarContentColor), // For potential leading icon
-            actions: [
-              IconButton(
-                icon: Icon(Icons.delete_sweep, color: appBarContentColor.withOpacity(0.8)),
-                tooltip: 'Clear History',
-                onPressed: () async { 
-                  final confirmClear = await showDialog<bool>(
-                    context: context,
-                    builder: (BuildContext dialogContext) => AlertDialog(
-                      title: const Text('Confirm Clear'),
-                      content: const Text('Are you sure you want to clear all comparison history? This action cannot be undone.'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-                          onPressed: () => Navigator.of(dialogContext).pop(true),
-                          child: const Text('Clear All'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirmClear == true) {
-                    context.read<HistoryBloc>().add(ClearHistory());
-                  }
-                },
-              )
-            ],
-          ),
-          body: BlocConsumer<HistoryBloc, HistoryState>(
-            listener: (context, state) {
-              if (state is HistoryLoaded) {
-                setState(() {
-                  _allHistory = state.history;
-                  _filteredHistory = List.from(_allHistory);
-                  _applySort();
-                });
-              } else if (state is HistoryError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: ${state.message}')),
-                );
-              }
-            },
-            builder: (context, state) {
-              if (state is HistoryLoading && _allHistory.isEmpty) { 
-                return Center(child: CircularProgressIndicator(color: theme.colorScheme.primary));
-              }
-              if (_allHistory.isEmpty && state is! HistoryLoading) {
-                return Center(child: Text('No comparison history yet.', style: TextStyle(color: isAmoled ? Colors.grey[500] : (isDarkMode ? Colors.grey[400] : Colors.grey[700]))));
-              }
-
-              return Container(
-                color: mainContentBgColor, // Main background for list area
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _filterController,
-                              style: TextStyle(color: searchFieldTextColor),
-                              decoration: InputDecoration(
-                                hintText: 'Filter by file name...',
-                                hintStyle: TextStyle(color: searchFieldHintColor),
-                                prefixIcon: Icon(Icons.search, color: searchFieldIconColor),
-                                filled: true,
-                                fillColor: searchFieldFillColor,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: isAmoled ? BorderSide(color: Colors.grey[700]!) : BorderSide.none 
-                                ),
-                                enabledBorder: OutlineInputBorder( // Added for consistency
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: isAmoled ? BorderSide(color: Colors.grey[700]!) : BorderSide.none
-                                ),
-                                focusedBorder: OutlineInputBorder( // Added for consistency
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  borderSide: isAmoled ? BorderSide(color: theme.colorScheme.primary) : BorderSide(color: theme.colorScheme.primary, width:1.5)
-                                ),
-                                suffixIcon: _filterController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: Icon(Icons.clear, color: searchFieldIconColor),
-                                        onPressed: () {
-                                          _filterController.clear();
-                                        },
-                                      )
-                                    : null,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          PopupMenuButton<String>(
-                            icon: Icon(Icons.sort, color: popupMenuIconColor),
-                            tooltip: "Sort By",
-                            onSelected: _setSort,
-                            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
-                                value: 'timestamp',
-                                child: Text('Sort by Date'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'file1Path',
-                                child: Text('Sort by Source File'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'file2Path',
-                                child: Text('Sort by Target File'),
-                              ),
-                            ],
-                             color: popupMenuBgColor, // Background for the dropdown menu
-                             // Text style for popup menu items will inherit, or can be set via itemBuilder if needed
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: _filteredHistory.isEmpty
-                          ? Center(child: Text('No results match your filter.', style: TextStyle(color: isAmoled ? Colors.grey[500] : (isDarkMode ? Colors.grey[400] : Colors.grey[700]))))
-                          : ListView.builder(
-                              itemCount: _filteredHistory.length,
-                              itemBuilder: (context, index) {
-                                final session = _filteredHistory[index];
-                                final isExpanded = _expandedStates[session.id] ?? false;
-                                return _buildHistoryCard(context, session, isExpanded, isDarkMode, isAmoled);
-                              },
-                            ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      }
+  void _deleteSession(ComparisonSession session) {
+    context.read<HistoryBloc>().add(DeleteHistoryItem(session.id));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('History item deleted'),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            context.read<HistoryBloc>().add(UndoDeleteHistoryItem());
+          },
+        ),
+      ),
     );
   }
 
-  Widget _buildHistoryCard(BuildContext context, ComparisonSession session, bool isExpanded, bool isDarkMode, bool isAmoled) {
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Define colors for stats based on mockup (these are semantic, should be okay for Amoled if contrast is good)
-    final Color newColor = isAmoled 
-        ? Colors.greenAccent[100]! // Lighter for Amoled
-        : (isDarkMode ? Colors.greenAccent.shade400 : Colors.green.shade700);
-    final Color delColor = isAmoled 
-        ? Colors.red[300]! // Lighter for Amoled
-        : (isDarkMode ? Colors.redAccent.shade400 : Colors.red.shade700);
-    final Color modColor = isAmoled 
-        ? Colors.orange[300]! // Lighter for Amoled
-        : (isDarkMode ? Colors.orangeAccent.shade400 : Colors.orange.shade700);
-    
-    String formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm').format(session.timestamp);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
-    // Define text and icon colors for Amoled
-    final Color cardTextColor = isAmoled ? Colors.grey[400]! : (isDarkMode ? Colors.grey[300]! : Colors.grey[700]!);
-    final Color cardMutedTextColor = isAmoled ? Colors.grey[500]! : (isDarkMode ? Colors.grey[400]! : Colors.grey[700]!);
-    final Color cardIconColor = isAmoled ? Colors.grey[500]! : (isDarkMode ? Colors.grey[400]! : Colors.grey[700]!);
-    final Color expandIconColor = isAmoled ? Colors.grey[500]! : (isDarkMode ? Colors.white70 : Colors.black54);
-    final Color noChangesTextColor = isAmoled ? Colors.grey[500]! : (isDarkMode ? Colors.grey[400]! : Colors.grey[600]!);
-
-    final Color cardInkWellSplashColor = isAmoled ? Colors.white.withOpacity(0.05) : theme.splashColor;
-    final Color cardInkWellHighlightColor = isAmoled ? Colors.white.withOpacity(0.03) : theme.highlightColor;
-
-    return Card(
-      color: isAmoled ? Colors.black : (isDarkMode ? const Color(0xFF3A3D4E) : Colors.white),
-      elevation: isAmoled ? 0.2 : 2.0,
-      shape: isAmoled 
-          ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0), // Or your desired radius
-              side: BorderSide(color: Colors.grey[850]!)
-            )
-          : null, // Default shape with elevation for non-Amoled
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _expandedStates[session.id] = !isExpanded;
-          });
-        },
-        splashColor: cardInkWellSplashColor,
-        highlightColor: cardInkWellHighlightColor,
-        borderRadius: BorderRadius.circular(12.0), // Match card's border radius for ink effects
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.schedule, size: 16, color: cardIconColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        formattedTimestamp,
-                        style: TextStyle(fontSize: 13, color: cardMutedTextColor),
-                      ),
-                    ],
-                  ),
                   Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: expandIconColor,
+                    Icons.history_rounded,
+                    size: 28,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Comparison History',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  // Clear all button
+                  Tooltip(
+                    message: 'Clear all history',
+                    child: IconButton(
+                      onPressed: () => _showClearConfirmation(context),
+                      icon: Icon(
+                        Icons.delete_sweep_rounded,
+                        color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              if (!isExpanded) ...[ // Collapsed view: Summary stats
-                const SizedBox(height: 12),
-                 Row(
-                  children: [
-                    if (session.stringsAdded > 0) ...[
-                      Icon(Icons.add_circle_outline, color: newColor, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${session.stringsAdded} new', style: TextStyle(color: newColor, fontSize: 13, fontWeight: FontWeight.w500)),
-                      const SizedBox(width: 12),
-                    ],
-                    if (session.stringsRemoved > 0) ...[
-                      Icon(Icons.remove_circle_outline, color: delColor, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${session.stringsRemoved} del', style: TextStyle(color: delColor, fontSize: 13, fontWeight: FontWeight.w500)),
-                      const SizedBox(width: 12),
-                    ],
-                    if (session.stringsModified > 0) ...[
-                      Icon(Icons.sync_alt, color: modColor, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${session.stringsModified} mod', style: TextStyle(color: modColor, fontSize: 13, fontWeight: FontWeight.w500)),
-                    ],
-                    if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
-                      Text('No changes', style: TextStyle(color: noChangesTextColor, fontSize: 13)),
-                  ],
-                ),
-              ],
-              if (isExpanded) ...[ // Expanded view: Detailed info
-                const SizedBox(height: 12),
-                _buildDetailRow('Source:', session.file1Path.split(Platform.pathSeparator).last, Icons.article_outlined, isDarkMode, theme, isAmoled, fullPath: session.file1Path),
-                const SizedBox(height: 8),
-                _buildDetailRow('Target:', session.file2Path.split(Platform.pathSeparator).last, Icons.article_outlined, isDarkMode, theme, isAmoled, fullPath: session.file2Path),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    if (session.stringsAdded > 0) _buildStatChip('${session.stringsAdded} new', newColor, Icons.add_circle_outline, isAmoled),
-                    if (session.stringsRemoved > 0) _buildStatChip('${session.stringsRemoved} del', delColor, Icons.remove_circle_outline, isAmoled),
-                    if (session.stringsModified > 0) _buildStatChip('${session.stringsModified} mod', modColor, Icons.sync_alt, isAmoled),
-                     if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
-                      Text('No changes detected', style: TextStyle(color: noChangesTextColor, fontStyle: FontStyle.italic)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    icon: Icon(Icons.visibility_outlined, size: 18, color: theme.colorScheme.primary),
-                    label: Text('View in Comparison', style: TextStyle(color: theme.colorScheme.primary, fontSize: 13)),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      minimumSize: Size.zero,
+              const SizedBox(height: 20),
+
+              // Search and Sort Row
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _filterController,
+                        decoration: InputDecoration(
+                          hintText: 'Search by file name...',
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          ),
+                          suffixIcon: _filterController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.clear_rounded,
+                                    size: 20,
+                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                  ),
+                                  onPressed: () => _filterController.clear(),
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                      ),
                     ),
-                    onPressed: () => _onViewDetails(session),
                   ),
+                  const SizedBox(width: 12),
+                  // Sort dropdown
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                      ),
+                    ),
+                    child: PopupMenuButton<String>(
+                      onSelected: _setSort,
+                      tooltip: 'Sort by',
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.sort_rounded,
+                              size: 20,
+                              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _getSortLabel(),
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            Icon(
+                              _sortAscending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                              size: 16,
+                              color: colorScheme.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                      itemBuilder: (context) => [
+                        _buildSortMenuItem('timestamp', 'Date', Icons.schedule_rounded),
+                        _buildSortMenuItem('file1Path', 'Source File', Icons.source_rounded),
+                        _buildSortMenuItem('file2Path', 'Target File', Icons.compare_arrows_rounded),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // History List
+              Expanded(
+                child: BlocConsumer<HistoryBloc, HistoryState>(
+                  listener: (context, state) {
+                    if (state is HistoryLoaded) {
+                      setState(() {
+                        _allHistory = state.history;
+                        _filteredHistory = List.from(_allHistory);
+                        _applySort();
+                      });
+                    } else if (state is HistoryError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error: ${state.message}'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  builder: (context, state) {
+                    if (state is HistoryLoading && _allHistory.isEmpty) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: colorScheme.primary,
+                        ),
+                      );
+                    }
+
+                    if (_allHistory.isEmpty) {
+                      return _buildEmptyState(context);
+                    }
+
+                    if (_filteredHistory.isEmpty) {
+                      return _buildNoResultsState(context);
+                    }
+
+                    return ListView.builder(
+                      itemCount: _filteredHistory.length,
+                      itemBuilder: (context, index) {
+                        final session = _filteredHistory[index];
+                        return _HistoryCard(
+                          session: session,
+                          isExpanded: _expandedStates[session.id] ?? false,
+                          onTap: () {
+                            setState(() {
+                              _expandedStates[session.id] = !(_expandedStates[session.id] ?? false);
+                            });
+                          },
+                          onView: () => _onViewDetails(session),
+                          onDelete: () => _deleteSession(session),
+                        );
+                      },
+                    );
+                  },
                 ),
-              ],
+              ),
             ],
           ),
         ),
@@ -427,30 +319,422 @@ class _HistoryViewState extends State<HistoryView> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, bool isDarkMode, ThemeData theme, bool isAmoled, {String? fullPath}) {
-    final Color detailIconColor = isAmoled 
-        ? Colors.blue[400]! 
-        : (isDarkMode ? Colors.blue[300]! : theme.primaryColor);
-    final Color detailLabelColor = isAmoled 
-        ? Colors.grey[350]! 
-        : (isDarkMode ? Colors.grey[300]! : Colors.black87);
-    final Color detailValueColor = isAmoled 
-        ? Colors.grey[350]! 
-        : (isDarkMode ? Colors.grey[300]! : Colors.black87);
+  String _getSortLabel() {
+    switch (_sortBy) {
+      case 'file1Path':
+        return 'Source';
+      case 'file2Path':
+        return 'Target';
+      default:
+        return 'Date';
+    }
+  }
+
+  PopupMenuItem<String> _buildSortMenuItem(String value, String label, IconData icon) {
+    final theme = Theme.of(context);
+    final isSelected = _sortBy == value;
+    
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isSelected ? theme.colorScheme.primary : null,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? theme.colorScheme.primary : null,
+              fontWeight: isSelected ? FontWeight.w600 : null,
+            ),
+          ),
+          if (isSelected) ...[
+            const Spacer(),
+            Icon(
+              Icons.check_rounded,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.history_rounded,
+            size: 72,
+            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No comparison history yet',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your file comparisons will appear here',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.search_off_rounded,
+            size: 64,
+            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No results found',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Try adjusting your search',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showClearConfirmation(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear All History?'),
+        content: const Text(
+          'This will permanently delete all comparison history. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppThemeV2.error,
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      context.read<HistoryBloc>().add(ClearHistory());
+    }
+  }
+}
+
+class _HistoryCard extends StatefulWidget {
+  final ComparisonSession session;
+  final bool isExpanded;
+  final VoidCallback onTap;
+  final VoidCallback onView;
+  final VoidCallback onDelete;
+
+  const _HistoryCard({
+    required this.session,
+    required this.isExpanded,
+    required this.onTap,
+    required this.onView,
+    required this.onDelete,
+  });
+
+  @override
+  State<_HistoryCard> createState() => _HistoryCardState();
+}
+
+class _HistoryCardState extends State<_HistoryCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final session = widget.session;
+    final formattedDate = DateFormat('MMM dd, yyyy • HH:mm').format(session.timestamp);
+
+    // Determine the dominant status color for the left border
+    Color statusColor;
+    if (session.stringsAdded > 0 && session.stringsRemoved == 0 && session.stringsModified == 0) {
+      statusColor = AppThemeV2.added;
+    } else if (session.stringsRemoved > 0 && session.stringsAdded == 0 && session.stringsModified == 0) {
+      statusColor = AppThemeV2.removed;
+    } else if (session.stringsModified > 0 || (session.stringsAdded > 0 && session.stringsRemoved > 0)) {
+      statusColor = AppThemeV2.modified;
+    } else if (session.stringsAdded > 0 || session.stringsRemoved > 0) {
+      statusColor = AppThemeV2.modified;
+    } else {
+      statusColor = isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder;
+    }
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: _isHovered
+              ? (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover)
+              : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left status indicator
+                Container(
+                  width: 4,
+                  constraints: BoxConstraints(
+                    minHeight: widget.isExpanded ? 140 : 80,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      bottomLeft: Radius.circular(14),
+                    ),
+                  ),
+                ),
+                // Content
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header row
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 14,
+                              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              formattedDate,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                              ),
+                            ),
+                            const Spacer(),
+                            // Stats pills
+                            if (!widget.isExpanded) ...[
+                              if (session.stringsAdded > 0)
+                                _StatPill(
+                                  count: session.stringsAdded,
+                                  color: AppThemeV2.added,
+                                  icon: Icons.add_rounded,
+                                ),
+                              if (session.stringsRemoved > 0)
+                                _StatPill(
+                                  count: session.stringsRemoved,
+                                  color: AppThemeV2.removed,
+                                  icon: Icons.remove_rounded,
+                                ),
+                              if (session.stringsModified > 0)
+                                _StatPill(
+                                  count: session.stringsModified,
+                                  color: AppThemeV2.modified,
+                                  icon: Icons.edit_rounded,
+                                ),
+                              if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
+                                Text(
+                                  'No changes',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                            ],
+                            AnimatedRotation(
+                              turns: widget.isExpanded ? 0.5 : 0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Expanded content
+                        if (widget.isExpanded) ...[
+                          const SizedBox(height: 16),
+                          _FilePathRow(
+                            label: 'Source',
+                            path: session.file1Path,
+                            icon: Icons.source_rounded,
+                            color: AppThemeV2.primary,
+                          ),
+                          const SizedBox(height: 8),
+                          _FilePathRow(
+                            label: 'Target',
+                            path: session.file2Path,
+                            icon: Icons.compare_arrows_rounded,
+                            color: AppThemeV2.secondary,
+                          ),
+                          const SizedBox(height: 12),
+                          
+                          // Stats row
+                          Row(
+                            children: [
+                              if (session.stringsAdded > 0)
+                                _StatChip(
+                                  label: 'Added',
+                                  count: session.stringsAdded,
+                                  color: AppThemeV2.added,
+                                  icon: Icons.add_circle_outline_rounded,
+                                ),
+                              if (session.stringsRemoved > 0)
+                                _StatChip(
+                                  label: 'Removed',
+                                  count: session.stringsRemoved,
+                                  color: AppThemeV2.removed,
+                                  icon: Icons.remove_circle_outline_rounded,
+                                ),
+                              if (session.stringsModified > 0)
+                                _StatChip(
+                                  label: 'Modified',
+                                  count: session.stringsModified,
+                                  color: AppThemeV2.modified,
+                                  icon: Icons.sync_alt_rounded,
+                                ),
+                              if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
+                                Text(
+                                  'No changes detected',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          
+                          // Actions row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: widget.onDelete,
+                                icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppThemeV2.error),
+                                label: Text('Delete', style: TextStyle(color: AppThemeV2.error)),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              FilledButton.icon(
+                                onPressed: widget.onView,
+                                icon: const Icon(Icons.visibility_rounded, size: 18),
+                                label: const Text('View Details'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilePathRow extends StatelessWidget {
+  final String label;
+  final String path;
+  final IconData icon;
+  final Color color;
+
+  const _FilePathRow({
+    required this.label,
+    required this.path,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final fileName = path.split(Platform.pathSeparator).last;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: detailIconColor),
-        const SizedBox(width: 8),
-        Text(label, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13, color: detailLabelColor)),
-        const SizedBox(width: 4),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 14, color: color),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          '$label: ',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         Expanded(
           child: Tooltip(
-            message: fullPath ?? value,
+            message: path,
             child: Text(
-              value,
-              style: TextStyle(fontSize: 13, color: detailValueColor),
+              fileName,
+              style: theme.textTheme.bodyMedium,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -458,27 +742,40 @@ class _HistoryViewState extends State<HistoryView> {
       ],
     );
   }
+}
 
-  Widget _buildStatChip(String text, Color color, IconData icon, bool isAmoled) {
-    final Color chipBackgroundColor = isAmoled ? color.withOpacity(0.1) : color.withOpacity(0.15);
-    final Color chipBorderColor = isAmoled ? color.withOpacity(0.3) : color.withOpacity(0.5);
+class _StatPill extends StatelessWidget {
+  final int count;
+  final Color color;
+  final IconData icon;
 
+  const _StatPill({
+    required this.count,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      margin: const EdgeInsets.only(left: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: chipBackgroundColor,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: chipBorderColor, width: 0.5)
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 14),
+          Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
           Text(
-            text,
-            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500),
+            count.toString(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -486,5 +783,44 @@ class _HistoryViewState extends State<HistoryView> {
   }
 }
 
-// _HistoryDataSource class is no longer needed and should be removed.
-// class _HistoryDataSource extends DataTableSource { ... } 
+class _StatChip extends StatelessWidget {
+  final String label;
+  final int count;
+  final Color color;
+  final IconData icon;
+
+  const _StatChip({
+    required this.label,
+    required this.count,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            '$count $label',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -66,7 +66,7 @@
 
 **4. AI-Assisted Translation**
 
-- Integration with Google Translate API (user-provided keys)
+- Integration with Gemini/OpenAI/Claude/OpenRouter (user-provided keys)
 - On-demand translation suggestions for missing strings
 - Local caching of frequent translations for performance
 

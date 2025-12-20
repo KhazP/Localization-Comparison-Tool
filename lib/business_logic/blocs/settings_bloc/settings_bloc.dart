@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 
@@ -8,9 +9,13 @@ part 'settings_state.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository _settingsRepository;
+  final SecureStorageService _secureStorageService;
 
-  SettingsBloc({required SettingsRepository settingsRepository})
-      : _settingsRepository = settingsRepository,
+  SettingsBloc({
+    required SettingsRepository settingsRepository,
+    required SecureStorageService secureStorageService,
+  })  : _settingsRepository = settingsRepository,
+        _secureStorageService = secureStorageService,
         super(SettingsState.initial()) {
     on<LoadSettings>(_onLoadSettings);
     on<UpdateDefaultSourceFormat>(_onUpdateDefaultSourceFormat);
@@ -39,13 +44,64 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<ResetComparisonSettings>(_onResetComparisonSettings);
     on<ResetAppearanceSettings>(_onResetAppearanceSettings);
     on<ResetAllSettings>(_onResetAllSettings);
+    // AI Services Events
+    on<UpdateAiTranslationService>(_onUpdateAiTranslationService);
+    on<UpdateGoogleTranslateApiKey>(_onUpdateGoogleTranslateApiKey);
+    on<UpdateDeeplApiKey>(_onUpdateDeeplApiKey);
+    on<UpdateEnableAiTranslation>(_onUpdateEnableAiTranslation);
+    on<UpdateTranslationConfidenceThreshold>(_onUpdateTranslationConfidenceThreshold);
+
+    on<UpdateGeminiApiKey>(_onUpdateGeminiApiKey);
+    on<UpdateOpenAiApiKey>(_onUpdateOpenAiApiKey);
+    on<UpdateDefaultAiModel>(_onUpdateDefaultAiModel);
+    on<UpdateSystemTranslationContext>(_onUpdateSystemTranslationContext);
+    on<UpdateContextStringsCount>(_onUpdateContextStringsCount);
+    on<UpdateIncludeContextStrings>(_onUpdateIncludeContextStrings);
+    // Version Control Events
+    on<UpdateDefaultGitRepositoryPath>(_onUpdateDefaultGitRepositoryPath);
+    on<UpdateAutoCommitOnSave>(_onUpdateAutoCommitOnSave);
+    on<UpdateGitUserName>(_onUpdateGitUserName);
+    on<UpdateGitUserEmail>(_onUpdateGitUserEmail);
+    on<UpdateEnableGitIntegration>(_onUpdateEnableGitIntegration);
+    // Reset events for new categories
+    on<ResetAiServicesSettings>(_onResetAiServicesSettings);
+    on<ResetVersionControlSettings>(_onResetVersionControlSettings);
   }
 
   Future<void> _onLoadSettings(
       LoadSettings event, Emitter<SettingsState> emit) async {
     emit(state.copyWith(status: SettingsStatus.loading));
     try {
-      final settings = await _settingsRepository.loadSettings();
+      var settings = await _settingsRepository.loadSettings();
+      
+      // Load API keys from secure storage
+      final googleKey = await _secureStorageService.getGoogleApiKey();
+      final deeplKey = await _secureStorageService.getDeepLApiKey();
+      final geminiKey = await _secureStorageService.getGeminiApiKey();
+      final openaiKey = await _secureStorageService.getOpenAiApiKey();
+
+      // Migration: If keys are in Hive but not in SecureStorage, move them
+      if (googleKey == null && settings.googleTranslateApiKey.isNotEmpty) {
+        await _secureStorageService.storeGoogleApiKey(settings.googleTranslateApiKey);
+      }
+      if (deeplKey == null && settings.deeplApiKey.isNotEmpty) {
+        await _secureStorageService.storeDeepLApiKey(settings.deeplApiKey);
+      }
+      if (geminiKey == null && settings.geminiApiKey.isNotEmpty) {
+        await _secureStorageService.storeGeminiApiKey(settings.geminiApiKey);
+      }
+      if (openaiKey == null && settings.openaiApiKey.isNotEmpty) {
+        await _secureStorageService.storeOpenAiApiKey(settings.openaiApiKey);
+      }
+
+      // Update settings with keys from SecureStorage (or keep existing if just migrated)
+      settings = settings.copyWith(
+        googleTranslateApiKey: googleKey ?? settings.googleTranslateApiKey,
+        deeplApiKey: deeplKey ?? settings.deeplApiKey,
+        geminiApiKey: geminiKey ?? settings.geminiApiKey,
+        openaiApiKey: openaiKey ?? settings.openaiApiKey,
+      );
+
       emit(state.copyWith(appSettings: settings, status: SettingsStatus.loaded));
     } catch (e) {
       emit(state.copyWith(
@@ -53,17 +109,28 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     }
   }
 
+  Future<void> _saveSettingsToRepository(AppSettings settings) async {
+    // Create a copy for storage that has empty API keys to avoid saving them to Hive
+    final storageSettings = settings.copyWith(
+      googleTranslateApiKey: '',
+      deeplApiKey: '',
+      geminiApiKey: '',
+      openaiApiKey: '',
+    );
+    await _settingsRepository.saveSettings(storageSettings);
+  }
+
   Future<void> _onUpdateDefaultSourceFormat(
       UpdateDefaultSourceFormat event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(defaultSourceFormat: event.newFormat);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateDefaultTargetFormat(
       UpdateDefaultTargetFormat event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(defaultTargetFormat: event.newFormat);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -71,7 +138,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       AddIgnorePattern event, Emitter<SettingsState> emit) async {
     final updatedPatterns = List<String>.from(state.appSettings.ignorePatterns)..add(event.pattern);
     final newSettings = state.appSettings.copyWith(ignorePatterns: updatedPatterns);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -79,77 +146,77 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       RemoveIgnorePattern event, Emitter<SettingsState> emit) async {
     final updatedPatterns = List<String>.from(state.appSettings.ignorePatterns)..remove(event.pattern);
     final newSettings = state.appSettings.copyWith(ignorePatterns: updatedPatterns);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateIgnoreCase(
       UpdateIgnoreCase event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(ignoreCase: event.ignoreCase);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateIgnoreWhitespace(
       UpdateIgnoreWhitespace event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(ignoreWhitespace: event.ignoreWhitespace);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateAppLanguage(
       UpdateAppLanguage event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(appLanguage: event.appLanguage);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateDefaultViewOnStartup(
       UpdateDefaultViewOnStartup event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(defaultViewOnStartup: event.defaultView);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateAutoCheckForUpdates(
       UpdateAutoCheckForUpdates event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(autoCheckForUpdates: event.autoCheck);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateAppThemeMode(
       UpdateAppThemeMode event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(appThemeMode: event.themeMode);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateAccentColor(
       UpdateAccentColor event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(accentColorValue: event.colorValue);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateDiffAddedColor(
       UpdateDiffAddedColor event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(diffAddedColor: event.colorValue);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateDiffRemovedColor(
       UpdateDiffRemovedColor event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(diffRemovedColor: event.colorValue);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateDiffModifiedColor(
       UpdateDiffModifiedColor event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(diffModifiedColor: event.colorValue);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -157,7 +224,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateDefaultSourceEncoding event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(defaultSourceEncoding: event.encoding);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -165,7 +232,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateDefaultTargetEncoding event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(defaultTargetEncoding: event.encoding);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -173,14 +240,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateAutoDetectEncoding event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(autoDetectEncoding: event.autoDetect);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateCsvDelimiter(
       UpdateCsvDelimiter event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(csvDelimiter: event.delimiter);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -188,7 +255,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateHandleByteOrderMark event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(handleByteOrderMark: event.handle);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -196,7 +263,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateAutoReloadOnChange event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(autoReloadOnChange: event.enabled);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -204,7 +271,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateDefaultExportDirectory event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(defaultExportDirectory: event.directory);
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -220,7 +287,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       autoReloadOnChange: defaultSettings.autoReloadOnChange,
       defaultExportDirectory: defaultSettings.defaultExportDirectory,
     );
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -232,7 +299,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       defaultViewOnStartup: defaultSettings.defaultViewOnStartup,
       autoCheckForUpdates: defaultSettings.autoCheckForUpdates,
     );
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -244,7 +311,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       ignoreWhitespace: defaultSettings.ignoreWhitespace,
       ignorePatterns: List<String>.from(defaultSettings.ignorePatterns),
     );
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
@@ -258,15 +325,170 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       diffRemovedColor: defaultSettings.diffRemovedColor,
       diffModifiedColor: defaultSettings.diffModifiedColor,
     );
-    await _settingsRepository.saveSettings(newSettings);
+    await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onResetAllSettings(
       ResetAllSettings event, Emitter<SettingsState> emit) async {
+    await _secureStorageService.clearAllKeys();
     final defaultSettings = AppSettings.defaultSettings();
-    await _settingsRepository.saveSettings(defaultSettings);
+    await _saveSettingsToRepository(defaultSettings);
     emit(state.copyWith(appSettings: defaultSettings));
+  }
+
+  // AI Services Event Handlers
+  Future<void> _onUpdateAiTranslationService(
+      UpdateAiTranslationService event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(aiTranslationService: event.service);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateGoogleTranslateApiKey(
+      UpdateGoogleTranslateApiKey event, Emitter<SettingsState> emit) async {
+    await _secureStorageService.storeGoogleApiKey(event.apiKey);
+    final newSettings = state.appSettings.copyWith(googleTranslateApiKey: event.apiKey);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateDeeplApiKey(
+      UpdateDeeplApiKey event, Emitter<SettingsState> emit) async {
+    await _secureStorageService.storeDeepLApiKey(event.apiKey);
+    final newSettings = state.appSettings.copyWith(deeplApiKey: event.apiKey);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateEnableAiTranslation(
+      UpdateEnableAiTranslation event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(enableAiTranslation: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateTranslationConfidenceThreshold(
+      UpdateTranslationConfidenceThreshold event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(translationConfidenceThreshold: event.threshold);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateGeminiApiKey(
+      UpdateGeminiApiKey event, Emitter<SettingsState> emit) async {
+    await _secureStorageService.storeGeminiApiKey(event.apiKey);
+    final newSettings = state.appSettings.copyWith(geminiApiKey: event.apiKey);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateOpenAiApiKey(
+      UpdateOpenAiApiKey event, Emitter<SettingsState> emit) async {
+    await _secureStorageService.storeOpenAiApiKey(event.apiKey);
+    final newSettings = state.appSettings.copyWith(openaiApiKey: event.apiKey);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateDefaultAiModel(
+      UpdateDefaultAiModel event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(defaultAiModel: event.model);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateSystemTranslationContext(
+      UpdateSystemTranslationContext event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(systemTranslationContext: event.context);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateContextStringsCount(
+      UpdateContextStringsCount event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(contextStringsCount: event.count);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateIncludeContextStrings(
+      UpdateIncludeContextStrings event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(includeContextStrings: event.include);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  // Version Control Event Handlers
+  Future<void> _onUpdateDefaultGitRepositoryPath(
+      UpdateDefaultGitRepositoryPath event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(defaultGitRepositoryPath: event.path);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateAutoCommitOnSave(
+      UpdateAutoCommitOnSave event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(autoCommitOnSave: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateGitUserName(
+      UpdateGitUserName event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(gitUserName: event.userName);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateGitUserEmail(
+      UpdateGitUserEmail event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(gitUserEmail: event.userEmail);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateEnableGitIntegration(
+      UpdateEnableGitIntegration event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(enableGitIntegration: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  // Reset Category Event Handlers
+  Future<void> _onResetAiServicesSettings(
+      ResetAiServicesSettings event, Emitter<SettingsState> emit) async {
+    await _secureStorageService.clearAllKeys();
+    final defaultSettings = AppSettings.defaultSettings();
+    final newSettings = state.appSettings.copyWith(
+      aiTranslationService: defaultSettings.aiTranslationService,
+      googleTranslateApiKey: defaultSettings.googleTranslateApiKey,
+      deeplApiKey: defaultSettings.deeplApiKey,
+      enableAiTranslation: defaultSettings.enableAiTranslation,
+      translationConfidenceThreshold: defaultSettings.translationConfidenceThreshold,
+      geminiApiKey: defaultSettings.geminiApiKey,
+      openaiApiKey: defaultSettings.openaiApiKey,
+      defaultAiModel: defaultSettings.defaultAiModel,
+      systemTranslationContext: defaultSettings.systemTranslationContext,
+      contextStringsCount: defaultSettings.contextStringsCount,
+      includeContextStrings: defaultSettings.includeContextStrings,
+    );
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onResetVersionControlSettings(
+      ResetVersionControlSettings event, Emitter<SettingsState> emit) async {
+    final defaultSettings = AppSettings.defaultSettings();
+    final newSettings = state.appSettings.copyWith(
+      defaultGitRepositoryPath: defaultSettings.defaultGitRepositoryPath,
+      autoCommitOnSave: defaultSettings.autoCommitOnSave,
+      gitUserName: defaultSettings.gitUserName,
+      gitUserEmail: defaultSettings.gitUserEmail,
+      enableGitIntegration: defaultSettings.enableGitIntegration,
+    );
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
   }
 }
 

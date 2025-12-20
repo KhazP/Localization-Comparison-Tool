@@ -426,8 +426,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                         });
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isAmoled ? Colors.grey[850] : (isDarkMode ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.secondaryContainer),
-                        foregroundColor: isAmoled ? Colors.white70 : (isDarkMode ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSecondaryContainer),
+                        backgroundColor: isAmoled ? Colors.grey[850] : (isDarkMode ? theme.colorScheme.surface : theme.colorScheme.secondaryContainer),
+                        foregroundColor: isAmoled ? Colors.white70 : (isDarkMode ? theme.colorScheme.onSurface.withOpacity(0.7) : theme.colorScheme.onSecondaryContainer),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         elevation: isAmoled ? 0.5 : 1,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
@@ -513,29 +513,52 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     );
   }
 
-  // Helper method for creating ChoiceChips (to reduce repetition)
+  // Helper method for creating modern filter chips
   Widget _buildFilterChip(AdvancedDiffFilter filter, String label, Color activeColor, bool isDarkMode, ThemeData theme, bool isAmoled) {
     final bool isActive = _currentFilter == filter;
-    return FilterChip(
-      label: Text(label),
-      selected: isActive,
-      onSelected: (bool selected) {
-        if (selected) {
-          setState(() {
-            _currentFilter = filter;
-            _processDiffEntries(); // Re-process with new filter
-          });
-        }
+    
+    final bgColor = isAmoled ? Colors.black : (isDarkMode ? const Color(0xFF1A1A22) : Colors.white);
+    final borderColor = isAmoled ? Colors.grey[800]! : (isDarkMode ? const Color(0xFF2E2E38) : Colors.grey[300]!);
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentFilter = filter;
+          _processDiffEntries();
+        });
       },
-      // ChipThemeData should handle Amoled styling from AppTheme.dart
-      // checkmarkColor: isActive ? (isAmoled ? Colors.black : theme.colorScheme.onPrimary) : null, 
-      // selectedColor: isActive ? (isAmoled ? activeColor.withOpacity(0.7) : activeColor) : null, 
-      // backgroundColor: isAmoled ? Colors.grey[850] : (isDarkMode ? theme.chipTheme.backgroundColor : Colors.grey[300]),
-      // labelStyle: TextStyle(color: isAmoled ? Colors.white70 : (isActive ? theme.colorScheme.onPrimary : theme.chipTheme.labelStyle?.color)),
-      // shape: RoundedRectangleBorder(
-      //   borderRadius: BorderRadius.circular(16.0),
-      //   side: BorderSide(color: isAmoled ? Colors.grey[700]! : (isDarkMode ? theme.chipTheme.shape?.side.color ?? Colors.transparent : Colors.grey[400]!))
-      // ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? activeColor.withAlpha(isDarkMode ? 40 : 25) : bgColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? activeColor : borderColor,
+            width: isActive ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isActive)
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Icon(Icons.check, size: 14, color: activeColor),
+              ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: isActive 
+                    ? activeColor 
+                    : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 } 

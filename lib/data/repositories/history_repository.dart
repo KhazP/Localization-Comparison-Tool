@@ -7,6 +7,7 @@ abstract class HistoryRepository {
   Future<void> init(); // Ensure Hive is initialized and box is open
   Future<void> addComparisonToHistory(ComparisonSession session);
   Future<List<ComparisonSession>> getComparisonHistory();
+  Future<void> deleteSession(String sessionId);
   Future<void> clearHistory();
   Future<void> close(); // Close the Hive box
 }
@@ -17,8 +18,14 @@ class LocalHistoryRepository implements HistoryRepository {
   @override
   Future<void> init() async {
     if (_historyBox == null || !_historyBox!.isOpen) {
-      _historyBox = await Hive.openBox<ComparisonSession>(_historyBoxName);
-      print('Comparison history Hive box opened.');
+      try {
+        _historyBox = await Hive.openBox<ComparisonSession>(_historyBoxName);
+        print('Comparison history Hive box opened.');
+      } catch (e) {
+        print('HistoryRepository: Error opening box: $e. Recreating...');
+        await Hive.deleteBoxFromDisk(_historyBoxName);
+        _historyBox = await Hive.openBox<ComparisonSession>(_historyBoxName);
+      }
     }
   }
 
@@ -44,6 +51,13 @@ class LocalHistoryRepository implements HistoryRepository {
     historyList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     print('Retrieved ${historyList.length} sessions from Hive.');
     return historyList;
+  }
+
+  @override
+  Future<void> deleteSession(String sessionId) async {
+    final box = await _getBox();
+    await box.delete(sessionId);
+    print('Deleted session from Hive: $sessionId');
   }
 
   @override

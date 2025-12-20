@@ -72,6 +72,12 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
       // 1. Check cache
       translatedText = await translationCache.getCachedTranslation(event.text, event.sourceLanguage ?? 'auto', event.targetLanguage);
       
+      if (translatedText == null) {
+        translatedText = await translationService.translate(event.text, event.targetLanguage, sourceLanguage: event.sourceLanguage);
+        // Cache the new translation
+        await translationCache.cacheTranslation(event.text, event.sourceLanguage ?? 'auto', event.targetLanguage, translatedText);
+      }
+
       _currentTranslations[event.textKey] = translatedText;
       emit(TranslationSuccess(Map.from(_currentTranslations)));
     } catch (e) {

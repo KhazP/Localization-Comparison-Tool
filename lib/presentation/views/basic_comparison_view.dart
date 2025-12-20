@@ -23,13 +23,31 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 enum BasicDiffFilter { all, added, removed, modified }
 
 class BasicComparisonView extends StatefulWidget {
-  const BasicComparisonView({super.key});
+  final Function(int)? onNavigateToTab;
+
+  const BasicComparisonView({
+    super.key,
+    this.onNavigateToTab,
+  });
 
   @override
   State<BasicComparisonView> createState() => _BasicComparisonViewState();
 }
 
 class _BasicComparisonViewState extends State<BasicComparisonView> {
+  // ... existing fields ...
+
+  void _navigateToAiSettings() {
+    // Navigate to Settings tab (index 4)
+    if (widget.onNavigateToTab != null) {
+      widget.onNavigateToTab!(4);
+    } else {
+      // Fallback if callback not provided
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Navigation to AI Settings not available')),
+      );
+    }
+  }
   File? _file1;
   File? _file2;
   // Store the latest comparison results for the analytics bar
@@ -61,7 +79,14 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       setState(() {
         _currentFilter = BasicDiffFilter.all; // Reset filter on new comparison
       });
-      context.read<ComparisonBloc>().add(CompareFilesRequested(_file1!, _file2!));
+      final settingsState = context.read<SettingsBloc>().state;
+      if (settingsState.status == SettingsStatus.loaded) {
+        context.read<ComparisonBloc>().add(CompareFilesRequested(
+          file1: _file1!,
+          file2: _file2!,
+          settings: settingsState.appSettings,
+        ));
+      }
       _updateFileWatcher();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,14 +170,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }
   }
 
-  void _navigateToAiSettings() {
-    // TODO: Implement navigation to AI Translation Settings screen/window
-    // For now, show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('AI Translation Settings navigation (not yet implemented).')),
-    );
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => AiTranslationSettingsView()));
-  }
+
 
   Color _getColorForStatus(BuildContext context, StringComparisonStatus status) {
     // Get colors from the theme, which is updated by ThemeBloc
@@ -178,25 +196,45 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         Theme.of(context).brightness == Brightness.dark &&
                         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
-    return BlocListener<FileWatcherBloc, FileWatcherState>(
-      listener: (context, state) {
-        if (state is FileChangedDetected) {
-          // Show a snackbar notification about file change
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...'
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-          
-          // Trigger automatic recomparison
-          context.read<ComparisonBloc>().add(
-            CompareFilesRequested(File(state.file1Path), File(state.file2Path)),
-          );
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<SettingsBloc, SettingsState>(
+          listenWhen: (previous, current) =>
+              previous.status == SettingsStatus.loaded &&
+              current.status == SettingsStatus.loaded &&
+              previous.appSettings.autoReloadOnChange !=
+                  current.appSettings.autoReloadOnChange,
+          listener: (context, state) {
+            _updateFileWatcher();
+          },
+        ),
+        BlocListener<FileWatcherBloc, FileWatcherState>(
+          listener: (context, state) {
+            if (state is FileChangedDetected) {
+              // Show a snackbar notification about file change
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+
+              // Trigger automatic recomparison
+              final settingsStateForReload = context.read<SettingsBloc>().state;
+              if (settingsStateForReload.status == SettingsStatus.loaded) {
+                context.read<ComparisonBloc>().add(
+                  CompareFilesRequested(
+                    file1: File(state.file1Path),
+                    file2: File(state.file2Path),
+                    settings: settingsStateForReload.appSettings,
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ],
       child: Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -348,12 +386,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   if (diffEntries.isEmpty) {
                      return const Center(child: Text('No differences found based on keys.'));
                   }
-                  return ListView.separated(
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: diffEntries.length,
-                    separatorBuilder: (context, index) => Divider(
-                      height: 1, 
-                      color: (isAmoled ? Colors.grey[850] : Theme.of(context).dividerColor)
-                    ),
                     itemBuilder: (context, index) {
                       final entry = diffEntries[index];
                       final key = entry.key;
@@ -362,32 +397,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       final value1 = state.result.file1Data[key];
                       final value2 = state.result.file2Data[key];
 
-                      return Container(
-                        color: _getColorForStatus(context, status),
-                        child: ListTile(
-                          title: Text(key, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (status == StringComparisonStatus.removed || status == StringComparisonStatus.modified)
-                                Text('File 1: ${value1 ?? "--"}', style: TextStyle(decoration: status == StringComparisonStatus.removed ? TextDecoration.lineThrough : null)),
-                              if (status == StringComparisonStatus.added || status == StringComparisonStatus.modified)
-                                Text('File 2: ${value2 ?? "--"}'),
-                              if (status == StringComparisonStatus.identical)
-                                Text('Value: ${value1 ?? "--"}'),
-                            ],
-                          ),
-                          trailing: Icon(
-                            status == StringComparisonStatus.added ? Icons.add_circle_outline :
-                            status == StringComparisonStatus.removed ? Icons.remove_circle_outline :
-                            status == StringComparisonStatus.modified ? Icons.edit_outlined :
-                            Icons.check_circle_outline, // Identical
-                            color: status == StringComparisonStatus.added ? Colors.green :
-                                   status == StringComparisonStatus.removed ? Colors.red :
-                                   status == StringComparisonStatus.modified ? Colors.orange :
-                                   Colors.grey,
-                          ),
-                        ),
+                      return _buildDiffListItem(
+                        key: key,
+                        status: status,
+                        value1: value1,
+                        value2: value2,
+                        isAmoled: isAmoled,
                       );
                     },
                   );
@@ -414,10 +429,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     required bool isDraggingOver,
   }) {
     final theme = Theme.of(context);
-    final settingsState = context.read<SettingsBloc>().state;
-    final bool isAmoled = settingsState.status == SettingsStatus.loaded &&
-                        theme.brightness == Brightness.dark &&
-                        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     String displayText;
     String tooltipPath = '';
@@ -429,31 +441,24 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       displayText = isDraggingOver ? 'Drop file here' : 'Click to browse or drop file here';
     }
 
-    // Define colors based on state
-    Color borderColor;
-    Color backgroundColor;
-    
-    if (isDraggingOver) {
-      // Drag hover state
-      borderColor = theme.colorScheme.primary;
-      backgroundColor = theme.colorScheme.primary.withOpacity(0.1);
-    } else if (file != null) {
-      // File selected state  
-      borderColor = isAmoled ? Colors.grey[800]! : theme.dividerColor;
-      backgroundColor = isAmoled ? const Color(0xFF1E1E1E) : theme.colorScheme.surface.withOpacity(0.5);
-    } else {
-      // Default state
-      borderColor = isAmoled ? Colors.grey[700]! : theme.dividerColor;
-      backgroundColor = isAmoled ? const Color(0xFF1E1E1E) : theme.colorScheme.surface.withOpacity(0.5);
+    Color borderColor = isDraggingOver 
+        ? theme.colorScheme.primary 
+        : theme.dividerColor;
+    Color backgroundColor = isDraggingOver 
+        ? theme.colorScheme.primary.withOpacity(0.05) 
+        : theme.cardColor;
+
+    if (file != null) {
+        backgroundColor = theme.colorScheme.surface.withOpacity(0.5);
     }
 
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(title, style: theme.textTheme.titleMedium?.copyWith(
+          Text(title, style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
-            color: isAmoled ? Colors.white70 : theme.textTheme.titleMedium?.color
+            color: theme.colorScheme.onSurface.withOpacity(0.7)
           )),
           const SizedBox(height: 8.0),
           DropTarget(
@@ -480,51 +485,49 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               onTap: onPressed,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                padding: const EdgeInsets.all(24.0),
                 decoration: BoxDecoration(
                   color: backgroundColor,
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(12.0),
                   border: Border.all(
                     color: borderColor,
                     width: isDraggingOver ? 2.0 : 1.0,
+                    style: BorderStyle.solid, // Dotted border requires custom painter, solid is fine for now
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       file != null 
-                          ? Icons.insert_drive_file_outlined
-                          : (isDraggingOver 
-                              ? Icons.file_download_outlined 
-                              : Icons.file_open_outlined),
+                          ? Icons.description_outlined
+                          : Icons.cloud_upload_outlined,
                       color: isDraggingOver 
                           ? theme.colorScheme.primary
-                          : (isAmoled ? Colors.white70 : theme.iconTheme.color),
-                      size: 20,
+                          : theme.colorScheme.primary.withOpacity(0.7),
+                      size: 32,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: file != null
-                          ? Tooltip(
-                              message: tooltipPath,
-                              child: Text(
-                                displayText,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: isAmoled ? Colors.white70 : theme.textTheme.bodyMedium?.color
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )
-                          : Text(
+                    const SizedBox(height: 12),
+                    file != null
+                        ? Tooltip(
+                            message: tooltipPath,
+                            child: Text(
                               displayText,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: isDraggingOver 
-                                    ? theme.colorScheme.primary
-                                    : (isAmoled ? Colors.grey[400]! : Colors.grey[600]!),
+                                fontWeight: FontWeight.w500,
+                                color: theme.colorScheme.onSurface
                               ),
+                              textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
                             ),
-                    ),
+                          )
+                        : Text(
+                            displayText,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(0.7),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                   ],
                 ),
               ),
@@ -536,125 +539,207 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   Widget _buildAnalyticsAndActionsBar() {
-    // Determine if Amoled mode is active (can also pass as parameter if preferred)
     final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = Theme.of(context).brightness == Brightness.dark &&
-                        settingsState.status == SettingsStatus.loaded &&
-                        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+    final theme = Theme.of(context);
+    final bool isDarkMode = theme.brightness == Brightness.dark;
+    final bool isAmoled = isDarkMode &&
+        settingsState.status == SettingsStatus.loaded &&
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
     int totalKeys = 0;
-    int missingInTarget = 0;
-    int missingInSource = 0;
+    int addedCount = 0;
+    int removedCount = 0;
+    int modifiedCount = 0;
 
     if (_latestComparisonResult != null) {
       final allKeys = Set<String>.from(_latestComparisonResult!.file1Data.keys);
       allKeys.addAll(_latestComparisonResult!.file2Data.keys);
-      totalKeys = allKeys.length; 
+      totalKeys = allKeys.length;
       _latestComparisonResult!.diff.forEach((key, statusDetail) {
-        if (statusDetail.status == StringComparisonStatus.added) missingInSource++; 
-        if (statusDetail.status == StringComparisonStatus.removed) missingInTarget++; 
+        switch (statusDetail.status) {
+          case StringComparisonStatus.added:
+            addedCount++;
+            break;
+          case StringComparisonStatus.removed:
+            removedCount++;
+            break;
+          case StringComparisonStatus.modified:
+            modifiedCount++;
+            break;
+          default:
+            break;
+        }
       });
     }
-    final theme = Theme.of(context);
-    final bool isDarkMode = theme.brightness == Brightness.dark; // Still useful for non-Amoled dark conditional logic
-    final Color separatorColor = isDarkMode ? (isAmoled ? Colors.grey[800]! : Colors.grey[700]!) : Colors.grey[300]!;
 
-    return Card(
-      color: isAmoled ? Colors.black : Theme.of(context).cardColor, // Amoled check for card color
-      elevation: isAmoled ? 0.3 : 2.0, 
-      shape: isAmoled 
-          ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0), // Consistent radius
-              side: BorderSide(color: Colors.grey[850]!)
-            )
-          : null,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 4, 
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround, 
-                children: [
-                  _buildAnalyticsItem('Total Keys', totalKeys.toString(), isAmoled ? Colors.grey[400]! : Colors.blueGrey, compact: true),
-                  _buildAnalyticsItem('Missing Target', missingInTarget.toString(), Colors.redAccent[100]!, compact: true), // Lighter red for Amoled
-                  _buildAnalyticsItem('Missing Source', missingInSource.toString(), Colors.lightGreenAccent[400]!, compact: true), // Lighter green for Amoled
-                  _buildFileWatcherStatus(settingsState, isAmoled, isDarkMode),
-                ],
+    final Color cardBg = isAmoled
+        ? Colors.black
+        : (isDarkMode ? const Color(0xFF1A1A22) : Colors.white);
+    final Color borderColor = isAmoled
+        ? Colors.grey[850]!
+        : (isDarkMode ? const Color(0xFF2E2E38) : Colors.grey[200]!);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          // Stats Section
+          Expanded(
+            flex: 3,
+            child: Row(
+              children: [
+                _buildCompactStat('Total', totalKeys, theme.colorScheme.onSurface.withAlpha(180)),
+                const SizedBox(width: 16),
+                _buildCompactStat('+${addedCount}', null, const Color(0xFF22C55E)),
+                const SizedBox(width: 12),
+                _buildCompactStat('-${removedCount}', null, const Color(0xFFEF4444)),
+                const SizedBox(width: 12),
+                _buildCompactStat('~${modifiedCount}', null, const Color(0xFFF59E0B)),
+                const SizedBox(width: 12),
+                _buildFileWatcherStatus(settingsState, isAmoled, isDarkMode),
+              ],
+            ),
+          ),
+
+          // Filter Toggle Buttons (icon-only to prevent overflow)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildFilterIconButton(
+                  BasicDiffFilter.added,
+                  Icons.add_circle_outline,
+                  const Color(0xFF22C55E),
+                  'Show Added',
+                ),
+                _buildFilterIconButton(
+                  BasicDiffFilter.removed,
+                  Icons.remove_circle_outline,
+                  const Color(0xFFEF4444),
+                  'Show Removed',
+                ),
+                _buildFilterIconButton(
+                  BasicDiffFilter.modified,
+                  Icons.edit_outlined,
+                  const Color(0xFFF59E0B),
+                  'Show Modified',
+                ),
+                _buildFilterIconButton(
+                  BasicDiffFilter.all,
+                  Icons.filter_list_off,
+                  theme.colorScheme.onSurface.withAlpha(150),
+                  'Show All',
+                ),
+              ],
+            ),
+          ),
+
+          // Divider
+          Container(
+            height: 28,
+            width: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            color: borderColor,
+          ),
+
+          // Action Buttons
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCompactActionButton(
+                icon: Icons.zoom_in_map,
+                label: 'Advanced',
+                onPressed: _navigateToAdvancedView,
+                color: theme.colorScheme.primary,
               ),
-            ),
-            SizedBox(
-              height: 30, 
-              child: VerticalDivider(color: separatorColor, thickness: 1, indent: 4, endIndent: 4)
-            ),
-            _buildFilterButton(BasicDiffFilter.added, 'Added', Icons.add_circle_outline, Colors.green, isDarkMode), // isDarkMode is fine here, FilterChip theme handles Amoled
-            _buildFilterButton(BasicDiffFilter.removed, 'Removed', Icons.remove_circle_outline, Colors.red, isDarkMode),
-            _buildFilterButton(BasicDiffFilter.modified, 'Modified', Icons.edit_outlined, Colors.orange, isDarkMode),
-            _buildFilterButton(BasicDiffFilter.all, 'All', Icons.filter_list_off_outlined, isAmoled ? Colors.grey[600]! : (isDarkMode ? Colors.grey[300]! : Colors.grey[700]!), isDarkMode),
-            SizedBox(
-              height: 30,
-              child: VerticalDivider(color: separatorColor, thickness: 1, indent: 4, endIndent: 4)
-            ),
-            Flexible(
-              flex: 3, 
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    icon: const Icon(Icons.zoom_in_map, size: 18),
-                    label: const Text('Advanced'),
-                    onPressed: _navigateToAdvancedView,
-                    style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), 
-                        foregroundColor: theme.colorScheme.primary, // Should be fine
-                    ),
-                  ),
-                  const SizedBox(width: 4), 
-                  TextButton.icon(
-                    icon: const Icon(Icons.model_training_outlined, size: 18),
-                    label: const Text('AI Settings'), 
-                    onPressed: _navigateToAiSettings,
-                    style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        foregroundColor: theme.colorScheme.secondary, // Should be fine
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              _buildCompactActionButton(
+                icon: Icons.psychology_outlined,
+                label: 'AI',
+                onPressed: _navigateToAiSettings,
+                color: theme.colorScheme.secondary,
               ),
-            ),
-          ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactStat(String label, int? value, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value != null ? '$label: $value' : label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterIconButton(
+    BasicDiffFilter filter,
+    IconData icon,
+    Color color,
+    String tooltip,
+  ) {
+    final bool isActive = _currentFilter == filter;
+    final theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () => setState(() => _currentFilter = filter),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: isActive
+                ? color.withAlpha(isDark ? 50 : 30)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: isActive
+                ? Border.all(color: color.withAlpha(isDark ? 150 : 100), width: 1.5)
+                : null,
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isActive ? color : color.withAlpha(isDark ? 120 : 150),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFilterButton(BasicDiffFilter filter, String label, IconData icon, Color defaultIconColor, bool isDarkMode) {
-    final bool isActive = _currentFilter == filter;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: FilterChip(
-        label: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16),
-            const SizedBox(width: 4),
-            Text(label, style: const TextStyle(fontSize: 12)),
-          ],
-        ),
-        selected: isActive,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-            side: isActive ? BorderSide.none : BorderSide(color: isDarkMode ? Colors.grey[700]! : Colors.grey[400]!)
-        ),
-        onSelected: (bool selected) {
-          if (selected) {
-            setState(() {
-              _currentFilter = filter;
-            });
-          }
-        },
+  Widget _buildCompactActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required Color color,
+  }) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: const TextStyle(fontSize: 13)),
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
@@ -707,7 +792,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     final Color currentLabelColor = isAmoled 
         ? Colors.grey[500]! 
-        : (Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).colorScheme.onSurfaceVariant);
+        : (Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).colorScheme.onSurface.withOpacity(0.7));
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -729,6 +814,200 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDiffListItem({
+    required String key,
+    required StringComparisonStatus status,
+    String? value1,
+    String? value2,
+    required bool isAmoled,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Status-based colors
+    Color statusColor;
+    Color bgColor;
+    IconData statusIcon;
+    String statusLabel;
+
+    switch (status) {
+      case StringComparisonStatus.added:
+        statusColor = const Color(0xFF22C55E);
+        bgColor = statusColor.withAlpha(isDark ? 20 : 15);
+        statusIcon = Icons.add_circle_outline;
+        statusLabel = 'ADDED';
+        break;
+      case StringComparisonStatus.removed:
+        statusColor = const Color(0xFFEF4444);
+        bgColor = statusColor.withAlpha(isDark ? 20 : 15);
+        statusIcon = Icons.remove_circle_outline;
+        statusLabel = 'REMOVED';
+        break;
+      case StringComparisonStatus.modified:
+        statusColor = const Color(0xFFF59E0B);
+        bgColor = statusColor.withAlpha(isDark ? 20 : 15);
+        statusIcon = Icons.edit_outlined;
+        statusLabel = 'MODIFIED';
+        break;
+      case StringComparisonStatus.identical:
+      default:
+        statusColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
+        bgColor = Colors.transparent;
+        statusIcon = Icons.check_circle_outline;
+        statusLabel = 'IDENTICAL';
+    }
+
+    final cardBg = isAmoled ? Colors.black : (isDark ? const Color(0xFF1A1A22) : Colors.white);
+    final borderColor = isAmoled ? Colors.grey[850]! : (isDark ? const Color(0xFF2E2E38) : Colors.grey[200]!);
+    final textMuted = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderColor.withAlpha(isDark ? 80 : 100)),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Status indicator bar
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: statusColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  bottomLeft: Radius.circular(10),
+                ),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Key row with status chip
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            key,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Status chip
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: statusColor.withAlpha(isDark ? 40 : 30),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(statusIcon, size: 12, color: statusColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                statusLabel,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: statusColor,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Values
+                    if (status == StringComparisonStatus.removed || status == StringComparisonStatus.modified) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Source: ', style: TextStyle(fontSize: 12, color: textMuted, fontWeight: FontWeight.w500)),
+                          Expanded(
+                            child: Text(
+                              value1 ?? '--',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: status == StringComparisonStatus.removed 
+                                    ? statusColor.withAlpha(200) 
+                                    : theme.colorScheme.onSurface.withAlpha(200),
+                                decoration: status == StringComparisonStatus.removed 
+                                    ? TextDecoration.lineThrough 
+                                    : null,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (status == StringComparisonStatus.added || status == StringComparisonStatus.modified) ...[
+                      if (status == StringComparisonStatus.modified) const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Target: ', style: TextStyle(fontSize: 12, color: textMuted, fontWeight: FontWeight.w500)),
+                          Expanded(
+                            child: Text(
+                              value2 ?? '--',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: status == StringComparisonStatus.added 
+                                    ? statusColor.withAlpha(200) 
+                                    : theme.colorScheme.onSurface.withAlpha(200),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (status == StringComparisonStatus.identical) ...[
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Value: ', style: TextStyle(fontSize: 12, color: textMuted, fontWeight: FontWeight.w500)),
+                          Expanded(
+                            child: Text(
+                              value1 ?? '--',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface.withAlpha(180),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 } 

@@ -1,62 +1,125 @@
-# Flutter & Dart
-.dart_tool/
-.flutter-plugins-dependencies
-build/
-*.iml
-
-# Release builds and distribution packages
-releases/
-
-# IDE & Editor Files  
-.cursor/
-.vscode/
-.idea/
-localizer_app_main.iml
-
-# Development Tools & Documentation
-.specstory/
-CLAUDE.md
-commit.md
-LocalizerAppMain.md
-settingspage.md
-.gitignore.flutter
-
-# Test Data & Samples
-SampleTranslations/
-
-# Windows Flutter Generated Files
-windows/flutter/ephemeral/
-
-# Legacy Python Files (backward compatibility)
-__pycache__/
-*.py[cod]
-*$py.class
-dist/
-*.egg-info/
-localizer.egg-info/
-.pytest_cache/
-.coverage
-htmlcov/
-*.spec
-*.exe
-*.pkg
-venv/
-env/
-.venv/
-hook-flet.py
-
-# Development Notes & Personal Files
-code-style.md
-copilot-instructions.md
-docs/TODO.md
-docs/report
-Sample Translation/
-
-# Logs and temporary files
+# Miscellaneous
+*.class
 *.log
-localizer_debug.log
+*.pyc
+*.swp
 .DS_Store
-Thumbs.db
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
 
-# Git LFS
-.gitattributes
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code related
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Flutter/Dart related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+pubspec.lock
+
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.keystore
+!debug.keystore
+
+# iOS/XCode related
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/DerivedData/
+**/ios/**/*.hmap
+**/ios/**/.svn/
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Pods/
+**/ios/Runner/GeneratedPluginRegistrant.*
+*.xcuserstate
+
+# macOS related
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Windows related
+**/windows/flutter/ephemeral/
+
+# Linux related
+**/linux/flutter/ephemeral/
+
+# Web related
+**/web/.dart_tool/
+
+# Coverage
+coverage/
+
+# Symbols
+app.*.symbols
+
+# Test related
+.test_coverage.dart
+**/test/.test_coverage.dart
+
+# Hive
+*.hive
+*.lock
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local configuration
+local_config.json
+secrets/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage reports
+htmlcov/
+lcov.info

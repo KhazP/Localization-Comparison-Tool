@@ -1,8 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// TODO: Implement API key secure storage and retrieval
-const String _apiKey = "YOUR_GOOGLE_TRANSLATE_API_KEY"; // Placeholder
+import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 
 abstract class TranslationService {
   Future<String> translate(String text, String targetLanguage, {String? sourceLanguage});
@@ -10,11 +9,17 @@ abstract class TranslationService {
 
 class GoogleTranslationService implements TranslationService {
   final String _baseUrl = "translation.googleapis.com";
+  final SecureStorageService _secureStorage;
+
+  GoogleTranslationService({required SecureStorageService secureStorage})
+      : _secureStorage = secureStorage;
 
   @override
   Future<String> translate(String text, String targetLanguage, {String? sourceLanguage}) async {
-    if (_apiKey == "YOUR_GOOGLE_TRANSLATE_API_KEY") {
-      print("Warning: API key is a placeholder. Real translations will fail.");
+    final apiKey = await _secureStorage.getGoogleApiKey();
+
+    if (apiKey == null || apiKey.isEmpty || apiKey == "YOUR_GOOGLE_TRANSLATE_API_KEY") {
+      print("Warning: API key is missing or invalid. Real translations will fail.");
       return "Translated: $text (Preview - API Key Needed)";
     }
 
@@ -22,7 +27,7 @@ class GoogleTranslationService implements TranslationService {
       'q': text,
       'target': targetLanguage,
       if (sourceLanguage != null) 'source': sourceLanguage,
-      'key': _apiKey,
+      'key': apiKey,
       'format': 'text',
     };
 
@@ -48,6 +53,4 @@ class GoogleTranslationService implements TranslationService {
     }
   }
 }
-
-// TODO: Implement local caching of frequent translations using Hive (lib/data/cache/translation_cache.dart)
-// TODO: Implement secure API key storage (e.g., using flutter_secure_storage) 
+ 

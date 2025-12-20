@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; // For StringComparisonStatus and ComparisonStatusDetail
 import 'package:csv/csv.dart'; // For CSV generation
-import 'dart:developer' as developer; // For debugPrint
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
@@ -312,7 +313,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     return rows;
   }
 
-  void _exportToCsv(BuildContext context) {
+  Future<void> _exportToCsv(BuildContext context) async {
     List<List<dynamic>> csvData = [];
     // Remove "Similarity (%)" column header
     csvData.add(['Status', 'String Key', 'Old Value (Source)', 'New Value (Target)']);
@@ -321,37 +322,60 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       final key = entry.key;
       final statusDetail = entry.value; // ComparisonStatusDetail
       final status = statusDetail.status;
-      // final similarity = statusDetail.similarity; // No longer exported
 
       final file1Value = widget.comparisonResult.file1Data[key] ?? '';
       final file2Value = widget.comparisonResult.file2Data[key] ?? '';
       String statusText;
-      // String similarityCsvText = ''; // No longer exported
 
       switch (status) {
         case StringComparisonStatus.added: 
           statusText = 'ADDED'; 
-          csvData.add([statusText, key, '', file2Value]); // Removed similarityCsvText
+          csvData.add([statusText, key, '', file2Value]);
           break;
         case StringComparisonStatus.removed: 
           statusText = 'REMOVED'; 
-          csvData.add([statusText, key, file1Value, '']); // Removed similarityCsvText
+          csvData.add([statusText, key, file1Value, '']);
           break;
         case StringComparisonStatus.modified: 
           statusText = 'MODIFIED';
-          // if (similarity != null) { // No longer exported
-          //   similarityCsvText = (similarity * 100).toStringAsFixed(1);
-          // }
-          csvData.add([statusText, key, file1Value, file2Value]); // Removed similarityCsvText
+          csvData.add([statusText, key, file1Value, file2Value]);
           break;
         default: break;
       }
     }
     String csvString = const ListToCsvConverter().convert(csvData);
-    developer.log('CSV Output:\n$csvString', name: 'AdvancedDiffView.ExportCsv');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('CSV data printed to console (see debug output).')),
+    
+    // Save to file using FilePicker
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save CSV Report',
+      fileName: 'comparison_report.csv',
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
     );
+    
+    if (outputPath != null) {
+      try {
+        final file = File(outputPath);
+        await file.writeAsString(csvString);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('CSV saved to: $outputPath'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to save CSV: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override

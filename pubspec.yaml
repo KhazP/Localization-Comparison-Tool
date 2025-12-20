@@ -1,5 +1,5 @@
 name: localizer_app_main
-description: A new Flutter project for comparing localization files.
+description: Localization Comparison Tool - Compare and analyze localization files with native desktop performance.
 
 # Prevent accidental publishing to pub.dev.
 publish_to: 'none' 

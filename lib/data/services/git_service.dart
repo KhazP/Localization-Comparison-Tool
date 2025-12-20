@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:libgit2dart/libgit2dart.dart';
 
 // Represents basic information about a Git branch
@@ -61,15 +61,15 @@ class LibGit2DartService implements GitService {
              final target = branch.target;
              branches.add(GitBranch(branch.name, target.sha));
            } catch (e) {
-             print('GitService: Error resolving branch ${branch.name}: $e');
+             developer.log('Error resolving branch ${branch.name}: $e', name: 'GitService');
            }
         }
       } catch (e) {
-         print('GitService: Error accessing repo.branches: $e');
+         developer.log('Error accessing repo.branches: $e', name: 'GitService');
       }
       return branches;
     } catch (e) {
-      print('GitService: Error opening repo for branches: $e');
+      developer.log('Error opening repo for branches: $e', name: 'GitService');
       return []; 
     }
   }
@@ -93,14 +93,14 @@ class LibGit2DartService implements GitService {
              }
            }
          } catch (_) {
-           print('GitService: Could not find branch $branchName');
+           developer.log('Could not find branch $branchName', name: 'GitService');
          }
        } else {
          try {
            final head = repo.head;
            currentOid = head.target;
          } catch (_) {
-            print('GitService: Could not find HEAD');
+            developer.log('Could not find HEAD', name: 'GitService');
          }
        }
 
@@ -124,13 +124,13 @@ class LibGit2DartService implements GitService {
              count++;
            }
          } catch (e) {
-           print('GitService: Error walking commits: $e');
+           developer.log('Error walking commits: $e', name: 'GitService');
          }
        }
        
        return commits;
     } catch (e) {
-      print('GitService: Error getting commits: $e');
+      developer.log('Error getting commits: $e', name: 'GitService');
       return [];
     }
   }
@@ -150,7 +150,7 @@ class LibGit2DartService implements GitService {
       }
       
       if (baseB == null || targetB == null) {
-        print('GitService: Could not find one or both branches');
+        developer.log('Could not find one or both branches', name: 'GitService');
         return [];
       }
       
@@ -176,7 +176,7 @@ class LibGit2DartService implements GitService {
       return diffFiles;
 
     } catch (e) {
-      print('GitService: Error comparing branches: $e');
+      developer.log('Error comparing branches: $e', name: 'GitService');
       return [];
     }
   }
@@ -208,10 +208,7 @@ class LibGit2DartService implements GitService {
       
       return diffFiles;
     } catch (e) {
-      print('GitService: Error comparing commits: $e');
-      // Re-throw or return empty? For now return empty but log error.
-      // Better to maybe throw so UI can show error. 
-      // Let's return empty list for safety but log it.
+      developer.log('Error comparing commits: $e', name: 'GitService');
       return [];
     }
   }
@@ -269,7 +266,7 @@ class LibGit2DartService implements GitService {
       }
 
     } catch (e) {
-      print('GitService: Error retrieving file content: $e');
+      developer.log('Error retrieving file content: $e', name: 'GitService');
       return 'Error retrieving content: $e';
     }
   }

@@ -1,20 +1,18 @@
 import 'dart:io';
 import 'dart:async';
-// import 'dart:isolate'; // Not directly used if only using compute
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart'; // For compute
 import 'package:localizer_app_main/data/parsers/file_parser_factory.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; // Import new model
 import 'package:localizer_app_main/data/models/app_settings.dart'; // Import AppSettings
-import 'package:string_similarity/string_similarity.dart'; // Import for similarity calculation
 import 'package:localizer_app_main/core/services/diff_calculator.dart';
 
 // Data structure to hold comparison results
 class ComparisonResult {
   final Map<String, String> file1Data;
   final Map<String, String> file2Data;
-  final Map<String, ComparisonStatusDetail> diff; // Changed type
-  // TODO: Add more details like added, removed, modified counts
+  final Map<String, ComparisonStatusDetail> diff;
 
   ComparisonResult(this.file1Data, this.file2Data, this.diff);
 }
@@ -47,9 +45,7 @@ class ComparisonEngine {
   }
 
   Future<ComparisonResult> compareFiles(File file1, File file2, AppSettings settings) async {
-    // TODO: Implement progress reporting via ProgressBloc
-    print('Starting comparison between ${file1.path} and ${file2.path}');
-    print('Comparison settings: ignoreCase: ${settings.ignoreCase}, ignoreWhitespace: ${settings.ignoreWhitespace}, ignorePatterns: ${settings.ignorePatterns}');
+    developer.log('Starting comparison', name: 'ComparisonEngine', error: '${file1.path} vs ${file2.path}');
 
     final file1DataFuture = _parseFile(file1, settings);
     final file2DataFuture = _parseFile(file2, settings);
@@ -65,15 +61,9 @@ class ComparisonEngine {
       ignorePatterns: settings.ignorePatterns,
       ignoreWhitespace: settings.ignoreWhitespace,
     );
-    print('Comparison finished.');
+    developer.log('Comparison finished', name: 'ComparisonEngine');
     return ComparisonResult(file1Data, file2Data, diff);
   }
-
-  // TODO: Implement directory-level recursive comparison
-  // This would involve:
-  // 1. Scanning directories for matching file pairs (e.g., based on name, locale in path)
-  // 2. Running compareFiles for each pair
-  // 3. Aggregating results
 }
 
 // Helper class for parameters to compute function

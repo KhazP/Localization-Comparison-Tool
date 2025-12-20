@@ -154,7 +154,7 @@ class DirectoryComparisonBloc extends Bloc<DirectoryComparisonEvent, DirectoryCo
     final currentState = state as DirectoryComparisonSuccess;
     if (currentState.pairedFiles.isEmpty) return;
 
-    // TODO: Add a proper loading state for this operation
+    emit(DirectoryComparisonLoading());
     
     final newResults = Map<FilePair, ComparisonResult>.from(currentState.comparisonResults);
 

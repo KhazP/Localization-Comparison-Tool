@@ -195,11 +195,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           ),
           // Navigation Items
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-              children: SettingsCategory.values.map((category) {
-                return _buildNavItem(context, category, isDark);
-              }).toList(),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                children: SettingsCategory.values.map((category) {
+                  return _buildNavItem(context, category, isDark);
+                }).toList(),
+              ),
             ),
           ),
         ],
@@ -359,12 +362,15 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           
           // Content
           Expanded(
-            child: SingleChildScrollView(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: KeyedSubtree(
-                  key: ValueKey(_selectedCategory),
-                  child: _buildCategoryContent(context, settings, isDark),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: KeyedSubtree(
+                    key: ValueKey(_selectedCategory),
+                    child: _buildCategoryContent(context, settings, isDark),
+                  ),
                 ),
               ),
             ),
@@ -1179,9 +1185,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           title: 'Links',
           isDark: isDark,
           children: [
-            _buildLinkRow(context, 'Website', Icons.language_rounded, () => _launchUrl('https://example.com'), isDark),
-            _buildLinkRow(context, 'Documentation', Icons.menu_book_rounded, () => _launchUrl('https://example.com/docs'), isDark),
-            _buildLinkRow(context, 'Report Issue', Icons.bug_report_rounded, () => _launchUrl('https://github.com'), isDark),
+            _buildLinkRow(context, 'GitHub Repository', Icons.code_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain'), isDark),
+            _buildLinkRow(context, 'Report Issue', Icons.bug_report_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain/issues'), isDark),
             _buildLinkRow(context, 'Licenses', Icons.article_rounded, () => _showLicensesDialog(context, isDark), isDark, showDivider: false),
           ],
         ),
@@ -1285,6 +1290,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
 
   void _showAddPatternDialog(BuildContext context, bool isDark) {
     _newPatternController.clear();
+    
+    void submitPattern() {
+      if (_newPatternController.text.isNotEmpty) {
+        context.read<SettingsBloc>().add(AddIgnorePattern(_newPatternController.text));
+        Navigator.of(context).pop();
+      }
+    }
+    
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -1296,6 +1309,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             labelText: 'Pattern (regex)',
           ),
           autofocus: true,
+          onSubmitted: (_) => submitPattern(),
         ),
         actions: [
           TextButton(
@@ -1303,12 +1317,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
-              if (_newPatternController.text.isNotEmpty) {
-                context.read<SettingsBloc>().add(AddIgnorePattern(_newPatternController.text));
-                Navigator.of(dialogContext).pop();
-              }
-            },
+            onPressed: submitPattern,
             child: const Text('Add'),
           ),
         ],
@@ -1330,7 +1339,36 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           FilledButton(
             onPressed: () {
               Navigator.of(dialogContext).pop();
-              // Implement reset logic per category
+              final bloc = context.read<SettingsBloc>();
+              switch (category) {
+                case SettingsCategory.general:
+                  bloc.add(ResetGeneralSettings());
+                  break;
+                case SettingsCategory.comparisonEngine:
+                  bloc.add(ResetComparisonSettings());
+                  break;
+                case SettingsCategory.appearance:
+                  bloc.add(ResetAppearanceSettings());
+                  break;
+                case SettingsCategory.fileHandling:
+                  bloc.add(ResetFileHandlingSettings());
+                  break;
+                case SettingsCategory.aiServices:
+                  bloc.add(ResetAiServicesSettings());
+                  break;
+                case SettingsCategory.versionControl:
+                  bloc.add(ResetVersionControlSettings());
+                  break;
+                case SettingsCategory.about:
+                  break; // No reset for About
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${_getCategoryTitle(category)} reset to defaults'),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              );
             },
             style: FilledButton.styleFrom(backgroundColor: AppThemeV2.warning),
             child: const Text('Reset'),

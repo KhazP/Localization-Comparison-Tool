@@ -40,15 +40,21 @@ class AppThemeV2 {
 
   // Semantic Colors
   static const Color added = Color(0xFF22C55E);            // Green
-  static const Color addedBg = Color(0xFF22C55E);
+  static const Color addedBg = Color(0x3322C55E);          // 20% alpha green
   static const Color removed = Color(0xFFEF4444);          // Red
-  static const Color removedBg = Color(0xFFEF4444);
+  static const Color removedBg = Color(0x33EF4444);        // 20% alpha red
   static const Color modified = Color(0xFFF59E0B);         // Amber
-  static const Color modifiedBg = Color(0xFFF59E0B);
+  static const Color modifiedBg = Color(0x33F59E0B);       // 20% alpha amber
   static const Color info = Color(0xFF3B82F6);             // Blue
   static const Color warning = Color(0xFFF59E0B);          // Amber
   static const Color error = Color(0xFFEF4444);            // Red
   static const Color success = Color(0xFF22C55E);          // Green
+
+  // Additional M3 Accent Colors
+  static const Color tertiary = Color(0xFF06B6D4);         // Cyan
+  static const Color tertiaryContainer = Color(0xFF22D3EE);
+  static const Color outline = Color(0xFF6B7280);          // Gray
+  static const Color outlineVariant = Color(0xFF4B5563);
 
   // Text Colors - Dark
   static const Color darkTextPrimary = Color(0xFFF1F1F4);
@@ -72,10 +78,16 @@ class AppThemeV2 {
       primary: primary,
       primaryContainer: primaryDark,
       secondary: secondary,
+      secondaryContainer: secondary,
+      tertiary: tertiary,
+      tertiaryContainer: tertiaryContainer,
       surface: darkSurface,
       error: error,
+      outline: outline,
+      outlineVariant: outlineVariant,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
+      onTertiary: Colors.white,
       onSurface: darkTextPrimary,
       onError: Colors.white,
     ),
@@ -94,6 +106,7 @@ class AppThemeV2 {
     snackBarTheme: _buildSnackBarTheme(isDark: true),
     dialogTheme: _buildDialogTheme(isDark: true),
     tooltipTheme: _buildTooltipTheme(isDark: true),
+    scrollbarTheme: _buildScrollbarTheme(isDark: true),
   );
 
   /// AMOLED theme with pure black backgrounds for OLED displays
@@ -105,10 +118,16 @@ class AppThemeV2 {
       primary: primary,
       primaryContainer: primaryDark,
       secondary: secondary,
+      secondaryContainer: secondary,
+      tertiary: tertiary,
+      tertiaryContainer: tertiaryContainer,
       surface: amoledSurface,
       error: error,
+      outline: outline,
+      outlineVariant: outlineVariant,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
+      onTertiary: Colors.white,
       onSurface: darkTextPrimary,
       onError: Colors.white,
     ),
@@ -127,6 +146,7 @@ class AppThemeV2 {
     snackBarTheme: _buildSnackBarTheme(isDark: true),
     dialogTheme: _buildDialogTheme(isDark: true, isAmoled: true),
     tooltipTheme: _buildTooltipTheme(isDark: true),
+    scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: true),
   );
 
   static ThemeData get lightTheme => ThemeData(
@@ -137,10 +157,16 @@ class AppThemeV2 {
       primary: primary,
       primaryContainer: primaryLight,
       secondary: secondary,
+      secondaryContainer: secondary,
+      tertiary: tertiary,
+      tertiaryContainer: tertiaryContainer,
       surface: lightSurface,
       error: error,
+      outline: outline,
+      outlineVariant: lightBorder,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
+      onTertiary: Colors.white,
       onSurface: lightTextPrimary,
       onError: Colors.white,
     ),
@@ -159,6 +185,7 @@ class AppThemeV2 {
     snackBarTheme: _buildSnackBarTheme(isDark: false),
     dialogTheme: _buildDialogTheme(isDark: false),
     tooltipTheme: _buildTooltipTheme(isDark: false),
+    scrollbarTheme: _buildScrollbarTheme(isDark: false),
   );
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -442,6 +469,7 @@ class AppThemeV2 {
 
   static TooltipThemeData _buildTooltipTheme({required bool isDark}) {
     return TooltipThemeData(
+      waitDuration: const Duration(milliseconds: 500), // Faster for desktop hover
       decoration: BoxDecoration(
         color: isDark ? darkCard : lightTextPrimary,
         borderRadius: BorderRadius.circular(8),
@@ -453,17 +481,42 @@ class AppThemeV2 {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
   }
+
+  static ScrollbarThemeData _buildScrollbarTheme({required bool isDark, bool isAmoled = false}) {
+    final thumbColor = isDark ? darkTextMuted : lightTextMuted;
+    final trackColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightBackground);
+    return ScrollbarThemeData(
+      thumbVisibility: WidgetStateProperty.all(true),
+      thickness: WidgetStateProperty.all(8.0),
+      radius: const Radius.circular(4),
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.hovered) || states.contains(WidgetState.dragged)) {
+          return primary.withAlpha(200);
+        }
+        return thumbColor.withAlpha(150);
+      }),
+      trackColor: WidgetStateProperty.all(trackColor.withAlpha(50)),
+      trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // THEME EXTENSION FOR CUSTOM COLORS
 // ═══════════════════════════════════════════════════════════════════════════
 
-extension ThemeExtension on ThemeData {
-  // Diff colors
+/// Custom theme extension providing diff colors and background variants.
+/// Named AppThemeColors to avoid confusion with Flutter's ThemeExtension type.
+extension AppThemeColors on ThemeData {
+  // Diff foreground colors
   Color get diffAdded => AppThemeV2.added;
   Color get diffRemoved => AppThemeV2.removed;
   Color get diffModified => AppThemeV2.modified;
+
+  // Diff background colors (reduced alpha for comfortable contrast)
+  Color get diffAddedBg => AppThemeV2.addedBg;
+  Color get diffRemovedBg => AppThemeV2.removedBg;
+  Color get diffModifiedBg => AppThemeV2.modifiedBg;
 
   // Background variants
   Color get cardBackground => brightness == Brightness.dark

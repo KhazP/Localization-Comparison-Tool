@@ -1,1 +1,0 @@
- C:\\Users\\alpya\\Documents\\GitHub\\LocalizerAppMain\\.dart_tool\\flutter_build\\6d59777738d87336965203e8c651a76d\\native_assets.json: 

@@ -69,13 +69,14 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       lastWindowY: fields[42] as double?,
       lastWindowWidth: fields[43] as double?,
       lastWindowHeight: fields[44] as double?,
+      similarityThreshold: fields[45] == null ? 0.85 : fields[45] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(45)
+      ..writeByte(46)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -165,7 +166,9 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(43)
       ..write(obj.lastWindowWidth)
       ..writeByte(44)
-      ..write(obj.lastWindowHeight);
+      ..write(obj.lastWindowHeight)
+      ..writeByte(45)
+      ..write(obj.similarityThreshold);
   }
 
   @override

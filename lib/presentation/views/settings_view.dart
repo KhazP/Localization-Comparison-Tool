@@ -704,6 +704,23 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Similarity Threshold',
+              description: 'Minimum similarity for "Modified" detection (${(settings.similarityThreshold * 100).round()}%)',
+              control: SizedBox(
+                width: 200,
+                child: Slider(
+                  value: settings.similarityThreshold,
+                  min: 0.5,
+                  max: 1.0,
+                  divisions: 10,
+                  label: '${(settings.similarityThreshold * 100).round()}%',
+                  onChanged: (val) => context.read<SettingsBloc>().add(UpdateSimilarityThreshold(val)),
+                ),
+              ),
+              isDark: isDark,
               showDivider: false,
             ),
           ],

@@ -338,4 +338,11 @@ class UpdateWindowBounds extends SettingsEvent {
   const UpdateWindowBounds({this.x, this.y, this.width, this.height});
   @override
   List<Object?> get props => [x, y, width, height];
+}
+
+class UpdateSimilarityThreshold extends SettingsEvent {
+  final double threshold;
+  const UpdateSimilarityThreshold(this.threshold);
+  @override
+  List<Object> get props => [threshold];
 } 

@@ -61,11 +61,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   // Search/filter state
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -521,9 +523,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           ),
                         ),
                       Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: diffEntries.length,
+                        child: Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: diffEntries.length,
                           itemBuilder: (context, index) {
                             final entry = diffEntries[index];
                             final key = entry.key;
@@ -564,6 +570,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           },
                         ),
                       ),
+                    ),
                     ],
                   );
                 }
@@ -1065,45 +1072,44 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     final isAutoReloadEnabled = settingsState.status == SettingsStatus.loaded &&
                                 settingsState.appSettings.autoReloadOnChange;
     
-    // Check actual watcher status
-    // Note: We're inside a method, not a BlocBuilder for the Chip content specifically,
-    // so we rely on parent rebuilds or we need to wrap the Chip in BlocBuilder if we want 
-    // real-time "active" status visualization beyond just the setting.
-    // However, the toggle mainly controls the setting.
-    
     return BlocBuilder<FileWatcherBloc, FileWatcherState>(
       builder: (context, watcherState) {
         final isWatching = watcherState is FileWatcherActive && watcherState.isEnabled;
         
-        return InputChip(
-          avatar: Icon(
-            isWatching ? Icons.visibility : Icons.visibility_off,
-            size: 16,
-            color: isWatching 
-                ? (isDarkMode ? Colors.green[400] : Colors.green[700])
-                : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+        return Tooltip(
+          message: 'File Watching: ${isWatching ? "ON" : "OFF"}\nAutomatically recompare when files change on disk',
+          waitDuration: const Duration(milliseconds: 500),
+          child: InputChip(
+             avatar: isWatching 
+                ? const _PulsingIndicator()
+                : Icon(
+                    Icons.visibility_off,
+                    size: 16,
+                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                  ),
+            label: Text(
+              isWatching ? 'Watching' : 'Watch Off',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isWatching ? FontWeight.bold : FontWeight.normal,
+                color: isWatching
+                    ? (isDarkMode ? Colors.green[400] : Colors.green[800])
+                    : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
+              ),
+            ),
+            selected: isAutoReloadEnabled,
+            showCheckmark: false,
+            onSelected: (value) => _toggleFileWatching(value),
+            backgroundColor: Colors.transparent,
+            selectedColor: isDarkMode ? Colors.green.withOpacity(0.15) : Colors.green.withOpacity(0.1),
+            side: BorderSide(
+              color: isWatching
+                  ? (isDarkMode ? Colors.green[700]! : Colors.green[600]!)
+                  : (isDarkMode ? Colors.grey[800]! : Colors.grey[300]!),
+            ),
+            padding: const EdgeInsets.all(0),
+            visualDensity: VisualDensity.compact,
           ),
-          label: Text(isWatching ? 'Watching' : 'Watch Off'),
-          selected: isAutoReloadEnabled,
-          showCheckmark: false,
-          onSelected: (value) => _toggleFileWatching(value),
-          tooltip: 'Automatically recompare when files change on disk',
-          backgroundColor: Colors.transparent,
-          selectedColor: isDarkMode ? Colors.green.withOpacity(0.15) : Colors.green.withOpacity(0.1),
-          side: BorderSide(
-            color: isWatching
-                ? (isDarkMode ? Colors.green[700]! : Colors.green[600]!)
-                : (isDarkMode ? Colors.grey[800]! : Colors.grey[300]!),
-          ),
-          labelStyle: TextStyle(
-            fontSize: 12,
-            fontWeight: isWatching ? FontWeight.bold : FontWeight.normal,
-            color: isWatching
-                ? (isDarkMode ? Colors.green[400] : Colors.green[800])
-                : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
-          ),
-          padding: const EdgeInsets.all(0),
-          visualDensity: VisualDensity.compact,
         );
       },
     );
@@ -1141,6 +1147,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       ],
     );
   }
+
+
 
   Widget _buildDiffListItem({
     required String key,
@@ -1435,75 +1443,306 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icon
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.08),
-                shape: BoxShape.circle,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32.0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Animated Icon
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const _AnimatedEmptyStateIcon(),
               ),
-              child: Icon(
-                Icons.compare_arrows_rounded,
-                size: 48,
-                color: theme.colorScheme.primary.withOpacity(0.7),
+              const SizedBox(height: 24),
+              // Headline
+              Text(
+                'Ready to Compare Files',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            // Headline
-            Text(
-              'Ready to Compare Files',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+              const SizedBox(height: 8),
+              // Description
+              Text(
+                'Drop localization files above or use the browse buttons\nto select files for comparison.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: textSecondary,
+                  height: 1.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            // Description
-            Text(
-              'Drop localization files above or use the browse buttons\nto select files for comparison.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: textSecondary,
-                height: 1.5,
+              const SizedBox(height: 20),
+              // Supported formats
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: ['.lang', '.json', '.xml', '.xliff', '.properties', '.yaml']
+                    .map((ext) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withOpacity(0.15),
+                            ),
+                          ),
+                          child: Text(
+                            ext,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: theme.colorScheme.primary,
+                              fontFamily: 'Consolas, Monaco, monospace',
+                            ),
+                          ),
+                        ))
+                    .toList(),
               ),
-            ),
-            const SizedBox(height: 20),
-            // Supported formats
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: ['.lang', '.json', '.xml', '.xliff', '.properties', '.yaml']
-                  .map((ext) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.06),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.15),
+              const SizedBox(height: 32),
+              // Quick Tutorial Link
+              TextButton.icon(
+                onPressed: () => _showQuickTutorialDialog(context),
+                icon: Icon(Icons.lightbulb_outline, size: 18, color: theme.colorScheme.secondary),
+                label: Text(
+                  'Quick Tutorial',
+                  style: TextStyle(color: theme.colorScheme.secondary),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Recent Comparisons Section
+              BlocBuilder<HistoryBloc, HistoryState>(
+                builder: (context, historyState) {
+                  if (historyState is HistoryLoaded && historyState.history.isNotEmpty) {
+                    final recentItems = historyState.history.take(5).toList();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Divider(color: theme.dividerColor.withOpacity(0.5)),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Recent Comparisons',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: textSecondary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: Text(
-                          ext,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: theme.colorScheme.primary,
-                            fontFamily: 'Consolas, Monaco, monospace',
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ],
+                        const SizedBox(height: 8),
+                        ...recentItems.map((session) => _buildRecentComparisonItem(context, session, theme, textSecondary)),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRecentComparisonItem(BuildContext context, ComparisonSession session, ThemeData theme, Color textSecondary) {
+    final sourceName = session.file1Path.split(Platform.pathSeparator).last;
+    final targetName = session.file2Path.split(Platform.pathSeparator).last;
+
+    return ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(Icons.history, color: theme.colorScheme.primary.withOpacity(0.7)),
+      title: Text(
+        '$sourceName ↔ $targetName',
+        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        _timeAgo(session.timestamp),
+        style: theme.textTheme.bodySmall?.copyWith(color: textSecondary),
+      ),
+      onTap: () => _loadRecentComparison(session),
+    );
+  }
+
+  void _loadRecentComparison(ComparisonSession session) {
+    final file1 = File(session.file1Path);
+    final file2 = File(session.file2Path);
+
+    if (!file1.existsSync() || !file2.existsSync()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('One or both files from this session no longer exist.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _file1 = file1;
+      _file2 = file2;
+    });
+    _startComparison();
+  }
+
+  String _timeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inSeconds < 60) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} min ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hours ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
+  }
+
+  void _showQuickTutorialDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.lightbulb, color: theme.colorScheme.secondary),
+            const SizedBox(width: 8),
+            const Text('Quick Tutorial'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('1. Drag & drop or select two localization files.'),
+            SizedBox(height: 8),
+            Text('2. Click "Compare Files" to see the differences.'),
+            SizedBox(height: 8),
+            Text('3. Use filters to focus on Added, Removed, or Modified keys.'),
+            SizedBox(height: 8),
+            Text('4. Enable File Watching to auto-recompare on file changes.'),
+            SizedBox(height: 8),
+            Text('5. Use "Advanced" view for detailed diff analysis.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PulsingIndicator extends StatefulWidget {
+  const _PulsingIndicator();
+
+  @override
+  State<_PulsingIndicator> createState() => _PulsingIndicatorState();
+}
+
+class _PulsingIndicatorState extends State<_PulsingIndicator> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return FadeTransition(
+      opacity: _animation,
+      child: Icon(
+            Icons.visibility,
+            size: 16,
+            color: isDark ? Colors.green[400] : Colors.green[700],
+      ),
+    );
+  }
+}
+
+class _AnimatedEmptyStateIcon extends StatefulWidget {
+  const _AnimatedEmptyStateIcon();
+
+  @override
+  State<_AnimatedEmptyStateIcon> createState() => _AnimatedEmptyStateIconState();
+}
+
+class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _rotationAnimation;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    
+    _rotationAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+    
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _rotationAnimation.value,
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Icon(
+              Icons.compare_arrows_rounded,
+              size: 48,
+              color: theme.colorScheme.primary.withOpacity(0.7),
+            ),
+          ),
+        );
+      },
     );
   }
 } 

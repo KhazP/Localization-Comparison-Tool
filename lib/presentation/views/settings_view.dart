@@ -29,6 +29,8 @@ class SettingsView extends StatefulWidget {
 class _SettingsViewState extends State<SettingsView> with SingleTickerProviderStateMixin {
   SettingsCategory _selectedCategory = SettingsCategory.general;
   final TextEditingController _newPatternController = TextEditingController();
+  final ScrollController _navScrollController = ScrollController();
+  final ScrollController _contentScrollController = ScrollController();
   
   PackageInfo? _packageInfo;
   String _platformInfo = 'Loading...';
@@ -39,7 +41,19 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   final List<String> _fileFormats = [
     'json', 'xml', 'yaml', 'yml', 'csv', 'arb', 'xliff', 'properties', 'resx', 'lang', 'txt', 'docx'
   ];
-  final List<String> _appLanguages = ['English (US)', 'Spanish (ES)', 'French (FR)'];
+  final List<String> _appLanguages = [
+    'Auto-Detect',
+    'English (US)',
+    'Español (ES)',
+    'Français (FR)',
+    'Deutsch (DE)',
+    'Italiano (IT)',
+    'Português (BR)',
+    'Türkçe (TR)',
+    '日本語 (JP)',
+    '中文 (ZH)',
+    '한국어 (KR)',
+  ];
   final List<String> _defaultViews = ['Basic Comparison', 'History View', 'Files', 'Last Used View'];
   final List<String> _encodings = ['UTF-8', 'UTF-16', 'UTF-16BE', 'UTF-16LE', 'ASCII', 'ISO-8859-1'];
   final List<String> _themeModes = ['System', 'Light', 'Dark', 'Amoled'];
@@ -80,6 +94,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   @override
   void dispose() {
     _newPatternController.dispose();
+    _navScrollController.dispose();
+    _contentScrollController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -210,8 +226,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           // Navigation Items
           Expanded(
             child: Scrollbar(
+              controller: _navScrollController,
               thumbVisibility: true,
               child: ListView(
+                controller: _navScrollController,
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 children: SettingsCategory.values.map((category) {
                   return _buildNavItem(context, category, isDark);
@@ -377,8 +395,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           // Content
           Expanded(
             child: Scrollbar(
+              controller: _contentScrollController,
               thumbVisibility: true,
               child: SingleChildScrollView(
+                controller: _contentScrollController,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: KeyedSubtree(

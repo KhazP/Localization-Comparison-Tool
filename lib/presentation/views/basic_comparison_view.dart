@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
@@ -702,6 +703,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             flex: 3,
             child: Row(
               children: [
+                _buildStatsChart(addedCount, removedCount, modifiedCount),
+                const SizedBox(width: 16),
                 _buildCompactStat('Total', totalKeys, theme.colorScheme.onSurface.withAlpha(180)),
                 const SizedBox(width: 16),
                 _buildCompactStat('+${addedCount}', null, const Color(0xFF22C55E)),
@@ -834,6 +837,43 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatsChart(int added, int removed, int modified) {
+    final total = added + removed + modified;
+    if (total == 0) return const SizedBox.shrink();
+
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: PieChart(
+        PieChartData(
+          sections: [
+            PieChartSectionData(
+              value: added.toDouble(),
+              color: const Color(0xFF22C55E),
+              radius: 6,
+              showTitle: false,
+            ),
+            PieChartSectionData(
+              value: removed.toDouble(),
+              color: const Color(0xFFEF4444),
+              radius: 6,
+              showTitle: false,
+            ),
+            PieChartSectionData(
+              value: modified.toDouble(),
+              color: const Color(0xFFF59E0B),
+              radius: 6,
+              showTitle: false,
+            ),
+          ],
+          sectionsSpace: 2,
+          centerSpaceRadius: 10,
+          startDegreeOffset: 270,
+        ),
       ),
     );
   }

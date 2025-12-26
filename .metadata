@@ -15,7 +15,7 @@ migration:
     - platform: root
       create_revision: b25305a8832cfc6ba632a7f87ad455e319dccce8
       base_revision: b25305a8832cfc6ba632a7f87ad455e319dccce8
-    - platform: linux
+    - platform: windows
       create_revision: b25305a8832cfc6ba632a7f87ad455e319dccce8
       base_revision: b25305a8832cfc6ba632a7f87ad455e319dccce8
 

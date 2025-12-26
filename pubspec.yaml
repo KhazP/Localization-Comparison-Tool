@@ -28,6 +28,7 @@ dependencies:
   diff_match_patch: ^0.4.1 # For character-level diff highlighting
   docx_to_text: ^1.0.1 # For parsing DOCX files
   flutter_colorpicker: ^1.1.0
+  fl_chart: ^0.68.0
   watcher: ^1.1.0 # For file system watching
   desktop_drop: ^0.4.4 # For drag & drop file support
   cross_file: ^0.3.3+8 # For XFile type used in drag & drop

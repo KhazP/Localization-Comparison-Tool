@@ -242,6 +242,12 @@
       "languageVersion": "3.1"
     },
     {
+      "name": "fl_chart",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/fl_chart-0.68.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "flutter",
       "rootUri": "file:///C:/Users/alpya/Documents/Flutter/flutter/packages/flutter",
       "packageUri": "lib/",

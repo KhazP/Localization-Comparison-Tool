@@ -1,93 +1,105 @@
-# Contributing to Localizer App
+# Contributing to Localization Comparison Tool
 
-Thank you for your interest in contributing to Localizer App! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing! We welcome contributions from the community to help make this tool better for everyone.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Flutter SDK (3.0+)
-- Dart SDK (included with Flutter)
-- Git
-- Windows, macOS, or Linux
+- **Flutter SDK**: Version 3.19 or higher ([Install Guide](https://docs.flutter.dev/get-started/install))
+- **Dart SDK**: Included with Flutter
+- **Git**: Version control system
 
 ### Setup
 
-1. Clone the repository:
+1. **Fork and Clone**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/LocalizerAppMain.git
-   cd LocalizerAppMain
+   git clone https://github.com/YOUR_USERNAME/Localization-Comparison-Tool.git
+   cd Localization-Comparison-Tool
    ```
 
-2. Install dependencies:
+2. **Install Dependencies**
    ```bash
    flutter pub get
    ```
 
-3. Run the app:
+3. **Generate Code**
+   This project uses code generation (Hive, JSON Serialization).
    ```bash
-   flutter run -d windows  # or macos/linux
+   dart run build_runner build --delete-conflicting-outputs
    ```
+
+4. **Run the App**
+   ```bash
+   flutter run -d windows
+   ```
+
+---
 
 ## 📁 Project Structure
 
-```
+```text
 lib/
-├── business_logic/     # BLoC state management
-│   └── blocs/         # All BLoC implementations
-├── core/              # Core utilities and constants
-│   ├── constants/     # App colors, spacing, etc.
-│   ├── di/            # Dependency injection (get_it)
-│   └── services/      # Business services
+├── business_logic/     # State management (BLoC pattern)
+│   ├── blocs/         # All BLoC implementations
+│   └── events/        # BLoC events and states
+├── core/              # Core utilities, constants, and DI
+│   ├── constants/     # App colors, themes, strings
+│   ├── services/      # Business logic services (Diffing, Parsing)
+│   └── di/            # Dependency Injection (GetIt)
 ├── data/              # Data layer
-│   ├── models/        # Data models
-│   ├── parsers/       # File format parsers
-│   └── repositories/  # Data repositories
+│   ├── models/        # Data models (Hive, JSON)
+│   └── parsers/       # File parsing logic
 └── presentation/      # UI layer
-    ├── themes/        # App themes
-    ├── views/         # Screen widgets
-    └── widgets/       # Reusable components
+    ├── themes/        # App themes and styles
+    └── views/         # Application screens/pages
 ```
+
+---
 
 ## 🔧 Development Guidelines
 
 ### Code Style
+- Follow [Effective Dart](https://dart.dev/guides/language/effective-dart) guidelines.
+- Use **PascalCase** for classes, **camelCase** for variables/functions.
+- Run the linter before committing: `flutter analyze`.
 
-- Follow [Effective Dart](https://dart.dev/guides/language/effective-dart) guidelines
-- Use meaningful variable and function names
-- Add comments for complex logic
-- Keep functions focused and small
-
-### BLoC Pattern
-
-- Events should be simple and descriptive
-- States should be immutable
-- Avoid BLoC-to-BLoC direct dependencies
-- Pass dependencies via events or use service locator
+### State Management (BLoC)
+- **Events**: Should be simple, descriptive, and separate files/classes where appropriate.
+- **States**: Should be immutable.
+- **Logic**: Keep business logic in BLoCs or Services, not in the UI widgets.
 
 ### Commits
+- Use descriptive commit messages (e.g., `feat: Add XLIFF parsing support` or `fix: Resolve layout issue on high DPI`).
+- Keep commits focused on a single logical change.
 
-- Use clear, descriptive commit messages
-- Reference issue numbers when applicable
-- Keep commits focused on single changes
+---
+
+## 📝 Pull Request Process
+
+1. **Create a Branch**: `git checkout -b feature/amazing-feature`
+2. **Implement Changes**: Write clean, tested code.
+3. **Verify**:
+    - Run `flutter test`.
+    - Run `flutter analyze` to check for lint errors.
+    - Format code with `dart format .`.
+4. **Push**: `git push origin feature/amazing-feature`
+5. **Open PR**: Create a Pull Request against the `main` branch.
+    - Fill out the PR template.
+    - Attach screenshots for UI changes.
+
+---
 
 ## 🧪 Testing
 
-Run tests with:
+Run standard tests:
 ```bash
 flutter test
 ```
 
-## 📝 Pull Request Process
+---
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests and ensure they pass
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+## 📄 License & Conduct
 
-## 📄 License
-
-By contributing, you agree that your contributions will be licensed under the project's license.
+- By contributing, you agree that your contributions will be licensed under the **GPLv3 License**.
+- Please respect our [Code of Conduct](CODE_OF_CONDUCT.md).

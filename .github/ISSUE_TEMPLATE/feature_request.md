@@ -1,32 +1,19 @@
 ---
 name: Feature request
-about: Suggest an idea or enhancement for Localization Comparison Tool
-title: "[FEATURE]"
+about: Suggest an idea for this project
+title: ''
 labels: enhancement
-assignees: KhazP
-
+assignees: ''
 ---
 
-## Feature Description
-A clear and concise description of the feature you're requesting.
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex: I'm always frustrated when [...]
 
-## Problem Statement
-Describe the problem this feature would solve or how it would improve the application.
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
 
-## Proposed Solution
-Describe how you envision this feature working.
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
 
-## Use Case
-Explain how users would utilize this feature in their workflow.
-
-## Alternative Solutions
-Have you considered any alternative approaches or workarounds?
-
-## Implementation Ideas
-If you have any implementation suggestions or technical approach ideas (optional).
-
-## Mockups/Examples
-Add any mockups, screenshots, or examples that help illustrate the feature (if applicable).
-
-## Additional Context
-Any other context, information, or references about the feature request.
+**Additional context**
+Add any other context or screenshots about the feature request here.

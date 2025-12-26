@@ -543,6 +543,11 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (state.pairedFiles.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _buildSummaryBar(context, state.pairedFiles, state.comparisonResults),
+          ),
         _buildPairedFilesSection(context, state.pairedFiles, state.comparisonResults),
         if (state.unmatchedSourceFiles.isNotEmpty)
           _buildUnmatchedFilesSection(
@@ -561,6 +566,64 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             AppThemeV2.info,
           ),
       ],
+    );
+  }
+
+  Widget _buildSummaryBar(
+    BuildContext context,
+    List<FilePair> pairs,
+    Map<FilePair, ComparisonResult> results,
+  ) {
+    int totalAdded = 0;
+    int totalRemoved = 0;
+    int totalModified = 0;
+
+    for (var pair in pairs) {
+      if (results.containsKey(pair)) {
+        final result = results[pair]!;
+        totalAdded += result.diff.values
+            .where((d) => d.status == StringComparisonStatus.added)
+            .length;
+        totalRemoved += result.diff.values
+            .where((d) => d.status == StringComparisonStatus.removed)
+            .length;
+        totalModified += result.diff.values
+            .where((d) => d.status == StringComparisonStatus.modified)
+            .length;
+      }
+    }
+
+    final theme = Theme.of(context);
+    final themeState = context.watch<ThemeBloc>().state;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.monitor_heart_outlined, 
+               size: 20, 
+               color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary),
+          const SizedBox(width: 8),
+          Text(
+            '${pairs.length} file pairs',
+            style: theme.textTheme.titleMedium,
+          ),
+          const Spacer(),
+          _StatChip(label: 'A', count: totalAdded, color: themeState.diffAddedColor),
+          const SizedBox(width: 8),
+          _StatChip(label: 'R', count: totalRemoved, color: themeState.diffRemovedColor),
+          const SizedBox(width: 8),
+          _StatChip(label: 'M', count: totalModified, color: themeState.diffModifiedColor),
+        ],
+      ),
     );
   }
 

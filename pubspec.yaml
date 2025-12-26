@@ -18,7 +18,7 @@ dependencies:
   xml: ^6.5.0 # For XML parsing (used in RESX and XML parsers)
   http: ^1.2.0 # For making HTTP requests (Google Translate)
   libgit2dart: ^1.2.2 # Downgraded as per pub suggestion
-  file_picker: ^6.2.0 # Added for file selection
+  file_picker: ^8.0.0 # Upgraded to fix Windows build
   uuid: ^4.3.3 # Added for generating unique IDs for history items
   hive: ^2.2.3 # For local database
   hive_flutter: ^1.1.0 # For Flutter integration (includes init)

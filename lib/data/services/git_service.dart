@@ -32,6 +32,7 @@ abstract class GitService {
   Future<List<GitDiffFile>> compareBranches(String repoPath, String baseBranch, String targetBranch);
   Future<List<GitDiffFile>> compareCommits(String repoPath, String baseSha, String targetSha);
   Future<String> getFileContentAtBranch(String repoPath, String branchName, String filePath);
+  Future<List<String>> getFilesInCommit(String repoPath, String ref);
 }
 
 class LibGit2DartService implements GitService {
@@ -244,9 +245,15 @@ class LibGit2DartService implements GitService {
       final tree = commit.tree;
 
       // 3. Find the file entry in the tree
-      // Note: tree[filePath] throws if not found in some bindings, or returns non-null. 
-      // Linter says it is never null. We rely on try/catch for "not found".
-      final entry = tree[filePath];
+      // Note: tree[filePath] throws if not found
+      var entry;
+      try {
+        entry = tree[filePath];
+      } catch (_) {
+        // File does not exist in this tree (e.g., deleted or not yet created)
+        // Return empty string so diff shows as added/deleted
+        return '';
+      }
 
       // Check for binary extensions
       final ext = filePath.split('.').last.toLowerCase();
@@ -267,6 +274,64 @@ class LibGit2DartService implements GitService {
     } catch (e) {
       developer.log('Error retrieving file content: $e', name: 'GitService');
       return 'Error retrieving content: $e';
+    }
+  }
+
+  @override
+  Future<List<String>> getFilesInCommit(String repoPath, String ref) async {
+    try {
+      final repo = Repository.open(repoPath);
+      
+      // Resolve reference to commit
+      Commit? commit;
+      if (RegExp(r'^[0-9a-fA-F]{40}$').hasMatch(ref)) {
+         try {
+           commit = Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: ref));
+         } catch (_) {}
+      }
+      
+      if (commit == null) {
+         for (final branch in repo.branches) {
+           if (branch.name == ref) {
+              commit = Commit.lookup(repo: repo, oid: branch.target);
+              break;
+           }
+         }
+      }
+
+      if (commit == null) return [];
+
+      final files = <String>[];
+      final tree = commit.tree;
+
+      // Recursive tree walker helper using libgit2dart API
+      void walkTree(Tree t, String parentPath) {
+        for (final entry in t.entries) {
+          final fullPath = parentPath.isEmpty ? entry.name : '$parentPath/${entry.name}';
+          
+          // Check filemode: GitFilemode.tree = directory, otherwise = file
+          if (entry.filemode == GitFilemode.tree) {
+            // It's a directory, recurse
+            try {
+              final subtree = Tree.lookup(repo: repo, oid: entry.oid);
+              walkTree(subtree, fullPath);
+            } catch (e) {
+              developer.log('Error looking up subtree $fullPath: $e', name: 'GitService');
+            }
+          } else {
+            // It's a file (blob, blobExecutable, or link)
+            files.add(fullPath);
+          }
+        }
+      }
+      
+      walkTree(tree, '');
+      developer.log('Found ${files.length} files in $ref', name: 'GitService');
+      return files;
+
+    } catch (e) {
+      developer.log('Error getting files in commit: $e', name: 'GitService');
+      return [];
     }
   }
 }

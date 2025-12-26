@@ -8,8 +8,12 @@ import 'package:localizer_app_main/presentation/views/history_view.dart';
 import 'package:localizer_app_main/presentation/views/settings_view.dart';
 import 'package:localizer_app_main/presentation/views/git_view.dart';
 
+import 'package:localizer_app_main/data/models/comparison_history.dart';
+
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  final ComparisonSession? initialSession;
+
+  const MyHomePage({super.key, this.initialSession});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -55,7 +59,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   List<Widget> get _widgetOptions => <Widget>[
-    BasicComparisonView(onNavigateToTab: _onDestinationSelected),
+    BasicComparisonView(
+      onNavigateToTab: _onDestinationSelected,
+      initialSession: widget.initialSession,
+    ),
     HistoryView(onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
     const FilesView(),
     const GitView(),

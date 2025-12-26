@@ -69,6 +69,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     // Reset events for new categories
     on<ResetAiServicesSettings>(_onResetAiServicesSettings);
     on<ResetVersionControlSettings>(_onResetVersionControlSettings);
+    // Startup Options Events
+    on<UpdateStartMinimizedToTray>(_onUpdateStartMinimizedToTray);
+    on<UpdateOpenLastProjectOnStartup>(_onUpdateOpenLastProjectOnStartup);
+    on<UpdateRememberWindowPosition>(_onUpdateRememberWindowPosition);
+    on<UpdateWindowBounds>(_onUpdateWindowBounds);
   }
 
   Future<void> _onLoadSettings(
@@ -515,6 +520,40 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       gitUserName: defaultSettings.gitUserName,
       gitUserEmail: defaultSettings.gitUserEmail,
       enableGitIntegration: defaultSettings.enableGitIntegration,
+    );
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  // Startup Options Event Handlers
+  Future<void> _onUpdateStartMinimizedToTray(
+      UpdateStartMinimizedToTray event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(startMinimizedToTray: event.minimized);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateOpenLastProjectOnStartup(
+      UpdateOpenLastProjectOnStartup event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(openLastProjectOnStartup: event.open);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateRememberWindowPosition(
+      UpdateRememberWindowPosition event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(rememberWindowPosition: event.remember);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateWindowBounds(
+      UpdateWindowBounds event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(
+      lastWindowX: event.x,
+      lastWindowY: event.y,
+      lastWindowWidth: event.width,
+      lastWindowHeight: event.height,
     );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));

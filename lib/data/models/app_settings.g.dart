@@ -62,13 +62,20 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       gitUserEmail: fields[28] == null ? '' : fields[28] as String,
       enableGitIntegration: fields[29] == null ? false : fields[29] as bool,
       showIdenticalEntries: fields[36] == null ? true : fields[36] as bool,
+      startMinimizedToTray: fields[38] == null ? false : fields[38] as bool,
+      openLastProjectOnStartup: fields[39] == null ? false : fields[39] as bool,
+      rememberWindowPosition: fields[40] == null ? false : fields[40] as bool,
+      lastWindowX: fields[41] as double?,
+      lastWindowY: fields[42] as double?,
+      lastWindowWidth: fields[43] as double?,
+      lastWindowHeight: fields[44] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(38)
+      ..writeByte(45)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -144,7 +151,21 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(29)
       ..write(obj.enableGitIntegration)
       ..writeByte(36)
-      ..write(obj.showIdenticalEntries);
+      ..write(obj.showIdenticalEntries)
+      ..writeByte(38)
+      ..write(obj.startMinimizedToTray)
+      ..writeByte(39)
+      ..write(obj.openLastProjectOnStartup)
+      ..writeByte(40)
+      ..write(obj.rememberWindowPosition)
+      ..writeByte(41)
+      ..write(obj.lastWindowX)
+      ..writeByte(42)
+      ..write(obj.lastWindowY)
+      ..writeByte(43)
+      ..write(obj.lastWindowWidth)
+      ..writeByte(44)
+      ..write(obj.lastWindowHeight);
   }
 
   @override

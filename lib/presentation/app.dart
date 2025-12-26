@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,11 +19,13 @@ import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
+import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/home_view.dart';
+import 'package:window_manager/window_manager.dart';
 
 class MyApp extends StatelessWidget {
   final AppSettings initialAppSettings;
@@ -67,10 +70,6 @@ class MyApp extends StatelessWidget {
           BlocProvider<ComparisonBloc>(
             create: (context) => ComparisonBloc(
               comparisonEngine: comparisonEngine,
-              // Optional: Add progress callback if needed
-              // onProgress: (completed, total, message) {
-              //   BlocProvider.of<ProgressBloc>(context).add(ProgressUpdated(completed, message));
-              // },
             ),
           ),
           BlocProvider<HistoryBloc>(
@@ -96,30 +95,104 @@ class MyApp extends StatelessWidget {
             create: (context) => FileWatcherBloc(fileWatcherService),
           ),
         ],
-        child: BlocListener<SettingsBloc, SettingsState>(
-          listener: (context, settingsState) {
-            if (settingsState.status == SettingsStatus.loaded) {
-              context.read<ThemeBloc>().add(UpdateThemeSettings(settingsState.appSettings));
-            }
-          },
-          child: BlocBuilder<ThemeBloc, AppThemeState>(
-            builder: (context, themeState) {
-              final settingsState = context.watch<SettingsBloc>().state;
-              bool useAmoled = false;
-              if (settingsState.status == SettingsStatus.loaded) {
-                useAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-              }
+        child: _WindowAwareApp(openLastProject: initialAppSettings.openLastProjectOnStartup),
+      ),
+    );
+  }
+}
 
-              return MaterialApp(
-                debugShowCheckedModeBanner: kDebugMode,
-                title: 'Localization Comparison Tool',
-                theme: AppThemeV2.createLightTheme(themeState.accentColor),
-                darkTheme: useAmoled ? AppThemeV2.createAmoledTheme(themeState.accentColor) : AppThemeV2.createDarkTheme(themeState.accentColor),
-                themeMode: themeState.themeMode,
-                home: const MyHomePage(),
-              );
-            },
-          ),
+/// A widget that wraps the app and listens to window events to save position.
+class _WindowAwareApp extends StatefulWidget {
+  final bool openLastProject;
+
+  const _WindowAwareApp({required this.openLastProject});
+
+  @override
+  State<_WindowAwareApp> createState() => _WindowAwareAppState();
+}
+
+class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
+  ComparisonSession? _initialSession;
+  bool _hasLoadedInitialSession = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.addListener(this);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      windowManager.removeListener(this);
+    }
+    super.dispose();
+  }
+
+  Future<void> _saveWindowBounds() async {
+    if (!mounted) return;
+    final settingsBloc = context.read<SettingsBloc>();
+    if (settingsBloc.state.appSettings.rememberWindowPosition) {
+      final bounds = await windowManager.getBounds();
+      settingsBloc.add(UpdateWindowBounds(
+        x: bounds.left,
+        y: bounds.top,
+        width: bounds.width,
+        height: bounds.height,
+      ));
+    }
+  }
+
+  @override
+  void onWindowResized() {
+    _saveWindowBounds();
+  }
+
+  @override
+  void onWindowMoved() {
+    _saveWindowBounds();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<HistoryBloc, HistoryState>(
+      listener: (context, historyState) {
+        // Load initial session once when history first loads
+        if (!_hasLoadedInitialSession && 
+            widget.openLastProject && 
+            historyState is HistoryLoaded && 
+            historyState.history.isNotEmpty) {
+          setState(() {
+            _initialSession = historyState.history.first;
+            _hasLoadedInitialSession = true;
+          });
+        }
+      },
+      child: BlocListener<SettingsBloc, SettingsState>(
+        listener: (context, settingsState) {
+          if (settingsState.status == SettingsStatus.loaded) {
+            context.read<ThemeBloc>().add(UpdateThemeSettings(settingsState.appSettings));
+          }
+        },
+        child: BlocBuilder<ThemeBloc, AppThemeState>(
+          builder: (context, themeState) {
+            final settingsState = context.watch<SettingsBloc>().state;
+            bool useAmoled = false;
+            if (settingsState.status == SettingsStatus.loaded) {
+              useAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+            }
+
+            return MaterialApp(
+              debugShowCheckedModeBanner: kDebugMode,
+              title: 'Localization Comparison Tool',
+              theme: AppThemeV2.createLightTheme(themeState.accentColor),
+              darkTheme: useAmoled ? AppThemeV2.createAmoledTheme(themeState.accentColor) : AppThemeV2.createDarkTheme(themeState.accentColor),
+              themeMode: themeState.themeMode,
+              home: MyHomePage(initialSession: _initialSession),
+            );
+          },
         ),
       ),
     );

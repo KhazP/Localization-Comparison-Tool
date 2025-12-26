@@ -28,10 +28,12 @@
         "libgit2dart",
         "package_info_plus",
         "path",
+        "screen_retriever",
         "string_similarity",
         "url_launcher",
         "uuid",
         "watcher",
+        "window_manager",
         "xml",
         "yaml"
       ],
@@ -148,6 +150,17 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "screen_retriever",
+      "version": "0.2.0",
+      "dependencies": [
+        "flutter",
+        "screen_retriever_linux",
+        "screen_retriever_macos",
+        "screen_retriever_platform_interface",
+        "screen_retriever_windows"
       ]
     },
     {
@@ -907,6 +920,39 @@
       ]
     },
     {
+      "name": "screen_retriever_windows",
+      "version": "0.2.0",
+      "dependencies": [
+        "flutter",
+        "screen_retriever_platform_interface"
+      ]
+    },
+    {
+      "name": "screen_retriever_platform_interface",
+      "version": "0.2.0",
+      "dependencies": [
+        "flutter",
+        "json_annotation",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "screen_retriever_macos",
+      "version": "0.2.0",
+      "dependencies": [
+        "flutter",
+        "screen_retriever_platform_interface"
+      ]
+    },
+    {
+      "name": "screen_retriever_linux",
+      "version": "0.2.0",
+      "dependencies": [
+        "flutter",
+        "screen_retriever_platform_interface"
+      ]
+    },
+    {
       "name": "path_provider",
       "version": "2.1.5",
       "dependencies": [
@@ -1392,6 +1438,15 @@
       "dependencies": [
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "window_manager",
+      "version": "0.4.3",
+      "dependencies": [
+        "flutter",
+        "path",
+        "screen_retriever"
       ]
     }
   ],

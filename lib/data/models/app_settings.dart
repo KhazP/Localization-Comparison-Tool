@@ -121,6 +121,28 @@ class AppSettings extends HiveObject {
   @HiveField(36, defaultValue: true)
   bool showIdenticalEntries;
 
+  // Startup Options
+  @HiveField(38, defaultValue: false)
+  bool startMinimizedToTray;
+
+  @HiveField(39, defaultValue: false)
+  bool openLastProjectOnStartup;
+
+  @HiveField(40, defaultValue: false)
+  bool rememberWindowPosition;
+
+  @HiveField(41)
+  double? lastWindowX;
+
+  @HiveField(42)
+  double? lastWindowY;
+
+  @HiveField(43)
+  double? lastWindowWidth;
+
+  @HiveField(44)
+  double? lastWindowHeight;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -160,6 +182,13 @@ class AppSettings extends HiveObject {
     required this.gitUserEmail,
     required this.enableGitIntegration,
     required this.showIdenticalEntries,
+    required this.startMinimizedToTray,
+    required this.openLastProjectOnStartup,
+    required this.rememberWindowPosition,
+    this.lastWindowX,
+    this.lastWindowY,
+    this.lastWindowWidth,
+    this.lastWindowHeight,
   });
 
   // Default settings
@@ -203,6 +232,13 @@ class AppSettings extends HiveObject {
       gitUserEmail: '',
       enableGitIntegration: false,
       showIdenticalEntries: true,
+      startMinimizedToTray: false,
+      openLastProjectOnStartup: false,
+      rememberWindowPosition: false,
+      lastWindowX: null,
+      lastWindowY: null,
+      lastWindowWidth: null,
+      lastWindowHeight: null,
     );
   }
 
@@ -247,6 +283,13 @@ class AppSettings extends HiveObject {
       gitUserEmail: json['gitUserEmail'] as String,
       enableGitIntegration: json['enableGitIntegration'] as bool,
       showIdenticalEntries: json['showIdenticalEntries'] as bool? ?? true,
+      startMinimizedToTray: json['startMinimizedToTray'] as bool? ?? false,
+      openLastProjectOnStartup: json['openLastProjectOnStartup'] as bool? ?? false,
+      rememberWindowPosition: json['rememberWindowPosition'] as bool? ?? false,
+      lastWindowX: (json['lastWindowX'] as num?)?.toDouble(),
+      lastWindowY: (json['lastWindowY'] as num?)?.toDouble(),
+      lastWindowWidth: (json['lastWindowWidth'] as num?)?.toDouble(),
+      lastWindowHeight: (json['lastWindowHeight'] as num?)?.toDouble(),
     );
   }
 
@@ -291,6 +334,13 @@ class AppSettings extends HiveObject {
       'gitUserEmail': gitUserEmail,
       'enableGitIntegration': enableGitIntegration,
       'showIdenticalEntries': showIdenticalEntries,
+      'startMinimizedToTray': startMinimizedToTray,
+      'openLastProjectOnStartup': openLastProjectOnStartup,
+      'rememberWindowPosition': rememberWindowPosition,
+      'lastWindowX': lastWindowX,
+      'lastWindowY': lastWindowY,
+      'lastWindowWidth': lastWindowWidth,
+      'lastWindowHeight': lastWindowHeight,
     };
   }
 
@@ -333,6 +383,13 @@ class AppSettings extends HiveObject {
     String? gitUserEmail,
     bool? enableGitIntegration,
     bool? showIdenticalEntries,
+    bool? startMinimizedToTray,
+    bool? openLastProjectOnStartup,
+    bool? rememberWindowPosition,
+    double? lastWindowX,
+    double? lastWindowY,
+    double? lastWindowWidth,
+    double? lastWindowHeight,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -373,6 +430,13 @@ class AppSettings extends HiveObject {
       gitUserEmail: gitUserEmail ?? this.gitUserEmail,
       enableGitIntegration: enableGitIntegration ?? this.enableGitIntegration,
       showIdenticalEntries: showIdenticalEntries ?? this.showIdenticalEntries,
+      startMinimizedToTray: startMinimizedToTray ?? this.startMinimizedToTray,
+      openLastProjectOnStartup: openLastProjectOnStartup ?? this.openLastProjectOnStartup,
+      rememberWindowPosition: rememberWindowPosition ?? this.rememberWindowPosition,
+      lastWindowX: lastWindowX ?? this.lastWindowX,
+      lastWindowY: lastWindowY ?? this.lastWindowY,
+      lastWindowWidth: lastWindowWidth ?? this.lastWindowWidth,
+      lastWindowHeight: lastWindowHeight ?? this.lastWindowHeight,
     );
   }
 } 

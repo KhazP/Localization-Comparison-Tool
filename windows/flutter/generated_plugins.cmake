@@ -6,7 +6,9 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   flutter_secure_storage_windows
   libgit2dart
+  screen_retriever_windows
   url_launcher_windows
+  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

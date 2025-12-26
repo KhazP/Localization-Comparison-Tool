@@ -38,8 +38,8 @@ dependencies:
   flutter_secure_storage: ^9.0.0 # For secure API key storage (for AI Translation)
   google_fonts: ^6.1.0 # For custom fonts (Inter)
   get_it: ^7.6.7 # Service locator for dependency injection
-  # google_mlkit_translation: # For AI Translation (will be added with AI Translation feature)
-  # window_manager: # For native desktop integration (as per Tech Design)
+  window_manager: ^0.4.0 # For window position management
+  screen_retriever: ^0.2.0 # For screen info (window_manager dependency)
 
 dev_dependencies:
   flutter_test:

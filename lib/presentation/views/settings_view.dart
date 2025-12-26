@@ -598,6 +598,47 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         ),
         _buildSettingsCard(
           context: context,
+          title: 'Startup Options',
+          isDark: isDark,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Remember Window Position',
+              description: 'Restore window size and position on startup',
+              control: Switch(
+                value: settings.rememberWindowPosition,
+                onChanged: (val) => context.read<SettingsBloc>().add(UpdateRememberWindowPosition(val)),
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Open Last Project',
+              description: 'Automatically load the last comparison on startup',
+              control: Switch(
+                value: settings.openLastProjectOnStartup,
+                onChanged: (val) => context.read<SettingsBloc>().add(UpdateOpenLastProjectOnStartup(val)),
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Start Minimized to Tray',
+              description: 'Minimize window to system tray on startup',
+              control: Switch(
+                value: settings.startMinimizedToTray,
+                onChanged: (val) => context.read<SettingsBloc>().add(UpdateStartMinimizedToTray(val)),
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+              showDivider: false,
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
           title: 'Danger Zone',
           isDark: isDark,
           children: [

@@ -602,6 +602,36 @@
       "languageVersion": "3.6"
     },
     {
+      "name": "screen_retriever",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/screen_retriever-0.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "screen_retriever_linux",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/screen_retriever_linux-0.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "screen_retriever_macos",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/screen_retriever_macos-0.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "screen_retriever_platform_interface",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/screen_retriever_platform_interface-0.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "screen_retriever_windows",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/screen_retriever_windows-0.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "shelf",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/shelf-1.4.2",
       "packageUri": "lib/",
@@ -840,6 +870,12 @@
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/win32_registry-1.1.5",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "window_manager",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/window_manager-0.4.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "xdg_directories",

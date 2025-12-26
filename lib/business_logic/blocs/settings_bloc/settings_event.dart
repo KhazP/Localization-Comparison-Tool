@@ -306,4 +306,36 @@ class UpdateShowIdenticalEntries extends SettingsEvent {
 // Reset events for new categories
 class ResetAiServicesSettings extends SettingsEvent {}
 
-class ResetVersionControlSettings extends SettingsEvent {} 
+class ResetVersionControlSettings extends SettingsEvent {}
+
+// Startup Options Events
+class UpdateStartMinimizedToTray extends SettingsEvent {
+  final bool minimized;
+  const UpdateStartMinimizedToTray(this.minimized);
+  @override
+  List<Object> get props => [minimized];
+}
+
+class UpdateOpenLastProjectOnStartup extends SettingsEvent {
+  final bool open;
+  const UpdateOpenLastProjectOnStartup(this.open);
+  @override
+  List<Object> get props => [open];
+}
+
+class UpdateRememberWindowPosition extends SettingsEvent {
+  final bool remember;
+  const UpdateRememberWindowPosition(this.remember);
+  @override
+  List<Object> get props => [remember];
+}
+
+class UpdateWindowBounds extends SettingsEvent {
+  final double? x;
+  final double? y;
+  final double? width;
+  final double? height;
+  const UpdateWindowBounds({this.x, this.y, this.width, this.height});
+  @override
+  List<Object?> get props => [x, y, width, height];
+} 

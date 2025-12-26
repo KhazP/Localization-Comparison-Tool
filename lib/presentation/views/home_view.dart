@@ -117,7 +117,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               selectedIndex: _selectedIndex,
               onDestinationSelected: _onDestinationSelected,
               backgroundColor: Colors.transparent,
-              indicatorColor: colorScheme.primary.withOpacity(0.15),
+              indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
               labelType: NavigationRailLabelType.all,
               destinations: const [
                 NavigationRailDestination(

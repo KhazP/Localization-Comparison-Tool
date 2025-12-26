@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:localizer_app_main/data/parsers/csv_parser.dart';
@@ -36,7 +37,7 @@ class FileParserFactory {
         return parser;
       }
     }
-    print('No parser found for file extension: $extension');
+    debugPrint('No parser found for file extension: $extension');
     return null; // Or throw an exception, or return a default/dummy parser
   }
 } 

@@ -338,21 +338,21 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDragging
-              ? accentColor.withOpacity(0.1)
+              ? accentColor.withValues(alpha: 0.1)
               : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDragging
                 ? accentColor
                 : hasDirectory
-                    ? accentColor.withOpacity(0.5)
+                    ? accentColor.withValues(alpha: 0.5)
                     : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
             width: isDragging ? 2 : 1,
           ),
           boxShadow: isDragging
               ? [
                   BoxShadow(
-                    color: accentColor.withOpacity(0.2),
+                    color: accentColor.withValues(alpha: 0.2),
                     blurRadius: 12,
                     spreadRadius: 2,
                   )
@@ -367,7 +367,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: accentColor, size: 20),
@@ -402,8 +402,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppThemeV2.darkSurface.withOpacity(0.5)
-                    : AppThemeV2.lightSurface.withOpacity(0.5),
+                    ? AppThemeV2.darkSurface.withValues(alpha: 0.5)
+                    : AppThemeV2.lightSurface.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle,
@@ -454,7 +454,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   side: BorderSide(
-                    color: accentColor.withOpacity(0.5),
+                    color: accentColor.withValues(alpha: 0.5),
                   ),
                   foregroundColor: accentColor,
                 ),
@@ -1199,7 +1199,7 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

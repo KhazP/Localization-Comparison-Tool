@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:docx_to_text/docx_to_text.dart';
@@ -22,10 +23,10 @@ class DocxParser extends LocalizationParser {
         }
       }
       if (translations.isEmpty && text.trim().isNotEmpty) {
-         print('Warning: Parsed .docx file ${file.path} but no non-empty lines found after text extraction.');
+         debugPrint('Warning: Parsed .docx file ${file.path} but no non-empty lines found after text extraction.');
       }
     } catch (e) {
-      print('Error parsing .docx file ${file.path}: $e');
+      debugPrint('Error parsing .docx file ${file.path}: $e');
       // Consider if specific error handling for docx_to_text is needed
       return {};
     }

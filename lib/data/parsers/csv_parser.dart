@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 // For utf8
 import 'package:csv/csv.dart';
@@ -31,7 +32,7 @@ class CsvParser extends LocalizationParser {
       final List<List<dynamic>> rowsAsListOfValues = converter.convert(content);
 
       if (rowsAsListOfValues.isEmpty) {
-        print('Warning: CSV file is empty or could not be parsed: ${file.path}');
+        debugPrint('Warning: CSV file is empty or could not be parsed: ${file.path}');
         return translations;
       }
 
@@ -47,21 +48,21 @@ class CsvParser extends LocalizationParser {
 
           if (key.isNotEmpty) {
             if (translations.containsKey(key)) {
-              print('Warning: Duplicate key "$key" found in CSV file ${file.path} (row ${i+1}). Overwriting previous value.');
+              debugPrint('Warning: Duplicate key "$key" found in CSV file ${file.path} (row ${i+1}). Overwriting previous value.');
             }
             translations[key] = value;
           } else {
-            print('Warning: Empty key found in CSV file ${file.path} (row ${i+1}). Skipping entry.');
+            debugPrint('Warning: Empty key found in CSV file ${file.path} (row ${i+1}). Skipping entry.');
           }
         } else {
-          print('Warning: Row ${i+1} in CSV file ${file.path} does not have at least two columns. Skipping row.');
+          debugPrint('Warning: Row ${i+1} in CSV file ${file.path} does not have at least two columns. Skipping row.');
         }
       }
        if (translations.isEmpty && rowsAsListOfValues.isNotEmpty) {
-          print('Warning: Parsed CSV file ${file.path} but no valid key-value pairs were extracted (check header or column count).');
+          debugPrint('Warning: Parsed CSV file ${file.path} but no valid key-value pairs were extracted (check header or column count).');
       }
     } catch (e) {
-      print('Error parsing CSV file ${file.path}: $e');
+      debugPrint('Error parsing CSV file ${file.path}: $e');
       // Consider if specific CsvParserException types from the package need special handling
       return {};
     }

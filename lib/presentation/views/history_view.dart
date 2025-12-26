@@ -453,7 +453,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && context.mounted) {
       context.read<HistoryBloc>().add(ClearHistory());
     }
   }
@@ -763,7 +763,7 @@ class _HistoryCardState extends State<_HistoryCard> {
             sections: [
               PieChartSectionData(
                 value: 1,
-                color: Colors.grey.withOpacity(0.2),
+                color: Colors.grey.withValues(alpha: 0.2),
                 radius: 6,
                 showTitle: false,
               ),
@@ -837,7 +837,7 @@ class _FilePathRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 14, color: color),
@@ -882,7 +882,7 @@ class _StatPill extends StatelessWidget {
       margin: const EdgeInsets.only(left: 6),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -923,9 +923,9 @@ class _StatChip extends StatelessWidget {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

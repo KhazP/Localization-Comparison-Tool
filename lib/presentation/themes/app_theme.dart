@@ -117,7 +117,7 @@ class AppTheme {
           borderSide: const BorderSide(color: lightPrimary, width: 2),
         ),
         labelStyle: TextStyle(color: lightTextSecondary),
-        hintStyle: TextStyle(color: lightTextSecondary.withOpacity(0.7)),
+        hintStyle: TextStyle(color: lightTextSecondary.withValues(alpha: 0.7)),
       ),
       dividerTheme: const DividerThemeData(
         color: lightBorder,
@@ -139,9 +139,8 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           fontSize: 12,
         ),
-        indicatorColor: lightPrimary.withOpacity(0.1),
+        indicatorColor: lightPrimary.withValues(alpha: 0.1),
       ),
-      useMaterial3: true,
     );
   }
 
@@ -220,7 +219,7 @@ class AppTheme {
           borderSide: const BorderSide(color: darkPrimary, width: 2),
         ),
         labelStyle: TextStyle(color: darkTextSecondary),
-        hintStyle: TextStyle(color: darkTextSecondary.withOpacity(0.7)),
+        hintStyle: TextStyle(color: darkTextSecondary.withValues(alpha: 0.7)),
       ),
       dividerTheme: const DividerThemeData(
         color: darkBorder,
@@ -242,9 +241,8 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           fontSize: 12,
         ),
-        indicatorColor: darkPrimary.withOpacity(0.2),
+        indicatorColor: darkPrimary.withValues(alpha: 0.2),
       ),
-      useMaterial3: true,
     );
   }
 } 

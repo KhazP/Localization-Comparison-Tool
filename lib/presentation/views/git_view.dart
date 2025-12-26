@@ -75,7 +75,7 @@ class _RepositorySelector extends StatelessWidget {
 
   Future<void> _pickRepository(BuildContext context) async {
     String? result = await FilePicker.platform.getDirectoryPath(); 
-    if (result != null) {
+    if (result != null && context.mounted) {
       context.read<GitBloc>().add(SelectRepository(result));
     }
   }
@@ -479,7 +479,7 @@ class _GitFileDiffDialog extends StatelessWidget {
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(8),
-                                color: Colors.grey.withOpacity(0.1),
+                                color: Colors.grey.withValues(alpha: 0.1),
                                 width: double.infinity,
                                 child: Text(baseRef, style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                               ),
@@ -498,7 +498,7 @@ class _GitFileDiffDialog extends StatelessWidget {
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(8),
-                                color: Colors.blue.withOpacity(0.1),
+                                color: Colors.blue.withValues(alpha: 0.1),
                                 width: double.infinity,
                                 child: Text(targetRef, style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                               ),

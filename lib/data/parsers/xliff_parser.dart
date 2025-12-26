@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
@@ -12,7 +13,7 @@ class XliffParser extends LocalizationParser {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
       final String content = await file.readAsString(encoding: encoding);
       if (content.trim().isEmpty) {
-        print('Info: XLIFF file ${file.path} is empty.');
+        debugPrint('Info: XLIFF file ${file.path} is empty.');
         return translations;
       }
       final xml.XmlDocument document = xml.XmlDocument.parse(content);
@@ -25,7 +26,7 @@ class XliffParser extends LocalizationParser {
       
       final fileElements = document.findAllElements('file');
       if (fileElements.isEmpty) {
-        print('Warning: No <file> elements found in XLIFF: ${file.path}');
+        debugPrint('Warning: No <file> elements found in XLIFF: ${file.path}');
         // Try finding unit elements directly under xliff if no <file> elements are present
         // This is not standard but provides some resilience
         final xliffRoot = document.rootElement; // <xliff>
@@ -45,18 +46,18 @@ class XliffParser extends LocalizationParser {
             !fileElements.any((fe) => fe.descendants.contains(unit))
         ).toList();
         if (directUnits.isNotEmpty) {
-           print('Info: Found <unit> elements directly under <xliff> in ${file.path}');
+           debugPrint('Info: Found <unit> elements directly under <xliff> in ${file.path}');
           _parseUnits(directUnits, translations, file.path);
         }
       }
 
 
       if (translations.isEmpty) {
-          print('Warning: No translation units found or parsed in XLIFF file: ${file.path}');
+          debugPrint('Warning: No translation units found or parsed in XLIFF file: ${file.path}');
       }
 
     } catch (e) {
-      print('Error parsing XLIFF file ${file.path}: $e');
+      debugPrint('Error parsing XLIFF file ${file.path}: $e');
       // Return empty map or throw a more specific error
       // For now, returning empty allows comparison to proceed with other file if it's valid
       return {}; 
@@ -81,7 +82,7 @@ class XliffParser extends LocalizationParser {
               // If target is missing, store key with empty string or some placeholder?
               // Empty string is consistent with how other parsers might handle missing values.
               translations[id] = ''; 
-              print('Warning: No <target> found for unit id "$id" in segment in $filePath');
+              debugPrint('Warning: No <target> found for unit id "$id" in segment in $filePath');
             }
           } else {
             // Fallback for XLIFF 1.2 style where <target> might be directly under <trans-unit> (equivalent of <unit>)
@@ -91,14 +92,14 @@ class XliffParser extends LocalizationParser {
              final directTargetElement = unitElement.findElements('target').firstOrNull;
              if (directTargetElement != null) {
                 translations[id] = directTargetElement.innerText.trim();
-                 print('Info: Found direct <target> for unit id "$id" (possibly XLIFF 1.2 style or simplified 2.0) in $filePath');
+                 debugPrint('Info: Found direct <target> for unit id "$id" (possibly XLIFF 1.2 style or simplified 2.0) in $filePath');
              } else {
                 translations[id] = '';
-                print('Warning: No <segment> or direct <target> found for unit id "$id" in $filePath');
+                debugPrint('Warning: No <segment> or direct <target> found for unit id "$id" in $filePath');
              }
           }
         } else {
-          print('Warning: Found <unit> element without an id in $filePath');
+          debugPrint('Warning: Found <unit> element without an id in $filePath');
         }
       }
   }

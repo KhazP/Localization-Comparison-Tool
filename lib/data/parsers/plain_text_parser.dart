@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
@@ -28,7 +29,7 @@ class PlainTextParser extends LocalizationParser {
           }
         }
         if (translations.isEmpty) {
-          print('Warning: Detected XML-style .lang file ${file.path} but no valid <string name="key">value</string> entries found.');
+          debugPrint('Warning: Detected XML-style .lang file ${file.path} but no valid <string name="key">value</string> entries found.');
         }
       } else {
         // Fall back to plain text parsing (list-of-phrases format)
@@ -43,11 +44,11 @@ class PlainTextParser extends LocalizationParser {
           translations[trimmedLine] = trimmedLine;
         }
         if (translations.isEmpty && content.trim().isNotEmpty) {
-          print('Warning: Parsed ${file.path} but no valid phrases extracted (all lines might be empty or comments).');
+          debugPrint('Warning: Parsed ${file.path} but no valid phrases extracted (all lines might be empty or comments).');
         }
       }
     } catch (e) {
-      print('Error parsing ${file.path}: $e');
+      debugPrint('Error parsing ${file.path}: $e');
       return {};
     }
     return translations;

@@ -26,7 +26,7 @@ class SettingsCard extends StatelessWidget {
         : (isLight ? Colors.white : const Color(0xFF2A2D3E));
     final borderColor = isAmoled
         ? Colors.grey[850]!
-        : theme.dividerColor.withOpacity(0.5);
+        : theme.dividerColor.withValues(alpha: 0.5);
     final titleColor = isAmoled
         ? Colors.grey[300]!
         : theme.textTheme.titleMedium?.color;
@@ -77,7 +77,7 @@ class SettingItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final labelColor = theme.colorScheme.onSurface;
-    final tooltipColor = theme.colorScheme.onSurface.withOpacity(0.5);
+    final tooltipColor = theme.colorScheme.onSurface.withValues(alpha: 0.5);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
@@ -150,7 +150,7 @@ class SettingsDropdown extends StatelessWidget {
       decoration: BoxDecoration(
         color: dropdownBg,
         borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: borderColor.withOpacity(0.5)),
+        border: Border.all(color: borderColor.withValues(alpha: 0.5)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -163,7 +163,7 @@ class SettingsDropdown extends StatelessWidget {
           isExpanded: true,
           dropdownColor: dropdownBg,
           style: TextStyle(fontSize: 14, color: dropdownTextColor),
-          icon: Icon(Icons.arrow_drop_down, color: dropdownTextColor.withOpacity(0.7)),
+          icon: Icon(Icons.arrow_drop_down, color: dropdownTextColor.withValues(alpha: 0.7)),
         ),
       ),
     );
@@ -184,13 +184,13 @@ class SettingsSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final mutedColor = theme.colorScheme.onSurface.withOpacity(0.3);
+    final mutedColor = theme.colorScheme.onSurface.withValues(alpha: 0.3);
 
     return Switch(
       value: value,
       onChanged: onChanged,
       activeColor: theme.colorScheme.primary,
-      activeTrackColor: theme.colorScheme.primary.withOpacity(0.5),
+      activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
       inactiveTrackColor: mutedColor,
       thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
         if (states.contains(WidgetState.selected)) {
@@ -217,14 +217,14 @@ class SettingsInfoBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-    final mutedColor = theme.colorScheme.onSurface.withOpacity(0.7);
+    final mutedColor = theme.colorScheme.onSurface.withValues(alpha: 0.7);
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.1),
+        color: primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: primaryColor.withOpacity(0.3)),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

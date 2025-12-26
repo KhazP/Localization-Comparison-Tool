@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 
@@ -212,7 +213,7 @@ class GitBloc extends Bloc<GitEvent, GitState> {
       ));
     } catch (e) {
       // Don't error the whole screen, just stop loading
-      print('Error loading commits: $e');
+      debugPrint('Error loading commits: $e');
       emit(GitBranchesLoaded(
         _currentRepoPath!, 
         _cachedBranches, 

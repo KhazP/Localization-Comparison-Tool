@@ -18,7 +18,7 @@ import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff_view.dart'; 
 // import 'package:localizer_app_main/presentation/views/ai_translation_settings_view.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
-import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
+
 
 // Enum for filter status in Basic View
 enum BasicDiffFilter { all, added, removed, modified }
@@ -187,24 +187,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }
   }
 
-
-
-  Color _getColorForStatus(BuildContext context, StringComparisonStatus status) {
-    // Get colors from the theme, which is updated by ThemeBloc
-    final themeState = context.watch<ThemeBloc>().state;
-    switch (status) {
-      case StringComparisonStatus.added:
-        return themeState.diffAddedColor.withOpacity(0.2);
-      case StringComparisonStatus.removed:
-        return themeState.diffRemovedColor.withOpacity(0.2);
-      case StringComparisonStatus.modified:
-        return themeState.diffModifiedColor.withOpacity(0.2);
-      case StringComparisonStatus.identical:
-      default:
-        return Colors.transparent;
-    }
-  }
-
  @override
   Widget build(BuildContext context) {
     // Determine if Amoled mode is active
@@ -264,7 +246,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0),
               side: BorderSide(
-                color: isAmoled ? Colors.grey[850]! : Theme.of(context).dividerColor.withOpacity(0.5),
+                color: isAmoled ? Colors.grey[850]! : Theme.of(context).dividerColor.withValues(alpha: 0.5),
               ),
             ),
             margin: const EdgeInsets.only(bottom: 12.0),
@@ -478,9 +460,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: theme.dividerColor.withOpacity(0.2)),
+                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
                           ),
                           child: Row(
                             children: [
@@ -622,12 +604,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     Color borderColor = isDraggingOver 
         ? theme.colorScheme.primary 
-        : (hasFile ? theme.colorScheme.primary.withOpacity(0.3) : theme.dividerColor);
+        : (hasFile ? theme.colorScheme.primary.withValues(alpha: 0.3) : theme.dividerColor);
     Color backgroundColor = isDraggingOver 
-        ? theme.colorScheme.primary.withOpacity(0.08) 
+        ? theme.colorScheme.primary.withValues(alpha: 0.08) 
         : (hasFile 
-            ? theme.colorScheme.primary.withOpacity(0.04) 
-            : theme.cardColor.withOpacity(0.5));
+            ? theme.colorScheme.primary.withValues(alpha: 0.04) 
+            : theme.cardColor.withValues(alpha: 0.5));
 
     // Active state (file loaded): compact inline layout ~44px
     // Idle state (empty): slightly larger ~70px for easy drop
@@ -675,7 +657,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   hasFile ? Icons.description_rounded : Icons.cloud_upload_outlined,
                   color: isDraggingOver 
                       ? theme.colorScheme.primary
-                      : (hasFile ? theme.colorScheme.primary : theme.colorScheme.primary.withOpacity(0.5)),
+                      : (hasFile ? theme.colorScheme.primary : theme.colorScheme.primary.withValues(alpha: 0.5)),
                   size: hasFile ? 20 : 24,
                 ),
                 const SizedBox(width: 12),
@@ -689,7 +671,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       Text(
                         title,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.5),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.3,
                         ),
@@ -705,7 +687,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             fontWeight: hasFile ? FontWeight.w600 : FontWeight.w400,
                             color: hasFile 
                                 ? theme.colorScheme.onSurface 
-                                : theme.colorScheme.onSurface.withOpacity(0.6),
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -720,7 +702,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -740,7 +722,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   Icon(
                     Icons.swap_horiz_rounded,
                     size: 18,
-                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ],
               ],
@@ -1101,7 +1083,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             showCheckmark: false,
             onSelected: (value) => _toggleFileWatching(value),
             backgroundColor: Colors.transparent,
-            selectedColor: isDarkMode ? Colors.green.withOpacity(0.15) : Colors.green.withOpacity(0.1),
+            selectedColor: isDarkMode ? Colors.green.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.1),
             side: BorderSide(
               color: isWatching
                   ? (isDarkMode ? Colors.green[700]! : Colors.green[600]!)
@@ -1114,40 +1096,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       },
     );
   }
-
-  Widget _buildAnalyticsItem(String label, String value, Color valueColor, {bool compact = false}) {
-    final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = Theme.of(context).brightness == Brightness.dark &&
-                        settingsState.status == SettingsStatus.loaded &&
-                        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-
-    final Color currentLabelColor = isAmoled 
-        ? Colors.grey[500]! 
-        : (Theme.of(context).textTheme.bodySmall?.color ?? Theme.of(context).colorScheme.onSurface.withOpacity(0.7));
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: compact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-      children: [
-        Text(
-          label, 
-          style: compact 
-              ? Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11, color: currentLabelColor)
-              : Theme.of(context).textTheme.bodySmall?.copyWith(color: currentLabelColor),
-        ),
-        SizedBox(height: compact ? 2 : 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: compact ? 20 : 24, 
-            fontWeight: FontWeight.bold,
-            color: valueColor, // Value colors (red, green, blueGrey) should be distinct enough or made slightly lighter for Amoled
-          ),
-        ),
-      ],
-    );
-  }
-
 
 
   Widget _buildDiffListItem({
@@ -1182,7 +1130,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         statusLabel = 'MODIFIED';
         break;
       case StringComparisonStatus.identical:
-      default:
         statusColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
         bgColor = Colors.transparent;
         statusLabel = 'IDENTICAL';
@@ -1455,7 +1402,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: const _AnimatedEmptyStateIcon(),
@@ -1489,10 +1436,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     .map((ext) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.06),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: theme.colorScheme.primary.withOpacity(0.15),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
                             ),
                           ),
                           child: Text(
@@ -1526,7 +1473,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Divider(color: theme.dividerColor.withOpacity(0.5)),
+                        Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
                         const SizedBox(height: 12),
                         Text(
                           'Recent Comparisons',
@@ -1557,7 +1504,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.history, color: theme.colorScheme.primary.withOpacity(0.7)),
+      leading: Icon(Icons.history, color: theme.colorScheme.primary.withValues(alpha: 0.7)),
       title: Text(
         '$sourceName ↔ $targetName',
         style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -1738,7 +1685,7 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon> with S
             child: Icon(
               Icons.compare_arrows_rounded,
               size: 48,
-              color: theme.colorScheme.primary.withOpacity(0.7),
+              color: theme.colorScheme.primary.withValues(alpha: 0.7),
             ),
           ),
         );

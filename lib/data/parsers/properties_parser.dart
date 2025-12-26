@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'dart:convert'; // For utf8 and potentially latin1
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
@@ -13,7 +14,7 @@ class PropertiesParser extends LocalizationParser {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
       lines = await file.readAsLines(encoding: encoding);
     } catch (e) {
-      print('Error reading properties file ${file.path} with specified encoding (${settings.defaultSourceEncoding}): $e');
+      debugPrint('Error reading properties file ${file.path} with specified encoding (${settings.defaultSourceEncoding}): $e');
       return {};
     }
     
@@ -68,7 +69,7 @@ class PropertiesParser extends LocalizationParser {
         
         if (key.isNotEmpty) {
             if (translations.containsKey(key)) {
-                 print('Warning: Duplicate key "$key" found in .properties file ${file.path}. Overwriting.');
+                 debugPrint('Warning: Duplicate key "$key" found in .properties file ${file.path}. Overwriting.');
             }
           translations[key] = value;
         }
@@ -77,15 +78,15 @@ class PropertiesParser extends LocalizationParser {
         String key = _unescapePropertiesString(logicalLine.trim());
          if (key.isNotEmpty) {
             if (translations.containsKey(key)) {
-                 print('Warning: Duplicate key "$key" (no separator) found in .properties file ${file.path}. Overwriting with empty value.');
+                 debugPrint('Warning: Duplicate key "$key" (no separator) found in .properties file ${file.path}. Overwriting with empty value.');
             }
            translations[key] = '';
-           print('Info: Line without separator in ${file.path} treated as key "$key" with empty value: "$logicalLine"');
+           debugPrint('Info: Line without separator in ${file.path} treated as key "$key" with empty value: "$logicalLine"');
          }
       }
     }
      if (translations.isEmpty && lines.any((l) => l.trim().isNotEmpty && !l.trim().startsWith('#') && !l.trim().startsWith('!'))) {
-        print('Warning: Parsed .properties file ${file.path} but no key-value pairs extracted (check format).');
+        debugPrint('Warning: Parsed .properties file ${file.path} but no key-value pairs extracted (check format).');
     }
 
     return translations;

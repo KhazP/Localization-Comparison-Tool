@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 
@@ -29,7 +30,7 @@ class SettingsRepository {
       }
       return settings;
     } catch (e) {
-      print('SettingsRepository: Error loading settings (likely migration issue): $e');
+      debugPrint('SettingsRepository: Error loading settings (likely migration issue): $e');
       // Corrupted data - delete and reset
       await Hive.deleteBoxFromDisk(_boxName);
       await init(); // Re-open fresh

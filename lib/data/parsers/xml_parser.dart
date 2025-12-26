@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:xml/xml.dart' as xml_package; // Renamed to avoid conflict
@@ -12,7 +13,7 @@ class XmlParser extends LocalizationParser {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
       final String content = await file.readAsString(encoding: encoding);
       if (content.trim().isEmpty) {
-        print('Info: XML file ${file.path} is empty.');
+        debugPrint('Info: XML file ${file.path} is empty.');
         return translations;
       }
       final xml_package.XmlDocument document = xml_package.XmlDocument.parse(content);
@@ -27,7 +28,7 @@ class XmlParser extends LocalizationParser {
 
       // Attempt 2: If first attempt yielded nothing, try simple <key>value</key>
       if (translations.isEmpty && document.rootElement.children.isNotEmpty) {
-        print('Info: No <string name="key"> elements found in ${file.path}. Attempting <key>value</key> structure.');
+        debugPrint('Info: No <string name="key"> elements found in ${file.path}. Attempting <key>value</key> structure.');
         for (var node in document.rootElement.children) {
           if (node is xml_package.XmlElement) {
             // Ensure the element has exactly one child and that child is text
@@ -37,7 +38,7 @@ class XmlParser extends LocalizationParser {
               final String value = node.innerText.trim();
               if (key.isNotEmpty) {
                 if (translations.containsKey(key)) {
-                     print('Warning: Duplicate key "$key" found in XML file ${file.path} (generic structure). Overwriting.');
+                     debugPrint('Warning: Duplicate key "$key" found in XML file ${file.path} (generic structure). Overwriting.');
                 }
                 translations[key] = value;
               }
@@ -47,11 +48,11 @@ class XmlParser extends LocalizationParser {
       }
       
       if (translations.isEmpty) {
-        print("Warning: XML file ${file.path} could not be parsed into key-value pairs with common generic structures.");
+        debugPrint("Warning: XML file ${file.path} could not be parsed into key-value pairs with common generic structures.");
       }
 
     } catch (e) {
-      print('Error parsing generic XML file ${file.path}: $e');
+      debugPrint('Error parsing generic XML file ${file.path}: $e');
       return {};
     }
     return translations;

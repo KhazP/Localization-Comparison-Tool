@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
@@ -19,7 +20,7 @@ class GoogleTranslationService implements TranslationService {
     final apiKey = await _secureStorage.getGoogleApiKey();
 
     if (apiKey == null || apiKey.isEmpty || apiKey == "YOUR_GOOGLE_TRANSLATE_API_KEY") {
-      print("Warning: API key is missing or invalid. Real translations will fail.");
+      debugPrint("Warning: API key is missing or invalid. Real translations will fail.");
       return "Translated: $text (Preview - API Key Needed)";
     }
 
@@ -43,12 +44,12 @@ class GoogleTranslationService implements TranslationService {
         }
         throw Exception('No translation found in response');
       } else {
-        print('Error from Google Translate API: ${response.statusCode}');
-        print('Response body: ${response.body}');
+        debugPrint('Error from Google Translate API: ${response.statusCode}');
+        debugPrint('Response body: ${response.body}');
         throw Exception('Failed to translate text. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error calling Google Translate API: $e');
+      debugPrint('Error calling Google Translate API: $e');
       throw Exception('Failed to translate text: $e');
     }
   }

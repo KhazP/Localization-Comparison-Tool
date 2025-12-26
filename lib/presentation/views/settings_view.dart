@@ -5,7 +5,6 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -33,7 +32,6 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   
   PackageInfo? _packageInfo;
   String _platformInfo = 'Loading...';
-  bool _infoLoaded = false;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -76,14 +74,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         setState(() {
           _packageInfo = packageInfo;
           _platformInfo = platformInfo;
-          _infoLoaded = true;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _platformInfo = 'Unknown Platform';
-          _infoLoaded = true;
         });
       }
     }
@@ -750,16 +746,17 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           isDark: isDark,
           children: [
             _buildColorRow(context, 'Added', Color(settings.diffAddedColor), (color) {
-              context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.value));
+              context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.toARGB32()));
             }, isDark),
             _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor), (color) {
-              context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.value));
+              context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.toARGB32()));
             }, isDark),
             _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor), (color) {
-              context.read<SettingsBloc>().add(UpdateDiffModifiedColor(color.value));
+              context.read<SettingsBloc>().add(UpdateDiffModifiedColor(color.toARGB32()));
             }, isDark, showDivider: false),
           ],
         ),
+        _buildPreviewPanel(context, settings, isDark),
       ],
     );
   }
@@ -795,7 +792,173 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildPreviewPanel(BuildContext context, AppSettings settings, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.visibility_rounded,
+                  size: 16,
+                  color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Live Preview',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            height: 1,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildPreviewEntry(
+                  context: context,
+                  lineNumber: 42,
+                  status: 'ADDED',
+                  color: Color(settings.diffAddedColor),
+                  key: 'welcome_message',
+                  value: '"Hello, welcome to our app!"',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 8),
+                _buildPreviewEntry(
+                  context: context,
+                  lineNumber: 58,
+                  status: 'REMOVED',
+                  color: Color(settings.diffRemovedColor),
+                  key: 'old_greeting',
+                  value: '"Greetings, user"',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 8),
+                _buildPreviewEntry(
+                  context: context,
+                  lineNumber: 73,
+                  status: 'MODIFIED',
+                  color: Color(settings.diffModifiedColor),
+                  key: 'button_label',
+                  value: '"Submit" → "Continue"',
+                  isDark: isDark,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreviewEntry({
+    required BuildContext context,
+    required int lineNumber,
+    required String status,
+    required Color color,
+    required String key,
+    required String value,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          // Line number
+          Container(
+            width: 28,
+            alignment: Alignment.center,
+            child: Text(
+              '$lineNumber',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                fontFamily: 'monospace',
+                fontSize: 11,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Status badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              status,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Key and value
+          Expanded(
+            child: RichText(
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                ),
+                children: [
+                  TextSpan(
+                    text: key,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ': ',
+                    style: TextStyle(
+                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    ),
+                  ),
+                  TextSpan(
+                    text: value,
+                    style: TextStyle(
+                      color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   // FILE HANDLING SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1284,7 +1447,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
 
   void _showAccentColorPicker(BuildContext context, Color initialColor) {
     _showColorPicker(context, initialColor, (color) {
-      context.read<SettingsBloc>().add(UpdateAccentColor(color.value));
+      context.read<SettingsBloc>().add(UpdateAccentColor(color.toARGB32()));
     });
   }
 

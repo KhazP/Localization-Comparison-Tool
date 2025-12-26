@@ -1,4 +1,5 @@
 import 'package:string_similarity/string_similarity.dart';
+import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 
 class DiffCalculator {
@@ -24,7 +25,7 @@ class DiffCalculator {
         } catch (e) {
           // Log regex compilation error or handle it if necessary
           // For now, if a pattern is invalid, we'll effectively ignore that specific pattern
-          print('Invalid regex pattern in ignorePatterns: $pattern. Error: $e');
+          debugPrint('Invalid regex pattern in ignorePatterns: $pattern. Error: $e');
         }
       }
 

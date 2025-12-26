@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
@@ -11,7 +12,7 @@ class JsonParser extends LocalizationParser {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
       final String content = await file.readAsString(encoding: encoding);
       if (content.isEmpty) {
-        print('Info: JSON file ${file.path} is empty.');
+        debugPrint('Info: JSON file ${file.path} is empty.');
         return translations;
       }
       final Map<String, dynamic> jsonData = json.decode(content);
@@ -19,13 +20,13 @@ class JsonParser extends LocalizationParser {
       _flattenJson(jsonData, '', translations, file.path);
 
       if (translations.isEmpty && jsonData.isNotEmpty) {
-          print('Warning: Parsed JSON file ${file.path} but no valid string translations were extracted (check structure).');
+          debugPrint('Warning: Parsed JSON file ${file.path} but no valid string translations were extracted (check structure).');
       } else if (jsonData.isEmpty) {
-          print('Info: JSON file ${file.path} is empty or contains no top-level entries.');
+          debugPrint('Info: JSON file ${file.path} is empty or contains no top-level entries.');
       }
 
     } catch (e) {
-      print('Error parsing JSON file ${file.path}: $e');
+      debugPrint('Error parsing JSON file ${file.path}: $e');
       return {};
     }
     return translations;
@@ -40,10 +41,10 @@ class JsonParser extends LocalizationParser {
         _flattenJson(value, newKey, translations, filePath);
       } else if (value is num || value is bool) {
         translations[newKey] = value.toString();
-         print('Info: JSON value for key "$newKey" in $filePath is num/bool, converted to string.');
+         debugPrint('Info: JSON value for key "$newKey" in $filePath is num/bool, converted to string.');
       } else if (value == null) {
         translations[newKey] = ''; // Null value becomes empty string
-        print('Info: JSON value for key "$newKey" in $filePath is null, converted to empty string.');
+        debugPrint('Info: JSON value for key "$newKey" in $filePath is null, converted to empty string.');
       }
       // else if (value is List) {
       //   // Decide how to handle lists. For now, convert to string or ignore.
@@ -52,7 +53,7 @@ class JsonParser extends LocalizationParser {
       // } 
       else {
          // For other types, including List for now, treat as non-translatable string or skip.
-         print('Warning: Unsupported JSON value type (${value.runtimeType}) for key "$newKey" in $filePath. Skipping or using toString(). Value: $value');
+         debugPrint('Warning: Unsupported JSON value type (${value.runtimeType}) for key "$newKey" in $filePath. Skipping or using toString(). Value: $value');
          // translations[newKey] = value.toString(); // Optional: convert everything else to string
       }
     });

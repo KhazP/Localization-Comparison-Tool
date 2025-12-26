@@ -67,7 +67,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(36)
+      ..writeByte(37)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)

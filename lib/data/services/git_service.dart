@@ -244,10 +244,9 @@ class LibGit2DartService implements GitService {
       final tree = commit.tree;
 
       // 3. Find the file entry in the tree
+      // Note: tree[filePath] throws if not found in some bindings, or returns non-null. 
+      // Linter says it is never null. We rely on try/catch for "not found".
       final entry = tree[filePath];
-      if (entry == null) {
-        return '[File does not exist in this version]';
-      }
 
       // Check for binary extensions
       final ext = filePath.split('.').last.toLowerCase();

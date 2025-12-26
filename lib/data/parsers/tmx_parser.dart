@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
@@ -12,14 +13,14 @@ class TmxParser extends LocalizationParser {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
       final String content = await file.readAsString(encoding: encoding);
       if (content.trim().isEmpty) {
-        print('Info: TMX file ${file.path} is empty.');
+        debugPrint('Info: TMX file ${file.path} is empty.');
         return translations;
       }
       final xml.XmlDocument document = xml.XmlDocument.parse(content);
 
       final bodyElement = document.findAllElements('body').firstOrNull;
       if (bodyElement == null) {
-        print('Warning: No <body> element found in TMX file: ${file.path}');
+        debugPrint('Warning: No <body> element found in TMX file: ${file.path}');
         return {};
       }
 
@@ -53,7 +54,7 @@ class TmxParser extends LocalizationParser {
 
             value = targetText;
           } else {
-            print('Warning: Missing <seg> in <tuv> for tuid "$tuid" or equivalent in ${file.path}');
+            debugPrint('Warning: Missing <seg> in <tuv> for tuid "$tuid" or equivalent in ${file.path}');
           }
         } else if (tuvElements.length == 1 && (tuid != null && tuid.isNotEmpty)) {
           // If only one TUV but has a TUID, could be a source-only entry.
@@ -63,33 +64,33 @@ class TmxParser extends LocalizationParser {
           if (sourceSeg != null) {
               key = tuid;
               value = sourceSeg.innerText.trim(); // Or value = ""; if we strictly want target
-              print('Info: TMX <tu> with tuid "$tuid" has only one <tuv>. Using its text as value. In file: ${file.path}');
+              debugPrint('Info: TMX <tu> with tuid "$tuid" has only one <tuv>. Using its text as value. In file: ${file.path}');
           }
         }
         
         else {
-          print('Warning: TMX <tu> element does not have at least two <tuv> children or a single <tuv> with a tuid. Skipping. ID: "$tuid", File: ${file.path}');
+          debugPrint('Warning: TMX <tu> element does not have at least two <tuv> children or a single <tuv> with a tuid. Skipping. ID: "$tuid", File: ${file.path}');
         }
 
         if (key != null && key.isNotEmpty && value != null) {
           if (translations.containsKey(key)) {
-            print('Warning: Duplicate key "$key" found in TMX file ${file.path}. Overwriting previous value.');
+            debugPrint('Warning: Duplicate key "$key" found in TMX file ${file.path}. Overwriting previous value.');
           }
           translations[key] = value;
         } else if (key != null && key.isNotEmpty && value == null) {
             // Key was determined (e.g. tuid) but no valid value found from TUVs
             translations[key] = ''; // Store with empty value
-            print('Warning: Key "$key" determined for TMX but no valid value found from TUVs. Storing with empty value. File: ${file.path}');
+            debugPrint('Warning: Key "$key" determined for TMX but no valid value found from TUVs. Storing with empty value. File: ${file.path}');
         }
       }
       if (translations.isEmpty && tuElements.isNotEmpty) {
-          print('Warning: Parsed TMX file ${file.path} but no valid translation entries were extracted.');
+          debugPrint('Warning: Parsed TMX file ${file.path} but no valid translation entries were extracted.');
       } else if (tuElements.isEmpty) {
-          print('Warning: No <tu> elements found in TMX file: ${file.path}');
+          debugPrint('Warning: No <tu> elements found in TMX file: ${file.path}');
       }
 
     } catch (e) {
-      print('Error parsing TMX file ${file.path}: $e');
+      debugPrint('Error parsing TMX file ${file.path}: $e');
       return {};
     }
     return translations;

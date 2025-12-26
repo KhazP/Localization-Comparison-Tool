@@ -10,7 +10,7 @@ class AppSettings extends HiveObject {
   @HiveField(1, defaultValue: 'json')
   String defaultTargetFormat;
 
-  @HiveField(2, defaultValue: const ['^//.*', '^#.*'])
+  @HiveField(2, defaultValue: ['^//.*', '^#.*'])
   List<String> ignorePatterns;
 
   @HiveField(3, defaultValue: true)

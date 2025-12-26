@@ -585,7 +585,7 @@ Users can compare entire directories but cannot export all results at once. They
 
 ### Requirements
 1. Add "Export All" button in the Files view
-2. Export should create a single CSV or ZIP with all comparison results
+2. Export should create a single CSV with pages or ZIP with all comparison results
 3. Include summary sheet with totals per file
 4. Show progress indicator for large exports
 

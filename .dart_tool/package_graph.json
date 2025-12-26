@@ -11,6 +11,7 @@
         "csv",
         "desktop_drop",
         "device_info_plus",
+        "diff_match_patch",
         "docx_to_text",
         "file_picker",
         "flutter",
@@ -265,6 +266,11 @@
       ]
     },
     {
+      "name": "diff_match_patch",
+      "version": "0.4.1",
+      "dependencies": []
+    },
+    {
       "name": "string_similarity",
       "version": "2.1.1",
       "dependencies": []
@@ -456,11 +462,6 @@
     {
       "name": "meta",
       "version": "1.16.0",
-      "dependencies": []
-    },
-    {
-      "name": "diff_match_patch",
-      "version": "0.4.1",
       "dependencies": []
     },
     {

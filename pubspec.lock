@@ -255,7 +255,7 @@ packages:
     source: hosted
     version: "7.0.3"
   diff_match_patch:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: diff_match_patch
       sha256: "2efc9e6e8f449d0abe15be240e2c2a3bcd977c8d126cfd70598aee60af35c0a4"

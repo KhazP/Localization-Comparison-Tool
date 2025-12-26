@@ -113,8 +113,8 @@ class MyApp extends StatelessWidget {
               return MaterialApp(
                 debugShowCheckedModeBanner: kDebugMode,
                 title: 'Localization Comparison Tool',
-                theme: AppThemeV2.lightTheme,
-                darkTheme: useAmoled ? AppThemeV2.amoledTheme : AppThemeV2.darkTheme,
+                theme: AppThemeV2.createLightTheme(themeState.accentColor),
+                darkTheme: useAmoled ? AppThemeV2.createAmoledTheme(themeState.accentColor) : AppThemeV2.createDarkTheme(themeState.accentColor),
                 themeMode: themeState.themeMode,
                 home: const MyHomePage(),
               );

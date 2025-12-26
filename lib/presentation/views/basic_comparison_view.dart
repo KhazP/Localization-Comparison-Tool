@@ -156,7 +156,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Invalid file type. Please select a supported localization file.'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -310,7 +310,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               if (state is ProgressFailure) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom:8.0),
-                    child: Text('Error during processing: ${state.error}', style: const TextStyle(color: Colors.red))
+                    child: Text('Error during processing: ${state.error}', style: TextStyle(color: Theme.of(context).colorScheme.error))
                   );
               }
               return const SizedBox.shrink();
@@ -558,7 +558,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   );
                 }
                 if (state is ComparisonFailure) {
-                  return Center(child: Text('Comparison Failed: ${state.error}', style: const TextStyle(color: Colors.red)));
+                  return Center(child: Text('Comparison Failed: ${state.error}', style: TextStyle(color: Theme.of(context).colorScheme.error)));
                 }
                 return _buildEmptyState(context, isAmoled);
               },
@@ -771,10 +771,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     final Color cardBg = isAmoled
         ? Colors.black
-        : (isDarkMode ? const Color(0xFF1A1A22) : Colors.white);
+        : (theme.cardTheme.color ?? theme.cardColor);
     final Color borderColor = isAmoled
         ? Colors.grey[850]!
-        : (isDarkMode ? const Color(0xFF2E2E38) : Colors.grey[200]!);
+        : theme.dividerColor;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
@@ -1141,10 +1141,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     final borderColor = isAmoled ? Colors.grey[850]! : (isDark ? const Color(0xFF2E2E38) : Colors.grey[200]!);
     final textMuted = isDark ? Colors.grey[500]! : Colors.grey[500]!;
     
+    final settingsState = context.watch<SettingsBloc>().state;
     // Monospace text style for values
-    const monoStyle = TextStyle(
+    final monoStyle = TextStyle(
       fontFamily: 'Consolas, Monaco, monospace',
-      fontSize: 12,
+      fontSize: settingsState.status == SettingsStatus.loaded ? settingsState.appSettings.diffFontSize : 14.0,
       height: 1.4,
     );
 

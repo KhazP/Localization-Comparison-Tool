@@ -43,6 +43,9 @@ class AppSettings extends HiveObject {
   @HiveField(12, defaultValue: 0xFFFFC107)
   int diffModifiedColor;
 
+  @HiveField(37, defaultValue: 14.0)
+  double diffFontSize;
+
   @HiveField(13, defaultValue: 'UTF-8')
   String defaultSourceEncoding;
 
@@ -132,6 +135,7 @@ class AppSettings extends HiveObject {
     required this.diffAddedColor,
     required this.diffRemovedColor,
     required this.diffModifiedColor,
+    required this.diffFontSize,
     required this.defaultSourceEncoding,
     required this.defaultTargetEncoding,
     required this.autoDetectEncoding,
@@ -174,6 +178,7 @@ class AppSettings extends HiveObject {
       diffAddedColor: 0xFF4CAF50, // Material Green
       diffRemovedColor: 0xFFF44336, // Material Red
       diffModifiedColor: 0xFFFFC107, // Material Amber
+      diffFontSize: 14.0, // Default font size
       defaultSourceEncoding: 'UTF-8',
       defaultTargetEncoding: 'UTF-8',
       autoDetectEncoding: true,
@@ -217,6 +222,7 @@ class AppSettings extends HiveObject {
       diffAddedColor: json['diffAddedColor'] as int,
       diffRemovedColor: json['diffRemovedColor'] as int,
       diffModifiedColor: json['diffModifiedColor'] as int,
+      diffFontSize: (json['diffFontSize'] as num?)?.toDouble() ?? 14.0,
       defaultSourceEncoding: json['defaultSourceEncoding'] as String,
       defaultTargetEncoding: json['defaultTargetEncoding'] as String,
       autoDetectEncoding: json['autoDetectEncoding'] as bool,
@@ -260,6 +266,7 @@ class AppSettings extends HiveObject {
       'diffAddedColor': diffAddedColor,
       'diffRemovedColor': diffRemovedColor,
       'diffModifiedColor': diffModifiedColor,
+      'diffFontSize': diffFontSize,
       'defaultSourceEncoding': defaultSourceEncoding,
       'defaultTargetEncoding': defaultTargetEncoding,
       'autoDetectEncoding': autoDetectEncoding,
@@ -301,6 +308,7 @@ class AppSettings extends HiveObject {
     int? diffAddedColor,
     int? diffRemovedColor,
     int? diffModifiedColor,
+    double? diffFontSize,
     String? defaultSourceEncoding,
     String? defaultTargetEncoding,
     bool? autoDetectEncoding,
@@ -340,6 +348,7 @@ class AppSettings extends HiveObject {
       diffAddedColor: diffAddedColor ?? this.diffAddedColor,
       diffRemovedColor: diffRemovedColor ?? this.diffRemovedColor,
       diffModifiedColor: diffModifiedColor ?? this.diffModifiedColor,
+      diffFontSize: diffFontSize ?? this.diffFontSize,
       defaultSourceEncoding: defaultSourceEncoding ?? this.defaultSourceEncoding,
       defaultTargetEncoding: defaultTargetEncoding ?? this.defaultTargetEncoding,
       autoDetectEncoding: autoDetectEncoding ?? this.autoDetectEncoding,

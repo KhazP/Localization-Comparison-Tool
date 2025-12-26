@@ -32,11 +32,6 @@ class AppThemeV2 {
   static const Color lightBorder = Color(0xFFE2E4EA);
   static const Color lightBorderSubtle = Color(0xFFEEEFF3);
 
-  // Accent Colors
-  static const Color primary = Color(0xFF6366F1);          // Indigo
-  static const Color primaryLight = Color(0xFF818CF8);
-  static const Color primaryDark = Color(0xFF4F46E5);
-  static const Color secondary = Color(0xFF8B5CF6);        // Violet
 
   // Semantic Colors
   static const Color added = Color(0xFF22C55E);            // Green
@@ -51,8 +46,6 @@ class AppThemeV2 {
   static const Color success = Color(0xFF22C55E);          // Green
 
   // Additional M3 Accent Colors
-  static const Color tertiary = Color(0xFF06B6D4);         // Cyan
-  static const Color tertiaryContainer = Color(0xFF22D3EE);
   static const Color outline = Color(0xFF6B7280);          // Gray
   static const Color outlineVariant = Color(0xFF4B5563);
 
@@ -70,123 +63,157 @@ class AppThemeV2 {
   // THEME DATA
   // ═══════════════════════════════════════════════════════════════════════════
 
-  static ThemeData get darkTheme => ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: darkBackground,
-    colorScheme: const ColorScheme.dark(
-      primary: primary,
-      primaryContainer: primaryDark,
-      secondary: secondary,
-      secondaryContainer: secondary,
-      tertiary: tertiary,
-      tertiaryContainer: tertiaryContainer,
-      surface: darkSurface,
-      error: error,
-      outline: outline,
-      outlineVariant: outlineVariant,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onTertiary: Colors.white,
-      onSurface: darkTextPrimary,
-      onError: Colors.white,
-    ),
-    textTheme: _buildTextTheme(isDark: true),
-    cardTheme: _buildCardTheme(isDark: true),
-    elevatedButtonTheme: _buildElevatedButtonTheme(),
-    outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true),
-    textButtonTheme: _buildTextButtonTheme(),
-    inputDecorationTheme: _buildInputTheme(isDark: true),
-    dividerTheme: const DividerThemeData(
-      color: darkBorder,
-      thickness: 1,
-    ),
-    navigationRailTheme: _buildNavRailTheme(isDark: true),
-    chipTheme: _buildChipTheme(isDark: true),
-    snackBarTheme: _buildSnackBarTheme(isDark: true),
-    dialogTheme: _buildDialogTheme(isDark: true),
-    tooltipTheme: _buildTooltipTheme(isDark: true),
-    scrollbarTheme: _buildScrollbarTheme(isDark: true),
-  );
+  // ═══════════════════════════════════════════════════════════════════════════
+  // THEME FACTORIES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static ThemeData createDarkTheme(Color accentColor) {
+    final primary = accentColor;
+    final primaryDark = HSLColor.fromColor(accentColor).withLightness(0.5).toColor(); // Slightly darker
+    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor(); // Analogous
+    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor(); // Complementary
+    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
+
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: darkBackground,
+      primaryColor: primary,
+      colorScheme: ColorScheme.dark(
+        primary: primary,
+        primaryContainer: primaryDark,
+        secondary: secondary,
+        secondaryContainer: secondary,
+        tertiary: tertiary,
+        tertiaryContainer: tertiaryContainer,
+        surface: darkSurface,
+        error: error,
+        outline: outline,
+        outlineVariant: outlineVariant,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onTertiary: Colors.white,
+        onSurface: darkTextPrimary,
+        onError: Colors.white,
+      ),
+      textTheme: _buildTextTheme(isDark: true),
+      cardTheme: _buildCardTheme(isDark: true, isAmoled: false),
+      elevatedButtonTheme: _buildElevatedButtonTheme(primary),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
+      textButtonTheme: _buildTextButtonTheme(primary),
+      inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      dividerTheme: const DividerThemeData(
+        color: darkBorder,
+        thickness: 1,
+      ),
+      navigationRailTheme: _buildNavRailTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      chipTheme: _buildChipTheme(isDark: true, primaryColor: primary),
+      snackBarTheme: _buildSnackBarTheme(isDark: true),
+      dialogTheme: _buildDialogTheme(isDark: true, isAmoled: false),
+      tooltipTheme: _buildTooltipTheme(isDark: true),
+      scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: false, primaryColor: primary),
+    );
+  }
 
   /// AMOLED theme with pure black backgrounds for OLED displays
-  static ThemeData get amoledTheme => ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: amoledBackground,
-    colorScheme: const ColorScheme.dark(
-      primary: primary,
-      primaryContainer: primaryDark,
-      secondary: secondary,
-      secondaryContainer: secondary,
-      tertiary: tertiary,
-      tertiaryContainer: tertiaryContainer,
-      surface: amoledSurface,
-      error: error,
-      outline: outline,
-      outlineVariant: outlineVariant,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onTertiary: Colors.white,
-      onSurface: darkTextPrimary,
-      onError: Colors.white,
-    ),
-    textTheme: _buildTextTheme(isDark: true),
-    cardTheme: _buildCardTheme(isDark: true, isAmoled: true),
-    elevatedButtonTheme: _buildElevatedButtonTheme(),
-    outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true),
-    textButtonTheme: _buildTextButtonTheme(),
-    inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: true),
-    dividerTheme: const DividerThemeData(
-      color: amoledBorder,
-      thickness: 1,
-    ),
-    navigationRailTheme: _buildNavRailTheme(isDark: true, isAmoled: true),
-    chipTheme: _buildChipTheme(isDark: true),
-    snackBarTheme: _buildSnackBarTheme(isDark: true),
-    dialogTheme: _buildDialogTheme(isDark: true, isAmoled: true),
-    tooltipTheme: _buildTooltipTheme(isDark: true),
-    scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: true),
-  );
+  static ThemeData createAmoledTheme(Color accentColor) {
+    final primary = accentColor;
+    final primaryDark = HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
+    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor();
+    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor();
+    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
 
-  static ThemeData get lightTheme => ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    scaffoldBackgroundColor: lightBackground,
-    colorScheme: const ColorScheme.light(
-      primary: primary,
-      primaryContainer: primaryLight,
-      secondary: secondary,
-      secondaryContainer: secondary,
-      tertiary: tertiary,
-      tertiaryContainer: tertiaryContainer,
-      surface: lightSurface,
-      error: error,
-      outline: outline,
-      outlineVariant: lightBorder,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onTertiary: Colors.white,
-      onSurface: lightTextPrimary,
-      onError: Colors.white,
-    ),
-    textTheme: _buildTextTheme(isDark: false),
-    cardTheme: _buildCardTheme(isDark: false),
-    elevatedButtonTheme: _buildElevatedButtonTheme(),
-    outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: false),
-    textButtonTheme: _buildTextButtonTheme(),
-    inputDecorationTheme: _buildInputTheme(isDark: false),
-    dividerTheme: const DividerThemeData(
-      color: lightBorder,
-      thickness: 1,
-    ),
-    navigationRailTheme: _buildNavRailTheme(isDark: false),
-    chipTheme: _buildChipTheme(isDark: false),
-    snackBarTheme: _buildSnackBarTheme(isDark: false),
-    dialogTheme: _buildDialogTheme(isDark: false),
-    tooltipTheme: _buildTooltipTheme(isDark: false),
-    scrollbarTheme: _buildScrollbarTheme(isDark: false),
-  );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: amoledBackground,
+      primaryColor: primary,
+      colorScheme: ColorScheme.dark(
+        primary: primary,
+        primaryContainer: primaryDark,
+        secondary: secondary,
+        secondaryContainer: secondary,
+        tertiary: tertiary,
+        tertiaryContainer: tertiaryContainer,
+        surface: amoledSurface,
+        error: error,
+        outline: outline,
+        outlineVariant: outlineVariant,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onTertiary: Colors.white,
+        onSurface: darkTextPrimary,
+        onError: Colors.white,
+      ),
+      textTheme: _buildTextTheme(isDark: true),
+      cardTheme: _buildCardTheme(isDark: true, isAmoled: true),
+      elevatedButtonTheme: _buildElevatedButtonTheme(primary),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
+      textButtonTheme: _buildTextButtonTheme(primary),
+      inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: true, primaryColor: primary),
+      dividerTheme: const DividerThemeData(
+        color: amoledBorder,
+        thickness: 1,
+      ),
+      navigationRailTheme: _buildNavRailTheme(isDark: true, isAmoled: true, primaryColor: primary),
+      chipTheme: _buildChipTheme(isDark: true, primaryColor: primary),
+      snackBarTheme: _buildSnackBarTheme(isDark: true),
+      dialogTheme: _buildDialogTheme(isDark: true, isAmoled: true),
+      tooltipTheme: _buildTooltipTheme(isDark: true),
+      scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: true, primaryColor: primary),
+    );
+  }
+
+  static ThemeData createLightTheme(Color accentColor) {
+    final primary = accentColor;
+    final primaryLight = HSLColor.fromColor(accentColor).withLightness(0.7).toColor();
+    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor();
+    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor();
+    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.8).toColor();
+
+    
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: lightBackground,
+      primaryColor: primary,
+      colorScheme: ColorScheme.light(
+        primary: primary,
+        primaryContainer: primaryLight,
+        secondary: secondary,
+        secondaryContainer: secondary,
+        tertiary: tertiary,
+        tertiaryContainer: tertiaryContainer,
+        surface: lightSurface,
+        error: error,
+        outline: outline,
+        outlineVariant: lightBorder,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onTertiary: Colors.white,
+        onSurface: lightTextPrimary,
+        onError: Colors.white,
+      ),
+      textTheme: _buildTextTheme(isDark: false),
+      cardTheme: _buildCardTheme(isDark: false),
+      elevatedButtonTheme: _buildElevatedButtonTheme(primary),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: false, primaryColor: primary),
+      textButtonTheme: _buildTextButtonTheme(primary),
+      inputDecorationTheme: _buildInputTheme(isDark: false, primaryColor: primary),
+      dividerTheme: const DividerThemeData(
+        color: lightBorder,
+        thickness: 1,
+      ),
+      navigationRailTheme: _buildNavRailTheme(isDark: false, primaryColor: primary),
+      chipTheme: _buildChipTheme(isDark: false, primaryColor: primary),
+      snackBarTheme: _buildSnackBarTheme(isDark: false),
+      dialogTheme: _buildDialogTheme(isDark: false),
+      tooltipTheme: _buildTooltipTheme(isDark: false),
+      scrollbarTheme: _buildScrollbarTheme(isDark: false, primaryColor: primary),
+    );
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // COMPONENT THEMES
@@ -290,10 +317,10 @@ class AppThemeV2 {
     );
   }
 
-  static ElevatedButtonThemeData _buildElevatedButtonTheme() {
+  static ElevatedButtonThemeData _buildElevatedButtonTheme(Color primaryColor) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primary,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -308,7 +335,7 @@ class AppThemeV2 {
     );
   }
 
-  static OutlinedButtonThemeData _buildOutlinedButtonTheme({required bool isDark}) {
+  static OutlinedButtonThemeData _buildOutlinedButtonTheme({required bool isDark, required Color primaryColor}) {
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: isDark ? darkTextPrimary : lightTextPrimary,
@@ -328,10 +355,10 @@ class AppThemeV2 {
     );
   }
 
-  static TextButtonThemeData _buildTextButtonTheme() {
+  static TextButtonThemeData _buildTextButtonTheme(Color primaryColor) {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: primary,
+        foregroundColor: primaryColor,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -344,7 +371,7 @@ class AppThemeV2 {
     );
   }
 
-  static InputDecorationTheme _buildInputTheme({required bool isDark, bool isAmoled = false}) {
+  static InputDecorationTheme _buildInputTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
     final borderColor = isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder);
     final fillColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);
     final textColor = isDark ? darkTextPrimary : lightTextPrimary;
@@ -364,7 +391,7 @@ class AppThemeV2 {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: primary, width: 2),
+        borderSide: BorderSide(color: primaryColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
@@ -381,14 +408,14 @@ class AppThemeV2 {
     );
   }
 
-  static NavigationRailThemeData _buildNavRailTheme({required bool isDark, bool isAmoled = false}) {
+  static NavigationRailThemeData _buildNavRailTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
     final bgColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);
     return NavigationRailThemeData(
       backgroundColor: bgColor,
       elevation: 0,
-      indicatorColor: primary.withAlpha(40),
-      selectedIconTheme: const IconThemeData(
-        color: primary,
+      indicatorColor: primaryColor.withAlpha(40),
+      selectedIconTheme: IconThemeData(
+        color: primaryColor,
         size: 24,
       ),
       unselectedIconTheme: IconThemeData(
@@ -398,7 +425,7 @@ class AppThemeV2 {
       selectedLabelTextStyle: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: primary,
+        color: primaryColor,
       ),
       unselectedLabelTextStyle: GoogleFonts.inter(
         fontSize: 12,
@@ -408,10 +435,10 @@ class AppThemeV2 {
     );
   }
 
-  static ChipThemeData _buildChipTheme({required bool isDark}) {
+  static ChipThemeData _buildChipTheme({required bool isDark, required Color primaryColor}) {
     return ChipThemeData(
       backgroundColor: isDark ? darkCard : lightCard,
-      selectedColor: primary.withAlpha(30),
+      selectedColor: primaryColor.withAlpha(30),
       disabledColor: isDark ? darkBorder : lightBorder,
       labelStyle: GoogleFonts.inter(
         fontSize: 12,
@@ -421,7 +448,7 @@ class AppThemeV2 {
       secondaryLabelStyle: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
-        color: primary,
+        color: primaryColor,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       shape: RoundedRectangleBorder(
@@ -482,7 +509,7 @@ class AppThemeV2 {
     );
   }
 
-  static ScrollbarThemeData _buildScrollbarTheme({required bool isDark, bool isAmoled = false}) {
+  static ScrollbarThemeData _buildScrollbarTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
     final thumbColor = isDark ? darkTextMuted : lightTextMuted;
     final trackColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightBackground);
     return ScrollbarThemeData(
@@ -491,7 +518,7 @@ class AppThemeV2 {
       radius: const Radius.circular(4),
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.hovered) || states.contains(WidgetState.dragged)) {
-          return primary.withAlpha(200);
+          return primaryColor.withAlpha(200);
         }
         return thumbColor.withAlpha(150);
       }),
@@ -500,6 +527,7 @@ class AppThemeV2 {
     );
   }
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // THEME EXTENSION FOR CUSTOM COLORS

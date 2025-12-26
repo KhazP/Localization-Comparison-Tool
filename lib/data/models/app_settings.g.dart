@@ -33,6 +33,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       diffAddedColor: fields[10] == null ? 4283215696 : fields[10] as int,
       diffRemovedColor: fields[11] == null ? 4294198070 : fields[11] as int,
       diffModifiedColor: fields[12] == null ? 4294951175 : fields[12] as int,
+      diffFontSize: fields[37] == null ? 14.0 : fields[37] as double,
       defaultSourceEncoding:
           fields[13] == null ? 'UTF-8' : fields[13] as String,
       defaultTargetEncoding:
@@ -67,7 +68,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(37)
+      ..writeByte(38)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -94,6 +95,8 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..write(obj.diffRemovedColor)
       ..writeByte(12)
       ..write(obj.diffModifiedColor)
+      ..writeByte(37)
+      ..write(obj.diffFontSize)
       ..writeByte(13)
       ..write(obj.defaultSourceEncoding)
       ..writeByte(14)

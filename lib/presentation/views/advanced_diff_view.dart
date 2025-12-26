@@ -65,7 +65,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   static const Color _borderColor = Color(0xFF30363D);
   static const Color _textPrimary = Color(0xFFE6EDF3);
   static const Color _textSecondary = Color(0xFF8B949E);
-  static const Color _accentBlue = Color(0xFF58A6FF);
+
 
 
   @override
@@ -324,7 +324,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: _accentBlue, width: 1.5),
+                  borderSide: BorderSide(color: Theme.of(ctx).colorScheme.primary, width: 1.5),
                 ),
               ),
               onChanged: (value) {

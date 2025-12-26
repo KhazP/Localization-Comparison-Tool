@@ -116,6 +116,13 @@ class UpdateDiffColors extends SettingsEvent {
   List<Object?> get props => [addedColor, removedColor, modifiedColor];
 }
 
+class UpdateDiffFontSize extends SettingsEvent {
+  final double fontSize;
+  const UpdateDiffFontSize(this.fontSize);
+  @override
+  List<Object> get props => [fontSize];
+}
+
 class UpdateDefaultSourceEncoding extends SettingsEvent {
   final String encoding;
   const UpdateDefaultSourceEncoding(this.encoding);

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+
 
 /// A styled card container for settings sections
 class SettingsCard extends StatelessWidget {
@@ -16,29 +15,9 @@ class SettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLight = theme.brightness == Brightness.light;
-    final settingsState = context.watch<SettingsBloc>().state;
-    final currentThemeMode = settingsState.appSettings.appThemeMode.toLowerCase();
-    final isAmoled = !isLight && currentThemeMode == 'amoled';
-
-    final cardBgColor = isAmoled 
-        ? const Color(0xFF0D0D0D)
-        : (isLight ? Colors.white : const Color(0xFF2A2D3E));
-    final borderColor = isAmoled
-        ? Colors.grey[850]!
-        : theme.dividerColor.withValues(alpha: 0.5);
-    final titleColor = isAmoled
-        ? Colors.grey[300]!
-        : theme.textTheme.titleMedium?.color;
 
     return Card(
-      color: cardBgColor,
-      elevation: isAmoled ? 0.0 : 1.0,
       margin: const EdgeInsets.only(bottom: 16.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        side: BorderSide(color: borderColor),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -48,7 +27,6 @@ class SettingsCard extends StatelessWidget {
               title,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: titleColor,
               ),
             ),
             const SizedBox(height: 16.0),
@@ -129,20 +107,10 @@ class SettingsDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLight = theme.brightness == Brightness.light;
-    final settingsState = context.watch<SettingsBloc>().state;
-    final currentThemeMode = settingsState.appSettings.appThemeMode.toLowerCase();
-    final isAmoled = !isLight && currentThemeMode == 'amoled';
 
-    final dropdownBg = isAmoled
-        ? Colors.grey[900]!
-        : (isLight ? Colors.grey[100]! : const Color(0xFF3A3D4E));
-    final dropdownTextColor = isAmoled
-        ? Colors.grey[300]!
-        : theme.colorScheme.onSurface;
-    final borderColor = isAmoled
-        ? Colors.grey[700]!
-        : theme.dividerColor;
+    final dropdownBg = theme.cardColor;
+    final dropdownTextColor = theme.textTheme.bodyMedium?.color ?? theme.colorScheme.onSurface;
+    final borderColor = theme.dividerColor;
 
     return Container(
       width: width,

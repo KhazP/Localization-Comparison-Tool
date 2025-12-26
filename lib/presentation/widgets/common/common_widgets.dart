@@ -206,7 +206,7 @@ class ThemedCard extends StatelessWidget {
     final isLight = theme.brightness == Brightness.light;
 
     return Card(
-      color: isLight ? Colors.white : const Color(0xFF2A2D3E),
+      color: theme.cardTheme.color ?? theme.cardColor,
       elevation: elevation ?? (isLight ? 1.0 : 0.5),
       margin: margin ?? const EdgeInsets.symmetric(vertical: 8.0),
       shape: RoundedRectangleBorder(

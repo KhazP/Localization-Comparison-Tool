@@ -671,14 +671,14 @@ class _HistoryCardState extends State<_HistoryCard> {
                             label: 'Source',
                             path: session.file1Path,
                             icon: Icons.source_rounded,
-                            color: AppThemeV2.primary,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           const SizedBox(height: 8),
                           _FilePathRow(
                             label: 'Target',
                             path: session.file2Path,
                             icon: Icons.compare_arrows_rounded,
-                            color: AppThemeV2.secondary,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                           const SizedBox(height: 16),
                           

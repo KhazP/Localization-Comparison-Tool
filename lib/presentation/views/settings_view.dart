@@ -186,8 +186,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppThemeV2.primary, AppThemeV2.secondary],
+                    gradient: LinearGradient(
+                      colors: [colorScheme.primary, colorScheme.secondary],
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -241,12 +241,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppThemeV2.primary.withAlpha(25)
+                  ? theme.colorScheme.primary.withAlpha(25)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isSelected
-                    ? AppThemeV2.primary.withAlpha(50)
+                    ? theme.colorScheme.primary.withAlpha(50)
                     : Colors.transparent,
               ),
             ),
@@ -256,7 +256,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   _getCategoryIcon(category),
                   size: 20,
                   color: isSelected
-                      ? AppThemeV2.primary
+                      ? theme.colorScheme.primary
                       : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
                 ),
                 const SizedBox(width: 12),
@@ -266,7 +266,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected
-                          ? AppThemeV2.primary
+                          ? theme.colorScheme.primary
                           : (isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary),
                     ),
                   ),
@@ -569,7 +569,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.autoCheckForUpdates,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateAutoCheckForUpdates(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
               showDivider: false,
@@ -629,7 +629,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.ignoreCase,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateIgnoreCase(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
             ),
@@ -640,7 +640,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.ignoreWhitespace,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateIgnoreWhitespace(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
               showDivider: false,
@@ -755,9 +755,39 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               }, isDark),
               isDark: isDark,
             ),
-            _buildSettingRow(
-              context: context,
-              label: 'Accent Color',
+                  _buildSettingRow(
+                    context: context,
+                    label: 'Diff Font Size',
+                    description: 'Adjust the font size of the comparison view',
+                    control: SizedBox(
+                      width: 200,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Expanded(
+                            child: Slider(
+                              value: settings.diffFontSize,
+                              min: 10,
+                              max: 18,
+                              divisions: 8,
+                              label: '${settings.diffFontSize.round()}px',
+                              onChanged: (value) => context.read<SettingsBloc>().add(UpdateDiffFontSize(value)),
+                              activeColor: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${settings.diffFontSize.round()}px',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    isDark: isDark,
+                  ),
+                  _buildSettingRow(
+                    context: context,
+                    label: 'Accent Color',
               control: Row(
                 children: [
                   Container(
@@ -1079,7 +1109,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.autoDetectEncoding,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateAutoDetectEncoding(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
               showDivider: false,
@@ -1113,7 +1143,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.enableAiTranslation,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateEnableAiTranslation(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
             ),
@@ -1146,7 +1176,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   max: 1.0,
                   divisions: 20,
                   onChanged: (val) => context.read<SettingsBloc>().add(UpdateTranslationConfidenceThreshold(val)),
-                  activeColor: AppThemeV2.primary,
+                  activeColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
               isDark: isDark,
@@ -1212,7 +1242,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.includeContextStrings,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateIncludeContextStrings(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
             ),
@@ -1230,7 +1260,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                     divisions: 4,
                     label: settings.contextStringsCount.toString(),
                     onChanged: (val) => context.read<SettingsBloc>().add(UpdateContextStringsCount(val.round())),
-                    activeColor: AppThemeV2.primary,
+                    activeColor: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 isDark: isDark,
@@ -1323,7 +1353,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.enableGitIntegration,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateEnableGitIntegration(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
             ),
@@ -1334,7 +1364,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.autoCommitOnSave,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateAutoCommitOnSave(val)),
-                activeColor: AppThemeV2.primary,
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
               showDivider: false,
@@ -1450,7 +1480,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: AppThemeV2.primary),
+                Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
                 Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium)),
                 Icon(

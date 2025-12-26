@@ -131,7 +131,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     directory: _sourceDirectory,
                     isDragging: _isDraggingSource,
                     icon: Icons.source_rounded,
-                    accentColor: AppThemeV2.primary,
+                    accentColor: Theme.of(context).colorScheme.primary,
                     onBrowse: () => _pickDirectory(true),
                     onDragEnter: () => setState(() => _isDraggingSource = true),
                     onDragExit: () => setState(() => _isDraggingSource = false),
@@ -160,7 +160,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     directory: _targetDirectory,
                     isDragging: _isDraggingTarget,
                     icon: Icons.compare_arrows_rounded,
-                    accentColor: AppThemeV2.secondary,
+                    accentColor: Theme.of(context).colorScheme.secondary,
                     onBrowse: () => _pickDirectory(false),
                     onDragEnter: () => setState(() => _isDraggingTarget = true),
                     onDragExit: () => setState(() => _isDraggingTarget = false),
@@ -1028,7 +1028,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.download_rounded, color: AppThemeV2.primary),
+                  Icon(Icons.download_rounded, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 12),
                   const Text('Exporting Results'),
                 ],
@@ -1053,7 +1053,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       backgroundColor: Theme.of(context).brightness == Brightness.dark
                           ? AppThemeV2.darkBorder
                           : AppThemeV2.lightBorder,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppThemeV2.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                     ),
                     const SizedBox(height: 12),
                     Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
@@ -110,6 +111,7 @@ class MyApp extends StatelessWidget {
               }
 
               return MaterialApp(
+                debugShowCheckedModeBanner: kDebugMode,
                 title: 'Localization Comparison Tool',
                 theme: AppThemeV2.lightTheme,
                 darkTheme: useAmoled ? AppThemeV2.amoledTheme : AppThemeV2.darkTheme,

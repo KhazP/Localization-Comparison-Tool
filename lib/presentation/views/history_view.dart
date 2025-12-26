@@ -7,6 +7,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'dart:io';
+import 'package:fl_chart/fl_chart.dart';
 
 class HistoryView extends StatefulWidget {
   final Function(int) onNavigateToTab;
@@ -487,6 +488,10 @@ class _HistoryCardState extends State<_HistoryCard> {
     final session = widget.session;
     final formattedDate = DateFormat('MMM dd, yyyy • HH:mm').format(session.timestamp);
 
+    // simple filename extraction
+    final file1Name = session.file1Path.split(Platform.pathSeparator).last;
+    final file2Name = session.file2Path.split(Platform.pathSeparator).last;
+
     // Determine the dominant status color for the left border
     Color statusColor;
     if (session.stringsAdded > 0 && session.stringsRemoved == 0 && session.stringsModified == 0) {
@@ -548,48 +553,101 @@ class _HistoryCardState extends State<_HistoryCard> {
                         // Header row
                         Row(
                           children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 14,
-                              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              formattedDate,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                            // 1. Pie Chart
+                            _buildStatsChart(session.stringsAdded, session.stringsRemoved, session.stringsModified),
+                            const SizedBox(width: 16),
+                            
+                            // 2. Info Column (File Names + Date)
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // File Names
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          file1Name,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                                        child: Icon(
+                                          Icons.compare_arrows_rounded, 
+                                          size: 16, 
+                                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: Text(
+                                          file2Name,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  // Date & Context
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.schedule_rounded,
+                                        size: 12,
+                                        color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        formattedDate,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                            const Spacer(),
-                            // Stats pills
+
+                            // 3. Right Side: Specific Stat Pills + Expand
                             if (!widget.isExpanded) ...[
-                              if (session.stringsAdded > 0)
-                                _StatPill(
-                                  count: session.stringsAdded,
-                                  color: AppThemeV2.added,
-                                  icon: Icons.add_rounded,
-                                ),
-                              if (session.stringsRemoved > 0)
-                                _StatPill(
-                                  count: session.stringsRemoved,
-                                  color: AppThemeV2.removed,
-                                  icon: Icons.remove_rounded,
-                                ),
-                              if (session.stringsModified > 0)
-                                _StatPill(
-                                  count: session.stringsModified,
-                                  color: AppThemeV2.modified,
-                                  icon: Icons.edit_rounded,
-                                ),
-                              if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
-                                Text(
-                                  'No changes',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                                    fontStyle: FontStyle.italic,
+                                const SizedBox(width: 12),
+                                if (session.stringsAdded > 0)
+                                  _StatPill(
+                                    count: session.stringsAdded,
+                                    color: AppThemeV2.added,
+                                    icon: Icons.add_rounded,
                                   ),
-                                ),
+                                if (session.stringsRemoved > 0)
+                                  _StatPill(
+                                    count: session.stringsRemoved,
+                                    color: AppThemeV2.removed,
+                                    icon: Icons.remove_rounded,
+                                  ),
+                                if (session.stringsModified > 0)
+                                  _StatPill(
+                                    count: session.stringsModified,
+                                    color: AppThemeV2.modified,
+                                    icon: Icons.edit_rounded,
+                                  ),
+                                if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
+                                  Text(
+                                    'No changes',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
                             ],
+                            const SizedBox(width: 8),
                             AnimatedRotation(
                               turns: widget.isExpanded ? 0.5 : 0,
                               duration: const Duration(milliseconds: 200),
@@ -604,6 +662,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                         // Expanded content
                         if (widget.isExpanded) ...[
                           const SizedBox(height: 16),
+                          Divider(height: 1, color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
+                          const SizedBox(height: 16),
                           _FilePathRow(
                             label: 'Source',
                             path: session.file1Path,
@@ -617,9 +677,9 @@ class _HistoryCardState extends State<_HistoryCard> {
                             icon: Icons.compare_arrows_rounded,
                             color: AppThemeV2.secondary,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           
-                          // Stats row
+                          // Stats row detailed
                           Row(
                             children: [
                               if (session.stringsAdded > 0)
@@ -686,6 +746,67 @@ class _HistoryCardState extends State<_HistoryCard> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsChart(int added, int removed, int modified) {
+    final total = added + removed + modified;
+    // Show a gray ring if no changes, instead of empty space
+    if (total == 0) {
+      return SizedBox(
+        width: 40,
+        height: 40,
+        child: PieChart(
+          PieChartData(
+            sections: [
+              PieChartSectionData(
+                value: 1,
+                color: Colors.grey.withOpacity(0.2),
+                radius: 6,
+                showTitle: false,
+              ),
+            ],
+            sectionsSpace: 0,
+            centerSpaceRadius: 10,
+            startDegreeOffset: 270,
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: PieChart(
+        PieChartData(
+          sections: [
+            if (added > 0)
+              PieChartSectionData(
+                value: added.toDouble(),
+                color: const Color(0xFF22C55E),
+                radius: 6,
+                showTitle: false,
+              ),
+            if (removed > 0)
+              PieChartSectionData(
+                value: removed.toDouble(),
+                color: const Color(0xFFEF4444),
+                radius: 6,
+                showTitle: false,
+              ),
+            if (modified > 0)
+              PieChartSectionData(
+                value: modified.toDouble(),
+                color: const Color(0xFFF59E0B),
+                radius: 6,
+                showTitle: false,
+              ),
+          ],
+          sectionsSpace: 2,
+          centerSpaceRadius: 10,
+          startDegreeOffset: 270,
         ),
       ),
     );

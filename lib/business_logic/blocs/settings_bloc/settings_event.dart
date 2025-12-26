@@ -280,6 +280,13 @@ class UpdateEnableGitIntegration extends SettingsEvent {
   List<Object> get props => [enabled];
 }
 
+class UpdateShowIdenticalEntries extends SettingsEvent {
+  final bool show;
+  const UpdateShowIdenticalEntries(this.show);
+  @override
+  List<Object> get props => [show];
+}
+
 // Reset events for new categories
 class ResetAiServicesSettings extends SettingsEvent {}
 

@@ -60,6 +60,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       gitUserName: fields[27] == null ? '' : fields[27] as String,
       gitUserEmail: fields[28] == null ? '' : fields[28] as String,
       enableGitIntegration: fields[29] == null ? false : fields[29] as bool,
+      showIdenticalEntries: fields[36] == null ? true : fields[36] as bool,
     );
   }
 
@@ -138,7 +139,9 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(28)
       ..write(obj.gitUserEmail)
       ..writeByte(29)
-      ..write(obj.enableGitIntegration);
+      ..write(obj.enableGitIntegration)
+      ..writeByte(36)
+      ..write(obj.showIdenticalEntries);
   }
 
   @override

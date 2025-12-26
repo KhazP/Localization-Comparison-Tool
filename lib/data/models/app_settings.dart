@@ -115,6 +115,9 @@ class AppSettings extends HiveObject {
   @HiveField(29, defaultValue: false)
   bool enableGitIntegration;
 
+  @HiveField(36, defaultValue: true)
+  bool showIdenticalEntries;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -152,6 +155,7 @@ class AppSettings extends HiveObject {
     required this.gitUserName,
     required this.gitUserEmail,
     required this.enableGitIntegration,
+    required this.showIdenticalEntries,
   });
 
   // Default settings
@@ -193,6 +197,7 @@ class AppSettings extends HiveObject {
       gitUserName: '',
       gitUserEmail: '',
       enableGitIntegration: false,
+      showIdenticalEntries: true,
     );
   }
 
@@ -235,6 +240,7 @@ class AppSettings extends HiveObject {
       gitUserName: json['gitUserName'] as String,
       gitUserEmail: json['gitUserEmail'] as String,
       enableGitIntegration: json['enableGitIntegration'] as bool,
+      showIdenticalEntries: json['showIdenticalEntries'] as bool? ?? true,
     );
   }
 
@@ -277,6 +283,7 @@ class AppSettings extends HiveObject {
       'gitUserName': gitUserName,
       'gitUserEmail': gitUserEmail,
       'enableGitIntegration': enableGitIntegration,
+      'showIdenticalEntries': showIdenticalEntries,
     };
   }
 
@@ -317,6 +324,7 @@ class AppSettings extends HiveObject {
     String? gitUserName,
     String? gitUserEmail,
     bool? enableGitIntegration,
+    bool? showIdenticalEntries,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -355,6 +363,7 @@ class AppSettings extends HiveObject {
       gitUserName: gitUserName ?? this.gitUserName,
       gitUserEmail: gitUserEmail ?? this.gitUserEmail,
       enableGitIntegration: enableGitIntegration ?? this.enableGitIntegration,
+      showIdenticalEntries: showIdenticalEntries ?? this.showIdenticalEntries,
     );
   }
 } 

@@ -395,6 +395,17 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     }).toList();
                   }
 
+                  // Hide identical entries if setting is disabled and we are in 'All' filter
+                  final showIdentical = settingsState.appSettings.showIdenticalEntries;
+                  int hiddenIdenticalCount = 0;
+                  if (!showIdentical && _currentFilter == BasicDiffFilter.all) {
+                    final identicals = diffEntries.where((entry) => entry.value.status == StringComparisonStatus.identical).toList();
+                    hiddenIdenticalCount = identicals.length;
+                    if (hiddenIdenticalCount > 0) {
+                       diffEntries = diffEntries.where((entry) => entry.value.status != StringComparisonStatus.identical).toList();
+                    }
+                  }
+
                   // Apply text search filter
                   final int totalBeforeSearch = diffEntries.length;
                   if (_searchQuery.isNotEmpty) {
@@ -427,12 +438,71 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           ],
                         ),
                       );
+
+                    }
+                    if (_searchQuery.isEmpty && !state.result.diff.values.any((e) => e.status != StringComparisonStatus.identical)) {
+                         return const Center(child: Text('Files are identical.'));
+                    }
+                     // If we hid everything (e.g. only identicals existed and we hid them), show that state
+                    if (diffEntries.isEmpty && hiddenIdenticalCount > 0) {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                             Text('$hiddenIdenticalCount identical entries hidden', style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(150))),
+                             const SizedBox(height: 8),
+                             TextButton(
+                               onPressed: () {
+                                 context.read<SettingsBloc>().add(const UpdateShowIdenticalEntries(true));
+                               },
+                               child: const Text('Show Identical Entries'),
+                             )
+                          ],
+                        );
                     }
                     return const Center(child: Text('No differences found based on keys.'));
                   }
+                  
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Hidden entries summary
+                      if (hiddenIdenticalCount > 0)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.dividerColor.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.visibility_off_outlined, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$hiddenIdenticalCount identical entries hidden',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const Spacer(),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(60, 24),
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: () {
+                                   context.read<SettingsBloc>().add(const UpdateShowIdenticalEntries(true));
+                                },
+                                child: const Text('Show'),
+                              ),
+                            ],
+                          ),
+                        ),
+
                       // Result count header when search is active
                       if (_searchQuery.isNotEmpty)
                         Padding(
@@ -798,6 +868,21 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   Icons.edit_outlined,
                   const Color(0xFFF59E0B),
                   'Show Modified',
+                ),
+                const SizedBox(width: 8),
+                // Toggle Identical Logic
+                IconButton(
+                  icon: Icon(
+                    settingsState.appSettings.showIdenticalEntries ? Icons.visibility : Icons.visibility_off,
+                    color: settingsState.appSettings.showIdenticalEntries 
+                        ? theme.colorScheme.onSurface.withAlpha(180) 
+                        : theme.colorScheme.onSurface.withAlpha(100),
+                    size: 20,
+                  ),
+                  tooltip: settingsState.appSettings.showIdenticalEntries ? 'Hide identical entries' : 'Show identical entries',
+                  onPressed: () {
+                    context.read<SettingsBloc>().add(UpdateShowIdenticalEntries(!settingsState.appSettings.showIdenticalEntries));
+                  },
                 ),
                 _buildFilterIconButton(
                   BasicDiffFilter.all,

@@ -63,6 +63,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateGitUserName>(_onUpdateGitUserName);
     on<UpdateGitUserEmail>(_onUpdateGitUserEmail);
     on<UpdateEnableGitIntegration>(_onUpdateEnableGitIntegration);
+    on<UpdateShowIdenticalEntries>(_onUpdateShowIdenticalEntries);
     // Reset events for new categories
     on<ResetAiServicesSettings>(_onResetAiServicesSettings);
     on<ResetVersionControlSettings>(_onResetVersionControlSettings);
@@ -451,6 +452,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onUpdateEnableGitIntegration(
       UpdateEnableGitIntegration event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(enableGitIntegration: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateShowIdenticalEntries(
+      UpdateShowIdenticalEntries event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(showIdenticalEntries: event.show);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

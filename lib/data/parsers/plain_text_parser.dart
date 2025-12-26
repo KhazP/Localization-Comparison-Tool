@@ -4,28 +4,51 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
 class PlainTextParser extends LocalizationParser {
+  // Pattern to detect XML-style localization strings: <string name="key">value</string>
+  static final RegExp _xmlStringPattern = RegExp(
+    r'<string\s+name="([^"]+)"[^>]*>([^<]*)</string>',
+    multiLine: true,
+  );
+
   @override
   Future<Map<String, String>> parse(File file, AppSettings settings) async {
-    // Parsing TXT file (list-of-phrases format)
     final Map<String, String> translations = {};
     try {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
-      final lines = await file.readAsLines(encoding: encoding);
-      for (final line in lines) {
-        final trimmedLine = line.trim();
-        // Skip empty lines and comments (lines starting with // or #)
-        if (trimmedLine.isEmpty || trimmedLine.startsWith('//') || trimmedLine.startsWith('#')) {
-          continue;
+      final String content = await file.readAsString(encoding: encoding);
+      
+      // Check if this is an XML-style .lang file
+      if (_xmlStringPattern.hasMatch(content)) {
+        // Parse as XML-style localization file
+        for (final match in _xmlStringPattern.allMatches(content)) {
+          final String? key = match.group(1);
+          final String? value = match.group(2);
+          if (key != null && key.isNotEmpty) {
+            translations[key] = value?.trim() ?? '';
+          }
         }
-        // For list-of-phrases format, use the line itself as the key and value.
-        translations[trimmedLine] = trimmedLine;
-      }
-      if (translations.isEmpty && lines.any((l) => l.trim().isNotEmpty && !l.trim().startsWith('//') && !l.trim().startsWith('#'))) {
-        print('Warning: Parsed ${file.path} but no valid phrases extracted (all lines might be empty or comments).');
+        if (translations.isEmpty) {
+          print('Warning: Detected XML-style .lang file ${file.path} but no valid <string name="key">value</string> entries found.');
+        }
+      } else {
+        // Fall back to plain text parsing (list-of-phrases format)
+        final lines = content.split('\n');
+        for (final line in lines) {
+          final trimmedLine = line.trim();
+          // Skip empty lines and comments (lines starting with // or #)
+          if (trimmedLine.isEmpty || trimmedLine.startsWith('//') || trimmedLine.startsWith('#')) {
+            continue;
+          }
+          // For list-of-phrases format, use the line itself as the key and value.
+          translations[trimmedLine] = trimmedLine;
+        }
+        if (translations.isEmpty && content.trim().isNotEmpty) {
+          print('Warning: Parsed ${file.path} but no valid phrases extracted (all lines might be empty or comments).');
+        }
       }
     } catch (e) {
-        print('Error parsing ${file.path}: $e');
-        return {};
+      print('Error parsing ${file.path}: $e');
+      return {};
     }
     return translations;
   }

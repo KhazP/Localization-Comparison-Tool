@@ -58,6 +58,16 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   bool _isDraggingOverFile1 = false;
   bool _isDraggingOverFile2 = false;
 
+  // Search/filter state
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickFile(int fileNumber) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
@@ -361,6 +371,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                  }
               },
               builder: (context, state) {
+                final theme = Theme.of(context);
                 if (state is ComparisonLoading) {
                   return const Center(child: Text('Comparison in progress...'));
                 }
@@ -383,28 +394,80 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     }).toList();
                   }
 
-                  if (diffEntries.isEmpty) {
-                     return const Center(child: Text('No differences found based on keys.'));
+                  // Apply text search filter
+                  final int totalBeforeSearch = diffEntries.length;
+                  if (_searchQuery.isNotEmpty) {
+                    final query = _searchQuery.toLowerCase();
+                    diffEntries = diffEntries.where((entry) {
+                      final key = entry.key.toLowerCase();
+                      final value1 = (state.result.file1Data[entry.key] ?? '').toLowerCase();
+                      final value2 = (state.result.file2Data[entry.key] ?? '').toLowerCase();
+                      return key.contains(query) || value1.contains(query) || value2.contains(query);
+                    }).toList();
                   }
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: diffEntries.length,
-                    itemBuilder: (context, index) {
-                      final entry = diffEntries[index];
-                      final key = entry.key;
-                      final statusDetail = entry.value;
-                      final status = statusDetail.status;
-                      final value1 = state.result.file1Data[key];
-                      final value2 = state.result.file2Data[key];
 
-                      return _buildDiffListItem(
-                        key: key,
-                        status: status,
-                        value1: value1,
-                        value2: value2,
-                        isAmoled: isAmoled,
+                  if (diffEntries.isEmpty) {
+                    if (_searchQuery.isNotEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.search_off, size: 48, color: theme.colorScheme.onSurface.withAlpha(100)),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No matches found for "$_searchQuery"',
+                              style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(150)),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Showing 0 of $totalBeforeSearch entries',
+                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha(100)),
+                            ),
+                          ],
+                        ),
                       );
-                    },
+                    }
+                    return const Center(child: Text('No differences found based on keys.'));
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Result count header when search is active
+                      if (_searchQuery.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          child: Text(
+                            'Showing ${diffEntries.length} of $totalBeforeSearch entries',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: theme.colorScheme.onSurface.withAlpha(150),
+                            ),
+                          ),
+                        ),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: diffEntries.length,
+                          itemBuilder: (context, index) {
+                            final entry = diffEntries[index];
+                            final key = entry.key;
+                            final statusDetail = entry.value;
+                            final status = statusDetail.status;
+                            final value1 = state.result.file1Data[key];
+                            final value2 = state.result.file2Data[key];
+
+                            return _buildDiffListItem(
+                              key: key,
+                              status: status,
+                              value1: value1,
+                              value2: value2,
+                              isAmoled: isAmoled,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   );
                 }
                 if (state is ComparisonFailure) {
@@ -649,6 +712,63 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 const SizedBox(width: 12),
                 _buildFileWatcherStatus(settingsState, isAmoled, isDarkMode),
               ],
+            ),
+          ),
+
+          // Search Field
+          Container(
+            width: 200,
+            height: 32,
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            child: TextField(
+              controller: _searchController,
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search keys or values...',
+                hintStyle: TextStyle(
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurface.withAlpha(100),
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 18,
+                  color: theme.colorScheme.onSurface.withAlpha(120),
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.clear,
+                          size: 16,
+                          color: theme.colorScheme.onSurface.withAlpha(120),
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      )
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                ),
+                filled: true,
+                fillColor: isAmoled ? Colors.grey[900] : (isDarkMode ? const Color(0xFF252530) : Colors.grey[50]),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
 

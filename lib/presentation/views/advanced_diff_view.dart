@@ -34,7 +34,7 @@ class AdvancedDiffView extends StatefulWidget {
 
 class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   // Filter & Sort
-  AdvancedDiffFilter _currentFilter = AdvancedDiffFilter.all;
+  Set<AdvancedDiffFilter> _selectedFilters = {AdvancedDiffFilter.all};
   DiffViewSortOrder _currentSortOrder = DiffViewSortOrder.fileOrder;
   List<MapEntry<String, ComparisonStatusDetail>> _processedDiffEntries = [];
   String _searchQuery = '';
@@ -128,25 +128,39 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         if (!key.contains(query)) return false;
       }
 
-      switch (_currentFilter) {
-        case AdvancedDiffFilter.added:
-          return status == StringComparisonStatus.added;
-        case AdvancedDiffFilter.removed:
-          return status == StringComparisonStatus.removed;
-        case AdvancedDiffFilter.modified:
-          return status == StringComparisonStatus.modified;
-        case AdvancedDiffFilter.modifiedHighSimilarity:
-          return status == StringComparisonStatus.modified && 
-                 similarity != null && similarity >= _highSimilarityThreshold;
-        case AdvancedDiffFilter.modifiedMediumSimilarity:
-          return status == StringComparisonStatus.modified && 
-                 similarity != null && similarity >= _lowSimilarityThreshold && similarity < _highSimilarityThreshold;
-        case AdvancedDiffFilter.modifiedLowSimilarity:
-          return status == StringComparisonStatus.modified && 
-                 similarity != null && similarity < _lowSimilarityThreshold;
-        case AdvancedDiffFilter.all:
-          return true;
+      // Filter Logic (Union of selected filters)
+      if (_selectedFilters.contains(AdvancedDiffFilter.all) || _selectedFilters.isEmpty) {
+        return true;
       }
+
+      bool matches = false;
+
+      if (_selectedFilters.contains(AdvancedDiffFilter.added)) {
+        if (status == StringComparisonStatus.added) matches = true;
+      }
+      if (!matches && _selectedFilters.contains(AdvancedDiffFilter.removed)) {
+        if (status == StringComparisonStatus.removed) matches = true;
+      }
+      if (!matches && _selectedFilters.contains(AdvancedDiffFilter.modified)) {
+        if (status == StringComparisonStatus.modified) matches = true;
+      }
+      // Granular modified filters
+      if (!matches && status == StringComparisonStatus.modified) {
+         if (_selectedFilters.contains(AdvancedDiffFilter.modifiedHighSimilarity) && 
+             similarity != null && similarity >= _highSimilarityThreshold) {
+           matches = true;
+         }
+         if (!matches && _selectedFilters.contains(AdvancedDiffFilter.modifiedMediumSimilarity) && 
+             similarity != null && similarity >= _lowSimilarityThreshold && similarity < _highSimilarityThreshold) {
+           matches = true;
+         }
+         if (!matches && _selectedFilters.contains(AdvancedDiffFilter.modifiedLowSimilarity) && 
+             similarity != null && similarity < _lowSimilarityThreshold) {
+           matches = true;
+         }
+      }
+
+      return matches;
     }).toList();
 
     // Sorting
@@ -248,6 +262,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               // Compact Toolbar
               _buildToolbar(context, isDarkMode, isAmoled, headerBg, textColor, subtleText, borderCol, stats, themeState),
               
+              // Filter Bar
+              _buildFilterBar(isDarkMode, textColor, borderCol, subtleText, themeState),
+              
               // Divider
               Container(height: 1, color: borderCol),
               
@@ -335,10 +352,6 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           ),
           const SizedBox(width: 12),
           
-          // Filter dropdown
-          _buildFilterDropdown(isDark, textColor, subtleText, borderCol),
-          const SizedBox(width: 8),
-          
           // Sort toggle
           _buildSortButton(isDark, textColor, subtleText, borderCol),
           const SizedBox(width: 8),
@@ -375,41 +388,156 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     );
   }
 
-  Widget _buildFilterDropdown(bool isDark, Color textColor, Color subtleText, Color borderCol) {
-    final filterLabels = {
-      AdvancedDiffFilter.all: 'All Changes',
-      AdvancedDiffFilter.added: 'Added',
-      AdvancedDiffFilter.removed: 'Removed',
-      AdvancedDiffFilter.modified: 'Modified (All)',
-      AdvancedDiffFilter.modifiedHighSimilarity: 'Mod. High (≥70%)',
-      AdvancedDiffFilter.modifiedMediumSimilarity: 'Mod. Med (40-70%)',
-      AdvancedDiffFilter.modifiedLowSimilarity: 'Mod. Low (<40%)',
-    };
+  Widget _buildFilterBar(bool isDark, Color textColor, Color borderCol, Color subtleText, AppThemeState themeState) {
+    final allFilters = [
+      AdvancedDiffFilter.all,
+      AdvancedDiffFilter.added,
+      AdvancedDiffFilter.removed,
+      AdvancedDiffFilter.modified,
+    ];
+    
+    void toggleFilter(AdvancedDiffFilter filter) {
+        setState(() {
+            if (filter == AdvancedDiffFilter.all) {
+                _selectedFilters.clear();
+                _selectedFilters.add(AdvancedDiffFilter.all);
+            } else {
+                _selectedFilters.remove(AdvancedDiffFilter.all);
+                if (_selectedFilters.contains(filter)) {
+                    _selectedFilters.remove(filter);
+                } else {
+                    _selectedFilters.add(filter);
+                }
+                
+                // If nothing selected, revert to All
+                if (_selectedFilters.isEmpty) {
+                    _selectedFilters.add(AdvancedDiffFilter.all);
+                }
+            }
+            _processDiffEntries();
+        });
+    }
 
     return Container(
-      height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? Colors.black26 : Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: borderCol),
+        color: isDark ? const Color(0xFF161B22) : Colors.white,
+        border: Border(bottom: BorderSide(color: borderCol)),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<AdvancedDiffFilter>(
-          value: _currentFilter,
-          icon: Icon(Icons.keyboard_arrow_down, color: subtleText, size: 18),
-          dropdownColor: isDark ? _bgSecondary : Colors.white,
-          style: TextStyle(color: textColor, fontSize: 13),
-          items: filterLabels.entries.map((e) => DropdownMenuItem(
-            value: e.key,
-            child: Text(e.value),
-          )).toList(),
-          onChanged: (value) {
-            if (value != null) {
-              setState(() => _currentFilter = value);
-              _processDiffEntries();
-            }
-          },
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            Text('Filters:', style: TextStyle(color: subtleText, fontSize: 13, fontWeight: FontWeight.w500)),
+            const SizedBox(width: 12),
+            // Filter Chips
+            ...allFilters.map((filter) {
+               bool isSelected = _selectedFilters.contains(filter);
+               String label = '';
+               Color? chipColor;
+               
+               switch (filter) {
+                   case AdvancedDiffFilter.all: label = 'All'; break;
+                   case AdvancedDiffFilter.added: 
+                       label = 'Added'; 
+                       chipColor = themeState.diffAddedColor;
+                       break;
+                   case AdvancedDiffFilter.removed: 
+                       label = 'Removed'; 
+                       chipColor = themeState.diffRemovedColor;
+                       break;
+                   case AdvancedDiffFilter.modified: 
+                       label = 'Modified'; 
+                       chipColor = themeState.diffModifiedColor;
+                       break;
+                   default: label = '';
+               }
+               
+               return Padding(
+                 padding: const EdgeInsets.only(right: 8),
+                 child: FilterChip(
+                   label: Text(label),
+                   selected: isSelected,
+                   onSelected: (_) => toggleFilter(filter),
+                   backgroundColor: isDark ? Colors.black26 : Colors.grey[200],
+                   selectedColor: (chipColor ?? Colors.blue).withValues(alpha: 0.2),
+                   checkmarkColor: chipColor ?? Colors.blue,
+                   labelStyle: TextStyle(
+                       color: isSelected ? (chipColor ?? Colors.blue) : textColor,
+                       fontSize: 12,
+                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                   ),
+                   side: BorderSide(
+                       color: isSelected ? (chipColor ?? Colors.blue) : borderCol,
+                       width: 1,
+                   ),
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                   showCheckmark: false,
+                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                   visualDensity: VisualDensity.compact,
+                 ),
+               );
+            }),
+            Container(height: 20, width: 1, color: borderCol, margin: const EdgeInsets.symmetric(horizontal: 4)),
+            const SizedBox(width: 4),
+            
+            // Granular Modified options
+            ...[
+                 AdvancedDiffFilter.modifiedHighSimilarity, 
+                 AdvancedDiffFilter.modifiedMediumSimilarity, 
+                 AdvancedDiffFilter.modifiedLowSimilarity
+            ].map((filter) {
+               bool isSelected = _selectedFilters.contains(filter);
+               String label = '';
+               switch(filter) {
+                   case AdvancedDiffFilter.modifiedHighSimilarity: label = 'Mod. High (≥70%)'; break;
+                   case AdvancedDiffFilter.modifiedMediumSimilarity: label = 'Mod. Med (40-70%)'; break;
+                   case AdvancedDiffFilter.modifiedLowSimilarity: label = 'Mod. Low (<40%)'; break;
+                   default: break;
+               }
+               
+               return Padding(
+                 padding: const EdgeInsets.only(right: 8),
+                 child: FilterChip(
+                   label: Text(label),
+                   selected: isSelected,
+                   onSelected: (_) => toggleFilter(filter),
+                   backgroundColor: isDark ? Colors.black26 : Colors.grey[200],
+                   selectedColor: themeState.diffModifiedColor.withValues(alpha: 0.2),
+                   labelStyle: TextStyle(
+                       color: isSelected ? themeState.diffModifiedColor : textColor,
+                       fontSize: 12,
+                   ),
+                   side: BorderSide(
+                       color: isSelected ? themeState.diffModifiedColor : borderCol,
+                   ),
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                   showCheckmark: false,
+                   visualDensity: VisualDensity.compact,
+                   padding: const EdgeInsets.symmetric(horizontal: 4),
+                 ),
+               );
+            }),
+            
+            // Clear All Button (appears if anything but All is selected)
+            if (!_selectedFilters.contains(AdvancedDiffFilter.all))
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedFilters = {AdvancedDiffFilter.all};
+                    _processDiffEntries();
+                  });
+                }, 
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: const Size(0, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text('Clear', style: TextStyle(color: subtleText, fontSize: 12)),
+              ),
+          ],
         ),
       ),
     );

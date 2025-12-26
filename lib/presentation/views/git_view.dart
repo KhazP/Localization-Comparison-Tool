@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 
 class GitView extends StatelessWidget {
@@ -387,17 +388,19 @@ class _ComparisonResultList extends StatelessWidget {
                    Color statusColor;
                    IconData statusIcon;
                    
+                   final themeState = context.watch<ThemeBloc>().state;
+                   
                    switch (file.status) {
                      case 'added':
-                       statusColor = Colors.green;
+                       statusColor = themeState.diffAddedColor;
                        statusIcon = Icons.add_circle_outline;
                        break;
                      case 'deleted':
-                       statusColor = Colors.red;
+                       statusColor = themeState.diffRemovedColor;
                        statusIcon = Icons.remove_circle_outline;
                        break;
                      case 'modified':
-                       statusColor = Colors.orange;
+                       statusColor = themeState.diffModifiedColor;
                        statusIcon = Icons.edit_outlined;
                        break;
                      default:

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'dart:io';
@@ -492,16 +493,18 @@ class _HistoryCardState extends State<_HistoryCard> {
     final file1Name = session.file1Path.split(Platform.pathSeparator).last;
     final file2Name = session.file2Path.split(Platform.pathSeparator).last;
 
+    final themeState = context.watch<ThemeBloc>().state;
+
     // Determine the dominant status color for the left border
     Color statusColor;
     if (session.stringsAdded > 0 && session.stringsRemoved == 0 && session.stringsModified == 0) {
-      statusColor = AppThemeV2.added;
+      statusColor = themeState.diffAddedColor;
     } else if (session.stringsRemoved > 0 && session.stringsAdded == 0 && session.stringsModified == 0) {
-      statusColor = AppThemeV2.removed;
+      statusColor = themeState.diffRemovedColor;
     } else if (session.stringsModified > 0 || (session.stringsAdded > 0 && session.stringsRemoved > 0)) {
-      statusColor = AppThemeV2.modified;
+      statusColor = themeState.diffModifiedColor;
     } else if (session.stringsAdded > 0 || session.stringsRemoved > 0) {
-      statusColor = AppThemeV2.modified;
+      statusColor = themeState.diffModifiedColor;
     } else {
       statusColor = isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder;
     }
@@ -554,11 +557,11 @@ class _HistoryCardState extends State<_HistoryCard> {
                         Row(
                           children: [
                             // 1. Pie Chart
-                            _buildStatsChart(session.stringsAdded, session.stringsRemoved, session.stringsModified),
+                            _buildStatsChart(session.stringsAdded, session.stringsRemoved, session.stringsModified, themeState),
                             const SizedBox(width: 16),
                             
                             // 2. Info Column (File Names + Date)
-                            Expanded(
+                            Expanded( // ... no changes here ...
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -623,19 +626,19 @@ class _HistoryCardState extends State<_HistoryCard> {
                                 if (session.stringsAdded > 0)
                                   _StatPill(
                                     count: session.stringsAdded,
-                                    color: AppThemeV2.added,
+                                    color: themeState.diffAddedColor,
                                     icon: Icons.add_rounded,
                                   ),
                                 if (session.stringsRemoved > 0)
                                   _StatPill(
                                     count: session.stringsRemoved,
-                                    color: AppThemeV2.removed,
+                                    color: themeState.diffRemovedColor,
                                     icon: Icons.remove_rounded,
                                   ),
                                 if (session.stringsModified > 0)
                                   _StatPill(
                                     count: session.stringsModified,
-                                    color: AppThemeV2.modified,
+                                    color: themeState.diffModifiedColor,
                                     icon: Icons.edit_rounded,
                                   ),
                                 if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
@@ -686,21 +689,21 @@ class _HistoryCardState extends State<_HistoryCard> {
                                 _StatChip(
                                   label: 'Added',
                                   count: session.stringsAdded,
-                                  color: AppThemeV2.added,
+                                  color: themeState.diffAddedColor,
                                   icon: Icons.add_circle_outline_rounded,
                                 ),
                               if (session.stringsRemoved > 0)
                                 _StatChip(
                                   label: 'Removed',
                                   count: session.stringsRemoved,
-                                  color: AppThemeV2.removed,
+                                  color: themeState.diffRemovedColor,
                                   icon: Icons.remove_circle_outline_rounded,
                                 ),
                               if (session.stringsModified > 0)
                                 _StatChip(
                                   label: 'Modified',
                                   count: session.stringsModified,
-                                  color: AppThemeV2.modified,
+                                  color: themeState.diffModifiedColor,
                                   icon: Icons.sync_alt_rounded,
                                 ),
                               if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
@@ -751,7 +754,7 @@ class _HistoryCardState extends State<_HistoryCard> {
     );
   }
 
-  Widget _buildStatsChart(int added, int removed, int modified) {
+  Widget _buildStatsChart(int added, int removed, int modified, AppThemeState themeState) {
     final total = added + removed + modified;
     // Show a gray ring if no changes, instead of empty space
     if (total == 0) {
@@ -785,21 +788,21 @@ class _HistoryCardState extends State<_HistoryCard> {
             if (added > 0)
               PieChartSectionData(
                 value: added.toDouble(),
-                color: const Color(0xFF22C55E),
+                color: themeState.diffAddedColor,
                 radius: 6,
                 showTitle: false,
               ),
             if (removed > 0)
               PieChartSectionData(
                 value: removed.toDouble(),
-                color: const Color(0xFFEF4444),
+                color: themeState.diffRemovedColor,
                 radius: 6,
                 showTitle: false,
               ),
             if (modified > 0)
               PieChartSectionData(
                 value: modified.toDouble(),
-                color: const Color(0xFFF59E0B),
+                color: themeState.diffModifiedColor,
                 radius: 6,
                 showTitle: false,
               ),

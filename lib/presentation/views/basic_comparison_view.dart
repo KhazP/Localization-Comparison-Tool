@@ -18,6 +18,7 @@ import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff_view.dart'; 
 // import 'package:localizer_app_main/presentation/views/ai_translation_settings_view.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 
 
 // Enum for filter status in Basic View
@@ -735,6 +736,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   Widget _buildAnalyticsAndActionsBar() {
     final settingsState = context.watch<SettingsBloc>().state;
+    final themeState = context.watch<ThemeBloc>().state;
     final theme = Theme.of(context);
     final bool isDarkMode = theme.brightness == Brightness.dark;
     final bool isAmoled = isDarkMode &&
@@ -788,15 +790,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             flex: 3,
             child: Row(
               children: [
-                _buildStatsChart(addedCount, removedCount, modifiedCount),
+                _buildStatsChart(addedCount, removedCount, modifiedCount, themeState),
                 const SizedBox(width: 16),
                 _buildCompactStat('Total', totalKeys, theme.colorScheme.onSurface.withAlpha(180)),
                 const SizedBox(width: 16),
-                _buildCompactStat('+${addedCount}', null, const Color(0xFF22C55E)),
+                _buildCompactStat('+${addedCount}', null, themeState.diffAddedColor),
                 const SizedBox(width: 12),
-                _buildCompactStat('-${removedCount}', null, const Color(0xFFEF4444)),
+                _buildCompactStat('-${removedCount}', null, themeState.diffRemovedColor),
                 const SizedBox(width: 12),
-                _buildCompactStat('~${modifiedCount}', null, const Color(0xFFF59E0B)),
+                _buildCompactStat('~${modifiedCount}', null, themeState.diffModifiedColor),
                 const SizedBox(width: 12),
                 _buildFileWatcherStatus(settingsState, isAmoled, isDarkMode),
               ],
@@ -869,19 +871,19 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 _buildFilterIconButton(
                   BasicDiffFilter.added,
                   Icons.add_circle_outline,
-                  const Color(0xFF22C55E),
+                  context.watch<ThemeBloc>().state.diffAddedColor,
                   'Show Added',
                 ),
                 _buildFilterIconButton(
                   BasicDiffFilter.removed,
                   Icons.remove_circle_outline,
-                  const Color(0xFFEF4444),
+                  context.watch<ThemeBloc>().state.diffRemovedColor,
                   'Show Removed',
                 ),
                 _buildFilterIconButton(
                   BasicDiffFilter.modified,
                   Icons.edit_outlined,
-                  const Color(0xFFF59E0B),
+                  context.watch<ThemeBloc>().state.diffModifiedColor,
                   'Show Modified',
                 ),
                 const SizedBox(width: 8),
@@ -941,7 +943,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     );
   }
 
-  Widget _buildStatsChart(int added, int removed, int modified) {
+  Widget _buildStatsChart(int added, int removed, int modified, AppThemeState themeState) {
     final total = added + removed + modified;
     if (total == 0) return const SizedBox.shrink();
 
@@ -953,19 +955,19 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           sections: [
             PieChartSectionData(
               value: added.toDouble(),
-              color: const Color(0xFF22C55E),
+              color: themeState.diffAddedColor,
               radius: 6,
               showTitle: false,
             ),
             PieChartSectionData(
               value: removed.toDouble(),
-              color: const Color(0xFFEF4444),
+              color: themeState.diffRemovedColor,
               radius: 6,
               showTitle: false,
             ),
             PieChartSectionData(
               value: modified.toDouble(),
-              color: const Color(0xFFF59E0B),
+              color: themeState.diffModifiedColor,
               radius: 6,
               showTitle: false,
             ),
@@ -1105,6 +1107,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     String? value2,
     required bool isAmoled,
   }) {
+    final themeState = context.watch<ThemeBloc>().state;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -1115,17 +1118,17 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     switch (status) {
       case StringComparisonStatus.added:
-        statusColor = const Color(0xFF22C55E);
+        statusColor = themeState.diffAddedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
         statusLabel = 'ADDED';
         break;
       case StringComparisonStatus.removed:
-        statusColor = const Color(0xFFEF4444);
+        statusColor = themeState.diffRemovedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
         statusLabel = 'REMOVED';
         break;
       case StringComparisonStatus.modified:
-        statusColor = const Color(0xFFF59E0B);
+        statusColor = themeState.diffModifiedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
         statusLabel = 'MODIFIED';
         break;
@@ -1236,10 +1239,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEF4444).withAlpha(isDark ? 20 : 15),
+                                color: themeState.diffRemovedColor.withAlpha(isDark ? 20 : 15),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
-                                  color: const Color(0xFFEF4444).withAlpha(isDark ? 40 : 30),
+                                  color: themeState.diffRemovedColor.withAlpha(isDark ? 40 : 30),
                                 ),
                               ),
                               child: Column(
@@ -1260,7 +1263,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                     style: monoStyle.copyWith(
                                       color: theme.colorScheme.onSurface.withAlpha(220),
                                       decoration: TextDecoration.lineThrough,
-                                      decorationColor: const Color(0xFFEF4444).withAlpha(150),
+                                      decorationColor: themeState.diffRemovedColor.withAlpha(150),
                                     ),
                                     maxLines: 4,
                                     overflow: TextOverflow.ellipsis,
@@ -1285,10 +1288,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF22C55E).withAlpha(isDark ? 20 : 15),
+                                color: themeState.diffAddedColor.withAlpha(isDark ? 20 : 15),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
-                                  color: const Color(0xFF22C55E).withAlpha(isDark ? 40 : 30),
+                                  color: themeState.diffAddedColor.withAlpha(isDark ? 40 : 30),
                                 ),
                               ),
                               child: Column(

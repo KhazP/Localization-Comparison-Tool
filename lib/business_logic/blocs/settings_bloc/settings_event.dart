@@ -107,6 +107,15 @@ class UpdateDiffModifiedColor extends SettingsEvent {
   List<Object> get props => [colorValue];
 }
 
+class UpdateDiffColors extends SettingsEvent {
+  final int? addedColor;
+  final int? removedColor;
+  final int? modifiedColor;
+  const UpdateDiffColors({this.addedColor, this.removedColor, this.modifiedColor});
+  @override
+  List<Object?> get props => [addedColor, removedColor, modifiedColor];
+}
+
 class UpdateDefaultSourceEncoding extends SettingsEvent {
   final String encoding;
   const UpdateDefaultSourceEncoding(this.encoding);

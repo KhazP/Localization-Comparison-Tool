@@ -66,9 +66,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   static const Color _textPrimary = Color(0xFFE6EDF3);
   static const Color _textSecondary = Color(0xFF8B949E);
   static const Color _accentBlue = Color(0xFF58A6FF);
-  static const Color _statusAdded = Color(0xFF3FB950);
-  static const Color _statusRemoved = Color(0xFFF85149);
-  static const Color _statusModified = Color(0xFFD29922);
+
 
   @override
   void initState() {
@@ -294,11 +292,11 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           // Stats badges
           _buildStatBadge('${stats['total']}', 'total', subtleText, isDark),
           const SizedBox(width: 8),
-          _buildStatBadge('${stats['added']}', 'added', _statusAdded, isDark),
+          _buildStatBadge('${stats['added']}', 'added', themeState.diffAddedColor, isDark),
           const SizedBox(width: 8),
-          _buildStatBadge('${stats['removed']}', 'removed', _statusRemoved, isDark),
+          _buildStatBadge('${stats['removed']}', 'removed', themeState.diffRemovedColor, isDark),
           const SizedBox(width: 8),
-          _buildStatBadge('${stats['modified']}', 'mod', _statusModified, isDark),
+          _buildStatBadge('${stats['modified']}', 'mod', themeState.diffModifiedColor, isDark),
           
           const Spacer(),
           
@@ -615,15 +613,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     String statusText;
     switch (status) {
       case StringComparisonStatus.added:
-        statusColor = _statusAdded;
+        statusColor = themeState.diffAddedColor;
         statusText = 'ADD';
         break;
       case StringComparisonStatus.removed:
-        statusColor = _statusRemoved;
+        statusColor = themeState.diffRemovedColor;
         statusText = 'DEL';
         break;
       case StringComparisonStatus.modified:
-        statusColor = _statusModified;
+        statusColor = themeState.diffModifiedColor;
         statusText = similarity != null ? 'MOD ${(similarity * 100).toInt()}%' : 'MOD';
         break;
       default:

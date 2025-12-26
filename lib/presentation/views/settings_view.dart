@@ -44,6 +44,24 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   final List<String> _encodings = ['UTF-8', 'UTF-16', 'UTF-16BE', 'UTF-16LE', 'ASCII', 'ISO-8859-1'];
   final List<String> _themeModes = ['System', 'Light', 'Dark', 'Amoled'];
 
+  final Map<String, _ThemePreset> _themePresets = {
+    'Default': const _ThemePreset(
+      added: Color(0xFF4CAF50),
+      removed: Color(0xFFF44336),
+      modified: Color(0xFFFFC107),
+    ),
+    'Colorblind-Friendly': const _ThemePreset(
+      added: Color(0xFF0077BB),    // Blue
+      removed: Color(0xFFEE7733),  // Orange
+      modified: Color(0xFF009988), // Teal
+    ),
+    'High Contrast': const _ThemePreset(
+      added: Colors.greenAccent,
+      removed: Colors.redAccent,
+      modified: Colors.yellowAccent,
+    ),
+  };
+
   @override
   void initState() {
     super.initState();
@@ -691,6 +709,30 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
+  Widget _buildPresetButtons(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _themePresets.entries.map((entry) {
+        return OutlinedButton(
+          onPressed: () {
+            final preset = entry.value;
+            context.read<SettingsBloc>().add(UpdateDiffColors(
+              addedColor: preset.added.toARGB32(),
+              removedColor: preset.removed.toARGB32(),
+              modifiedColor: preset.modified.toARGB32(),
+            ));
+          },
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            visualDensity: VisualDensity.compact,
+          ),
+          child: Text(entry.key),
+        );
+      }).toList(),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // APPEARANCE SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -698,6 +740,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   Widget _buildAppearanceSettings(BuildContext context, AppSettings settings, bool isDark) {
     return Column(
       children: [
+
         _buildSettingsCard(
           context: context,
           title: 'Theme',
@@ -745,6 +788,25 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           title: 'Diff Colors',
           isDark: isDark,
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Text(
+                'Presets',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: _buildPresetButtons(context),
+            ),
+            Divider(
+              color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+              height: 1,
+              indent: 16,
+              endIndent: 16,
+            ),
             _buildColorRow(context, 'Added', Color(settings.diffAddedColor), (color) {
               context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.toARGB32()));
             }, isDark),
@@ -1579,4 +1641,16 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       await launchUrl(uri);
     }
   }
+}
+
+class _ThemePreset {
+  final Color added;
+  final Color removed;
+  final Color modified;
+
+  const _ThemePreset({
+    required this.added,
+    required this.removed,
+    required this.modified,
+  });
 }

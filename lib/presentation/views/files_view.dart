@@ -7,6 +7,7 @@ import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/data/models/file_pair.dart';
@@ -594,6 +595,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
           final added = result?.diff.values.where((d) => d.status == StringComparisonStatus.added).length ?? 0;
           final removed = result?.diff.values.where((d) => d.status == StringComparisonStatus.removed).length ?? 0;
           final modified = result?.diff.values.where((d) => d.status == StringComparisonStatus.modified).length ?? 0;
+          
+          final themeState = context.watch<ThemeBloc>().state;
 
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
@@ -636,11 +639,11 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                   ),
                 ),
                 if (result != null) ...[
-                  _StatChip(label: 'A', count: added, color: AppThemeV2.added),
+                  _StatChip(label: 'A', count: added, color: themeState.diffAddedColor),
                   const SizedBox(width: 4),
-                  _StatChip(label: 'R', count: removed, color: AppThemeV2.removed),
+                  _StatChip(label: 'R', count: removed, color: themeState.diffRemovedColor),
                   const SizedBox(width: 4),
-                  _StatChip(label: 'M', count: modified, color: AppThemeV2.modified),
+                  _StatChip(label: 'M', count: modified, color: themeState.diffModifiedColor),
                   const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: () {

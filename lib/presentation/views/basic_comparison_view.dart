@@ -85,6 +85,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }
   }
 
+  void _toggleFileWatching(bool enabled) {
+    context.read<SettingsBloc>().add(UpdateAutoReloadOnChange(enabled));
+  }
+
   void _startComparison() {
     if (_file1 != null && _file2 != null) {
       setState(() {
@@ -528,12 +532,34 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             final value1 = state.result.file1Data[key];
                             final value2 = state.result.file2Data[key];
 
-                            return _buildDiffListItem(
-                              key: key,
-                              status: status,
-                              value1: value1,
-                              value2: value2,
-                              isAmoled: isAmoled,
+                            final lineNumber = (index + 1).toString().padLeft(3, '0');
+
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 48,
+                                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                                  child: Text(
+                                    lineNumber,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.outline,
+                                      fontFamily: 'monospace',
+                                      fontSize: 12,
+                                    ),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildDiffListItem(
+                                    key: key,
+                                    status: status,
+                                    value1: value1,
+                                    value2: value2,
+                                    isAmoled: isAmoled,
+                                  ),
+                                ),
+                              ],
                             );
                           },
                         ),
@@ -1039,37 +1065,45 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     final isAutoReloadEnabled = settingsState.status == SettingsStatus.loaded &&
                                 settingsState.appSettings.autoReloadOnChange;
     
+    // Check actual watcher status
+    // Note: We're inside a method, not a BlocBuilder for the Chip content specifically,
+    // so we rely on parent rebuilds or we need to wrap the Chip in BlocBuilder if we want 
+    // real-time "active" status visualization beyond just the setting.
+    // However, the toggle mainly controls the setting.
+    
     return BlocBuilder<FileWatcherBloc, FileWatcherState>(
       builder: (context, watcherState) {
         final isWatching = watcherState is FileWatcherActive && watcherState.isEnabled;
-        final iconColor = isWatching ? Colors.green : 
-                         (isAutoReloadEnabled ? Colors.orange : Colors.grey);
-        final statusText = isWatching ? 'ON' : 
-                          (isAutoReloadEnabled ? 'OFF' : 'DIS');
         
-        return Tooltip(
-          message: isWatching ? 'Auto-reload is active' :
-                   (isAutoReloadEnabled ? 'Auto-reload enabled but no files watched' : 'Auto-reload disabled'),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.visibility_outlined,
-                size: 16,
-                color: iconColor,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                statusText,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: iconColor,
-                ),
-              ),
-            ],
+        return InputChip(
+          avatar: Icon(
+            isWatching ? Icons.visibility : Icons.visibility_off,
+            size: 16,
+            color: isWatching 
+                ? (isDarkMode ? Colors.green[400] : Colors.green[700])
+                : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
           ),
+          label: Text(isWatching ? 'Watching' : 'Watch Off'),
+          selected: isAutoReloadEnabled,
+          showCheckmark: false,
+          onSelected: (value) => _toggleFileWatching(value),
+          tooltip: 'Automatically recompare when files change on disk',
+          backgroundColor: Colors.transparent,
+          selectedColor: isDarkMode ? Colors.green.withOpacity(0.15) : Colors.green.withOpacity(0.1),
+          side: BorderSide(
+            color: isWatching
+                ? (isDarkMode ? Colors.green[700]! : Colors.green[600]!)
+                : (isDarkMode ? Colors.grey[800]! : Colors.grey[300]!),
+          ),
+          labelStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: isWatching ? FontWeight.bold : FontWeight.normal,
+            color: isWatching
+                ? (isDarkMode ? Colors.green[400] : Colors.green[800])
+                : (isDarkMode ? Colors.grey[400] : Colors.grey[700]),
+          ),
+          padding: const EdgeInsets.all(0),
+          visualDensity: VisualDensity.compact,
         );
       },
     );

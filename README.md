@@ -16,22 +16,32 @@ The **Localization Comparison Tool** helps developers, translators, and localiza
 ## ✨ Key Features
 
 ### 📊 **Smart File Comparison**
-- **Multi-Format Support**: JSON, XML, XLIFF, TMX, CSV, YAML, Properties, RESX, TXT, DOCX, and more.
-- **Intelligent Diff Detection**: Automatically identifies added, removed, and modified strings.
-- **Similarity Analysis**: Advanced algorithms detect how much modified strings have changed.
-- **Batch Processing**: Compare entire directories with matching file pairs.
+- **Multi-Format Support**: JSON, XML, XLIFF, TMX, CSV, YAML, Properties, RESX, TXT, DOCX, and more
+- **Intelligent Diff Detection**: Automatically identifies added, removed, and modified strings
+- **Similarity Analysis**: Advanced algorithms detect how much modified strings have changed
+- **Batch Processing**: Compare entire directories with matching file pairs
+
+<img src="https://github.com/user-attachments/assets/15a392c6-2c9f-4bd9-9ec7-019d9d63fef9" width="800">
 
 ### 🎨 **Modern Interface**
-- **Material Design 3**: Beautiful, intuitive interface that follows platform conventions.
-- **Advanced Theming**: Light, Dark, and Amoled modes with customizable accent colors.
-- **Drag & Drop**: Simply drag files from your desktop for instant comparison.
+- **Material Design 3**: Beautiful, intuitive interface that follows platform conventions
+- **Advanced Theming**: Light, Dark, and Amoled modes with customizable accent colors
+- **Drag & Drop**: Simply drag files from your desktop for instant comparison
+- **Responsive Design**: Optimized for different screen sizes and resolutions
+
+<img src="https://github.com/user-attachments/assets/c7cab91c-47a1-4300-b354-dd8a6abfd680" width="800">
 
 ### 🚀 **Performance & Usability**
-- **Real-Time File Watching**: Automatically recompares files when they change on disk.
-- **Large Dataset Support**: Handle files with thousands of entries using smart pagination.
-- **Export Capabilities**: Export comparison results to CSV for documentation.
+- **Real-Time File Watching**: Automatically recompares files when they change on disk
+- **Large Dataset Support**: Handle files with thousands of entries using smart pagination
+- **Export Capabilities**: Export comparison results to CSV for documentation
+- **Comparison History**: Keep track of past comparisons with full session history
 
----
+### ⚙️ **Professional Features**
+- **Advanced Filtering**: Filter results by change type, similarity levels, and custom patterns
+- **Custom Settings**: Configure ignore patterns, case sensitivity, and default file formats
+- **Progress Tracking**: Real-time progress indicators for large file operations
+- **Cross-Platform**: Native desktop performance on Windows, macOS, and Linux
 
 ## 🔧 Supported File Formats
 
@@ -81,12 +91,103 @@ flutter run -d windows
 
 ## 💻 System Requirements
 
-- **OS**: Windows 10 version 1903 (build 18362) or later.
-- **Architecture**: x64, ARM64.
-- **Memory**: 4GB RAM minimum.
-- **Storage**: 200MB available space.
+### Windows
+- **OS**: Windows 10 version 1903 (build 18362) or later
+- **Architecture**: x64, ARM64
+- **Memory**: 4GB RAM minimum, 8GB recommended
+- **Storage**: ~10MB available space
 
----
+## 🎯 Quick Start Guide
+
+1. **Launch the Application**
+   - Use `run_localizer_app.bat` (Windows) or run `flutter run` from the terminal
+
+2. **Select Files to Compare**
+   - **Drag & Drop**: Drag your source and target files directly onto the selection areas
+   - **Browse**: Click the "Browse" buttons to select files using the file picker
+
+3. **Start Comparison**
+   - Click "Compare Files" to analyze the differences
+   - View results instantly in the main comparison view
+
+4. **Explore Results**
+   - **Basic View**: See an overview with filters for Added, Removed, and Modified entries
+   - **Advanced View**: Detailed analysis with pagination for large datasets
+   - **Export**: Save results as CSV for documentation or further analysis
+
+5. **Configure Settings** (Optional)
+   - **Auto-Reload**: Enable automatic recomparison when files change
+   - **Themes**: Choose Light, Dark, or Amoled mode
+   - **File Formats**: Set default formats and encoding preferences
+   - **Ignore Patterns**: Configure regex patterns to ignore specific keys
+
+## 🎨 Interface Overview
+
+### Main Views
+- **Basic Comparison**: Quick overview with filtering and analytics
+- **Advanced Diff**: Detailed table view with pagination and export options
+- **History**: Browse and reload previous comparison sessions
+- **Files**: Directory-based comparison for batch operations
+- **Settings**: Comprehensive customization options
+
+### Key Controls
+- **Filter Buttons**: Quickly filter by Added, Removed, Modified, or All changes
+- **Analytics Bar**: Real-time statistics showing total keys and change counts
+- **Auto-Reload Indicator**: Shows when file watching is active
+- **Theme Toggle**: Quick access to light/dark theme switching
+
+## 🔄 Advanced Features
+
+### Auto-Reload File Watching
+Enable in Settings to automatically detect and recompare files when they change on disk. Perfect for active development workflows where you're editing localization files and want immediate feedback.
+
+### Smart Filtering
+- **Change Type**: Filter by Added, Removed, or Modified entries
+- **Similarity Levels**: For modified strings, filter by how much they've changed
+- **Custom Patterns**: Use regex patterns to ignore specific keys during comparison
+- **Search**: Find specific keys or values within comparison results
+
+### Performance Optimization
+- **Pagination**: Large files (1000+ keys) are automatically paginated for smooth navigation
+- **Background Processing**: File parsing happens in the background without blocking the UI
+- **Memory Efficient**: Optimized data structures handle large datasets efficiently
+- **Progress Indicators**: Clear feedback during processing operations
+
+## 🛠️ Development
+
+### Prerequisites
+- Flutter 3.19+ installed and configured
+- Dart SDK 3.0+
+- Platform-specific development tools (Visual Studio on Windows, Xcode on macOS, etc.)
+
+### Development Setup
+```bash
+# Clone the repository
+git clone https://github.com/KhazP/LocalizerAppMain.git
+cd LocalizerAppMain
+
+# Install dependencies
+flutter pub get
+
+# Generate code for data models
+flutter packages pub run build_runner build
+
+# Run in development mode
+flutter run -d windows  # or macos, linux
+
+# Run tests
+flutter test
+```
+
+### Project Structure
+```
+lib/
+├── business_logic/blocs/    # State management (BLoC pattern)
+├── core/services/           # Core business services
+├── data/                    # Data models and repositories
+├── presentation/            # UI components and screens
+└── main.dart               # Application entry point
+```
 
 ## 🤝 Contributing
 
@@ -120,5 +221,9 @@ This project is licensed under the **GNU General Public License v3.0**. See the 
 ---
 
 <div align="center">
-  <strong>Made with ❤️ and Flutter</strong>
+
+**Made with ❤️ and Flutter**
+
+*Streamline your localization workflow today!*
+
 </div>

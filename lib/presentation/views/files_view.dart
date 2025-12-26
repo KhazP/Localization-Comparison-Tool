@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:csv/csv.dart';
+import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
@@ -26,6 +28,12 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
   bool _isDraggingTarget = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  
+  // Export state
+  bool _isExporting = false;
+  int _exportedCount = 0;
+  int _totalToExport = 0;
+  String? _currentExportFile;
 
   @override
   void initState() {
@@ -170,8 +178,16 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             BlocBuilder<DirectoryComparisonBloc, DirectoryComparisonState>(
               builder: (context, state) {
                 bool canCompare = false;
+                bool canExport = false;
+                List<FilePair> pairedFiles = [];
+                Map<FilePair, ComparisonResult> comparisonResults = {};
+                
                 if (state is DirectoryComparisonSuccess) {
                   canCompare = state.pairedFiles.isNotEmpty;
+                  pairedFiles = state.pairedFiles;
+                  comparisonResults = state.comparisonResults;
+                  // Can export if at least one pair has comparison results
+                  canExport = comparisonResults.isNotEmpty;
                 }
                 final hasDirectories = _sourceDirectory != null && _targetDirectory != null;
 
@@ -207,7 +223,18 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                                 }
                               }
                             : null,
-                        isPrimary: canCompare,
+                        isPrimary: canCompare && !canExport,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ActionButton(
+                        icon: Icons.download_rounded,
+                        label: 'Export All',
+                        onPressed: canExport && !_isExporting
+                            ? () => _exportAllResults(pairedFiles, comparisonResults)
+                            : null,
+                        isPrimary: canExport,
                       ),
                     ),
                   ],
@@ -764,6 +791,354 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             TextButton(
               child: const Text('Cancel'),
               onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Export all comparison results to CSV files
+  Future<void> _exportAllResults(
+    List<FilePair> pairedFiles,
+    Map<FilePair, ComparisonResult> results,
+  ) async {
+    // Filter pairs that have comparison results
+    final pairsWithResults = pairedFiles
+        .where((pair) => results.containsKey(pair))
+        .toList();
+
+    if (pairsWithResults.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('No comparison results to export. Run "Compare All" first.'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Ask user to select export directory
+    final exportPath = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Export Folder',
+    );
+
+    if (exportPath == null) return; // User cancelled
+
+    // Create timestamped subfolder
+    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final exportDir = Directory('$exportPath/export_$timestamp');
+    
+    try {
+      await exportDir.create(recursive: true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create export folder: $e'),
+            backgroundColor: AppThemeV2.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Start export with progress
+    setState(() {
+      _isExporting = true;
+      _exportedCount = 0;
+      _totalToExport = pairsWithResults.length;
+      _currentExportFile = null;
+    });
+
+    // Show progress dialog
+    if (mounted) {
+      _showExportProgressDialog();
+    }
+
+    // Summary data for the summary file
+    final summaryData = <Map<String, dynamic>>[];
+
+    try {
+      for (int i = 0; i < pairsWithResults.length; i++) {
+        final pair = pairsWithResults[i];
+        final result = results[pair]!;
+        final fileName = p.basenameWithoutExtension(pair.sourceFile.path);
+
+        setState(() {
+          _exportedCount = i;
+          _currentExportFile = fileName;
+        });
+
+        // Generate CSV content for this pair
+        final csvContent = _generateCsvForPair(pair, result);
+        
+        // Write to file
+        final csvFile = File('${exportDir.path}/${fileName}_comparison.csv');
+        await csvFile.writeAsString(csvContent);
+
+        // Collect summary data
+        final added = result.diff.values
+            .where((d) => d.status == StringComparisonStatus.added)
+            .length;
+        final removed = result.diff.values
+            .where((d) => d.status == StringComparisonStatus.removed)
+            .length;
+        final modified = result.diff.values
+            .where((d) => d.status == StringComparisonStatus.modified)
+            .length;
+        
+        summaryData.add({
+          'filename': fileName,
+          'added': added,
+          'removed': removed,
+          'modified': modified,
+          'total': added + removed + modified,
+        });
+      }
+
+      // Generate and write summary file
+      final summaryCsv = _generateSummaryCsv(summaryData);
+      final summaryFile = File('${exportDir.path}/_summary.csv');
+      await summaryFile.writeAsString(summaryCsv);
+
+      setState(() {
+        _exportedCount = pairsWithResults.length;
+        _currentExportFile = null;
+      });
+
+      // Close progress dialog and show success
+      if (mounted) {
+        Navigator.of(context).pop(); // Close progress dialog
+        _showExportCompleteDialog(exportDir.path, pairsWithResults.length);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close progress dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: AppThemeV2.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isExporting = false;
+        _exportedCount = 0;
+        _totalToExport = 0;
+        _currentExportFile = null;
+      });
+    }
+  }
+
+  String _generateCsvForPair(FilePair pair, ComparisonResult result) {
+    final csvData = <List<dynamic>>[
+      ['Status', 'String Key', 'Old Value (Source)', 'New Value (Target)', 'Similarity'],
+    ];
+
+    for (final entry in result.diff.entries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = result.file1Data[key] ?? '';
+      final file2Value = result.file2Data[key] ?? '';
+
+      String statusText;
+      switch (status) {
+        case StringComparisonStatus.added:
+          statusText = 'ADDED';
+          break;
+        case StringComparisonStatus.removed:
+          statusText = 'REMOVED';
+          break;
+        case StringComparisonStatus.modified:
+          statusText = 'MODIFIED';
+          break;
+        case StringComparisonStatus.identical:
+          statusText = 'IDENTICAL';
+          break;
+      }
+
+      String simText = similarity != null 
+          ? '${(similarity * 100).toStringAsFixed(1)}%' 
+          : '';
+
+      csvData.add([
+        statusText,
+        key,
+        status == StringComparisonStatus.added ? '' : file1Value,
+        status == StringComparisonStatus.removed ? '' : file2Value,
+        simText,
+      ]);
+    }
+
+    // Convert to CSV string with UTF-8 BOM for Excel compatibility
+    final csvString = const ListToCsvConverter().convert(csvData);
+    return '\uFEFF$csvString';
+  }
+
+  String _generateSummaryCsv(List<Map<String, dynamic>> summaryData) {
+    final csvData = <List<dynamic>>[
+      ['Filename', 'Added', 'Removed', 'Modified', 'Total Changes'],
+    ];
+
+    int totalAdded = 0;
+    int totalRemoved = 0;
+    int totalModified = 0;
+    int grandTotal = 0;
+
+    for (final entry in summaryData) {
+      csvData.add([
+        entry['filename'],
+        entry['added'],
+        entry['removed'],
+        entry['modified'],
+        entry['total'],
+      ]);
+      totalAdded += entry['added'] as int;
+      totalRemoved += entry['removed'] as int;
+      totalModified += entry['modified'] as int;
+      grandTotal += entry['total'] as int;
+    }
+
+    // Add totals row
+    csvData.add(['TOTAL', totalAdded, totalRemoved, totalModified, grandTotal]);
+
+    final csvString = const ListToCsvConverter().convert(csvData);
+    return '\uFEFF$csvString';
+  }
+
+  void _showExportProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            // Update dialog state when parent state changes
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.download_rounded, color: AppThemeV2.primary),
+                  const SizedBox(width: 12),
+                  const Text('Exporting Results'),
+                ],
+              ),
+              content: SizedBox(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_currentExportFile != null)
+                      Text(
+                        'Processing: $_currentExportFile',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 16),
+                    LinearProgressIndicator(
+                      value: _totalToExport > 0 
+                          ? _exportedCount / _totalToExport 
+                          : null,
+                      backgroundColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppThemeV2.darkBorder
+                          : AppThemeV2.lightBorder,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppThemeV2.primary),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '$_exportedCount of $_totalToExport files exported',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showExportCompleteDialog(String exportPath, int fileCount) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: AppThemeV2.success),
+              const SizedBox(width: 12),
+              const Text('Export Complete'),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Successfully exported $fileCount comparison files plus summary.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? AppThemeV2.darkSurface 
+                        : AppThemeV2.lightSurface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark 
+                          ? AppThemeV2.darkBorder 
+                          : AppThemeV2.lightBorder,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.folder_rounded,
+                        size: 20,
+                        color: isDark 
+                            ? AppThemeV2.darkTextMuted 
+                            : AppThemeV2.lightTextMuted,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          exportPath,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: 'monospace',
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
             ),
           ],
         );

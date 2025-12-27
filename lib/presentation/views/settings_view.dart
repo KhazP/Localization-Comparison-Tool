@@ -777,6 +777,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             else
               ...settings.ignorePatterns.map((pattern) => _buildPatternItem(context, pattern, isDark)),
             Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildPatternPresets(context),
+            ),
+            Padding(
               padding: const EdgeInsets.all(16),
               child: OutlinedButton.icon(
                 onPressed: () => _showAddPatternDialog(context, isDark),
@@ -817,6 +821,31 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPatternPresets(BuildContext context) {
+    final presets = {
+      'Comments': ['^//.*', '^#.*'],
+      'Temp Keys': ['^temp_.*', '^test_.*'],
+      'Placeholders': ['^TODO_.*', '^PLACEHOLDER_.*'],
+      'Dev Only': ['^DEBUG_.*', '^DEV_.*'],
+    };
+    
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: presets.entries.map((entry) => 
+        OutlinedButton.icon(
+          icon: const Icon(Icons.add, size: 16),
+          label: Text(entry.key),
+          onPressed: () {
+            for (final pattern in entry.value) {
+              context.read<SettingsBloc>().add(AddIgnorePattern(pattern));
+            }
+          },
+        ),
+      ).toList(),
     );
   }
 

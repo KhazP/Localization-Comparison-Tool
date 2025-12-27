@@ -10,6 +10,14 @@ class WindowsIntegrationService {
   static const String _fileExtension = '.loc';
   static const String _protocolScheme = 'localizer';
 
+  /// Supported localization file extensions with their descriptions
+  static const Map<String, String> supportedExtensions = {
+    '.loc': 'Localizer Project File',
+    '.lang': 'Language File',
+    '.json': 'JSON Localization File',
+    '.xml': 'XML Localization File',
+  };
+
   /// Check if running on Windows
   static bool get isWindows => Platform.isWindows;
 
@@ -329,5 +337,153 @@ class WindowsIntegrationService {
     } catch (e) {
       return false;
     }
+  }
+
+  // ============ Per-Extension File Association ============
+
+  /// Register a specific file extension to open with Localizer
+  static Future<bool> registerFileExtension(String extension) async {
+    if (!isWindows) return false;
+
+    final description = supportedExtensions[extension] ?? 'Localization File';
+
+    try {
+      final exePath = Platform.resolvedExecutable;
+
+      // Ensure extension starts with dot
+      final ext = extension.startsWith('.') ? extension : '.$extension';
+      final typeId = '$_appName${ext.replaceAll('.', '_')}.Document';
+
+      final classesKey = Registry.openPath(
+        RegistryHive.currentUser,
+        path: r'Software\Classes',
+        desiredAccessRights: AccessRights.allAccess,
+      );
+
+      // Register the file extension
+      final extKey = classesKey.createKey(ext);
+      extKey.createValue(RegistryValue(
+        '',
+        RegistryValueType.string,
+        typeId,
+      ));
+      extKey.close();
+
+      // Register the file type
+      final typeKey = classesKey.createKey(typeId);
+      typeKey.createValue(RegistryValue(
+        '',
+        RegistryValueType.string,
+        description,
+      ));
+
+      // Default icon
+      final iconKey = typeKey.createKey('DefaultIcon');
+      iconKey.createValue(RegistryValue(
+        '',
+        RegistryValueType.string,
+        '"$exePath",0',
+      ));
+      iconKey.close();
+
+      // Shell open command
+      final shellKey = typeKey.createKey(r'shell\open\command');
+      shellKey.createValue(RegistryValue(
+        '',
+        RegistryValueType.string,
+        '"$exePath" "%1"',
+      ));
+      shellKey.close();
+
+      typeKey.close();
+      classesKey.close();
+
+      debugPrint('File extension $ext registered successfully');
+      return true;
+    } catch (e) {
+      debugPrint('Failed to register file extension $extension: $e');
+      return false;
+    }
+  }
+
+  /// Unregister a specific file extension
+  static Future<bool> unregisterFileExtension(String extension) async {
+    if (!isWindows) return false;
+
+    try {
+      final ext = extension.startsWith('.') ? extension : '.$extension';
+      final typeId = '$_appName${ext.replaceAll('.', '_')}.Document';
+
+      final classesKey = Registry.openPath(
+        RegistryHive.currentUser,
+        path: r'Software\Classes',
+        desiredAccessRights: AccessRights.allAccess,
+      );
+
+      try {
+        classesKey.deleteKey(ext, recursive: true);
+      } catch (_) {
+        // Key might not exist
+      }
+
+      try {
+        classesKey.deleteKey(typeId, recursive: true);
+      } catch (_) {
+        // Key might not exist
+      }
+
+      classesKey.close();
+
+      debugPrint('File extension $ext unregistered successfully');
+      return true;
+    } catch (e) {
+      debugPrint('Failed to unregister file extension $extension: $e');
+      return false;
+    }
+  }
+
+  /// Check if a specific file extension is registered
+  static bool isFileExtensionRegistered(String extension) {
+    if (!isWindows) return false;
+
+    try {
+      final ext = extension.startsWith('.') ? extension : '.$extension';
+
+      final key = Registry.openPath(
+        RegistryHive.currentUser,
+        path: 'Software\\Classes\\$ext',
+      );
+      key.close();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get a map of all supported extensions and their registration status
+  static Map<String, bool> getExtensionRegistrationStatus() {
+    final result = <String, bool>{};
+    for (final ext in supportedExtensions.keys) {
+      result[ext] = isFileExtensionRegistered(ext);
+    }
+    return result;
+  }
+
+  /// Register all supported localization file extensions
+  static Future<Map<String, bool>> registerAllExtensions() async {
+    final results = <String, bool>{};
+    for (final ext in supportedExtensions.keys) {
+      results[ext] = await registerFileExtension(ext);
+    }
+    return results;
+  }
+
+  /// Unregister all supported localization file extensions
+  static Future<Map<String, bool>> unregisterAllExtensions() async {
+    final results = <String, bool>{};
+    for (final ext in supportedExtensions.keys) {
+      results[ext] = await unregisterFileExtension(ext);
+    }
+    return results;
   }
 }

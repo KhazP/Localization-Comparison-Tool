@@ -2221,73 +2221,141 @@ class _SettingsViewState extends State<SettingsView>
           isAmoled: isAmoled,
           children: [
             Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Register file types to open with Localizer when double-clicked in Explorer.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppThemeV2.darkTextMuted
+                          : AppThemeV2.lightTextMuted,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Per-extension toggles
+            ...WindowsIntegrationService.supportedExtensions.entries
+                .map((entry) {
+              final ext = entry.key;
+              final description = entry.value;
+              final isRegistered =
+                  isWindows && WindowsIntegrationService.isFileExtensionRegistered(ext);
+
+              return _buildSettingRow(
+                context: context,
+                label: ext,
+                description: description,
+                control: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isRegistered ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isRegistered ? 'Registered' : 'Not Registered',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? AppThemeV2.darkTextMuted
+                                : AppThemeV2.lightTextMuted,
+                          ),
+                    ),
+                    const SizedBox(width: 12),
+                    Switch(
+                      value: isRegistered,
+                      onChanged: isWindows
+                          ? (val) async {
+                              final success = val
+                                  ? await WindowsIntegrationService
+                                      .registerFileExtension(ext)
+                                  : await WindowsIntegrationService
+                                      .unregisterFileExtension(ext);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(success
+                                        ? (val
+                                            ? '$ext registered!'
+                                            : '$ext unregistered!')
+                                        : 'Failed to ${val ? 'register' : 'unregister'} $ext'),
+                                    backgroundColor:
+                                        success ? Colors.green : AppThemeV2.error,
+                                  ),
+                                );
+                                // Trigger rebuild to update status
+                                setState(() {});
+                              }
+                            }
+                          : null,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+                isDark: isDark,
+                isAmoled: isAmoled,
+                showDivider: ext != WindowsIntegrationService.supportedExtensions.keys.last,
+              );
+            }),
+            Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    'Register .loc files to open with Localizer when double-clicked.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDark
-                              ? AppThemeV2.darkTextMuted
-                              : AppThemeV2.lightTextMuted,
-                        ),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: isWindows
+                          ? () async {
+                              final results = await WindowsIntegrationService
+                                  .registerAllExtensions();
+                              final successCount =
+                                  results.values.where((v) => v).length;
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Registered $successCount of ${results.length} file types'),
+                                    backgroundColor: successCount == results.length
+                                        ? Colors.green
+                                        : Colors.orange,
+                                  ),
+                                );
+                                setState(() {});
+                              }
+                            }
+                          : null,
+                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                      label: const Text('Register All'),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: isWindows
-                              ? () async {
-                                  final success =
-                                      await WindowsIntegrationService
-                                          .registerFileAssociation();
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success
-                                            ? 'File association registered!'
-                                            : 'Failed to register'),
-                                        backgroundColor: success
-                                            ? Colors.green
-                                            : AppThemeV2.error,
-                                      ),
-                                    );
-                                  }
-                                }
-                              : null,
-                          icon: const Icon(Icons.link_rounded, size: 18),
-                          label: const Text('Register .loc Files'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: isWindows
-                              ? () async {
-                                  final success =
-                                      await WindowsIntegrationService
-                                          .unregisterFileAssociation();
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success
-                                            ? 'File association removed!'
-                                            : 'Failed to remove'),
-                                        backgroundColor: success
-                                            ? Colors.green
-                                            : AppThemeV2.error,
-                                      ),
-                                    );
-                                  }
-                                }
-                              : null,
-                          icon: const Icon(Icons.link_off_rounded, size: 18),
-                          label: const Text('Unregister'),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: isWindows
+                          ? () async {
+                              final results = await WindowsIntegrationService
+                                  .unregisterAllExtensions();
+                              final successCount =
+                                  results.values.where((v) => v).length;
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Unregistered $successCount of ${results.length} file types'),
+                                    backgroundColor: successCount == results.length
+                                        ? Colors.green
+                                        : Colors.orange,
+                                  ),
+                                );
+                                setState(() {});
+                              }
+                            }
+                          : null,
+                      icon: const Icon(Icons.remove_circle_outline_rounded, size: 18),
+                      label: const Text('Unregister All'),
+                    ),
                   ),
                 ],
               ),

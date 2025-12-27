@@ -147,6 +147,10 @@ class AppSettings extends HiveObject {
   @HiveField(45, defaultValue: 0.85)
   double similarityThreshold;
 
+  // Comparison Engine - Comparison Mode
+  @HiveField(46, defaultValue: 'Key-based')
+  String comparisonMode;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -194,6 +198,7 @@ class AppSettings extends HiveObject {
     this.lastWindowWidth,
     this.lastWindowHeight,
     required this.similarityThreshold,
+    required this.comparisonMode,
   });
 
   // Default settings
@@ -245,6 +250,7 @@ class AppSettings extends HiveObject {
       lastWindowWidth: null,
       lastWindowHeight: null,
       similarityThreshold: 0.85,
+      comparisonMode: 'Key-based',
     );
   }
 
@@ -297,6 +303,7 @@ class AppSettings extends HiveObject {
       lastWindowWidth: (json['lastWindowWidth'] as num?)?.toDouble(),
       lastWindowHeight: (json['lastWindowHeight'] as num?)?.toDouble(),
       similarityThreshold: (json['similarityThreshold'] as num?)?.toDouble() ?? 0.85,
+      comparisonMode: json['comparisonMode'] as String? ?? 'Key-based',
     );
   }
 
@@ -349,6 +356,7 @@ class AppSettings extends HiveObject {
       'lastWindowWidth': lastWindowWidth,
       'lastWindowHeight': lastWindowHeight,
       'similarityThreshold': similarityThreshold,
+      'comparisonMode': comparisonMode,
     };
   }
 
@@ -399,6 +407,7 @@ class AppSettings extends HiveObject {
     double? lastWindowWidth,
     double? lastWindowHeight,
     double? similarityThreshold,
+    String? comparisonMode,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -447,6 +456,7 @@ class AppSettings extends HiveObject {
       lastWindowWidth: lastWindowWidth ?? this.lastWindowWidth,
       lastWindowHeight: lastWindowHeight ?? this.lastWindowHeight,
       similarityThreshold: similarityThreshold ?? this.similarityThreshold,
+      comparisonMode: comparisonMode ?? this.comparisonMode,
     );
   }
 } 

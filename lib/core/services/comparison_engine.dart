@@ -60,6 +60,8 @@ class ComparisonEngine {
       ignoreCase: settings.ignoreCase,
       ignorePatterns: settings.ignorePatterns,
       ignoreWhitespace: settings.ignoreWhitespace,
+      comparisonMode: settings.comparisonMode,
+      similarityThreshold: settings.similarityThreshold,
     );
     developer.log('Comparison finished', name: 'ComparisonEngine');
     return ComparisonResult(file1Data, file2Data, diff);

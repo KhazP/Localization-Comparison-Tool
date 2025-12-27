@@ -345,4 +345,11 @@ class UpdateSimilarityThreshold extends SettingsEvent {
   const UpdateSimilarityThreshold(this.threshold);
   @override
   List<Object> get props => [threshold];
+}
+
+class UpdateComparisonMode extends SettingsEvent {
+  final String mode;
+  const UpdateComparisonMode(this.mode);
+  @override
+  List<Object> get props => [mode];
 } 

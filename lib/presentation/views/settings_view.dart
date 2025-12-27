@@ -57,6 +57,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   final List<String> _defaultViews = ['Basic Comparison', 'History View', 'Files', 'Last Used View'];
   final List<String> _encodings = ['UTF-8', 'UTF-16', 'UTF-16BE', 'UTF-16LE', 'ASCII', 'ISO-8859-1'];
   final List<String> _themeModes = ['System', 'Light', 'Dark', 'Amoled'];
+  final List<String> _comparisonModes = ['Key-based', 'Order-based', 'Smart Match'];
 
   final Map<String, _ThemePreset> _themePresets = {
     'Default': const _ThemePreset(
@@ -719,6 +720,38 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   label: '${(settings.similarityThreshold * 100).round()}%',
                   onChanged: (val) => context.read<SettingsBloc>().add(UpdateSimilarityThreshold(val)),
                 ),
+              ),
+              isDark: isDark,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Comparison Mode',
+              description: 'How to match entries between files',
+              control: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDropdown(context, settings.comparisonMode, _comparisonModes, (val) {
+                    if (val != null) context.read<SettingsBloc>().add(UpdateComparisonMode(val));
+                  }, isDark),
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    richMessage: const TextSpan(
+                      children: [
+                        TextSpan(text: 'Key-based: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: 'Matches by key name (default).\n\n'),
+                        TextSpan(text: 'Order-based: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: 'Matches by position in file.\n\n'),
+                        TextSpan(text: 'Smart Match: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: 'Detects moved/renamed keys.'),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.info_outline_rounded,
+                      size: 18,
+                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    ),
+                  ),
+                ],
               ),
               isDark: isDark,
               showDivider: false,

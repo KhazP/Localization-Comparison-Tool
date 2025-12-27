@@ -75,6 +75,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateRememberWindowPosition>(_onUpdateRememberWindowPosition);
     on<UpdateWindowBounds>(_onUpdateWindowBounds);
     on<UpdateSimilarityThreshold>(_onUpdateSimilarityThreshold);
+    on<UpdateComparisonMode>(_onUpdateComparisonMode);
   }
 
   Future<void> _onLoadSettings(
@@ -338,6 +339,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       ignoreWhitespace: defaultSettings.ignoreWhitespace,
       ignorePatterns: List<String>.from(defaultSettings.ignorePatterns),
       similarityThreshold: defaultSettings.similarityThreshold,
+      comparisonMode: defaultSettings.comparisonMode,
     );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
@@ -564,6 +566,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onUpdateSimilarityThreshold(
       UpdateSimilarityThreshold event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(similarityThreshold: event.threshold);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateComparisonMode(
+      UpdateComparisonMode event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(comparisonMode: event.mode);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

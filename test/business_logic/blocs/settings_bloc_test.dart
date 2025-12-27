@@ -4,20 +4,24 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
+import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 // Mock classes using mocktail
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 class MockSecureStorageService extends Mock implements SecureStorageService {}
+class MockApiKeyValidationService extends Mock implements ApiKeyValidationService {}
 
 void main() {
   late MockSettingsRepository mockSettingsRepository;
   late MockSecureStorageService mockSecureStorageService;
+  late MockApiKeyValidationService mockApiKeyValidationService;
   late SettingsBloc settingsBloc;
 
   setUp(() {
     mockSettingsRepository = MockSettingsRepository();
     mockSecureStorageService = MockSecureStorageService();
+    mockApiKeyValidationService = MockApiKeyValidationService();
   });
 
   tearDown(() {
@@ -36,6 +40,7 @@ void main() {
       settingsBloc = SettingsBloc(
         settingsRepository: mockSettingsRepository,
         secureStorageService: mockSecureStorageService,
+        apiKeyValidationService: mockApiKeyValidationService,
       );
       expect(settingsBloc.state, SettingsState.initial());
     });
@@ -65,6 +70,7 @@ void main() {
         return SettingsBloc(
           settingsRepository: mockSettingsRepository,
           secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
         );
       },
       act: (bloc) => bloc.add(LoadSettings()),
@@ -101,6 +107,7 @@ void main() {
         return SettingsBloc(
           settingsRepository: mockSettingsRepository,
           secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
         );
       },
       act: (bloc) => bloc.add(LoadSettings()),
@@ -134,6 +141,7 @@ void main() {
         return SettingsBloc(
           settingsRepository: mockSettingsRepository,
           secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
         );
       },
       act: (bloc) async {

@@ -149,6 +149,13 @@ class AppSettings extends HiveObject {
   @HiveField(45, defaultValue: 0.85)
   double similarityThreshold;
 
+  // AI Model Parameters
+  @HiveField(56, defaultValue: 0.7)
+  double aiTemperature;
+
+  @HiveField(57, defaultValue: 2048)
+  int maxTokens;
+
   // Comparison Engine - Comparison Mode
   @HiveField(46, defaultValue: 'Key-based')
   String comparisonMode;
@@ -232,6 +239,8 @@ class AppSettings extends HiveObject {
     this.lastWindowWidth,
     this.lastWindowHeight,
     required this.similarityThreshold,
+    required this.aiTemperature,
+    required this.maxTokens,
     required this.comparisonMode,
     required this.useMicaEffect,
     required this.diffFontFamily,
@@ -294,6 +303,8 @@ class AppSettings extends HiveObject {
       lastWindowWidth: null,
       lastWindowHeight: null,
       similarityThreshold: 0.85,
+      aiTemperature: 0.7,
+      maxTokens: 2048,
       comparisonMode: 'Key-based',
       useMicaEffect: false,
       diffFontFamily: 'System Default',
@@ -360,6 +371,8 @@ class AppSettings extends HiveObject {
       lastWindowHeight: (json['lastWindowHeight'] as num?)?.toDouble(),
       similarityThreshold:
           (json['similarityThreshold'] as num?)?.toDouble() ?? 0.85,
+      aiTemperature: (json['aiTemperature'] as num?)?.toDouble() ?? 0.7,
+      maxTokens: json['maxTokens'] as int? ?? 2048,
       comparisonMode: json['comparisonMode'] as String? ?? 'Key-based',
       useMicaEffect: json['useMicaEffect'] as bool? ?? false,
       diffFontFamily: json['diffFontFamily'] as String? ?? 'System Default',
@@ -432,6 +445,8 @@ class AppSettings extends HiveObject {
       'autoBackup': autoBackup,
       'backupDirectory': backupDirectory,
       'backupsToKeep': backupsToKeep,
+      'aiTemperature': aiTemperature,
+      'maxTokens': maxTokens,
     };
   }
 
@@ -482,6 +497,8 @@ class AppSettings extends HiveObject {
     double? lastWindowWidth,
     double? lastWindowHeight,
     double? similarityThreshold,
+    double? aiTemperature,
+    int? maxTokens,
     String? comparisonMode,
     bool? useMicaEffect,
     String? diffFontFamily,
@@ -550,6 +567,8 @@ class AppSettings extends HiveObject {
       lastWindowWidth: lastWindowWidth ?? this.lastWindowWidth,
       lastWindowHeight: lastWindowHeight ?? this.lastWindowHeight,
       similarityThreshold: similarityThreshold ?? this.similarityThreshold,
+      aiTemperature: aiTemperature ?? this.aiTemperature,
+      maxTokens: maxTokens ?? this.maxTokens,
       comparisonMode: comparisonMode ?? this.comparisonMode,
       useMicaEffect: useMicaEffect ?? this.useMicaEffect,
       diffFontFamily: diffFontFamily ?? this.diffFontFamily,

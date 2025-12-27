@@ -92,6 +92,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateComparisonMode>(_onUpdateComparisonMode);
     // Windows Integration Events
     on<UpdateUseMicaEffect>(_onUpdateUseMicaEffect);
+    
+    // AI Model Parameters
+    on<UpdateAiTemperature>(_onUpdateAiTemperature);
+    on<UpdateMaxTokens>(_onUpdateMaxTokens);
+    on<FetchAvailableModels>(_onFetchAvailableModels);
   }
 
   Future<void> _onLoadSettings(
@@ -628,6 +633,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         ),
       ),
     ));
+
+    if (result.success && (event.provider == ApiProvider.gemini || event.provider == ApiProvider.openAi)) {
+      add(FetchAvailableModels(event.provider));
+    }
   }
 
   Future<void> _onUpdateDefaultAiModel(
@@ -808,6 +817,50 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         state.appSettings.copyWith(useMicaEffect: event.enabled);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateAiTemperature(
+      UpdateAiTemperature event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(aiTemperature: event.temperature);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateMaxTokens(
+      UpdateMaxTokens event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(maxTokens: event.maxTokens);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onFetchAvailableModels(
+      FetchAvailableModels event, Emitter<SettingsState> emit) async {
+    String? apiKey;
+    if (event.provider == ApiProvider.gemini) {
+      apiKey = await _secureStorageService.getGeminiApiKey();
+    } else if (event.provider == ApiProvider.openAi) {
+      apiKey = await _secureStorageService.getOpenAiApiKey();
+    }
+
+    if (apiKey == null || apiKey.isEmpty) return;
+
+    final models = await _apiKeyValidationService.fetchAvailableModels(
+      event.provider,
+      apiKey,
+    );
+
+    if (models.isNotEmpty) {
+      final updatedAvailableModels =
+          Map<ApiProvider, List<String>>.from(state.availableModels);
+      updatedAvailableModels[event.provider] = models;
+      emit(state.copyWith(availableModels: updatedAvailableModels));
+      
+      // Select first model if default is empty
+      if (state.appSettings.defaultAiModel.isEmpty) {
+        add(UpdateDefaultAiModel(models.first));
+      }
+    }
   }
 }
 

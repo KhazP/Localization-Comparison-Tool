@@ -70,6 +70,8 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       lastWindowWidth: fields[43] as double?,
       lastWindowHeight: fields[44] as double?,
       similarityThreshold: fields[45] == null ? 0.85 : fields[45] as double,
+      aiTemperature: fields[56] == null ? 0.7 : fields[56] as double,
+      maxTokens: fields[57] == null ? 2048 : fields[57] as int,
       comparisonMode: fields[46] == null ? 'Key-based' : fields[46] as String,
       useMicaEffect: fields[47] == null ? false : fields[47] as bool,
       diffFontFamily:
@@ -87,7 +89,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(56)
+      ..writeByte(58)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -180,6 +182,10 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..write(obj.lastWindowHeight)
       ..writeByte(45)
       ..write(obj.similarityThreshold)
+      ..writeByte(56)
+      ..write(obj.aiTemperature)
+      ..writeByte(57)
+      ..write(obj.maxTokens)
       ..writeByte(46)
       ..write(obj.comparisonMode)
       ..writeByte(47)

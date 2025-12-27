@@ -5,9 +5,18 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 // SettingsEvent should be exported by settings_bloc.dart
 // import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_event.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/presentation/views/settings_view.dart';
 import 'package:mocktail/mocktail.dart'; // mocktail for general mocking if needed elsewhere
 import 'package:bloc_test/bloc_test.dart'; // bloc_test for MockBloc and whenListen
+
+// Default API key tests map for SettingsState
+Map<ApiProvider, ApiKeyTestResult> get defaultApiKeyTests => {
+  ApiProvider.googleTranslate: const ApiKeyTestResult.idle(),
+  ApiProvider.deepl: const ApiKeyTestResult.idle(),
+  ApiProvider.gemini: const ApiKeyTestResult.idle(),
+  ApiProvider.openAi: const ApiKeyTestResult.idle(),
+};
 
 // Mock SettingsBloc
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState> implements SettingsBloc {}
@@ -43,8 +52,8 @@ void main() {
 
     whenListen(
       mockSettingsBloc,
-      Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings)]),
-      initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings),
+      Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests)]),
+      initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests),
     );
   });
 
@@ -83,8 +92,8 @@ void main() {
       // No need for when(() => specificTestSettingsBloc.add(any())) here if covered by global setUp
       whenListen(
         specificTestSettingsBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings),
+        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests)]),
+        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: specificTestSettingsBloc);
@@ -107,8 +116,8 @@ void main() {
       // No need for when(() => specificTestSettingsBloc.add(any())) here
       whenListen(
         specificTestSettingsBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings),
+        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests)]),
+        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests),
       );
       await pumpSettingsView(tester, settingsBloc: specificTestSettingsBloc);
       await navigateToCategory(tester, 'Comparison');
@@ -122,8 +131,8 @@ void main() {
       when(() => testBloc.add(const UpdateIgnoreCase(true))).thenReturn(null);
       whenListen(
         testBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings),
+        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests)]),
+        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests),
       );
       
       await pumpSettingsView(tester, settingsBloc: testBloc);
@@ -141,8 +150,8 @@ void main() {
       when(() => testBloc.add(const UpdateIgnoreWhitespace(true))).thenReturn(null);
       whenListen(
         testBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings),
+        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests)]),
+        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);
@@ -165,10 +174,10 @@ void main() {
       whenListen(
         testBloc,
         Stream.fromIterable([ // Define the sequence of states
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsBeforeAdd), // Initial state
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsAfterAdd)   // State after add
+          SettingsState(status: SettingsStatus.loaded, appSettings: settingsBeforeAdd, apiKeyTests: defaultApiKeyTests), // Initial state
+          SettingsState(status: SettingsStatus.loaded, appSettings: settingsAfterAdd, apiKeyTests: defaultApiKeyTests)   // State after add
         ]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsBeforeAdd),
+        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsBeforeAdd, apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);
@@ -205,10 +214,10 @@ void main() {
       whenListen(
         testBloc,
         Stream.fromIterable([ // Define the sequence of states
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithPattern),    // Initial state with the pattern
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithoutPattern) // State after removal
+          SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithPattern, apiKeyTests: defaultApiKeyTests),    // Initial state with the pattern
+          SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithoutPattern, apiKeyTests: defaultApiKeyTests) // State after removal
         ]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithPattern), // Start with the pattern present
+        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithPattern, apiKeyTests: defaultApiKeyTests), // Start with the pattern present
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);
@@ -235,8 +244,8 @@ void main() {
       // General when(() => testBloc.add(any())) from setUp should cover this
       whenListen(
         testBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings),
+        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests)]),
+        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);

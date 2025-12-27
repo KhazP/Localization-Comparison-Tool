@@ -204,4 +204,65 @@ class ApiKeyValidationService {
     }
     return buffer.toString();
   }
+
+  /// Fetches available models for the provider.
+  Future<List<String>> fetchAvailableModels(
+    ApiProvider provider,
+    String apiKey,
+  ) async {
+    try {
+      switch (provider) {
+        case ApiProvider.gemini:
+          return await _fetchGeminiModels(apiKey);
+        case ApiProvider.openAi:
+          return await _fetchOpenAiModels(apiKey);
+        default:
+          return [];
+      }
+    } catch (e) {
+      developer.log('Failed to fetch models: $e', name: 'api_key_validation');
+      return [];
+    }
+  }
+
+  Future<List<String>> _fetchGeminiModels(String apiKey) async {
+    final uri = Uri.https(
+      'generativelanguage.googleapis.com',
+      '/v1beta/models',
+      {'key': apiKey},
+    );
+    final response = await _client.get(uri);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      final models = (data['models'] as List<dynamic>?) ?? [];
+      return models
+          .map((m) => m['name'] as String)
+          .where((name) =>
+              name.contains('gemini') &&
+              !name.contains('vision')) // Filter for text/chat models if needed
+          .map((name) => name.replaceFirst('models/', ''))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<List<String>> _fetchOpenAiModels(String apiKey) async {
+    final uri = Uri.https('api.openai.com', '/v1/models');
+    final response = await _client.get(
+      uri,
+      headers: {'Authorization': 'Bearer $apiKey'},
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      final models = (data['data'] as List<dynamic>?) ?? [];
+      return models
+          .map((m) => m['id'] as String)
+          .where((id) =>
+              id.startsWith('gpt-4') ||
+              id.startsWith('gpt-3.5')) // Filter for GPT models
+          .toList();
+    }
+    return [];
+  }
 }
+

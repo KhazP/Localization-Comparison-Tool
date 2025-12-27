@@ -1758,14 +1758,27 @@ class _SettingsViewState extends State<SettingsView>
     bool isAmoled,
   ) {
     final settings = state.appSettings;
-    final llmModels = [
-      'Gemini 1.5 Flash',
-      'Gemini 1.5 Pro',
-      'GPT-4o',
-      'GPT-4o-mini',
-      'Claude 3.5 Sonnet',
-      'DeepSeek-V3'
-    ];
+
+    // Determine available models based on selected service
+    List<String> validModels = [];
+    if (settings.aiTranslationService == 'Gemini') {
+      validModels = state.availableModels[ApiProvider.gemini] ?? [];
+      if (validModels.isEmpty) {
+        validModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'];
+      }
+    } else if (settings.aiTranslationService == 'OpenAI') {
+      validModels = state.availableModels[ApiProvider.openAi] ?? [];
+      if (validModels.isEmpty) {
+        validModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'];
+      }
+    }
+
+    // Ensure current model is in list or add default/placeholder
+    final List<String> dropdownItems = ['Select model...', ...validModels];
+    if (!dropdownItems.contains(settings.defaultAiModel) &&
+        settings.defaultAiModel.isNotEmpty) {
+      dropdownItems.add(settings.defaultAiModel);
+    }
 
     return Column(
       children: [
@@ -1793,24 +1806,49 @@ class _SettingsViewState extends State<SettingsView>
             ),
             _buildSettingRow(
               context: context,
-              label: 'Default Model',
-              description: 'Required for fast translate',
+              label: 'Service Provider',
               control: _buildDropdown(
                 context,
-                settings.defaultAiModel.isEmpty
-                    ? 'Select model...'
-                    : settings.defaultAiModel,
-                ['Select model...', ...llmModels],
+                settings.aiTranslationService,
+                ['Gemini', 'OpenAI'],
                 (val) {
-                  if (val != null && val != 'Select model...') {
-                    context.read<SettingsBloc>().add(UpdateDefaultAiModel(val));
+                  if (val != null) {
+                    context
+                        .read<SettingsBloc>()
+                        .add(UpdateAiTranslationService(val));
                   }
                 },
                 isDark,
                 isAmoled,
               ),
+              isDark: isDark,
               isAmoled: isAmoled,
             ),
+            if (settings.aiTranslationService == 'Gemini' ||
+                settings.aiTranslationService == 'OpenAI')
+              _buildSettingRow(
+                context: context,
+                label: 'Default Model',
+                description: 'Required for fast translate',
+                control: _buildDropdown(
+                  context,
+                  dropdownItems.contains(settings.defaultAiModel)
+                      ? settings.defaultAiModel
+                      : dropdownItems.first,
+                  dropdownItems,
+                  (val) {
+                    if (val != null && val != 'Select model...') {
+                      context
+                          .read<SettingsBloc>()
+                          .add(UpdateDefaultAiModel(val));
+                    }
+                  },
+                  isDark,
+                  isAmoled,
+                ),
+                isDark: isDark,
+                isAmoled: isAmoled,
+              ),
             _buildSettingRow(
               context: context,
               label: 'Confidence Threshold',
@@ -1834,47 +1872,98 @@ class _SettingsViewState extends State<SettingsView>
               showDivider: true,
             ),
             const SizedBox(height: 8),
-            _buildApiKeyRowWithTest(
-              context: context,
-              label: 'Gemini API Key',
-              value: settings.geminiApiKey,
-              onChanged: (val) {
-                context.read<SettingsBloc>().add(UpdateGeminiApiKey(val));
-              },
-              onTest: () {
-                context.read<SettingsBloc>().add(TestApiKey(
-                      provider: ApiProvider.gemini,
-                      apiKey: settings.geminiApiKey,
-                    ));
-              },
-              testResult:
-                  state.apiKeyTests[ApiProvider.gemini] ??
-                      const ApiKeyTestResult.idle(),
-              isDark: isDark,
-              isAmoled: isAmoled,
-            ),
-            _buildApiKeyRowWithTest(
-              context: context,
-              label: 'OpenAI API Key',
-              value: settings.openaiApiKey,
-              onChanged: (val) {
-                context.read<SettingsBloc>().add(UpdateOpenAiApiKey(val));
-              },
-              onTest: () {
-                context.read<SettingsBloc>().add(TestApiKey(
-                      provider: ApiProvider.openAi,
-                      apiKey: settings.openaiApiKey,
-                    ));
-              },
-              testResult:
-                  state.apiKeyTests[ApiProvider.openAi] ??
-                      const ApiKeyTestResult.idle(),
-              isDark: isDark,
-              isAmoled: isAmoled,
-              showDivider: false,
-            ),
+            if (settings.aiTranslationService == 'Gemini')
+              _buildApiKeyRowWithTest(
+                context: context,
+                label: 'Gemini API Key',
+                value: settings.geminiApiKey,
+                onChanged: (val) {
+                  context.read<SettingsBloc>().add(UpdateGeminiApiKey(val));
+                },
+                onTest: () {
+                  context.read<SettingsBloc>().add(TestApiKey(
+                        provider: ApiProvider.gemini,
+                        apiKey: settings.geminiApiKey,
+                      ));
+                },
+                testResult: state.apiKeyTests[ApiProvider.gemini] ??
+                    const ApiKeyTestResult.idle(),
+                isDark: isDark,
+                isAmoled: isAmoled,
+              ),
+            if (settings.aiTranslationService == 'OpenAI')
+              _buildApiKeyRowWithTest(
+                context: context,
+                label: 'OpenAI API Key',
+                value: settings.openaiApiKey,
+                onChanged: (val) {
+                  context.read<SettingsBloc>().add(UpdateOpenAiApiKey(val));
+                },
+                onTest: () {
+                  context.read<SettingsBloc>().add(TestApiKey(
+                        provider: ApiProvider.openAi,
+                        apiKey: settings.openaiApiKey,
+                      ));
+                },
+                testResult: state.apiKeyTests[ApiProvider.openAi] ??
+                    const ApiKeyTestResult.idle(),
+                isDark: isDark,
+                isAmoled: isAmoled,
+                showDivider: false,
+              ),
           ],
         ),
+
+        // -----------------------------------------------------------
+        // MODEL PARAMETERS
+        // -----------------------------------------------------------
+        if (settings.aiTranslationService == 'Gemini' ||
+            settings.aiTranslationService == 'OpenAI')
+          _buildSettingsCard(
+            context: context,
+            title: 'Model Parameters',
+            isDark: isDark,
+            isAmoled: isAmoled,
+            children: [
+              _buildSettingRow(
+                context: context,
+                label: 'Temperature',
+                description:
+                    'Creativity vs consistency (${settings.aiTemperature.toStringAsFixed(1)})',
+                control: SizedBox(
+                  width: 150,
+                  child: Slider(
+                    value: settings.aiTemperature,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 10,
+                    onChanged: (val) => context
+                        .read<SettingsBloc>()
+                        .add(UpdateAiTemperature(val)),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                isDark: isDark,
+                isAmoled: isAmoled,
+              ),
+              _buildSettingRow(
+                context: context,
+                label: 'Max Tokens',
+                description: 'Maximum response length',
+                control: _buildDropdown(
+                    context,
+                    settings.maxTokens.toString(),
+                    ['256', '512', '1024', '2048', '4096', '8192'], (val) {
+                  if (val != null)
+                    context
+                        .read<SettingsBloc>()
+                        .add(UpdateMaxTokens(int.parse(val)));
+                }, isDark, isAmoled),
+                isDark: isDark,
+                isAmoled: isAmoled,
+              ),
+            ],
+          ),
 
         // -----------------------------------------------------------
         // TRANSLATION CONTEXT

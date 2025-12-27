@@ -305,6 +305,27 @@ class TestApiKey extends SettingsEvent {
   List<Object> get props => [provider, apiKey];
 }
 
+class FetchAvailableModels extends SettingsEvent {
+  final ApiProvider provider;
+  const FetchAvailableModels(this.provider);
+  @override
+  List<Object> get props => [provider];
+}
+
+class UpdateAiTemperature extends SettingsEvent {
+  final double temperature;
+  const UpdateAiTemperature(this.temperature);
+  @override
+  List<Object> get props => [temperature];
+}
+
+class UpdateMaxTokens extends SettingsEvent {
+  final int maxTokens;
+  const UpdateMaxTokens(this.maxTokens);
+  @override
+  List<Object> get props => [maxTokens];
+}
+
 class UpdateDefaultAiModel extends SettingsEvent {
   final String model;
   const UpdateDefaultAiModel(this.model);

@@ -8,6 +8,7 @@ import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:localizer_app_main/core/services/windows_integration_service.dart';
 
 enum SettingsCategory {
   general,
@@ -16,6 +17,7 @@ enum SettingsCategory {
   fileHandling,
   aiServices,
   versionControl,
+  windowsIntegrations,
   about,
 }
 
@@ -312,6 +314,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         return Icons.auto_awesome_rounded;
       case SettingsCategory.versionControl:
         return Icons.history_rounded;
+      case SettingsCategory.windowsIntegrations:
+        return Icons.window_rounded;
       case SettingsCategory.about:
         return Icons.info_rounded;
     }
@@ -331,6 +335,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         return 'AI Services';
       case SettingsCategory.versionControl:
         return 'Version Control';
+      case SettingsCategory.windowsIntegrations:
+        return 'Windows';
       case SettingsCategory.about:
         return 'About';
     }
@@ -350,6 +356,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         return 'AI Services';
       case SettingsCategory.versionControl:
         return 'Version Control (Git)';
+      case SettingsCategory.windowsIntegrations:
+        return 'Windows Integrations';
       case SettingsCategory.about:
         return 'About';
     }
@@ -429,6 +437,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         return _buildAiServicesSettings(context, settings, isDark);
       case SettingsCategory.versionControl:
         return _buildVersionControlSettings(context, settings, isDark);
+      case SettingsCategory.windowsIntegrations:
+        return _buildWindowsIntegrationsSettings(context, settings, isDark);
       case SettingsCategory.about:
         return _buildAboutSettings(context, isDark);
     }
@@ -1528,6 +1538,243 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WINDOWS INTEGRATIONS SETTINGS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildWindowsIntegrationsSettings(BuildContext context, AppSettings settings, bool isDark) {
+    final isWindows = Platform.isWindows;
+    
+    return Column(
+      children: [
+        if (!isWindows)
+          _buildSettingsCard(
+            context: context,
+            title: 'Platform Notice',
+            isDark: isDark,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Windows integrations are only available when running on Windows.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Visual Effects',
+          isDark: isDark,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Use Mica Effect',
+              description: 'Enable Windows 11 Mica transparency (requires restart)',
+              control: Switch(
+                value: settings.useMicaEffect,
+                onChanged: isWindows ? (val) => context.read<SettingsBloc>().add(UpdateUseMicaEffect(val)) : null,
+              ),
+              isDark: isDark,
+              showDivider: false,
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Explorer Integration',
+          isDark: isDark,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add "Open with Localizer" to the Windows Explorer right-click menu for folders.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isWindows ? () async {
+                            final success = await WindowsIntegrationService.addToContextMenu();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'Context menu added!' : 'Failed to add context menu'),
+                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
+                                ),
+                              );
+                            }
+                          } : null,
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: const Text('Add to Context Menu'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isWindows ? () async {
+                            final success = await WindowsIntegrationService.removeFromContextMenu();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'Context menu removed!' : 'Failed to remove context menu'),
+                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
+                                ),
+                              );
+                            }
+                          } : null,
+                          icon: const Icon(Icons.remove_rounded, size: 18),
+                          label: const Text('Remove'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'File Associations',
+          isDark: isDark,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Register .loc files to open with Localizer when double-clicked.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isWindows ? () async {
+                            final success = await WindowsIntegrationService.registerFileAssociation();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'File association registered!' : 'Failed to register'),
+                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
+                                ),
+                              );
+                            }
+                          } : null,
+                          icon: const Icon(Icons.link_rounded, size: 18),
+                          label: const Text('Register .loc Files'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isWindows ? () async {
+                            final success = await WindowsIntegrationService.unregisterFileAssociation();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'File association removed!' : 'Failed to remove'),
+                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
+                                ),
+                              );
+                            }
+                          } : null,
+                          icon: const Icon(Icons.link_off_rounded, size: 18),
+                          label: const Text('Unregister'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Protocol Handler',
+          isDark: isDark,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Register localizer:// URLs to open this application.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isWindows ? () async {
+                            final success = await WindowsIntegrationService.registerProtocolHandler();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'Protocol handler registered!' : 'Failed to register'),
+                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
+                                ),
+                              );
+                            }
+                          } : null,
+                          icon: const Icon(Icons.public_rounded, size: 18),
+                          label: const Text('Register Protocol'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isWindows ? () async {
+                            final success = await WindowsIntegrationService.unregisterProtocolHandler();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'Protocol handler removed!' : 'Failed to remove'),
+                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
+                                ),
+                              );
+                            }
+                          } : null,
+                          icon: const Icon(Icons.public_off_rounded, size: 18),
+                          label: const Text('Unregister'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildTextFieldRow(
     BuildContext context,
     String label,
@@ -1817,6 +2064,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 case SettingsCategory.versionControl:
                   bloc.add(ResetVersionControlSettings());
                   break;
+                case SettingsCategory.windowsIntegrations:
+                  break; // No reset event for Windows Integrations
                 case SettingsCategory.about:
                   break; // No reset for About
               }

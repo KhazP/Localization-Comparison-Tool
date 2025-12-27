@@ -16,6 +16,7 @@
         "file_picker",
         "fl_chart",
         "flutter",
+        "flutter_acrylic",
         "flutter_bloc",
         "flutter_colorpicker",
         "flutter_secure_storage",
@@ -28,12 +29,16 @@
         "libgit2dart",
         "package_info_plus",
         "path",
+        "protocol_handler",
         "screen_retriever",
         "string_similarity",
         "url_launcher",
         "uuid",
         "watcher",
+        "win32_registry",
         "window_manager",
+        "windows_single_instance",
+        "windows_taskbar",
         "xml",
         "yaml"
       ],
@@ -153,6 +158,38 @@
       ]
     },
     {
+      "name": "protocol_handler",
+      "version": "0.1.6",
+      "dependencies": [
+        "flutter",
+        "win32_registry"
+      ]
+    },
+    {
+      "name": "flutter_acrylic",
+      "version": "1.1.4",
+      "dependencies": [
+        "flutter",
+        "macos_window_utils"
+      ]
+    },
+    {
+      "name": "win32_registry",
+      "version": "1.1.5",
+      "dependencies": [
+        "ffi",
+        "win32"
+      ]
+    },
+    {
+      "name": "windows_taskbar",
+      "version": "1.1.2",
+      "dependencies": [
+        "flutter",
+        "path"
+      ]
+    },
+    {
       "name": "screen_retriever",
       "version": "0.2.0",
       "dependencies": [
@@ -161,6 +198,15 @@
         "screen_retriever_macos",
         "screen_retriever_platform_interface",
         "screen_retriever_windows"
+      ]
+    },
+    {
+      "name": "window_manager",
+      "version": "0.4.3",
+      "dependencies": [
+        "flutter",
+        "path",
+        "screen_retriever"
       ]
     },
     {
@@ -920,6 +966,18 @@
       ]
     },
     {
+      "name": "win32",
+      "version": "5.14.0",
+      "dependencies": [
+        "ffi"
+      ]
+    },
+    {
+      "name": "ffi",
+      "version": "2.1.4",
+      "dependencies": []
+    },
+    {
       "name": "screen_retriever_windows",
       "version": "0.2.0",
       "dependencies": [
@@ -1011,21 +1069,6 @@
       ]
     },
     {
-      "name": "win32_registry",
-      "version": "1.1.5",
-      "dependencies": [
-        "ffi",
-        "win32"
-      ]
-    },
-    {
-      "name": "win32",
-      "version": "5.14.0",
-      "dependencies": [
-        "ffi"
-      ]
-    },
-    {
       "name": "web",
       "version": "0.5.1",
       "dependencies": []
@@ -1049,11 +1092,6 @@
         "meta",
         "path"
       ]
-    },
-    {
-      "name": "ffi",
-      "version": "2.1.4",
-      "dependencies": []
     },
     {
       "name": "device_info_plus_platform_interface",
@@ -1441,12 +1479,19 @@
       ]
     },
     {
-      "name": "window_manager",
-      "version": "0.4.3",
+      "name": "windows_single_instance",
+      "version": "1.1.0",
       "dependencies": [
+        "ffi",
         "flutter",
-        "path",
-        "screen_retriever"
+        "win32"
+      ]
+    },
+    {
+      "name": "macos_window_utils",
+      "version": "1.9.0",
+      "dependencies": [
+        "flutter"
       ]
     }
   ],

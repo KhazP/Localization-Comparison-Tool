@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
+  flutter_acrylic
   flutter_secure_storage_linux
   libgit2dart
   screen_retriever_linux

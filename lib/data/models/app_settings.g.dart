@@ -71,13 +71,14 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       lastWindowHeight: fields[44] as double?,
       similarityThreshold: fields[45] == null ? 0.85 : fields[45] as double,
       comparisonMode: fields[46] == null ? 'Key-based' : fields[46] as String,
+      useMicaEffect: fields[47] == null ? false : fields[47] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(47)
+      ..writeByte(48)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -171,7 +172,9 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(45)
       ..write(obj.similarityThreshold)
       ..writeByte(46)
-      ..write(obj.comparisonMode);
+      ..write(obj.comparisonMode)
+      ..writeByte(47)
+      ..write(obj.useMicaEffect);
   }
 
   @override

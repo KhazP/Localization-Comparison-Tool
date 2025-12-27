@@ -180,15 +180,27 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
           builder: (context, themeState) {
             final settingsState = context.watch<SettingsBloc>().state;
             bool useAmoled = false;
+            bool useMica = false;
             if (settingsState.status == SettingsStatus.loaded) {
               useAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+              useMica = Platform.isWindows && settingsState.appSettings.useMicaEffect;
+            }
+
+            // Determine dark theme: Mica > Amoled > Standard Dark
+            ThemeData darkTheme;
+            if (useMica) {
+              darkTheme = AppThemeV2.createMicaTheme(themeState.accentColor);
+            } else if (useAmoled) {
+              darkTheme = AppThemeV2.createAmoledTheme(themeState.accentColor);
+            } else {
+              darkTheme = AppThemeV2.createDarkTheme(themeState.accentColor);
             }
 
             return MaterialApp(
               debugShowCheckedModeBanner: kDebugMode,
               title: 'Localization Comparison Tool',
               theme: AppThemeV2.createLightTheme(themeState.accentColor),
-              darkTheme: useAmoled ? AppThemeV2.createAmoledTheme(themeState.accentColor) : AppThemeV2.createDarkTheme(themeState.accentColor),
+              darkTheme: darkTheme,
               themeMode: themeState.themeMode,
               home: MyHomePage(initialSession: _initialSession),
             );

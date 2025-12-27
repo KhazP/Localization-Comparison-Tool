@@ -40,6 +40,12 @@ dependencies:
   get_it: ^7.6.7 # Service locator for dependency injection
   window_manager: ^0.4.0 # For window position management
   screen_retriever: ^0.2.0 # For screen info (window_manager dependency)
+  # Windows-specific integrations
+  windows_single_instance: ^1.0.1 # For single instance enforcement
+  windows_taskbar: ^1.1.2 # For taskbar progress indicators
+  win32_registry: ^1.1.5 # For registry operations (context menu, file associations)
+  flutter_acrylic: ^1.1.4 # For Mica/Acrylic window effects
+  protocol_handler: ^0.1.6 # For deep link protocol handling
 
 dev_dependencies:
   flutter_test:

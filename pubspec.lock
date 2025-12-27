@@ -331,6 +331,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_acrylic:
+    dependency: "direct main"
+    description:
+      name: flutter_acrylic
+      sha256: b3996dbde5abf5823cc9ead4cf2e5267c3181f15585fe47ce4dc4472e7ec827a
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.4"
   flutter_bloc:
     dependency: "direct main"
     description:
@@ -589,6 +597,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  macos_window_utils:
+    dependency: transitive
+    description:
+      name: macos_window_utils
+      sha256: d4df3501fd32ac0d2d7590cb6a8e4758337d061c8fa0db816fdd636be63a8438
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.9.0"
   macros:
     dependency: transitive
     description:
@@ -765,6 +781,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.1"
+  protocol_handler:
+    dependency: "direct main"
+    description:
+      name: protocol_handler
+      sha256: fb1882bd6cf767114f46b4708d1794fcd662e0a9b9b4512519adeaff3f931d7d
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.6"
   provider:
     dependency: transitive
     description:
@@ -1139,7 +1163,7 @@ packages:
     source: hosted
     version: "5.14.0"
   win32_registry:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: win32_registry
       sha256: "21ec76dfc731550fd3e2ce7a33a9ea90b828fdf19a5c3bcf556fa992cfa99852"
@@ -1154,6 +1178,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.3"
+  windows_single_instance:
+    dependency: "direct main"
+    description:
+      name: windows_single_instance
+      sha256: "27ac7ef70a2930a42431d94263941c76884036f797c6d749d1ce5d9d386e66d9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  windows_taskbar:
+    dependency: "direct main"
+    description:
+      name: windows_taskbar
+      sha256: "204edfdb280a7053febdf50fc9b49b3c007255bd8a83c082d10c174ec6548f33"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
   xdg_directories:
     dependency: transitive
     description:

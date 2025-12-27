@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
@@ -8,9 +9,23 @@ import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/presentation/app.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:windows_single_instance/windows_single_instance.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Windows: Enforce single instance
+  if (Platform.isWindows) {
+    await WindowsSingleInstance.ensureSingleInstance(
+      args,
+      'localizer_app_single_instance_mutex',
+      onSecondWindow: (args) {
+        // Bring existing window to front
+        windowManager.show();
+        windowManager.focus();
+      },
+    );
+  }
 
   final appDocumentDir = await getApplicationDocumentsDirectory();
   
@@ -30,6 +45,27 @@ Future<void> main() async {
   // Initialize window manager for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
+
+    // Windows: Initialize Acrylic/Mica effect
+    if (Platform.isWindows && initialAppSettings.useMicaEffect) {
+      await Window.initialize();
+      final isDark = initialAppSettings.appThemeMode == 'Dark' || 
+                     initialAppSettings.appThemeMode == 'Amoled' ||
+                     initialAppSettings.appThemeMode == 'System'; // Assume dark for system on Windows
+      await Window.setEffect(
+        effect: WindowEffect.mica,
+        dark: isDark,
+      );
+      // Make title bar match the window effect
+      await windowManager.setTitleBarStyle(
+        TitleBarStyle.normal,
+        windowButtonVisibility: true,
+      );
+      // Set dark title bar for Windows
+      if (isDark) {
+        await windowManager.setBrightness(Brightness.dark);
+      }
+    }
 
     // Restore window position if enabled
     if (initialAppSettings.rememberWindowPosition) {

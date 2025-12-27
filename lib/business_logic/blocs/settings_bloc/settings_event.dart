@@ -352,4 +352,12 @@ class UpdateComparisonMode extends SettingsEvent {
   const UpdateComparisonMode(this.mode);
   @override
   List<Object> get props => [mode];
+}
+
+// Windows Integration Events
+class UpdateUseMicaEffect extends SettingsEvent {
+  final bool enabled;
+  const UpdateUseMicaEffect(this.enabled);
+  @override
+  List<Object> get props => [enabled];
 } 

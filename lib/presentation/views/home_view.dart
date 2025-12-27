@@ -113,10 +113,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           // Navigation Rail
           Container(
             decoration: BoxDecoration(
-              color: isDarkMode ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+              color: Theme.of(context).navigationRailTheme.backgroundColor ?? 
+                     (isDarkMode ? AppThemeV2.darkCard : AppThemeV2.lightCard),
               border: Border(
                 right: BorderSide(
-                  color: isDarkMode ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                  color: Theme.of(context).dividerColor,
                 ),
               ),
             ),
@@ -177,10 +178,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: isDarkMode ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+                                  color: colorScheme.surface,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: isDarkMode ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                                    color: Theme.of(context).dividerColor,
                                   ),
                                 ),
                                 child: AnimatedSwitcher(

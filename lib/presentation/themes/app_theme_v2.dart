@@ -116,6 +116,92 @@ class AppThemeV2 {
     );
   }
 
+  /// Mica-enabled dark theme with transparent backgrounds for Windows 11
+  static ThemeData createMicaTheme(Color accentColor) {
+    final primary = accentColor;
+    final primaryDark = HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
+    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor();
+    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor();
+    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
+
+    // Semi-transparent colors for Mica effect
+    // Higher alpha values for darker overlays that still show Mica blur but are readable
+    const micaBackground = Color(0xFA0F0F14); // 98% opacity
+    const micaSurface = Color(0xFC1A1A22); // 99% opacity
+    const micaCard = Color(0xFE22222C); // 99.5% opacity
+    const micaNavRail = Color(0xFD1A1A22); // 99% opacity
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: micaBackground,
+      canvasColor: micaBackground, // Used by some Material widgets
+      primaryColor: primary,
+      colorScheme: ColorScheme.dark(
+        primary: primary,
+        primaryContainer: primaryDark,
+        secondary: secondary,
+        secondaryContainer: secondary,
+        tertiary: tertiary,
+        tertiaryContainer: tertiaryContainer,
+        surface: micaSurface,
+        error: error,
+        outline: outline,
+        outlineVariant: outlineVariant,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onTertiary: Colors.white,
+        onSurface: darkTextPrimary,
+        onError: Colors.white,
+      ),
+      textTheme: _buildTextTheme(isDark: true),
+      cardTheme: CardThemeData(
+        color: micaCard,
+        elevation: 0,
+        margin: const EdgeInsets.all(0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: darkBorder.withAlpha(150),
+            width: 1,
+          ),
+        ),
+      ),
+      elevatedButtonTheme: _buildElevatedButtonTheme(primary),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
+      textButtonTheme: _buildTextButtonTheme(primary),
+      inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      dividerTheme: DividerThemeData(
+        color: darkBorder.withAlpha(150),
+        thickness: 1,
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: micaNavRail,
+        elevation: 0,
+        indicatorColor: primary.withAlpha(40),
+        selectedIconTheme: IconThemeData(
+          color: primary,
+          size: 24,
+        ),
+        unselectedIconTheme: IconThemeData(
+          color: darkTextMuted,
+          size: 22,
+        ),
+      ),
+      chipTheme: _buildChipTheme(isDark: true, primaryColor: primary),
+      snackBarTheme: _buildSnackBarTheme(isDark: true),
+      dialogTheme: DialogThemeData(
+        backgroundColor: micaCard,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      tooltipTheme: _buildTooltipTheme(isDark: true),
+      scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: false, primaryColor: primary),
+    );
+  }
+
   /// AMOLED theme with pure black backgrounds for OLED displays
   static ThemeData createAmoledTheme(Color accentColor) {
     final primary = accentColor;

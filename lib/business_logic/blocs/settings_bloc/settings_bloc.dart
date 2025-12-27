@@ -76,6 +76,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateWindowBounds>(_onUpdateWindowBounds);
     on<UpdateSimilarityThreshold>(_onUpdateSimilarityThreshold);
     on<UpdateComparisonMode>(_onUpdateComparisonMode);
+    // Windows Integration Events
+    on<UpdateUseMicaEffect>(_onUpdateUseMicaEffect);
   }
 
   Future<void> _onLoadSettings(
@@ -573,6 +575,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onUpdateComparisonMode(
       UpdateComparisonMode event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(comparisonMode: event.mode);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  // Windows Integration Event Handlers
+  Future<void> _onUpdateUseMicaEffect(
+      UpdateUseMicaEffect event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(useMicaEffect: event.enabled);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

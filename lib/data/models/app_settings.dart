@@ -151,6 +151,10 @@ class AppSettings extends HiveObject {
   @HiveField(46, defaultValue: 'Key-based')
   String comparisonMode;
 
+  // Windows Integration Settings
+  @HiveField(47, defaultValue: false)
+  bool useMicaEffect;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -199,6 +203,7 @@ class AppSettings extends HiveObject {
     this.lastWindowHeight,
     required this.similarityThreshold,
     required this.comparisonMode,
+    required this.useMicaEffect,
   });
 
   // Default settings
@@ -251,6 +256,7 @@ class AppSettings extends HiveObject {
       lastWindowHeight: null,
       similarityThreshold: 0.85,
       comparisonMode: 'Key-based',
+      useMicaEffect: false,
     );
   }
 
@@ -304,6 +310,7 @@ class AppSettings extends HiveObject {
       lastWindowHeight: (json['lastWindowHeight'] as num?)?.toDouble(),
       similarityThreshold: (json['similarityThreshold'] as num?)?.toDouble() ?? 0.85,
       comparisonMode: json['comparisonMode'] as String? ?? 'Key-based',
+      useMicaEffect: json['useMicaEffect'] as bool? ?? false,
     );
   }
 
@@ -357,6 +364,7 @@ class AppSettings extends HiveObject {
       'lastWindowHeight': lastWindowHeight,
       'similarityThreshold': similarityThreshold,
       'comparisonMode': comparisonMode,
+      'useMicaEffect': useMicaEffect,
     };
   }
 
@@ -408,6 +416,7 @@ class AppSettings extends HiveObject {
     double? lastWindowHeight,
     double? similarityThreshold,
     String? comparisonMode,
+    bool? useMicaEffect,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -457,6 +466,7 @@ class AppSettings extends HiveObject {
       lastWindowHeight: lastWindowHeight ?? this.lastWindowHeight,
       similarityThreshold: similarityThreshold ?? this.similarityThreshold,
       comparisonMode: comparisonMode ?? this.comparisonMode,
+      useMicaEffect: useMicaEffect ?? this.useMicaEffect,
     );
   }
 } 

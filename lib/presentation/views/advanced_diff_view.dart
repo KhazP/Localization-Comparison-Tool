@@ -2071,6 +2071,23 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
+          const SizedBox(width: 8),
+          // AI button
+          IconButton(
+            icon: Icon(Icons.psychology_outlined, color: Theme.of(ctx).colorScheme.secondary, size: 20),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                const SnackBar(
+                  content: Text('Go to Settings → AI to configure AI translations'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            tooltip: 'AI Translation (Settings → AI)',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          ),
         ],
       ),
     );

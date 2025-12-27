@@ -26,6 +26,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
   final Map<String, bool> _expandedStates = {};
   String _sortBy = 'timestamp';
   bool _sortAscending = false;
+  bool _groupByFolder = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -274,6 +275,20 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  // Group by folder toggle
+                  Tooltip(
+                    message: _groupByFolder ? 'Disable folder grouping' : 'Group by folder',
+                    child: IconButton(
+                      onPressed: () => setState(() => _groupByFolder = !_groupByFolder),
+                      icon: Icon(
+                        _groupByFolder ? Icons.folder : Icons.folder_outlined,
+                        color: _groupByFolder 
+                            ? colorScheme.primary 
+                            : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -313,6 +328,10 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
 
                     if (_filteredHistory.isEmpty) {
                       return _buildNoResultsState(context);
+                    }
+
+                    if (_groupByFolder) {
+                      return _buildGroupedList(context);
                     }
 
                     return ListView.builder(
@@ -383,6 +402,211 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildGroupedList(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final themeState = context.watch<ThemeBloc>().state;
+    
+    // Group sessions by parent folder with full path context
+    final Map<String, List<ComparisonSession>> grouped = {};
+    final Map<String, String> folderPaths = {}; // Store grandparent context
+    
+    for (final session in _filteredHistory) {
+      final parts = session.file1Path.split(Platform.pathSeparator);
+      final folder = parts.length > 1 ? parts[parts.length - 2] : 'Root';
+      final grandparent = parts.length > 2 ? parts[parts.length - 3] : '';
+      
+      grouped.putIfAbsent(folder, () => []).add(session);
+      if (grandparent.isNotEmpty && !folderPaths.containsKey(folder)) {
+        folderPaths[folder] = grandparent;
+      }
+    }
+    
+    // Sort folder names alphabetically
+    final sortedFolders = grouped.keys.toList()..sort();
+    
+    return ListView.builder(
+      itemCount: sortedFolders.length,
+      itemBuilder: (context, folderIndex) {
+        final folder = sortedFolders[folderIndex];
+        final sessions = grouped[folder]!;
+        final isExpanded = _expandedStates['folder_$folder'] ?? true;
+        final grandparent = folderPaths[folder];
+        
+        // Aggregate stats for this folder
+        int totalAdded = 0, totalRemoved = 0, totalModified = 0;
+        final Set<String> fileTypes = {};
+        
+        for (final session in sessions) {
+          totalAdded += session.stringsAdded;
+          totalRemoved += session.stringsRemoved;
+          totalModified += session.stringsModified;
+          
+          // Extract file type
+          final ext = session.file1Path.split('.').last.toUpperCase();
+          if (ext.isNotEmpty && ext.length <= 5) fileTypes.add(ext);
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Folder header
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _expandedStates['folder_$folder'] = !isExpanded;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                margin: EdgeInsets.only(bottom: 8, top: folderIndex > 0 ? 16 : 0),
+                decoration: BoxDecoration(
+                  color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // First row: folder name, count, expand icon
+                    Row(
+                      children: [
+                        Icon(
+                          isExpanded ? Icons.folder_open_rounded : Icons.folder_rounded,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        // Grandparent + folder path
+                        Expanded(
+                          child: Row(
+                            children: [
+                              if (grandparent != null && grandparent.isNotEmpty) ...[
+                                Text(
+                                  '.../$grandparent/',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                  ),
+                                ),
+                              ],
+                              Text(
+                                folder,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Count badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withAlpha(30),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${sessions.length}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          isExpanded ? Icons.expand_less : Icons.expand_more,
+                          size: 20,
+                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Second row: stats, density bar, file types
+                    Row(
+                      children: [
+                        // Aggregate stats
+                        if (totalAdded > 0)
+                          _MiniStatBadge(label: '+$totalAdded', color: themeState.diffAddedColor),
+                        if (totalRemoved > 0)
+                          _MiniStatBadge(label: '-$totalRemoved', color: themeState.diffRemovedColor),
+                        if (totalModified > 0)
+                          _MiniStatBadge(label: '~$totalModified', color: themeState.diffModifiedColor),
+                        const SizedBox(width: 8),
+                        // Mini density bar
+                        Expanded(
+                          child: _ChangeDensityBar(
+                            added: totalAdded,
+                            removed: totalRemoved,
+                            modified: totalModified,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // File types
+                        ...fileTypes.take(3).map((type) => Container(
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.secondary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.secondary,
+                            ),
+                          ),
+                        )),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Sessions in this folder
+            if (isExpanded)
+              ...sessions.map((session) => _HistoryCard(
+                session: session,
+                isExpanded: _expandedStates[session.id] ?? false,
+                onTap: () {
+                  setState(() {
+                    _expandedStates[session.id] = !(_expandedStates[session.id] ?? false);
+                  });
+                },
+                onView: () => _onViewDetails(session),
+                onDelete: () => _deleteSession(session),
+              )),
+          ],
+        );
+      },
+    );
+  }
+
+  // Mini stat badge for folder header
+  Widget _MiniStatBadge({required String label, required Color color}) {
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
@@ -758,6 +982,14 @@ class _HistoryCardState extends State<_HistoryCard> {
                           ],
                           const SizedBox(height: 16),
                           
+                          // Change Density Bar (visual ratio)
+                          _ChangeDensityBar(
+                            added: session.stringsAdded,
+                            removed: session.stringsRemoved,
+                            modified: session.stringsModified,
+                          ),
+                          const SizedBox(height: 16),
+                          
                           // Stats row detailed
                           Row(
                             children: [
@@ -959,7 +1191,14 @@ class _FilePathRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final fileName = path.split(Platform.pathSeparator).last;
+    
+    // Extract parent folder and filename for better context
+    final parts = path.split(Platform.pathSeparator);
+    final fileName = parts.last;
+    final parentFolder = parts.length > 1 ? parts[parts.length - 2] : '';
+    final displayPath = parentFolder.isNotEmpty 
+        ? '.../$parentFolder/$fileName' 
+        : fileName;
 
     return Row(
       children: [
@@ -983,14 +1222,40 @@ class _FilePathRow extends StatelessWidget {
           child: Tooltip(
             message: path,
             child: Text(
-              fileName,
+              displayPath,
               style: theme.textTheme.bodyMedium,
               overflow: TextOverflow.ellipsis,
             ),
           ),
         ),
+        // Open Location button
+        Tooltip(
+          message: 'Open file location',
+          child: IconButton(
+            icon: Icon(
+              Icons.folder_open_outlined,
+              size: 16,
+              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            onPressed: () => _openFileLocation(path),
+          ),
+        ),
       ],
     );
+  }
+
+  void _openFileLocation(String filePath) {
+    final file = File(filePath);
+    final directory = file.parent.path;
+    if (Platform.isWindows) {
+      Process.run('explorer.exe', [directory]);
+    } else if (Platform.isMacOS) {
+      Process.run('open', [directory]);
+    } else if (Platform.isLinux) {
+      Process.run('xdg-open', [directory]);
+    }
   }
 }
 
@@ -1109,6 +1374,55 @@ class _InfoChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Horizontal bar showing the ratio of added/removed/modified strings
+class _ChangeDensityBar extends StatelessWidget {
+  final int added;
+  final int removed;
+  final int modified;
+
+  const _ChangeDensityBar({
+    required this.added,
+    required this.removed,
+    required this.modified,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final themeState = context.watch<ThemeBloc>().state;
+    final total = added + removed + modified;
+    
+    if (total == 0) {
+      return const SizedBox.shrink();
+    }
+    
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: SizedBox(
+        height: 6,
+        child: Row(
+          children: [
+            if (added > 0)
+              Expanded(
+                flex: added,
+                child: Container(color: themeState.diffAddedColor),
+              ),
+            if (removed > 0)
+              Expanded(
+                flex: removed,
+                child: Container(color: themeState.diffRemovedColor),
+              ),
+            if (modified > 0)
+              Expanded(
+                flex: modified,
+                child: Container(color: themeState.diffModifiedColor),
+              ),
+          ],
+        ),
       ),
     );
   }

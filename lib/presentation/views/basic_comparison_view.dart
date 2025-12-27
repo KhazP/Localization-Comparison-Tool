@@ -1383,8 +1383,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 const SizedBox(width: 12),
                 _buildCompactStat(
                     '~${modifiedCount}', null, themeState.diffModifiedColor),
-                const SizedBox(width: 12),
-                _buildFileWatcherStatus(settingsState, isAmoled, isDarkMode),
+              // File watcher removed (moved to settings)
               ],
             ),
           ),
@@ -1529,13 +1528,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 onPressed: _navigateToAdvancedView,
                 color: theme.colorScheme.primary,
               ),
-              const SizedBox(width: 8),
-              _buildCompactActionButton(
-                icon: Icons.psychology_outlined,
-                label: 'AI',
-                onPressed: _navigateToAiSettings,
-                color: theme.colorScheme.secondary,
-              ),
+              // AI button moved to Advanced view
             ],
           ),
         ],

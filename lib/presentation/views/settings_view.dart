@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -2617,6 +2618,223 @@ class _SettingsViewState extends State<SettingsView>
             }, isDark, isAmoled, showDivider: false),
           ],
         ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Git Defaults',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Default Branch',
+              description: 'Branch to use for new comparisons',
+              control: SizedBox(
+                width: 150,
+                child: TextField(
+                  controller: TextEditingController(text: settings.defaultBranch),
+                  onChanged: (val) => context.read<SettingsBloc>().add(UpdateDefaultBranch(val)),
+                  decoration: const InputDecoration(
+                    hintText: 'main',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Default Remote',
+              description: 'Remote to use for push/pull operations',
+              control: SizedBox(
+                width: 150,
+                child: TextField(
+                  controller: TextEditingController(text: settings.defaultRemote),
+                  onChanged: (val) => context.read<SettingsBloc>().add(UpdateDefaultRemote(val)),
+                  decoration: const InputDecoration(
+                    hintText: 'origin',
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+              showDivider: false,
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Commit Templates',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    maxLines: 2,
+                    controller: TextEditingController(text: settings.commitMessageTemplate),
+                    onChanged: (val) => context.read<SettingsBloc>().add(UpdateCommitMessageTemplate(val)),
+                    decoration: InputDecoration(
+                      labelText: 'Commit Message Template',
+                      hintText: 'Update localization: {files}',
+                      helperText: 'Variables: {date}, {files}, {added}, {removed}, {modified}',
+                      helperMaxLines: 2,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Presets',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.grey[400] : Colors.grey[700],
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildCommitPresetChip(
+                        context: context,
+                        label: 'Simple',
+                        template: 'Update localization: {files}',
+                        isDark: isDark,
+                      ),
+                      _buildCommitPresetChip(
+                        context: context,
+                        label: 'Detailed',
+                        template: '[{date}] Localization update\n\nModified: {modified}\nAdded: {added}\nRemoved: {removed}',
+                        isDark: isDark,
+                      ),
+                      _buildCommitPresetChip(
+                        context: context,
+                        label: 'Conventional',
+                        template: 'chore(i18n): update translations\n\nFiles: {files}',
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'SSH Configuration',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: TextEditingController(text: settings.sshKeyPath),
+                          onChanged: (val) => context.read<SettingsBloc>().add(UpdateSshKeyPath(val)),
+                          decoration: InputDecoration(
+                            labelText: 'SSH Key Path',
+                            hintText: Platform.isWindows
+                                ? 'C:\\Users\\....\\.ssh\\id_rsa'
+                                : '~/.ssh/id_rsa',
+                            helperText: 'Path to your private SSH key for Git operations',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.folder_open),
+                        tooltip: 'Browse...',
+                        onPressed: () async {
+                          final result = await FilePicker.platform.pickFiles(
+                            dialogTitle: 'Select SSH Private Key',
+                            type: FileType.any,
+                          );
+                          if (result != null && result.files.isNotEmpty) {
+                            final path = result.files.first.path;
+                            if (path != null && context.mounted) {
+                              context.read<SettingsBloc>().add(UpdateSshKeyPath(path));
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.content_copy, size: 18),
+                        label: const Text('Copy Public Key'),
+                        onPressed: settings.sshKeyPath.isEmpty
+                            ? null
+                            : () async {
+                                final pubKeyPath = '${settings.sshKeyPath}.pub';
+                                try {
+                                  final file = File(pubKeyPath);
+                                  if (await file.exists()) {
+                                    final content = await file.readAsString();
+                                    await Clipboard.setData(ClipboardData(text: content.trim()));
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Public key copied to clipboard!'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Public key not found: $pubKeyPath'),
+                                          backgroundColor: AppThemeV2.error,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error reading public key: $e'),
+                                        backgroundColor: AppThemeV2.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Copies {key}.pub to clipboard',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDark ? Colors.grey[500] : Colors.grey[600],
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -3023,6 +3241,22 @@ class _SettingsViewState extends State<SettingsView>
       isDark: isDark,
       isAmoled: isAmoled,
       showDivider: showDivider,
+    );
+  }
+
+  Widget _buildCommitPresetChip({
+    required BuildContext context,
+    required String label,
+    required String template,
+    required bool isDark,
+  }) {
+    return ActionChip(
+      label: Text(label),
+      onPressed: () {
+        context.read<SettingsBloc>().add(UpdateCommitMessageTemplate(template));
+      },
+      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+      side: BorderSide.none,
     );
   }
 

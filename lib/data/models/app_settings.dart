@@ -141,6 +141,18 @@ class AppSettings extends HiveObject {
   @HiveField(29, defaultValue: false)
   bool enableGitIntegration;
 
+  @HiveField(65, defaultValue: 'main')
+  String defaultBranch;
+
+  @HiveField(66, defaultValue: 'origin')
+  String defaultRemote;
+
+  @HiveField(67, defaultValue: 'Update localization: {files}')
+  String commitMessageTemplate;
+
+  @HiveField(68, defaultValue: '')
+  String sshKeyPath;
+
   @HiveField(36, defaultValue: true)
   bool showIdenticalEntries;
 
@@ -258,6 +270,10 @@ class AppSettings extends HiveObject {
     required this.gitUserName,
     required this.gitUserEmail,
     required this.enableGitIntegration,
+    required this.defaultBranch,
+    required this.defaultRemote,
+    required this.commitMessageTemplate,
+    required this.sshKeyPath,
     required this.showIdenticalEntries,
     required this.startMinimizedToTray,
     required this.openLastProjectOnStartup,
@@ -329,6 +345,10 @@ class AppSettings extends HiveObject {
       gitUserName: '',
       gitUserEmail: '',
       enableGitIntegration: false,
+      defaultBranch: 'main',
+      defaultRemote: 'origin',
+      commitMessageTemplate: 'Update localization: {files}',
+      sshKeyPath: '',
       showIdenticalEntries: true,
       startMinimizedToTray: false,
       openLastProjectOnStartup: false,
@@ -404,6 +424,10 @@ class AppSettings extends HiveObject {
       gitUserName: json['gitUserName'] as String,
       gitUserEmail: json['gitUserEmail'] as String,
       enableGitIntegration: json['enableGitIntegration'] as bool,
+      defaultBranch: json['defaultBranch'] as String? ?? 'main',
+      defaultRemote: json['defaultRemote'] as String? ?? 'origin',
+      commitMessageTemplate: json['commitMessageTemplate'] as String? ?? 'Update localization: {files}',
+      sshKeyPath: json['sshKeyPath'] as String? ?? '',
       showIdenticalEntries: json['showIdenticalEntries'] as bool? ?? true,
       startMinimizedToTray: json['startMinimizedToTray'] as bool? ?? false,
       openLastProjectOnStartup:
@@ -477,6 +501,10 @@ class AppSettings extends HiveObject {
       'gitUserName': gitUserName,
       'gitUserEmail': gitUserEmail,
       'enableGitIntegration': enableGitIntegration,
+      'defaultBranch': defaultBranch,
+      'defaultRemote': defaultRemote,
+      'commitMessageTemplate': commitMessageTemplate,
+      'sshKeyPath': sshKeyPath,
       'showIdenticalEntries': showIdenticalEntries,
       'startMinimizedToTray': startMinimizedToTray,
       'openLastProjectOnStartup': openLastProjectOnStartup,
@@ -546,6 +574,10 @@ class AppSettings extends HiveObject {
     String? gitUserName,
     String? gitUserEmail,
     bool? enableGitIntegration,
+    String? defaultBranch,
+    String? defaultRemote,
+    String? commitMessageTemplate,
+    String? sshKeyPath,
     bool? showIdenticalEntries,
     bool? startMinimizedToTray,
     bool? openLastProjectOnStartup,
@@ -624,6 +656,10 @@ class AppSettings extends HiveObject {
       gitUserName: gitUserName ?? this.gitUserName,
       gitUserEmail: gitUserEmail ?? this.gitUserEmail,
       enableGitIntegration: enableGitIntegration ?? this.enableGitIntegration,
+      defaultBranch: defaultBranch ?? this.defaultBranch,
+      defaultRemote: defaultRemote ?? this.defaultRemote,
+      commitMessageTemplate: commitMessageTemplate ?? this.commitMessageTemplate,
+      sshKeyPath: sshKeyPath ?? this.sshKeyPath,
       showIdenticalEntries: showIdenticalEntries ?? this.showIdenticalEntries,
       startMinimizedToTray: startMinimizedToTray ?? this.startMinimizedToTray,
       openLastProjectOnStartup:

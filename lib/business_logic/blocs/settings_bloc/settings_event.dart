@@ -439,6 +439,34 @@ class UpdateEnableGitIntegration extends SettingsEvent {
   List<Object> get props => [enabled];
 }
 
+class UpdateDefaultBranch extends SettingsEvent {
+  final String branch;
+  const UpdateDefaultBranch(this.branch);
+  @override
+  List<Object> get props => [branch];
+}
+
+class UpdateDefaultRemote extends SettingsEvent {
+  final String remote;
+  const UpdateDefaultRemote(this.remote);
+  @override
+  List<Object> get props => [remote];
+}
+
+class UpdateCommitMessageTemplate extends SettingsEvent {
+  final String template;
+  const UpdateCommitMessageTemplate(this.template);
+  @override
+  List<Object> get props => [template];
+}
+
+class UpdateSshKeyPath extends SettingsEvent {
+  final String path;
+  const UpdateSshKeyPath(this.path);
+  @override
+  List<Object> get props => [path];
+}
+
 class UpdateShowIdenticalEntries extends SettingsEvent {
   final bool show;
   const UpdateShowIdenticalEntries(this.show);

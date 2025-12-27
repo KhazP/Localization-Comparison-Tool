@@ -74,6 +74,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateContextStringsCount>(_onUpdateContextStringsCount);
     on<UpdateIncludeContextStrings>(_onUpdateIncludeContextStrings);
     on<UpdateEnableTranslationMemory>(_onUpdateEnableTranslationMemory);
+    on<UpdateEnableFuzzyFill>(_onUpdateEnableFuzzyFill);
+    on<UpdateFuzzyFillMinScore>(_onUpdateFuzzyFillMinScore);
+    on<UpdateFuzzyFillAutoApply>(_onUpdateFuzzyFillAutoApply);
+    on<UpdateFuzzyFillOnlyEmptyTargets>(_onUpdateFuzzyFillOnlyEmptyTargets);
+    on<UpdateFuzzyFillMatchLimit>(_onUpdateFuzzyFillMatchLimit);
+    on<UpdateFuzzyFillExactMatchesOnly>(_onUpdateFuzzyFillExactMatchesOnly);
     // Version Control Events
     on<UpdateDefaultGitRepositoryPath>(_onUpdateDefaultGitRepositoryPath);
     on<UpdateAutoCommitOnSave>(_onUpdateAutoCommitOnSave);
@@ -93,7 +99,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateComparisonMode>(_onUpdateComparisonMode);
     // Windows Integration Events
     on<UpdateUseMicaEffect>(_onUpdateUseMicaEffect);
-    
+
     // AI Model Parameters
     on<UpdateAiTemperature>(_onUpdateAiTemperature);
     on<UpdateMaxTokens>(_onUpdateMaxTokens);
@@ -480,6 +486,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       ignorePatterns: List<String>.from(defaultSettings.ignorePatterns),
       similarityThreshold: defaultSettings.similarityThreshold,
       comparisonMode: defaultSettings.comparisonMode,
+      enableFuzzyFill: defaultSettings.enableFuzzyFill,
+      fuzzyFillMinScore: defaultSettings.fuzzyFillMinScore,
+      fuzzyFillAutoApply: defaultSettings.fuzzyFillAutoApply,
+      fuzzyFillOnlyEmptyTargets: defaultSettings.fuzzyFillOnlyEmptyTargets,
+      fuzzyFillMatchLimit: defaultSettings.fuzzyFillMatchLimit,
+      fuzzyFillExactMatchesOnly: defaultSettings.fuzzyFillExactMatchesOnly,
     );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
@@ -637,7 +649,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       ),
     ));
 
-    if (result.success && (event.provider == ApiProvider.gemini || event.provider == ApiProvider.openAi)) {
+    if (result.success &&
+        (event.provider == ApiProvider.gemini ||
+            event.provider == ApiProvider.openAi)) {
       add(FetchAvailableModels(event.provider));
     }
   }
@@ -674,10 +688,60 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future<void> _onUpdateEnableTranslationMemory(
-      UpdateEnableTranslationMemory event,
-      Emitter<SettingsState> emit) async {
+      UpdateEnableTranslationMemory event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(
       enableTranslationMemory: event.enabled,
+    );
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateEnableFuzzyFill(
+      UpdateEnableFuzzyFill event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(enableFuzzyFill: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateFuzzyFillMinScore(
+      UpdateFuzzyFillMinScore event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(fuzzyFillMinScore: event.minScore);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateFuzzyFillAutoApply(
+      UpdateFuzzyFillAutoApply event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(fuzzyFillAutoApply: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateFuzzyFillOnlyEmptyTargets(
+      UpdateFuzzyFillOnlyEmptyTargets event,
+      Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(fuzzyFillOnlyEmptyTargets: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateFuzzyFillMatchLimit(
+      UpdateFuzzyFillMatchLimit event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(fuzzyFillMatchLimit: event.limit);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateFuzzyFillExactMatchesOnly(
+      UpdateFuzzyFillExactMatchesOnly event,
+      Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(
+      fuzzyFillExactMatchesOnly: event.enabled,
     );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
@@ -868,7 +932,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           Map<ApiProvider, List<String>>.from(state.availableModels);
       updatedAvailableModels[event.provider] = models;
       emit(state.copyWith(availableModels: updatedAvailableModels));
-      
+
       // Select first model if default is empty
       if (state.appSettings.defaultAiModel.isEmpty) {
         add(UpdateDefaultAiModel(models.first));

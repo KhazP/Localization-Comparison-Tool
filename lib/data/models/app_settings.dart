@@ -107,6 +107,24 @@ class AppSettings extends HiveObject {
   @HiveField(58, defaultValue: true)
   bool enableTranslationMemory;
 
+  @HiveField(59, defaultValue: true)
+  bool enableFuzzyFill;
+
+  @HiveField(60, defaultValue: 0.6)
+  double fuzzyFillMinScore;
+
+  @HiveField(61, defaultValue: false)
+  bool fuzzyFillAutoApply;
+
+  @HiveField(62, defaultValue: true)
+  bool fuzzyFillOnlyEmptyTargets;
+
+  @HiveField(63, defaultValue: 3)
+  int fuzzyFillMatchLimit;
+
+  @HiveField(64, defaultValue: false)
+  bool fuzzyFillExactMatchesOnly;
+
   // Version Control Settings
   @HiveField(25, defaultValue: '')
   String defaultGitRepositoryPath;
@@ -229,6 +247,12 @@ class AppSettings extends HiveObject {
     required this.contextStringsCount,
     required this.includeContextStrings,
     required this.enableTranslationMemory,
+    required this.enableFuzzyFill,
+    required this.fuzzyFillMinScore,
+    required this.fuzzyFillAutoApply,
+    required this.fuzzyFillOnlyEmptyTargets,
+    required this.fuzzyFillMatchLimit,
+    required this.fuzzyFillExactMatchesOnly,
     required this.defaultGitRepositoryPath,
     required this.autoCommitOnSave,
     required this.gitUserName,
@@ -294,6 +318,12 @@ class AppSettings extends HiveObject {
       contextStringsCount: 2,
       includeContextStrings: false,
       enableTranslationMemory: true,
+      enableFuzzyFill: true,
+      fuzzyFillMinScore: 0.6,
+      fuzzyFillAutoApply: false,
+      fuzzyFillOnlyEmptyTargets: true,
+      fuzzyFillMatchLimit: 3,
+      fuzzyFillExactMatchesOnly: false,
       defaultGitRepositoryPath: '',
       autoCommitOnSave: false,
       gitUserName: '',
@@ -360,8 +390,15 @@ class AppSettings extends HiveObject {
           json['systemTranslationContext'] as String? ?? '',
       contextStringsCount: json['contextStringsCount'] as int? ?? 2,
       includeContextStrings: json['includeContextStrings'] as bool? ?? false,
-      enableTranslationMemory:
-          json['enableTranslationMemory'] as bool? ?? true,
+      enableTranslationMemory: json['enableTranslationMemory'] as bool? ?? true,
+      enableFuzzyFill: json['enableFuzzyFill'] as bool? ?? true,
+      fuzzyFillMinScore: (json['fuzzyFillMinScore'] as num?)?.toDouble() ?? 0.6,
+      fuzzyFillAutoApply: json['fuzzyFillAutoApply'] as bool? ?? false,
+      fuzzyFillOnlyEmptyTargets:
+          json['fuzzyFillOnlyEmptyTargets'] as bool? ?? true,
+      fuzzyFillMatchLimit: json['fuzzyFillMatchLimit'] as int? ?? 3,
+      fuzzyFillExactMatchesOnly:
+          json['fuzzyFillExactMatchesOnly'] as bool? ?? false,
       defaultGitRepositoryPath: json['defaultGitRepositoryPath'] as String,
       autoCommitOnSave: json['autoCommitOnSave'] as bool,
       gitUserName: json['gitUserName'] as String,
@@ -429,6 +466,12 @@ class AppSettings extends HiveObject {
       'contextStringsCount': contextStringsCount,
       'includeContextStrings': includeContextStrings,
       'enableTranslationMemory': enableTranslationMemory,
+      'enableFuzzyFill': enableFuzzyFill,
+      'fuzzyFillMinScore': fuzzyFillMinScore,
+      'fuzzyFillAutoApply': fuzzyFillAutoApply,
+      'fuzzyFillOnlyEmptyTargets': fuzzyFillOnlyEmptyTargets,
+      'fuzzyFillMatchLimit': fuzzyFillMatchLimit,
+      'fuzzyFillExactMatchesOnly': fuzzyFillExactMatchesOnly,
       'defaultGitRepositoryPath': defaultGitRepositoryPath,
       'autoCommitOnSave': autoCommitOnSave,
       'gitUserName': gitUserName,
@@ -492,6 +535,12 @@ class AppSettings extends HiveObject {
     int? contextStringsCount,
     bool? includeContextStrings,
     bool? enableTranslationMemory,
+    bool? enableFuzzyFill,
+    double? fuzzyFillMinScore,
+    bool? fuzzyFillAutoApply,
+    bool? fuzzyFillOnlyEmptyTargets,
+    int? fuzzyFillMatchLimit,
+    bool? fuzzyFillExactMatchesOnly,
     String? defaultGitRepositoryPath,
     bool? autoCommitOnSave,
     String? gitUserName,
@@ -561,6 +610,14 @@ class AppSettings extends HiveObject {
           includeContextStrings ?? this.includeContextStrings,
       enableTranslationMemory:
           enableTranslationMemory ?? this.enableTranslationMemory,
+      enableFuzzyFill: enableFuzzyFill ?? this.enableFuzzyFill,
+      fuzzyFillMinScore: fuzzyFillMinScore ?? this.fuzzyFillMinScore,
+      fuzzyFillAutoApply: fuzzyFillAutoApply ?? this.fuzzyFillAutoApply,
+      fuzzyFillOnlyEmptyTargets:
+          fuzzyFillOnlyEmptyTargets ?? this.fuzzyFillOnlyEmptyTargets,
+      fuzzyFillMatchLimit: fuzzyFillMatchLimit ?? this.fuzzyFillMatchLimit,
+      fuzzyFillExactMatchesOnly:
+          fuzzyFillExactMatchesOnly ?? this.fuzzyFillExactMatchesOnly,
       defaultGitRepositoryPath:
           defaultGitRepositoryPath ?? this.defaultGitRepositoryPath,
       autoCommitOnSave: autoCommitOnSave ?? this.autoCommitOnSave,

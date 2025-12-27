@@ -466,8 +466,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           child: SizedBox(
                             height: 40,
                             child: ElevatedButton.icon(
-                              icon:
-                                  const Icon(Icons.compare_arrows, size: 18),
+                              icon: const Icon(Icons.compare_arrows, size: 18),
                               label: Text(_isBilingualMode
                                   ? 'Compare File'
                                   : 'Compare Files'),
@@ -931,10 +930,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
 
       String statusText = status == StringComparisonStatus.added
-          ? 'ADDED'
+          ? 'EXTRA'
           : status == StringComparisonStatus.removed
-              ? 'REMOVED'
-              : 'MODIFIED';
+              ? 'MISSING'
+              : 'CHANGED';
       String simText =
           similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
 
@@ -1003,7 +1002,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
 
       jsonData.add({
-        'status': status.name,
+        'status': status == StringComparisonStatus.added
+            ? 'extra'
+            : status == StringComparisonStatus.removed
+                ? 'missing'
+                : status.name,
         'key': key,
         'old_value': status == StringComparisonStatus.added ? null : file1Value,
         'new_value':
@@ -1069,10 +1072,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
 
       String statusText = status == StringComparisonStatus.added
-          ? 'ADDED'
+          ? 'EXTRA'
           : status == StringComparisonStatus.removed
-              ? 'REMOVED'
-              : 'MODIFIED';
+              ? 'MISSING'
+              : 'CHANGED';
       String simText =
           similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
 
@@ -1457,19 +1460,19 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   BasicDiffFilter.added,
                   Icons.add_circle_outline,
                   context.watch<ThemeBloc>().state.diffAddedColor,
-                  'Show Added',
+                  'Show Extra',
                 ),
                 _buildFilterIconButton(
                   BasicDiffFilter.removed,
                   Icons.remove_circle_outline,
                   context.watch<ThemeBloc>().state.diffRemovedColor,
-                  'Show Removed',
+                  'Show Missing',
                 ),
                 _buildFilterIconButton(
                   BasicDiffFilter.modified,
                   Icons.edit_outlined,
                   context.watch<ThemeBloc>().state.diffModifiedColor,
-                  'Show Modified',
+                  'Show Changed',
                 ),
                 const SizedBox(width: 8),
                 // Toggle Identical Logic
@@ -1723,17 +1726,17 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       case StringComparisonStatus.added:
         statusColor = themeState.diffAddedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = 'ADDED';
+        statusLabel = 'EXTRA';
         break;
       case StringComparisonStatus.removed:
         statusColor = themeState.diffRemovedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = 'REMOVED';
+        statusLabel = 'MISSING';
         break;
       case StringComparisonStatus.modified:
         statusColor = themeState.diffModifiedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = 'MODIFIED';
+        statusLabel = 'CHANGED';
         break;
       case StringComparisonStatus.identical:
         statusColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
@@ -2248,8 +2251,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             SizedBox(height: 8),
             Text('2. Click Compare to see the differences.'),
             SizedBox(height: 8),
-            Text(
-                '3. Use filters to focus on Added, Removed, or Modified keys.'),
+            Text('3. Use filters to focus on Extra, Missing, or Changed keys.'),
             SizedBox(height: 8),
             Text('4. Enable File Watching to auto-recompare on file changes.'),
             SizedBox(height: 8),

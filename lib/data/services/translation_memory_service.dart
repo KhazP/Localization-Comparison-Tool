@@ -29,9 +29,13 @@ class TranslationMemoryStats {
 class TranslationMemoryMatch {
   /// Creates a translation memory match.
   const TranslationMemoryMatch({
+    required this.sourceText,
     required this.targetText,
     required this.score,
   });
+
+  /// The source text stored in translation memory.
+  final String sourceText;
 
   /// The translated text to reuse.
   final String targetText;
@@ -62,9 +66,15 @@ class TranslationMemoryService {
 
   static bool _databaseFactoryInitialized = false;
 
+  TranslationMemoryService({
+    Future<Directory> Function()? getDocumentsDirectory,
+  }) : _getDocumentsDirectory =
+            getDocumentsDirectory ?? getApplicationDocumentsDirectory;
+
   sqflite.Database? _database;
   Future<sqflite.Database>? _databaseFuture;
   String? _databasePath;
+  final Future<Directory> Function() _getDocumentsDirectory;
 
   /// Stores a translation unit in the local database.
   Future<void> addTranslationUnit({
@@ -119,6 +129,7 @@ class TranslationMemoryService {
 
     double bestScore = 0.0;
     String? bestTarget;
+    String? bestSource;
     int? bestId;
     for (final row in rows) {
       final candidate = (row['source_text'] as String?) ?? '';
@@ -132,11 +143,15 @@ class TranslationMemoryService {
       if (score > bestScore) {
         bestScore = score;
         bestTarget = row['target_text'] as String?;
+        bestSource = candidate;
         bestId = row['id'] as int?;
       }
     }
 
-    if (bestTarget == null || bestScore < minScore || bestId == null) {
+    if (bestTarget == null ||
+        bestSource == null ||
+        bestScore < minScore ||
+        bestId == null) {
       return null;
     }
 
@@ -145,7 +160,80 @@ class TranslationMemoryService {
       [bestId],
     );
 
-    return TranslationMemoryMatch(targetText: bestTarget, score: bestScore);
+    return TranslationMemoryMatch(
+      sourceText: bestSource,
+      targetText: bestTarget,
+      score: bestScore,
+    );
+  }
+
+  /// Finds the best fuzzy matches for the given source text.
+  Future<List<TranslationMemoryMatch>> findMatches({
+    required String sourceText,
+    required String sourceLang,
+    required String targetLang,
+    double minScore = 0.6,
+    int limit = 3,
+  }) async {
+    if (sourceText.trim().isEmpty) {
+      return [];
+    }
+    final db = await _getDatabase();
+    final normalizedSource = _normalizeLanguage(sourceLang);
+    final normalizedTarget = _normalizeLanguage(targetLang);
+    final rows = await db.query(
+      _tableName,
+      columns: ['source_text', 'target_text'],
+      where: 'source_lang IN (?, ?) AND target_lang IN (?, ?)',
+      whereArgs: [
+        normalizedSource,
+        _unknownLanguage,
+        normalizedTarget,
+        _unknownLanguage,
+      ],
+    );
+
+    if (rows.isEmpty) {
+      return [];
+    }
+
+    final matches = <TranslationMemoryMatch>[];
+    for (final row in rows) {
+      final candidate = (row['source_text'] as String?) ?? '';
+      final targetText = (row['target_text'] as String?) ?? '';
+      if (candidate.isEmpty || targetText.isEmpty) {
+        continue;
+      }
+      final score = StringSimilarity.compareTwoStrings(
+        sourceText,
+        candidate,
+      );
+      if (score < minScore) {
+        continue;
+      }
+      matches.add(
+        TranslationMemoryMatch(
+          sourceText: candidate,
+          targetText: targetText,
+          score: score,
+        ),
+      );
+    }
+
+    matches.sort((a, b) => b.score.compareTo(a.score));
+    if (limit > 0 && matches.length > limit) {
+      return matches.sublist(0, limit);
+    }
+    return matches;
+  }
+
+  /// Builds a plain-text preview of a match for quick display.
+  String buildMatchPreview(String matchSource, {int maxLength = 140}) {
+    final trimmed = matchSource.trim();
+    if (trimmed.length <= maxLength) {
+      return trimmed;
+    }
+    return '${trimmed.substring(0, maxLength - 3)}...';
   }
 
   /// Returns stats for the local translation memory database.
@@ -158,8 +246,7 @@ class TranslationMemoryService {
     final countResult = await db.rawQuery(
       'SELECT COUNT(*) AS count FROM $_tableName',
     );
-    final entryCount =
-        (countResult.first['count'] as int?) ?? 0;
+    final entryCount = (countResult.first['count'] as int?) ?? 0;
     final dbPath = await _resolveDatabasePath();
     final file = File(dbPath);
     final storageBytes = await file.exists() ? await file.length() : 0;
@@ -171,6 +258,7 @@ class TranslationMemoryService {
 
   /// Clears all stored translation units.
   Future<void> clearMemory() async {
+    await _initDatabaseFactory();
     final dbPath = await _resolveDatabasePath();
     if (_database != null) {
       await _database?.close();
@@ -179,6 +267,13 @@ class TranslationMemoryService {
     }
     await sqflite.deleteDatabase(dbPath);
     await _getDatabase();
+  }
+
+  /// Closes any open database handles.
+  Future<void> close() async {
+    await _database?.close();
+    _database = null;
+    _databaseFuture = null;
   }
 
   /// Imports translation units from a TMX or CSV file.
@@ -201,18 +296,15 @@ class TranslationMemoryService {
         return 0;
       }
       final document = xml.XmlDocument.parse(content);
-      final headerElement =
-          _firstOrNull(document.findAllElements('header'));
+      final headerElement = _firstOrNull(document.findAllElements('header'));
       final sourceLanguage = headerElement?.getAttribute('srclang');
 
-      final bodyElement =
-          _firstOrNull(document.findAllElements('body'));
+      final bodyElement = _firstOrNull(document.findAllElements('body'));
       if (bodyElement == null) {
         return 0;
       }
       final tuElements = bodyElement.findElements('tu');
-      final targetLanguage =
-          _detectTargetLanguage(tuElements, sourceLanguage);
+      final targetLanguage = _detectTargetLanguage(tuElements, sourceLanguage);
 
       final db = await _getDatabase();
       int imported = 0;
@@ -243,10 +335,8 @@ class TranslationMemoryService {
         if (sourceText.isEmpty || targetText.isEmpty) {
           continue;
         }
-        final resolvedSourceLang =
-            _readLanguage(sourceTuv) ?? sourceLanguage;
-        final resolvedTargetLang =
-            _readLanguage(targetTuv) ?? targetLanguage;
+        final resolvedSourceLang = _readLanguage(sourceTuv) ?? sourceLanguage;
+        final resolvedTargetLang = _readLanguage(targetTuv) ?? targetLanguage;
         await _upsertTranslationUnit(
           db,
           _TranslationUnit(
@@ -356,14 +446,12 @@ class TranslationMemoryService {
         );
         builder.element('body', nest: () {
           for (final unit in units) {
-            final resolvedSourceLang =
-                unit.sourceLang == _unknownLanguage
-                    ? sourceLang
-                    : unit.sourceLang;
-            final resolvedTargetLang =
-                unit.targetLang == _unknownLanguage
-                    ? targetLang
-                    : unit.targetLang;
+            final resolvedSourceLang = unit.sourceLang == _unknownLanguage
+                ? sourceLang
+                : unit.sourceLang;
+            final resolvedTargetLang = unit.targetLang == _unknownLanguage
+                ? targetLang
+                : unit.targetLang;
             builder.element('tu', nest: () {
               builder.element(
                 'tuv',
@@ -458,7 +546,7 @@ class TranslationMemoryService {
     if (_databasePath != null) {
       return _databasePath!;
     }
-    final directory = await getApplicationDocumentsDirectory();
+    final directory = await _getDocumentsDirectory();
     final folder = Directory(path.join(directory.path, 'translation_memory'));
     if (!await folder.exists()) {
       await folder.create(recursive: true);
@@ -604,8 +692,7 @@ class TranslationMemoryService {
     if (tuvElements.length < 2) {
       return null;
     }
-    final sourceLanguage =
-        sourceTuv == null ? null : _readLanguage(sourceTuv);
+    final sourceLanguage = sourceTuv == null ? null : _readLanguage(sourceTuv);
     for (final tuv in tuvElements) {
       if (tuv == sourceTuv) {
         continue;

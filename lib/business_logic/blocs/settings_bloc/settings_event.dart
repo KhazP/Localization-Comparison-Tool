@@ -361,6 +361,48 @@ class UpdateEnableTranslationMemory extends SettingsEvent {
   List<Object> get props => [enabled];
 }
 
+class UpdateEnableFuzzyFill extends SettingsEvent {
+  final bool enabled;
+  const UpdateEnableFuzzyFill(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateFuzzyFillMinScore extends SettingsEvent {
+  final double minScore;
+  const UpdateFuzzyFillMinScore(this.minScore);
+  @override
+  List<Object> get props => [minScore];
+}
+
+class UpdateFuzzyFillAutoApply extends SettingsEvent {
+  final bool enabled;
+  const UpdateFuzzyFillAutoApply(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateFuzzyFillOnlyEmptyTargets extends SettingsEvent {
+  final bool enabled;
+  const UpdateFuzzyFillOnlyEmptyTargets(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateFuzzyFillMatchLimit extends SettingsEvent {
+  final int limit;
+  const UpdateFuzzyFillMatchLimit(this.limit);
+  @override
+  List<Object> get props => [limit];
+}
+
+class UpdateFuzzyFillExactMatchesOnly extends SettingsEvent {
+  final bool enabled;
+  const UpdateFuzzyFillExactMatchesOnly(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
 // Version Control Events
 class UpdateDefaultGitRepositoryPath extends SettingsEvent {
   final String path;

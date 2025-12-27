@@ -409,9 +409,8 @@ class LocalizationFileService {
   Map<String, dynamic> _convertYamlMap(YamlMap map) {
     final result = <String, dynamic>{};
     map.nodes.forEach((keyNode, valueNode) {
-      final key = keyNode is YamlScalar
-          ? keyNode.value.toString()
-          : keyNode.toString();
+      final key =
+          keyNode is YamlScalar ? keyNode.value.toString() : keyNode.toString();
       result[key] = _convertYamlNode(valueNode);
     });
     return result;
@@ -864,8 +863,7 @@ class LocalizationFileService {
     String key,
     String? relatedValue,
   ) {
-    final resolvedUnit =
-        unit ?? _createXliffUnit(document, key, relatedValue);
+    final resolvedUnit = unit ?? _createXliffUnit(document, key, relatedValue);
     final segment = resolvedUnit.findAllElements('segment').firstOrNull ??
         _createXliffSegment(resolvedUnit, relatedValue);
     final target = segment.findAllElements('target').firstOrNull ??
@@ -882,8 +880,8 @@ class LocalizationFileService {
       xml.XmlName('unit'),
       [xml.XmlAttribute(xml.XmlName('id'), key)],
     );
-    final container = document.findAllElements('file').firstOrNull ??
-        document.rootElement;
+    final container =
+        document.findAllElements('file').firstOrNull ?? document.rootElement;
     container.children.add(unit);
     _createXliffSegment(unit, relatedValue);
     return unit;
@@ -965,8 +963,8 @@ class LocalizationFileService {
       xml.XmlName('tu'),
       [xml.XmlAttribute(xml.XmlName('tuid'), key)],
     );
-    final body = document.findAllElements('body').firstOrNull ??
-        document.rootElement;
+    final body =
+        document.findAllElements('body').firstOrNull ?? document.rootElement;
     body.children.add(tu);
     final langs = _detectTmxLangs(document);
     if (relatedValue != null && relatedValue.isNotEmpty) {
@@ -982,9 +980,8 @@ class LocalizationFileService {
       return (null, null);
     }
     final tuvList = tu.findAllElements('tuv').toList();
-    final sourceLang = tuvList.isNotEmpty
-        ? tuvList.first.getAttribute('xml:lang')
-        : null;
+    final sourceLang =
+        tuvList.isNotEmpty ? tuvList.first.getAttribute('xml:lang') : null;
     final targetLang =
         tuvList.length > 1 ? tuvList[1].getAttribute('xml:lang') : null;
     return (sourceLang, targetLang);
@@ -1044,11 +1041,31 @@ class LocalizationFileService {
       return;
     }
     final lines = _parsePlainTextLines(content);
-    final index = lines.indexOf(key);
-    if (index >= 0) {
-      lines[index] = value;
+    final hasKeyValueEntries =
+        lines.any((line) => _splitKeyValueLine(line) != null);
+    if (hasKeyValueEntries) {
+      var found = false;
+      for (var i = 0; i < lines.length; i++) {
+        final entry = _splitKeyValueLine(lines[i]);
+        if (entry == null) {
+          continue;
+        }
+        if (entry.key == key) {
+          lines[i] = '$key=$value';
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        lines.add('$key=$value');
+      }
     } else {
-      lines.add(value);
+      final index = lines.indexOf(key);
+      if (index >= 0) {
+        lines[index] = value;
+      } else {
+        lines.add(value);
+      }
     }
     await _writeFileContent(file, lines.join('\n'), encoding);
   }
@@ -1066,7 +1083,16 @@ class LocalizationFileService {
       return;
     }
     final lines = _parsePlainTextLines(content);
-    lines.removeWhere((line) => line == key);
+    final hasKeyValueEntries =
+        lines.any((line) => _splitKeyValueLine(line) != null);
+    if (hasKeyValueEntries) {
+      lines.removeWhere((line) {
+        final entry = _splitKeyValueLine(line);
+        return entry != null && entry.key == key;
+      });
+    } else {
+      lines.removeWhere((line) => line == key);
+    }
     await _writeFileContent(file, lines.join('\n'), encoding);
   }
 
@@ -1092,6 +1118,19 @@ class LocalizationFileService {
       lines.add(trimmed);
     }
     return lines;
+  }
+
+  MapEntry<String, String>? _splitKeyValueLine(String line) {
+    final equalsIndex = line.indexOf('=');
+    if (equalsIndex <= 0) {
+      return null;
+    }
+    final key = line.substring(0, equalsIndex).trim();
+    final value = line.substring(equalsIndex + 1).trim();
+    if (key.isEmpty) {
+      return null;
+    }
+    return MapEntry(key, value);
   }
 
   String _updateXmlStringFragment(String content, String key, String value) {

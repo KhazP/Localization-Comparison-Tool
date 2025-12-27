@@ -57,6 +57,13 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       contextStringsCount: fields[34] == null ? 2 : fields[34] as int,
       includeContextStrings: fields[35] == null ? false : fields[35] as bool,
       enableTranslationMemory: fields[58] == null ? true : fields[58] as bool,
+      enableFuzzyFill: fields[59] == null ? true : fields[59] as bool,
+      fuzzyFillMinScore: fields[60] == null ? 0.6 : fields[60] as double,
+      fuzzyFillAutoApply: fields[61] == null ? false : fields[61] as bool,
+      fuzzyFillOnlyEmptyTargets: fields[62] == null ? true : fields[62] as bool,
+      fuzzyFillMatchLimit: fields[63] == null ? 3 : fields[63] as int,
+      fuzzyFillExactMatchesOnly:
+          fields[64] == null ? false : fields[64] as bool,
       defaultGitRepositoryPath: fields[25] == null ? '' : fields[25] as String,
       autoCommitOnSave: fields[26] == null ? false : fields[26] as bool,
       gitUserName: fields[27] == null ? '' : fields[27] as String,
@@ -90,7 +97,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(59)
+      ..writeByte(65)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -157,6 +164,18 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..write(obj.includeContextStrings)
       ..writeByte(58)
       ..write(obj.enableTranslationMemory)
+      ..writeByte(59)
+      ..write(obj.enableFuzzyFill)
+      ..writeByte(60)
+      ..write(obj.fuzzyFillMinScore)
+      ..writeByte(61)
+      ..write(obj.fuzzyFillAutoApply)
+      ..writeByte(62)
+      ..write(obj.fuzzyFillOnlyEmptyTargets)
+      ..writeByte(63)
+      ..write(obj.fuzzyFillMatchLimit)
+      ..writeByte(64)
+      ..write(obj.fuzzyFillExactMatchesOnly)
       ..writeByte(25)
       ..write(obj.defaultGitRepositoryPath)
       ..writeByte(26)

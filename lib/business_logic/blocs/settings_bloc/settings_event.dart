@@ -186,6 +186,27 @@ class UpdateDefaultExportDirectory extends SettingsEvent {
   List<Object> get props => [directory];
 }
 
+class UpdateDefaultExportFormat extends SettingsEvent {
+  final String format;
+  const UpdateDefaultExportFormat(this.format);
+  @override
+  List<Object> get props => [format];
+}
+
+class UpdateIncludeUtf8Bom extends SettingsEvent {
+  final bool enable;
+  const UpdateIncludeUtf8Bom(this.enable);
+  @override
+  List<Object> get props => [enable];
+}
+
+class UpdateOpenFolderAfterExport extends SettingsEvent {
+  final bool enable;
+  const UpdateOpenFolderAfterExport(this.enable);
+  @override
+  List<Object> get props => [enable];
+}
+
 class ResetFileHandlingSettings extends SettingsEvent {}
 
 class ResetGeneralSettings extends SettingsEvent {}

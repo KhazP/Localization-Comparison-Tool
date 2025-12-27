@@ -30,7 +30,18 @@ class FileParserFactory {
     // Add other parsers here as they are implemented
   ];
 
-  LocalizationParser?getParserForFile(File file) {
+  LocalizationParser? getParserForFile(File file, {String? format}) {
+    // If format is provided and is not 'Auto', attempt to find a parser that supports that format (mapped to extension)
+    if (format != null && format != 'Auto') {
+      final targetExt = '.${format.toLowerCase()}';
+      for (final parser in _parsers) {
+        if (parser.getSupportedExtensions().contains(targetExt)) {
+          return parser;
+        }
+      }
+      debugPrint('No parser found for forced format: $format (`$targetExt`). Falling back to file extension.');
+    }
+
     final extension = p.extension(file.path).toLowerCase();
     for (final parser in _parsers) {
       if (parser.getSupportedExtensions().contains(extension)) {
@@ -38,6 +49,6 @@ class FileParserFactory {
       }
     }
     debugPrint('No parser found for file extension: $extension');
-    return null; // Or throw an exception, or return a default/dummy parser
+    return null;
   }
 } 

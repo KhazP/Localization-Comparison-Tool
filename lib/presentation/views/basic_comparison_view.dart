@@ -4,6 +4,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:csv/csv.dart';
+import 'package:excel/excel.dart' hide Border;
+import 'dart:convert';
 import 'package:cross_file/cross_file.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/progress_bloc.dart';
@@ -672,6 +675,194 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     );
   }
 
+  Future<void> _exportResult() async {
+    if (_latestComparisonResult == null) return;
+    
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    final format = settings.defaultExportFormat;
+    
+    if (format == 'Excel') {
+      await _exportToExcel();
+    } else if (format == 'JSON') {
+      await _exportToJson();
+    } else {
+      await _exportToCsv();
+    }
+  }
+
+  Future<void> _exportToExcel() async {
+    var excel = Excel.createExcel();
+    Sheet sheetObject = excel['Sheet1'];
+    
+    // Header
+    sheetObject.appendRow([
+      TextCellValue('Status'), 
+      TextCellValue('String Key'), 
+      TextCellValue('Old Value (Source)'), 
+      TextCellValue('New Value (Target)'), 
+      TextCellValue('Similarity')
+    ]);
+    
+    for (var entry in _latestComparisonResult!.diff.entries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
+      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
+      
+      String statusText = status == StringComparisonStatus.added ? 'ADDED' 
+          : status == StringComparisonStatus.removed ? 'REMOVED' : 'MODIFIED';
+      String simText = similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
+      
+      sheetObject.appendRow([
+        TextCellValue(statusText), 
+        TextCellValue(key), 
+        TextCellValue(status == StringComparisonStatus.added ? '' : file1Value),
+        TextCellValue(status == StringComparisonStatus.removed ? '' : file2Value),
+        TextCellValue(simText)
+      ]);
+    }
+    
+    // Save
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save Excel Report',
+      fileName: 'comparison_report.xlsx',
+      type: FileType.custom,
+      allowedExtensions: ['xlsx'],
+    );
+    
+    if (outputPath != null) {
+      try {
+        var fileBytes = excel.save();
+        if (fileBytes != null) {
+          File(outputPath)
+            ..createSync(recursive: true)
+            ..writeAsBytesSync(fileBytes);
+            
+          if (mounted) {
+             final settings = context.read<SettingsBloc>().state.appSettings;
+             if (settings.openFolderAfterExport && Platform.isWindows) {
+               Process.run('explorer.exe', [File(outputPath).parent.path]);
+             }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Excel saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save Excel: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _exportToJson() async {
+    List<Map<String, dynamic>> jsonData = [];
+    for (var entry in _latestComparisonResult!.diff.entries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
+      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
+      
+      jsonData.add({
+        'status': status.name,
+        'key': key,
+        'old_value': status == StringComparisonStatus.added ? null : file1Value,
+        'new_value': status == StringComparisonStatus.removed ? null : file2Value,
+        'similarity': similarity
+      });
+    }
+
+    String jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
+
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save JSON Report',
+      fileName: 'comparison_report.json',
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+    
+    if (outputPath != null) {
+      try {
+        await File(outputPath).writeAsString(jsonString);
+        if (mounted) {
+             final settings = context.read<SettingsBloc>().state.appSettings;
+             if (settings.openFolderAfterExport && Platform.isWindows) {
+               Process.run('explorer.exe', [File(outputPath).parent.path]);
+             }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('JSON saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save JSON: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _exportToCsv() async {
+    List<List<dynamic>> csvData = [['Status', 'String Key', 'Old Value (Source)', 'New Value (Target)', 'Similarity']];
+    for (var entry in _latestComparisonResult!.diff.entries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
+      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
+      
+      String statusText = status == StringComparisonStatus.added ? 'ADDED' 
+          : status == StringComparisonStatus.removed ? 'REMOVED' : 'MODIFIED';
+      String simText = similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
+      
+      csvData.add([statusText, key, 
+        status == StringComparisonStatus.added ? '' : file1Value,
+        status == StringComparisonStatus.removed ? '' : file2Value,
+        simText]);
+    }
+    
+    String csvString = const ListToCsvConverter().convert(csvData);
+    
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    if (settings.includeUtf8Bom) {
+      csvString = '\uFEFF$csvString';
+    }
+
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save CSV Report',
+      fileName: 'comparison_report.csv',
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+    
+    if (outputPath != null) {
+      try {
+        await File(outputPath).writeAsString(csvString);
+        if (mounted) {
+             if (settings.openFolderAfterExport && Platform.isWindows) {
+               Process.run('explorer.exe', [File(outputPath).parent.path]);
+             }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('CSV saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save CSV: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   Widget _buildFilePicker({
     required BuildContext context,
     required String title,
@@ -1028,6 +1219,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              _buildCompactActionButton(
+                icon: Icons.download_outlined,
+                label: 'Export',
+                onPressed: _exportResult,
+                color: theme.colorScheme.onSurface,
+              ),
+              const SizedBox(width: 8),
               _buildCompactActionButton(
                 icon: Icons.zoom_in_map,
                 label: 'Advanced',

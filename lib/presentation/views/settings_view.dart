@@ -1387,7 +1387,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Source Format',
-              control: _buildDropdown(context, settings.defaultSourceFormat, _fileFormats, (val) {
+              control: _buildDropdown(context, settings.defaultSourceFormat, ['Auto', ..._fileFormats], (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateDefaultSourceFormat(val));
               }, isDark, isAmoled),
               isDark: isDark,
@@ -1396,7 +1396,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Target Format',
-              control: _buildDropdown(context, settings.defaultTargetFormat, _fileFormats, (val) {
+              control: _buildDropdown(context, settings.defaultTargetFormat, ['Auto', ..._fileFormats], (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateDefaultTargetFormat(val));
               }, isDark, isAmoled),
               isDark: isDark,
@@ -1436,6 +1436,47 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Switch(
                 value: settings.autoDetectEncoding,
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateAutoDetectEncoding(val)),
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+              showDivider: false,
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Export Settings',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Default Export Format',
+              control: _buildDropdown(context, settings.defaultExportFormat, ['CSV', 'JSON', 'Excel'], (val) {
+                if (val != null) context.read<SettingsBloc>().add(UpdateDefaultExportFormat(val));
+              }, isDark, isAmoled),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Include UTF-8 BOM',
+              description: 'Required for Excel compatibility',
+              control: Switch(
+                value: settings.includeUtf8Bom,
+                onChanged: (val) => context.read<SettingsBloc>().add(UpdateIncludeUtf8Bom(val)),
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Open Folder After Export',
+              control: Switch(
+                value: settings.openFolderAfterExport,
+                onChanged: (val) => context.read<SettingsBloc>().add(UpdateOpenFolderAfterExport(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,

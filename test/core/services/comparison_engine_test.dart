@@ -16,14 +16,14 @@ void main() {
       test('should treat different cased values as identical when ignoreCase is true', () {
         final data1 = {'key1': 'Value'};
         final data2 = {'key1': 'value'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.identical);
       });
 
       test('should treat different cased values as modified when ignoreCase is false', () {
         final data1 = {'key1': 'Value'};
         final data2 = {'key1': 'value'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.modified);
       });
 
@@ -31,7 +31,7 @@ void main() {
         // Key casing is always sensitive, ignoreCase applies to values.
         final data1 = {'Key1': 'Value'};
         final data2 = {'key1': 'Value'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['Key1']?.status, StringComparisonStatus.removed);
         expect(result['key1']?.status, StringComparisonStatus.added);
       });
@@ -39,20 +39,20 @@ void main() {
       test('should handle mixed case common strings from sample files correctly with ignoreCase true', () {
         final data1 = {'welcome': 'Welcome to our company.'};
         final data2 = {'welcome': 'welcome to our company.'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['welcome']?.status, StringComparisonStatus.identical);
       });
        test('should handle user example: skills.type.dash as identical when ignoreCase is true', () {
         final data1 = {'skills.type.dash': 'Dash'};
         final data2 = {'skills.type.dash': 'dash'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['skills.type.dash']?.status, StringComparisonStatus.identical);
       });
 
       test('should handle user example: skills.type.dash as modified when ignoreCase is false', () {
         final data1 = {'skills.type.dash': 'Dash'};
         final data2 = {'skills.type.dash': 'dash'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['skills.type.dash']?.status, StringComparisonStatus.modified);
       });
     });
@@ -66,7 +66,7 @@ void main() {
           data2: data2,
           ignoreCase: false,
           ignorePatterns: [],
-          ignoreWhitespace: false,
+          ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85,
         );
         expect(result['key_to_remove']?.status, StringComparisonStatus.removed);
       });
@@ -76,49 +76,49 @@ void main() {
       test('should treat values with different leading/trailing spaces as identical when ignoreWhitespace is true', () {
         final data1 = {'key1': '  value  '};
         final data2 = {'key1': 'value'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.identical);
       });
 
       test('should treat values with different leading/trailing spaces as modified when ignoreWhitespace is false', () {
         final data1 = {'key1': '  value  '};
         final data2 = {'key1': 'value'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.modified);
       });
 
       test('should treat values with different internal spacing as identical when ignoreWhitespace is true', () {
         final data1 = {'key1': 'value  with   spaces'};
         final data2 = {'key1': 'value with spaces'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.identical);
       });
 
       test('should treat values with different internal spacing as modified when ignoreWhitespace is false', () {
         final data1 = {'key1': 'value  with   spaces'};
         final data2 = {'key1': 'value with spaces'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.modified);
       });
 
       test('should handle mixed leading/trailing and internal spaces correctly when ignoreWhitespace is true', () {
         final data1 = {'key1': '  value  with   extra   spaces  '};
         final data2 = {'key1': 'value with extra spaces'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.identical);
       });
 
       test('should treat empty string and string with only spaces as identical when ignoreWhitespace is true', () {
         final data1 = {'key1': '   '};
         final data2 = {'key1': ''};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.identical);
       });
 
       test('should treat empty string and string with only spaces as modified when ignoreWhitespace is false', () {
         final data1 = {'key1': '   '};
         final data2 = {'key1': ''};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.modified);
       });
     });
@@ -127,7 +127,7 @@ void main() {
       test('should ignore keys matching a simple prefix pattern', () {
         final data1 = {'_temp_key1': 'value1', 'user_key1': 'value2'};
         final data2 = {'_temp_key1': 'value1_modified', 'user_key2': 'value3'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^_temp_'], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^_temp_'], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         
         expect(result.containsKey('_temp_key1'), isFalse);
         expect(result['user_key1']?.status, StringComparisonStatus.removed);
@@ -137,7 +137,7 @@ void main() {
       test('should not ignore keys if no patterns match', () {
         final data1 = {'_temp_key1': 'value1', 'user_key1': 'value2'};
         final data2 = {'_temp_key1': 'value1_modified', 'user_key2': 'value3'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^_permanent_'], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^_permanent_'], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         
         expect(result.containsKey('_temp_key1'), isTrue);
         expect(result['_temp_key1']?.status, StringComparisonStatus.modified);
@@ -148,7 +148,7 @@ void main() {
       test('should ignore keys matching any of multiple patterns', () {
         final data1 = {'debug_data': 'debug', 'temp_user': 'temp', 'final_config': 'config'};
         final data2 = {'final_config': 'config_v2'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^debug_', r'^temp_'], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^debug_', r'^temp_'], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         
         expect(result.containsKey('debug_data'), isFalse);
         expect(result.containsKey('temp_user'), isFalse);
@@ -158,7 +158,7 @@ void main() {
       test('should handle empty ignorePatterns list (no keys ignored)', () {
         final data1 = {'_temp_key1': 'value1'};
         final data2 = {'_temp_key1': 'value2'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         
         expect(result['_temp_key1']?.status, StringComparisonStatus.modified);
       });
@@ -166,7 +166,7 @@ void main() {
       test('should correctly process non-ignored keys when some are ignored', () {
         final data1 = {'ignore_this_abc': 'val1', 'keep_this_1': 'val2', 'also_ignore_xyz': 'val3'};
         final data2 = {'keep_this_1': 'val2_mod', 'keep_this_2': 'val4'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^ignore_this_', r'_xyz$'], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^ignore_this_', r'_xyz$'], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         
         expect(result.containsKey('ignore_this_abc'), isFalse);
         expect(result.containsKey('also_ignore_xyz'), isFalse);
@@ -177,7 +177,7 @@ void main() {
       test('should ignore keys even if their values would otherwise be identical or different', () {
         final data1 = {'ignore_me': 'same_value', 'another_to_ignore': 'val_A'};
         final data2 = {'ignore_me': 'same_value', 'another_to_ignore': 'val_B'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^ignore_me', r'^another_to_ignore'], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [r'^ignore_me', r'^another_to_ignore'], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         
         expect(result.containsKey('ignore_me'), isFalse);
         expect(result.containsKey('another_to_ignore'), isFalse);
@@ -189,14 +189,14 @@ void main() {
       test('ignoreCase true, ignoreWhitespace true: should make values identical', () {
         final data1 = {'key1': '  Hello World  '};
         final data2 = {'key1': 'hello world'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: true);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.identical);
       });
 
       test('ignoreCase false, ignoreWhitespace true: should make values modified due to case', () {
         final data1 = {'key1': '  Hello World  '};
         final data2 = {'key1': 'hello world'};
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: false, ignorePatterns: [], ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         // Whitespace is ignored, so 'Hello World' vs 'hello world' -> modified
         expect(result['key1']?.status, StringComparisonStatus.modified);
       });
@@ -206,7 +206,7 @@ void main() {
         final data2 = {'key1': 'hello world'}; // Note: target also has different case
         // Case is ignored, so '  hello world  ' (from data1 after lowercasing) vs 'hello world' (from data2 after lowercasing)
         // These are different due to whitespace.
-        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false);
+        final result = DiffCalculator.calculateDiff(data1: data1, data2: data2, ignoreCase: true, ignorePatterns: [], ignoreWhitespace: false, comparisonMode: 'Key-based', similarityThreshold: 0.85);
         expect(result['key1']?.status, StringComparisonStatus.modified);
       });
 
@@ -218,7 +218,7 @@ void main() {
           data2: data2, 
           ignoreCase: true, 
           ignorePatterns: [r'^_temp_'], 
-          ignoreWhitespace: true
+          ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85
         );
         expect(result.containsKey('_temp_data'), isFalse);
         expect(result.isEmpty, isTrue);
@@ -245,7 +245,7 @@ void main() {
           data2: data2, 
           ignoreCase: true, 
           ignorePatterns: [r'^_temp_'], 
-          ignoreWhitespace: true
+          ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85
         );
 
         expect(result.containsKey('_temp_ignored'), isFalse, reason: 'Pattern should exclude _temp_ignored');
@@ -284,7 +284,7 @@ void main() {
           data2: data2, 
           ignoreCase: true, 
           ignorePatterns: [r'^_metadata_'], 
-          ignoreWhitespace: true
+          ignoreWhitespace: true, comparisonMode: 'Key-based', similarityThreshold: 0.85
         );
 
         expect(result.containsKey('_metadata_info'), isFalse);

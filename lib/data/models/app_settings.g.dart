@@ -75,13 +75,16 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       diffFontFamily:
           fields[48] == null ? 'System Default' : fields[48] as String,
       diffIdenticalColor: fields[49] == null ? 4288585374 : fields[49] as int,
+      defaultExportFormat: fields[50] == null ? 'CSV' : fields[50] as String,
+      includeUtf8Bom: fields[51] == null ? true : fields[51] as bool,
+      openFolderAfterExport: fields[52] == null ? true : fields[52] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(50)
+      ..writeByte(53)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -181,7 +184,13 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(48)
       ..write(obj.diffFontFamily)
       ..writeByte(49)
-      ..write(obj.diffIdenticalColor);
+      ..write(obj.diffIdenticalColor)
+      ..writeByte(50)
+      ..write(obj.defaultExportFormat)
+      ..writeByte(51)
+      ..write(obj.includeUtf8Bom)
+      ..writeByte(52)
+      ..write(obj.openFolderAfterExport);
   }
 
   @override

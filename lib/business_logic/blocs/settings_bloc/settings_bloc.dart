@@ -43,6 +43,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateHandleByteOrderMark>(_onUpdateHandleByteOrderMark);
     on<UpdateAutoReloadOnChange>(_onUpdateAutoReloadOnChange);
     on<UpdateDefaultExportDirectory>(_onUpdateDefaultExportDirectory);
+    on<UpdateDefaultExportFormat>(_onUpdateDefaultExportFormat);
+    on<UpdateIncludeUtf8Bom>(_onUpdateIncludeUtf8Bom);
+    on<UpdateOpenFolderAfterExport>(_onUpdateOpenFolderAfterExport);
     on<ResetFileHandlingSettings>(_onResetFileHandlingSettings);
     on<ResetGeneralSettings>(_onResetGeneralSettings);
     on<ResetComparisonSettings>(_onResetComparisonSettings);
@@ -321,6 +324,29 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(state.copyWith(appSettings: newSettings));
   }
 
+  Future<void> _onUpdateDefaultExportFormat(
+      UpdateDefaultExportFormat event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(defaultExportFormat: event.format);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateIncludeUtf8Bom(
+      UpdateIncludeUtf8Bom event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(includeUtf8Bom: event.enable);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateOpenFolderAfterExport(
+      UpdateOpenFolderAfterExport event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(openFolderAfterExport: event.enable);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
   Future<void> _onResetFileHandlingSettings(
       ResetFileHandlingSettings event, Emitter<SettingsState> emit) async {
     final defaultSettings = AppSettings.defaultSettings();
@@ -331,7 +357,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       csvDelimiter: defaultSettings.csvDelimiter,
       handleByteOrderMark: defaultSettings.handleByteOrderMark,
       autoReloadOnChange: defaultSettings.autoReloadOnChange,
+
       defaultExportDirectory: defaultSettings.defaultExportDirectory,
+      defaultExportFormat: defaultSettings.defaultExportFormat,
+      includeUtf8Bom: defaultSettings.includeUtf8Bom,
+      openFolderAfterExport: defaultSettings.openFolderAfterExport,
     );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));

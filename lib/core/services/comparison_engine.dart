@@ -26,8 +26,8 @@ class ComparisonResult {
 class ComparisonEngine {
   final FileParserFactory _parserFactory = FileParserFactory();
 
-  Future<Map<String, String>> _parseFile(File file, AppSettings settings) async {
-    final parser = _parserFactory.getParserForFile(file);
+  Future<Map<String, String>> _parseFile(File file, AppSettings settings, {String? format}) async {
+    final parser = _parserFactory.getParserForFile(file, format: format);
     if (parser == null) {
       throw Exception('Unsupported file type: ${file.path}');
     }
@@ -47,8 +47,8 @@ class ComparisonEngine {
   Future<ComparisonResult> compareFiles(File file1, File file2, AppSettings settings) async {
     developer.log('Starting comparison', name: 'ComparisonEngine', error: '${file1.path} vs ${file2.path}');
 
-    final file1DataFuture = _parseFile(file1, settings);
-    final file2DataFuture = _parseFile(file2, settings);
+    final file1DataFuture = _parseFile(file1, settings, format: settings.defaultSourceFormat);
+    final file2DataFuture = _parseFile(file2, settings, format: settings.defaultTargetFormat);
 
     final results = await Future.wait([file1DataFuture, file2DataFuture]);
     final file1Data = results[0];

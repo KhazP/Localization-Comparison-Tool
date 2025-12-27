@@ -8,6 +8,8 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
+import 'package:excel/excel.dart' hide Border;
+import 'dart:convert';
 
 // Filter options
 enum AdvancedDiffFilter {
@@ -185,6 +187,144 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     });
   }
 
+  Future<void> _exportResult(BuildContext context) async {
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    final format = settings.defaultExportFormat;
+    
+    if (format == 'Excel') {
+      await _exportToExcel(context);
+    } else if (format == 'JSON') {
+      await _exportToJson(context);
+    } else {
+      await _exportToCsv(context);
+    }
+  }
+
+  Future<void> _exportToExcel(BuildContext context) async {
+    var excel = Excel.createExcel();
+    Sheet sheetObject = excel['Sheet1'];
+    
+    // Header
+    sheetObject.appendRow([
+      TextCellValue('Status'), 
+      TextCellValue('String Key'), 
+      TextCellValue('Old Value (Source)'), 
+      TextCellValue('New Value (Target)'), 
+      TextCellValue('Similarity')
+    ]);
+    
+    for (var entry in _processedDiffEntries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = widget.comparisonResult.file1Data[key] ?? '';
+      final file2Value = widget.comparisonResult.file2Data[key] ?? '';
+      
+      String statusText = status == StringComparisonStatus.added ? 'ADDED' 
+          : status == StringComparisonStatus.removed ? 'REMOVED' : 'MODIFIED';
+      String simText = similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
+      
+      sheetObject.appendRow([
+        TextCellValue(statusText), 
+        TextCellValue(key), 
+        TextCellValue(status == StringComparisonStatus.added ? '' : file1Value),
+        TextCellValue(status == StringComparisonStatus.removed ? '' : file2Value),
+        TextCellValue(simText)
+      ]);
+    }
+    
+    // Save
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save Excel Report',
+      fileName: 'comparison_report.xlsx',
+      type: FileType.custom,
+      allowedExtensions: ['xlsx'],
+    );
+    
+    if (outputPath != null) {
+      try {
+        var fileBytes = excel.save();
+        if (fileBytes != null) {
+          File(outputPath)
+            ..createSync(recursive: true)
+            ..writeAsBytesSync(fileBytes);
+            
+          if (context.mounted) {
+             final settings = context.read<SettingsBloc>().state.appSettings;
+             if (settings.openFolderAfterExport) {
+               // Attempt to open folder
+               final folder = File(outputPath).parent.path;
+               // Open folder logic would go here, for now just notify
+               // On Windows we can try 'explorer.exe'
+               if (Platform.isWindows) {
+                 Process.run('explorer.exe', [folder]);
+               }
+             }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Excel saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save Excel: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _exportToJson(BuildContext context) async {
+    List<Map<String, dynamic>> jsonData = [];
+    for (var entry in _processedDiffEntries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = widget.comparisonResult.file1Data[key] ?? '';
+      final file2Value = widget.comparisonResult.file2Data[key] ?? '';
+      
+      jsonData.add({
+        'status': status.name,
+        'key': key,
+        'old_value': status == StringComparisonStatus.added ? null : file1Value,
+        'new_value': status == StringComparisonStatus.removed ? null : file2Value,
+        'similarity': similarity
+      });
+    }
+
+    String jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
+
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save JSON Report',
+      fileName: 'comparison_report.json',
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+    
+    if (outputPath != null) {
+      try {
+        await File(outputPath).writeAsString(jsonString);
+        if (context.mounted) {
+             final settings = context.read<SettingsBloc>().state.appSettings;
+             if (settings.openFolderAfterExport && Platform.isWindows) {
+               Process.run('explorer.exe', [File(outputPath).parent.path]);
+             }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('JSON saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to save JSON: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _exportToCsv(BuildContext context) async {
     List<List<dynamic>> csvData = [['Status', 'String Key', 'Old Value (Source)', 'New Value (Target)', 'Similarity']];
     for (var entry in _processedDiffEntries) {
@@ -206,8 +346,10 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     
     String csvString = const ListToCsvConverter().convert(csvData);
     
-    // Add UTF-8 BOM for Excel compatibility with non-English characters
-    csvString = '\uFEFF$csvString';
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    if (settings.includeUtf8Bom) {
+      csvString = '\uFEFF$csvString';
+    }
 
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save CSV Report',
@@ -220,6 +362,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       try {
         await File(outputPath).writeAsString(csvString);
         if (context.mounted) {
+             if (settings.openFolderAfterExport && Platform.isWindows) {
+               Process.run('explorer.exe', [File(outputPath).parent.path]);
+             }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('CSV saved to: $outputPath'), behavior: SnackBarBehavior.floating),
           );
@@ -359,8 +504,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           // Export button
           IconButton(
             icon: Icon(Icons.download_outlined, color: textColor, size: 20),
-            onPressed: () => _exportToCsv(ctx),
-            tooltip: 'Export CSV',
+            onPressed: () => _exportResult(ctx),
+            tooltip: 'Export Result',
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),

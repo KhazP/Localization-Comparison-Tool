@@ -468,6 +468,15 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 controller: _contentScrollController,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
+                  layoutBuilder: (currentChild, previousChildren) {
+                    return Stack(
+                      alignment: AlignmentDirectional.topStart,
+                      children: [
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    );
+                  },
                   child: KeyedSubtree(
                     key: ValueKey(_selectedCategory),
                     child: _buildCategoryContent(context, settings, isDark, isAmoled),

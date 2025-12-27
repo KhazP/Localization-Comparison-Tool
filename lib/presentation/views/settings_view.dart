@@ -1685,40 +1685,103 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
 
   void _showAddPatternDialog(BuildContext context, bool isDark) {
     _newPatternController.clear();
-    
-    void submitPattern() {
-      if (_newPatternController.text.isNotEmpty) {
-        context.read<SettingsBloc>().add(AddIgnorePattern(_newPatternController.text));
-        Navigator.of(context).pop();
-      }
-    }
+    String? errorMessage;
+    String testString = '';
+    bool? matchResult;
     
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Add Ignore Pattern'),
-        content: TextField(
-          controller: _newPatternController,
-          decoration: const InputDecoration(
-            hintText: 'e.g., ^temp_.*',
-            labelText: 'Pattern (regex)',
-          ),
-          autofocus: true,
-          onSubmitted: (_) => submitPattern(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: submitPattern,
-            child: const Text('Add'),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          void submitPattern() {
+            if (_newPatternController.text.isNotEmpty && errorMessage == null) {
+              context.read<SettingsBloc>().add(AddIgnorePattern(_newPatternController.text));
+              Navigator.of(dialogContext).pop();
+            }
+          }
+          
+          void validateAndTest(String pattern) {
+            try {
+              final regex = RegExp(pattern);
+              setState(() {
+                errorMessage = null;
+                if (testString.isNotEmpty && pattern.isNotEmpty) {
+                  matchResult = regex.hasMatch(testString);
+                } else {
+                  matchResult = null;
+                }
+              });
+            } catch (e) {
+              setState(() {
+                errorMessage = 'Invalid regex pattern';
+                matchResult = null;
+              });
+            }
+          }
+          
+          return AlertDialog(
+            title: const Text('Add Ignore Pattern'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _newPatternController,
+                  decoration: InputDecoration(
+                    hintText: 'e.g., ^temp_.*',
+                    labelText: 'Pattern (regex)',
+                    errorText: errorMessage,
+                  ),
+                  autofocus: true,
+                  onChanged: (value) => validateAndTest(value),
+                  onSubmitted: (_) => submitPattern(),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Test String',
+                    hintText: 'Enter a key to test against pattern',
+                    suffixIcon: matchResult == null
+                        ? null
+                        : Icon(
+                            matchResult! ? Icons.check_circle : Icons.cancel,
+                            color: matchResult! ? Colors.green : Colors.red,
+                          ),
+                  ),
+                  onChanged: (value) {
+                    testString = value;
+                    validateAndTest(_newPatternController.text);
+                  },
+                ),
+                if (matchResult != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      matchResult! ? '✓ Pattern matches test string' : '✗ Pattern does not match',
+                      style: TextStyle(
+                        color: matchResult! ? Colors.green : Colors.red,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: errorMessage == null && _newPatternController.text.isNotEmpty ? submitPattern : null,
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
+
 
   void _showResetCategoryDialog(BuildContext context, SettingsCategory category) {
     showDialog(

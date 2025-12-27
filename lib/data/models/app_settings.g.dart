@@ -74,13 +74,14 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       useMicaEffect: fields[47] == null ? false : fields[47] as bool,
       diffFontFamily:
           fields[48] == null ? 'System Default' : fields[48] as String,
+      diffIdenticalColor: fields[49] == null ? 4288585374 : fields[49] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(49)
+      ..writeByte(50)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -178,7 +179,9 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(47)
       ..write(obj.useMicaEffect)
       ..writeByte(48)
-      ..write(obj.diffFontFamily);
+      ..write(obj.diffFontFamily)
+      ..writeByte(49)
+      ..write(obj.diffIdenticalColor);
   }
 
   @override

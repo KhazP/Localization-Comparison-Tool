@@ -32,6 +32,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateDiffAddedColor>(_onUpdateDiffAddedColor);
     on<UpdateDiffRemovedColor>(_onUpdateDiffRemovedColor);
     on<UpdateDiffModifiedColor>(_onUpdateDiffModifiedColor);
+    on<UpdateDiffIdenticalColor>(_onUpdateDiffIdenticalColor);
     on<UpdateDiffFontSize>(_onUpdateDiffFontSize);
     on<UpdateDiffFontFamily>(_onUpdateDiffFontFamily);
     on<UpdateDiffColors>(_onUpdateDiffColors);
@@ -233,6 +234,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(state.copyWith(appSettings: newSettings));
   }
 
+  Future<void> _onUpdateDiffIdenticalColor(
+      UpdateDiffIdenticalColor event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(diffIdenticalColor: event.colorValue);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
   Future<void> _onUpdateDiffFontSize(
       UpdateDiffFontSize event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(diffFontSize: event.fontSize);
@@ -364,6 +372,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       diffAddedColor: defaultSettings.diffAddedColor,
       diffRemovedColor: defaultSettings.diffRemovedColor,
       diffModifiedColor: defaultSettings.diffModifiedColor,
+      diffIdenticalColor: defaultSettings.diffIdenticalColor,
       diffFontSize: defaultSettings.diffFontSize,
       diffFontFamily: defaultSettings.diffFontFamily,
     );

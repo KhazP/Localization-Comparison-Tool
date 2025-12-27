@@ -107,6 +107,13 @@ class UpdateDiffModifiedColor extends SettingsEvent {
   List<Object> get props => [colorValue];
 }
 
+class UpdateDiffIdenticalColor extends SettingsEvent {
+  final int colorValue;
+  const UpdateDiffIdenticalColor(this.colorValue);
+  @override
+  List<Object> get props => [colorValue];
+}
+
 class UpdateDiffColors extends SettingsEvent {
   final int? addedColor;
   final int? removedColor;

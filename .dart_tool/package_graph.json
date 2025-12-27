@@ -162,6 +162,16 @@
       ]
     },
     {
+      "name": "tray_manager",
+      "version": "0.2.4",
+      "dependencies": [
+        "flutter",
+        "menu_base",
+        "path",
+        "shortid"
+      ]
+    },
+    {
       "name": "macos_dock_progress",
       "version": "0.1.0",
       "dependencies": [
@@ -1005,6 +1015,18 @@
       ]
     },
     {
+      "name": "shortid",
+      "version": "0.1.2",
+      "dependencies": []
+    },
+    {
+      "name": "menu_base",
+      "version": "0.1.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
       "name": "plugin_platform_interface",
       "version": "2.1.8",
       "dependencies": [
@@ -1531,28 +1553,6 @@
       "dependencies": [
         "meta",
         "path"
-      ]
-    },
-    {
-      "name": "tray_manager",
-      "version": "0.2.4",
-      "dependencies": [
-        "flutter",
-        "menu_base",
-        "path",
-        "shortid"
-      ]
-    },
-    {
-      "name": "shortid",
-      "version": "0.1.2",
-      "dependencies": []
-    },
-    {
-      "name": "menu_base",
-      "version": "0.1.1",
-      "dependencies": [
-        "flutter"
       ]
     }
   ],

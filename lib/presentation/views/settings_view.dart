@@ -1124,6 +1124,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             }, isDark, isAmoled),
             _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor), (color) {
               context.read<SettingsBloc>().add(UpdateDiffModifiedColor(color.toARGB32()));
+            }, isDark, isAmoled),
+            _buildColorRow(context, 'Identical', Color(settings.diffIdenticalColor), (color) {
+              context.read<SettingsBloc>().add(UpdateDiffIdenticalColor(color.toARGB32()));
             }, isDark, isAmoled, showDivider: false),
           ],
         ),
@@ -1251,6 +1254,19 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   color: Color(settings.diffModifiedColor),
                   key: 'button_label',
                   value: '"Submit" → "Continue"',
+                  isDark: isDark,
+                  isAmoled: isAmoled,
+                  fontFamily: actualFontFamily,
+                  fontSize: fontSize,
+                ),
+                const SizedBox(height: 8),
+                _buildPreviewEntry(
+                  context: context,
+                  lineNumber: 89,
+                  status: 'IDENTICAL',
+                  color: Color(settings.diffIdenticalColor),
+                  key: 'app_name',
+                  value: '"Localizer Tool"',
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,

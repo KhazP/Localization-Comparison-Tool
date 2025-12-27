@@ -159,6 +159,10 @@ class AppSettings extends HiveObject {
   @HiveField(48, defaultValue: 'System Default')
   String diffFontFamily;
 
+  // Identical Entry Color
+  @HiveField(49, defaultValue: 0xFF9E9E9E)
+  int diffIdenticalColor;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -209,6 +213,7 @@ class AppSettings extends HiveObject {
     required this.comparisonMode,
     required this.useMicaEffect,
     required this.diffFontFamily,
+    required this.diffIdenticalColor,
   });
 
   // Default settings
@@ -263,6 +268,7 @@ class AppSettings extends HiveObject {
       comparisonMode: 'Key-based',
       useMicaEffect: false,
       diffFontFamily: 'System Default',
+      diffIdenticalColor: 0xFF9E9E9E, // Subtle gray
     );
   }
 
@@ -318,6 +324,7 @@ class AppSettings extends HiveObject {
       comparisonMode: json['comparisonMode'] as String? ?? 'Key-based',
       useMicaEffect: json['useMicaEffect'] as bool? ?? false,
       diffFontFamily: json['diffFontFamily'] as String? ?? 'System Default',
+      diffIdenticalColor: json['diffIdenticalColor'] as int? ?? 0xFF9E9E9E,
     );
   }
 
@@ -373,6 +380,7 @@ class AppSettings extends HiveObject {
       'comparisonMode': comparisonMode,
       'useMicaEffect': useMicaEffect,
       'diffFontFamily': diffFontFamily,
+      'diffIdenticalColor': diffIdenticalColor,
     };
   }
 
@@ -426,6 +434,7 @@ class AppSettings extends HiveObject {
     String? comparisonMode,
     bool? useMicaEffect,
     String? diffFontFamily,
+    int? diffIdenticalColor,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -477,6 +486,7 @@ class AppSettings extends HiveObject {
       comparisonMode: comparisonMode ?? this.comparisonMode,
       useMicaEffect: useMicaEffect ?? this.useMicaEffect,
       diffFontFamily: diffFontFamily ?? this.diffFontFamily,
+      diffIdenticalColor: diffIdenticalColor ?? this.diffIdenticalColor,
     );
   }
 } 

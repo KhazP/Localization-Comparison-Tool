@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
 // Events
 abstract class ComparisonEvent {}
@@ -17,6 +18,19 @@ class CompareFilesRequested extends ComparisonEvent {
     required this.file1, 
     required this.file2,
     required this.settings,
+  });
+}
+
+/// Event to request bilingual comparison from a single file.
+class CompareBilingualFileRequested extends ComparisonEvent {
+  final File file;
+  final AppSettings settings;
+  final bool isFromHistory;
+
+  CompareBilingualFileRequested({
+    required this.file,
+    required this.settings,
+    this.isFromHistory = false,
   });
 }
 
@@ -74,6 +88,7 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     this.onProgress,
   }) : super(ComparisonInitial()) {
     on<CompareFilesRequested>(_onCompareFilesRequested);
+    on<CompareBilingualFileRequested>(_onCompareBilingualFileRequested);
     on<CompareFilesFromHistoryRequested>(_onCompareFilesFromHistoryRequested);
   }
 
@@ -130,6 +145,36 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       emit(ComparisonSuccess(result, file1, file2, wasLoadedFromHistory: event.isFromHistory));
     } catch (e) {
       final errorMessage = 'Failed to compare files from history: ${e.toString()}';
+      emit(ComparisonFailure(errorMessage));
+    }
+  }
+
+  Future<void> _onCompareBilingualFileRequested(
+    CompareBilingualFileRequested event,
+    Emitter<ComparisonState> emit,
+  ) async {
+    emit(ComparisonLoading(message: 'Starting comparison...'));
+    onProgress?.call(0, 2, 'Starting comparison...');
+
+    try {
+      onProgress?.call(1, 2, 'Parsing file...');
+
+      final result = await comparisonEngine.compareBilingualFile(
+        event.file,
+        event.settings,
+      );
+
+      onProgress?.call(2, 2, 'Comparison complete');
+      emit(ComparisonSuccess(
+        result,
+        event.file,
+        event.file,
+        wasLoadedFromHistory: event.isFromHistory,
+      ));
+    } on InvalidBilingualFileException catch (e) {
+      emit(ComparisonFailure(e.message));
+    } catch (e) {
+      final errorMessage = 'Failed to compare file: ${e.toString()}';
       emit(ComparisonFailure(errorMessage));
     }
   }

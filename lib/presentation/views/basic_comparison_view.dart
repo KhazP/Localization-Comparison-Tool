@@ -59,6 +59,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   File? _file1;
   File? _file2;
+  File? _bilingualFile;
+  bool _isBilingualMode = false;
   // Store the latest comparison results for the analytics bar
   ComparisonResult? _latestComparisonResult;
   BasicDiffFilter _currentFilter = BasicDiffFilter.all;
@@ -66,6 +68,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   // Drag & drop state
   bool _isDraggingOverFile1 = false;
   bool _isDraggingOverFile2 = false;
+  bool _isDraggingOverBilingualFile = false;
 
   // Search/filter state
   final TextEditingController _searchController = TextEditingController();
@@ -134,8 +137,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       setState(() {
         if (fileNumber == 1) {
           _file1 = File(result.files.single.path!);
-        } else {
+        } else if (fileNumber == 2) {
           _file2 = File(result.files.single.path!);
+        } else {
+          _bilingualFile = File(result.files.single.path!);
         }
       });
 
@@ -148,7 +153,18 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     context.read<SettingsBloc>().add(UpdateAutoReloadOnChange(enabled));
   }
 
+  void _toggleComparisonMode() {
+    setState(() {
+      _isBilingualMode = !_isBilingualMode;
+    });
+    _updateFileWatcher();
+  }
+
   void _startComparison() {
+    if (_isBilingualMode) {
+      _startBilingualComparison();
+      return;
+    }
     if (_file1 != null && _file2 != null) {
       setState(() {
         _currentFilter = BasicDiffFilter.all; // Reset filter on new comparison
@@ -169,12 +185,50 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }
   }
 
+  void _startBilingualComparison() {
+    if (_bilingualFile != null) {
+      setState(() {
+        _currentFilter = BasicDiffFilter.all; // Reset filter on new comparison
+      });
+      final settingsState = context.read<SettingsBloc>().state;
+      if (settingsState.status == SettingsStatus.loaded) {
+        context.read<ComparisonBloc>().add(
+              CompareBilingualFileRequested(
+                file: _bilingualFile!,
+                settings: settingsState.appSettings,
+              ),
+            );
+      }
+      _updateFileWatcher();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please select a bilingual file to compare.')),
+      );
+    }
+  }
+
   void _updateFileWatcher() {
     final settingsState = context.read<SettingsBloc>().state;
     final isAutoReloadEnabled = settingsState.status == SettingsStatus.loaded &&
         settingsState.appSettings.autoReloadOnChange;
 
-    if (isAutoReloadEnabled && _file1 != null && _file2 != null) {
+    if (!isAutoReloadEnabled) {
+      context.read<FileWatcherBloc>().add(StopWatchingFiles());
+      return;
+    }
+
+    if (_isBilingualMode && _bilingualFile != null) {
+      context.read<FileWatcherBloc>().add(
+            StartWatchingFiles(
+              _bilingualFile!.path,
+              _bilingualFile!.path,
+            ),
+          );
+      return;
+    }
+
+    if (!_isBilingualMode && _file1 != null && _file2 != null) {
       context.read<FileWatcherBloc>().add(
             StartWatchingFiles(_file1!.path, _file2!.path),
           );
@@ -192,8 +246,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         setState(() {
           if (fileNumber == 1) {
             _file1 = file;
-          } else {
+          } else if (fileNumber == 2) {
             _file2 = file;
+          } else {
+            _bilingualFile = file;
           }
         });
 
@@ -201,10 +257,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         _updateFileWatcher();
 
         // Show success message
+        final fileName = file.path.split(Platform.pathSeparator).last;
+        final selectionLabel = fileNumber == 1
+            ? 'Source file'
+            : fileNumber == 2
+                ? 'Target file'
+                : 'Bilingual file';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                'File ${fileNumber == 1 ? "1" : "2"} selected: ${file.path.split(Platform.pathSeparator).last}'),
+            content: Text('$selectionLabel selected: $fileName'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -316,13 +377,22 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               // Trigger automatic recomparison
               final settingsStateForReload = context.read<SettingsBloc>().state;
               if (settingsStateForReload.status == SettingsStatus.loaded) {
-                context.read<ComparisonBloc>().add(
-                      CompareFilesRequested(
-                        file1: File(state.file1Path),
-                        file2: File(state.file2Path),
-                        settings: settingsStateForReload.appSettings,
-                      ),
-                    );
+                if (_isBilingualMode) {
+                  context.read<ComparisonBloc>().add(
+                        CompareBilingualFileRequested(
+                          file: File(state.file1Path),
+                          settings: settingsStateForReload.appSettings,
+                        ),
+                      );
+                } else {
+                  context.read<ComparisonBloc>().add(
+                        CompareFilesRequested(
+                          file1: File(state.file1Path),
+                          file2: File(state.file2Path),
+                          settings: settingsStateForReload.appSettings,
+                        ),
+                      );
+                }
               }
             }
           },
@@ -350,41 +420,79 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
                   children: [
+                    if (_isBilingualMode)
+                      Row(
+                        children: [
+                          _buildFilePicker(
+                            context: context,
+                            title: 'Bilingual File',
+                            file: _bilingualFile,
+                            fileNumber: 3,
+                            onPressed: () => _pickFile(3),
+                            isDraggingOver: _isDraggingOverBilingualFile,
+                            isAmoled: isAmoled,
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          _buildFilePicker(
+                            context: context,
+                            title: 'Source File',
+                            file: _file1,
+                            fileNumber: 1,
+                            onPressed: () => _pickFile(1),
+                            isDraggingOver: _isDraggingOverFile1,
+                            isAmoled: isAmoled,
+                          ),
+                          const SizedBox(width: 12),
+                          _buildFilePicker(
+                            context: context,
+                            title: 'Target File',
+                            file: _file2,
+                            fileNumber: 2,
+                            onPressed: () => _pickFile(2),
+                            isDraggingOver: _isDraggingOverFile2,
+                            isAmoled: isAmoled,
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 12),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        _buildFilePicker(
-                          context: context,
-                          title: 'Source File',
-                          file: _file1,
-                          fileNumber: 1,
-                          onPressed: () => _pickFile(1),
-                          isDraggingOver: _isDraggingOverFile1,
-                          isAmoled: isAmoled,
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 40,
+                            child: ElevatedButton.icon(
+                              icon:
+                                  const Icon(Icons.compare_arrows, size: 18),
+                              label: Text(_isBilingualMode
+                                  ? 'Compare File'
+                                  : 'Compare Files'),
+                              onPressed: _isBilingualMode
+                                  ? (_bilingualFile != null
+                                      ? _startComparison
+                                      : null)
+                                  : (_file1 != null && _file2 != null
+                                      ? _startComparison
+                                      : null),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 12),
-                        _buildFilePicker(
-                          context: context,
-                          title: 'Target File',
-                          file: _file2,
-                          fileNumber: 2,
-                          onPressed: () => _pickFile(2),
-                          isDraggingOver: _isDraggingOverFile2,
-                          isAmoled: isAmoled,
+                        SizedBox(
+                          height: 40,
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.translate_rounded, size: 18),
+                            label: Text(_isBilingualMode
+                                ? 'Two Files'
+                                : 'Bilingual Mode'),
+                            onPressed: _toggleComparisonMode,
+                          ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 40,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.compare_arrows, size: 18),
-                        label: const Text('Compare Files'),
-                        onPressed: (_file1 != null && _file2 != null)
-                            ? _startComparison
-                            : null,
-                      ),
                     ),
                   ],
                 ),
@@ -431,11 +539,18 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
                   if (state is ComparisonSuccess) {
                     // Update file references in the UI
+                    final isBilingualResult =
+                        state.file1.path == state.file2.path;
                     setState(() {
+                      _isBilingualMode = isBilingualResult;
                       _file1 = state.file1;
                       _file2 = state.file2;
+                      if (isBilingualResult) {
+                        _bilingualFile = state.file1;
+                      }
                       _latestComparisonResult = state.result;
                     });
+                    _updateFileWatcher();
 
                     // Only add to history if it wasn't loaded from history
                     if (!state.wasLoadedFromHistory) {
@@ -1075,8 +1190,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           setState(() {
             if (fileNumber == 1) {
               _isDraggingOverFile1 = true;
-            } else {
+            } else if (fileNumber == 2) {
               _isDraggingOverFile2 = true;
+            } else {
+              _isDraggingOverBilingualFile = true;
             }
           });
         },
@@ -1084,8 +1201,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           setState(() {
             if (fileNumber == 1) {
               _isDraggingOverFile1 = false;
-            } else {
+            } else if (fileNumber == 2) {
               _isDraggingOverFile2 = false;
+            } else {
+              _isDraggingOverBilingualFile = false;
             }
           });
         },
@@ -2040,6 +2159,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       ComparisonSession session, ThemeData theme, Color textSecondary) {
     final sourceName = session.file1Path.split(Platform.pathSeparator).last;
     final targetName = session.file2Path.split(Platform.pathSeparator).last;
+    final isBilingualSession = session.file1Path == session.file2Path;
+    final title = isBilingualSession
+        ? 'Bilingual file: $sourceName'
+        : '$sourceName ↔ $targetName';
 
     return ListTile(
       dense: true,
@@ -2047,7 +2170,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       leading: Icon(Icons.history,
           color: theme.colorScheme.primary.withValues(alpha: 0.7)),
       title: Text(
-        '$sourceName ↔ $targetName',
+        title,
         style:
             theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         overflow: TextOverflow.ellipsis,
@@ -2063,8 +2186,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   void _loadRecentComparison(ComparisonSession session) {
     final file1 = File(session.file1Path);
     final file2 = File(session.file2Path);
+    final isBilingualSession = session.file1Path == session.file2Path;
 
-    if (!file1.existsSync() || !file2.existsSync()) {
+    final shouldCheckBoth = !isBilingualSession;
+    if (!file1.existsSync() || (shouldCheckBoth && !file2.existsSync())) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content:
@@ -2074,8 +2199,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }
 
     setState(() {
-      _file1 = file1;
-      _file2 = file2;
+      _isBilingualMode = isBilingualSession;
+      if (isBilingualSession) {
+        _bilingualFile = file1;
+      } else {
+        _file1 = file1;
+        _file2 = file2;
+      }
     });
     _startComparison();
   }
@@ -2113,9 +2243,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('1. Drag & drop or select two localization files.'),
+            Text(
+                '1. Drag & drop two files, or use Bilingual Mode for a single file with both languages.'),
             SizedBox(height: 8),
-            Text('2. Click "Compare Files" to see the differences.'),
+            Text('2. Click Compare to see the differences.'),
             SizedBox(height: 8),
             Text(
                 '3. Use filters to focus on Added, Removed, or Modified keys.'),

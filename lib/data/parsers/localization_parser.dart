@@ -1,7 +1,30 @@
 import 'dart:io';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 
+/// Identifies which side of a bilingual file should be extracted.
+enum ExtractionMode { source, target }
+
+/// Thrown when a file does not include both source and target text.
+class InvalidBilingualFileException implements Exception {
+  InvalidBilingualFileException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// Base contract for localization parsers.
 abstract class LocalizationParser {
-  Future<Map<String, String>> parse(File file, AppSettings settings);
+  /// Parses a localization file into key/value pairs.
+  Future<Map<String, String>> parse(
+    File file,
+    AppSettings settings, {
+    ExtractionMode extractionMode = ExtractionMode.target,
+    bool requireBilingual = false,
+  });
+
+  /// Whether this parser can extract source and target from a single file.
+  bool get supportsBilingualExtraction => false;
   List<String> getSupportedExtensions();
-} 
+}

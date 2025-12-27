@@ -6,7 +6,12 @@ import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
 class PropertiesParser extends LocalizationParser {
   @override
-  Future<Map<String, String>> parse(File file, AppSettings settings) async {
+  Future<Map<String, String>> parse(
+    File file,
+    AppSettings settings, {
+    ExtractionMode extractionMode = ExtractionMode.target,
+    bool requireBilingual = false,
+  }) async {
     final Map<String, String> translations = {};
     List<String> lines;
     try {

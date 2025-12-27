@@ -99,13 +99,24 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     widget.onNavigateToTab(0);
     final settingsState = context.read<SettingsBloc>().state;
     if (settingsState.status == SettingsStatus.loaded) {
-      context.read<ComparisonBloc>().add(
-        CompareFilesFromHistoryRequested(
-          file1Path: session.file1Path,
-          file2Path: session.file2Path,
-          settings: settingsState.appSettings,
-        ),
-      );
+      final isBilingualSession = session.file1Path == session.file2Path;
+      if (isBilingualSession) {
+        context.read<ComparisonBloc>().add(
+              CompareBilingualFileRequested(
+                file: File(session.file1Path),
+                settings: settingsState.appSettings,
+                isFromHistory: true,
+              ),
+            );
+      } else {
+        context.read<ComparisonBloc>().add(
+              CompareFilesFromHistoryRequested(
+                file1Path: session.file1Path,
+                file2Path: session.file2Path,
+                settings: settingsState.appSettings,
+              ),
+            );
+      }
     }
   }
 
@@ -502,6 +513,11 @@ class _HistoryCardState extends State<_HistoryCard> {
     // simple filename extraction
     final file1Name = session.file1Path.split(Platform.pathSeparator).last;
     final file2Name = session.file2Path.split(Platform.pathSeparator).last;
+    final isBilingualSession = session.file1Path == session.file2Path;
+    final fileTypeLabel = _buildFileTypeLabel(
+      session.file1Path,
+      session.file2Path,
+    );
 
     final themeState = context.watch<ThemeBloc>().state;
     
@@ -515,6 +531,12 @@ class _HistoryCardState extends State<_HistoryCard> {
     final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
     final cardHoverColor = isAmoled ? AppThemeV2.amoledCardHover : (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover);
     final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    final neutralStatColor =
+        isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted;
+    final totalStrings = session.stringsAdded +
+        session.stringsRemoved +
+        session.stringsModified +
+        session.stringsIdentical;
 
     // Determine the dominant status color for the left border
     Color statusColor;
@@ -597,24 +619,28 @@ class _HistoryCardState extends State<_HistoryCard> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                                        child: Icon(
-                                          Icons.compare_arrows_rounded, 
-                                          size: 16, 
-                                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted
-                                        ),
-                                      ),
-                                      Flexible(
-                                        child: Text(
-                                          file2Name,
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 15,
+                                      if (!isBilingualSession) ...[
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          child: Icon(
+                                            Icons.compare_arrows_rounded,
+                                            size: 16,
+                                            color: isDark
+                                                ? AppThemeV2.darkTextMuted
+                                                : AppThemeV2.lightTextMuted,
                                           ),
-                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                      ),
+                                        Flexible(
+                                          child: Text(
+                                            file2Name,
+                                            style: theme.textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 15,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                   const SizedBox(height: 4),
@@ -633,6 +659,28 @@ class _HistoryCardState extends State<_HistoryCard> {
                                           color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                                         ),
                                       ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children: [
+                                      _InfoChip(
+                                        label: isBilingualSession
+                                            ? 'Bilingual'
+                                            : 'Two files',
+                                        icon: isBilingualSession
+                                            ? Icons.translate_rounded
+                                            : Icons.compare_arrows_rounded,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      if (fileTypeLabel != null)
+                                        _InfoChip(
+                                          label: fileTypeLabel,
+                                          icon: Icons.description_rounded,
+                                          color: theme.colorScheme.secondary,
+                                        ),
                                     ],
                                   ),
                                 ],
@@ -686,19 +734,28 @@ class _HistoryCardState extends State<_HistoryCard> {
                           const SizedBox(height: 16),
                           Divider(height: 1, color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
                           const SizedBox(height: 16),
-                          _FilePathRow(
-                            label: 'Source',
-                            path: session.file1Path,
-                            icon: Icons.source_rounded,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(height: 8),
-                          _FilePathRow(
-                            label: 'Target',
-                            path: session.file2Path,
-                            icon: Icons.compare_arrows_rounded,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
+                          if (isBilingualSession)
+                            _FilePathRow(
+                              label: 'Bilingual file',
+                              path: session.file1Path,
+                              icon: Icons.translate_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                          else ...[
+                            _FilePathRow(
+                              label: 'Source',
+                              path: session.file1Path,
+                              icon: Icons.source_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(height: 8),
+                            _FilePathRow(
+                              label: 'Target',
+                              path: session.file2Path,
+                              icon: Icons.compare_arrows_rounded,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ],
                           const SizedBox(height: 16),
                           
                           // Stats row detailed
@@ -724,6 +781,20 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   count: session.stringsModified,
                                   color: themeState.diffModifiedColor,
                                   icon: Icons.sync_alt_rounded,
+                                ),
+                              if (session.stringsIdentical > 0)
+                                _StatChip(
+                                  label: 'Same',
+                                  count: session.stringsIdentical,
+                                  color: neutralStatColor,
+                                  icon: Icons.check_circle_outline_rounded,
+                                ),
+                              if (totalStrings > 0)
+                                _StatChip(
+                                  label: 'Total',
+                                  count: totalStrings,
+                                  color: neutralStatColor,
+                                  icon: Icons.list_alt_rounded,
                                 ),
                               if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
                                 Text(
@@ -832,6 +903,42 @@ class _HistoryCardState extends State<_HistoryCard> {
         ),
       ),
     );
+  }
+
+  String? _buildFileTypeLabel(String file1Path, String file2Path) {
+    final sourceType = _extensionLabel(file1Path);
+    final targetType = _extensionLabel(file2Path);
+
+    if (sourceType == null && targetType == null) {
+      return null;
+    }
+
+    if (sourceType == null) {
+      return targetType;
+    }
+
+    if (targetType == null) {
+      return sourceType;
+    }
+
+    if (sourceType == targetType) {
+      return sourceType;
+    }
+
+    return '$sourceType -> $targetType';
+  }
+
+  String? _extensionLabel(String path) {
+    final fileName = path.split(Platform.pathSeparator).last;
+    final dotIndex = fileName.lastIndexOf('.');
+    if (dotIndex == -1 || dotIndex == fileName.length - 1) {
+      return null;
+    }
+    final ext = fileName.substring(dotIndex + 1).trim();
+    if (ext.isEmpty) {
+      return null;
+    }
+    return ext.toUpperCase();
   }
 }
 
@@ -959,6 +1066,45 @@ class _StatChip extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _InfoChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
               color: color,
             ),
           ),

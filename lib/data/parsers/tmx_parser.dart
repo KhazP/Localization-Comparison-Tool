@@ -7,7 +7,12 @@ import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
 class TmxParser extends LocalizationParser {
   @override
-  Future<Map<String, String>> parse(File file, AppSettings settings) async {
+  Future<Map<String, String>> parse(
+    File file,
+    AppSettings settings, {
+    ExtractionMode extractionMode = ExtractionMode.target,
+    bool requireBilingual = false,
+  }) async {
     final Map<String, String> translations = {};
     try {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
@@ -18,6 +23,9 @@ class TmxParser extends LocalizationParser {
       }
       final xml.XmlDocument document = xml.XmlDocument.parse(content);
 
+      final headerElement = document.findAllElements('header').firstOrNull;
+      final sourceLanguage = headerElement?.getAttribute('srclang');
+
       final bodyElement = document.findAllElements('body').firstOrNull;
       if (bodyElement == null) {
         debugPrint('Warning: No <body> element found in TMX file: ${file.path}');
@@ -25,6 +33,25 @@ class TmxParser extends LocalizationParser {
       }
 
       final tuElements = bodyElement.findElements('tu');
+      final targetLanguage = _detectTargetLanguage(
+        tuElements,
+        sourceLanguage,
+      );
+
+      if (requireBilingual) {
+        if (sourceLanguage == null || sourceLanguage.isEmpty) {
+          throw InvalidBilingualFileException(
+            'This file does not include both the original text and the '
+            'translation.',
+          );
+        }
+        if (targetLanguage == null || targetLanguage.isEmpty) {
+          throw InvalidBilingualFileException(
+            'This file does not include both the original text and the '
+            'translation.',
+          );
+        }
+      }
 
       for (final tuElement in tuElements) {
         String? key;
@@ -34,41 +61,39 @@ class TmxParser extends LocalizationParser {
 
         final tuvElements = tuElement.findElements('tuv').toList();
 
-        if (tuvElements.length >= 2) {
-          // First TUV is source, second TUV is target
-          final sourceTuv = tuvElements[0];
-          final targetTuv = tuvElements[1];
+        if (tuvElements.isNotEmpty) {
+          final sourceTuv =
+              _findTuvForLanguage(tuvElements, sourceLanguage);
+          final targetTuv =
+              _findTuvForLanguage(tuvElements, targetLanguage);
 
           final sourceSeg = sourceTuv.findElements('seg').firstOrNull;
           final targetSeg = targetTuv.findElements('seg').firstOrNull;
 
-          if (sourceSeg != null && targetSeg != null) {
-            final String sourceText = sourceSeg.innerText.trim();
-            final String targetText = targetSeg.innerText.trim();
+          final sourceText = sourceSeg?.innerText.trim() ?? '';
+          final targetText = targetSeg?.innerText.trim() ?? '';
 
-            if (tuid != null && tuid.isNotEmpty) {
-              key = tuid;
-            } else if (sourceText.isNotEmpty) {
-              key = sourceText;
-            }
+          if (tuid != null && tuid.isNotEmpty) {
+            key = tuid;
+          } else if (sourceText.isNotEmpty) {
+            key = sourceText;
+          }
 
-            value = targetText;
+          if (extractionMode == ExtractionMode.source) {
+            value = sourceText;
           } else {
-            debugPrint('Warning: Missing <seg> in <tuv> for tuid "$tuid" or equivalent in ${file.path}');
+            value = targetText;
           }
-        } else if (tuvElements.length == 1 && (tuid != null && tuid.isNotEmpty)) {
-          // If only one TUV but has a TUID, could be a source-only entry.
-          // Store with empty value, assuming it's a key that needs translation.
-          final sourceTuv = tuvElements[0];
-          final sourceSeg = sourceTuv.findElements('seg').firstOrNull;
-          if (sourceSeg != null) {
-              key = tuid;
-              value = sourceSeg.innerText.trim(); // Or value = ""; if we strictly want target
-              debugPrint('Info: TMX <tu> with tuid "$tuid" has only one <tuv>. Using its text as value. In file: ${file.path}');
+
+          if (sourceSeg == null && sourceLanguage != null) {
+            debugPrint(
+                'Warning: Missing source <seg> for tuid "$tuid" in ${file.path}');
           }
-        }
-        
-        else {
+          if (targetSeg == null && targetLanguage != null) {
+            debugPrint(
+                'Warning: Missing target <seg> for tuid "$tuid" in ${file.path}');
+          }
+        } else {
           debugPrint('Warning: TMX <tu> element does not have at least two <tuv> children or a single <tuv> with a tuid. Skipping. ID: "$tuid", File: ${file.path}');
         }
 
@@ -96,8 +121,58 @@ class TmxParser extends LocalizationParser {
     return translations;
   }
 
+  String? _detectTargetLanguage(
+    Iterable<xml.XmlElement> tuElements,
+    String? sourceLanguage,
+  ) {
+    if (sourceLanguage == null || sourceLanguage.isEmpty) {
+      return null;
+    }
+
+    for (final tuElement in tuElements) {
+      for (final tuvElement in tuElement.findElements('tuv')) {
+        final language = _readLanguage(tuvElement);
+        if (language != null &&
+            language.isNotEmpty &&
+            !_matchesLanguage(language, sourceLanguage)) {
+          return language;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  xml.XmlElement _findTuvForLanguage(
+    List<xml.XmlElement> tuvElements,
+    String? language,
+  ) {
+    if (language == null || language.isEmpty) {
+      return tuvElements.first;
+    }
+
+    return tuvElements.firstWhere(
+      (element) => _matchesLanguage(_readLanguage(element), language),
+      orElse: () => tuvElements.first,
+    );
+  }
+
+  String? _readLanguage(xml.XmlElement element) {
+    return element.getAttribute('xml:lang') ?? element.getAttribute('lang');
+  }
+
+  bool _matchesLanguage(String? value, String other) {
+    if (value == null) {
+      return false;
+    }
+    return value.toLowerCase() == other.toLowerCase();
+  }
+
+  @override
+  bool get supportsBilingualExtraction => true;
+
   @override
   List<String> getSupportedExtensions() {
     return ['.tmx'];
   }
-} 
+}

@@ -6,7 +6,12 @@ import 'package:docx_to_text/docx_to_text.dart';
 
 class DocxParser extends LocalizationParser {
   @override
-  Future<Map<String, String>> parse(File file, AppSettings settings) async {
+  Future<Map<String, String>> parse(
+    File file,
+    AppSettings settings, {
+    ExtractionMode extractionMode = ExtractionMode.target,
+    bool requireBilingual = false,
+  }) async {
     // Note: The AppSettings for encoding are not applicable here because
     // docx_to_text package works directly on the byte stream of the DOCX file.
     final Map<String, String> translations = {};

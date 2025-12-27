@@ -12,7 +12,12 @@ class PlainTextParser extends LocalizationParser {
   );
 
   @override
-  Future<Map<String, String>> parse(File file, AppSettings settings) async {
+  Future<Map<String, String>> parse(
+    File file,
+    AppSettings settings, {
+    ExtractionMode extractionMode = ExtractionMode.target,
+    bool requireBilingual = false,
+  }) async {
     final Map<String, String> translations = {};
     try {
       final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;

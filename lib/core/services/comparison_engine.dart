@@ -26,29 +26,65 @@ class ComparisonResult {
 class ComparisonEngine {
   final FileParserFactory _parserFactory = FileParserFactory();
 
-  Future<Map<String, String>> _parseFile(File file, AppSettings settings, {String? format}) async {
+  Future<Map<String, String>> _parseFile(
+    File file,
+    AppSettings settings, {
+    String? format,
+    ExtractionMode extractionMode = ExtractionMode.target,
+    bool requireBilingual = false,
+  }) async {
     final parser = _parserFactory.getParserForFile(file, format: format);
     if (parser == null) {
       throw Exception('Unsupported file type: ${file.path}');
     }
+    if (requireBilingual && !parser.supportsBilingualExtraction) {
+      throw InvalidBilingualFileException(
+        'This file does not include both the original text and the '
+        'translation.',
+      );
+    }
     // Using compute for simplicity, which manages its own Isolate.
     // For more complex progress reporting or cancellation, direct Isolate management is better.
-    return await compute(_performParse, _ComputeParseParams(file.path, parser, settings.toJson()));
+    return await compute(
+      _performParse,
+      _ComputeParseParams(
+        file.path,
+        parser,
+        settings.toJson(),
+        extractionMode,
+        requireBilingual,
+      ),
+    );
   }
 
   // We need a top-level function or static method for compute
-  static Future<Map<String, String>> _performParse(_ComputeParseParams params) async {
+  static Future<Map<String, String>> _performParse(
+    _ComputeParseParams params,
+  ) async {
     // Reconstruct a plain AppSettings object from the JSON map.
     // This new object is not a HiveObject and is safe to use in the isolate.
     final settings = AppSettings.fromJson(params.settingsAsJson);
-    return await params.parser.parse(File(params.filePath), settings);
+    return await params.parser.parse(
+      File(params.filePath),
+      settings,
+      extractionMode: params.extractionMode,
+      requireBilingual: params.requireBilingual,
+    );
   }
 
   Future<ComparisonResult> compareFiles(File file1, File file2, AppSettings settings) async {
     developer.log('Starting comparison', name: 'ComparisonEngine', error: '${file1.path} vs ${file2.path}');
 
-    final file1DataFuture = _parseFile(file1, settings, format: settings.defaultSourceFormat);
-    final file2DataFuture = _parseFile(file2, settings, format: settings.defaultTargetFormat);
+    final file1DataFuture = _parseFile(
+      file1,
+      settings,
+      format: settings.defaultSourceFormat,
+    );
+    final file2DataFuture = _parseFile(
+      file2,
+      settings,
+      format: settings.defaultTargetFormat,
+    );
 
     final results = await Future.wait([file1DataFuture, file2DataFuture]);
     final file1Data = results[0];
@@ -66,6 +102,47 @@ class ComparisonEngine {
     developer.log('Comparison finished', name: 'ComparisonEngine');
     return ComparisonResult(file1Data, file2Data, diff);
   }
+
+  /// Compares source and target text extracted from a single bilingual file.
+  Future<ComparisonResult> compareBilingualFile(
+    File file,
+    AppSettings settings,
+  ) async {
+    developer.log(
+      'Starting bilingual comparison',
+      name: 'ComparisonEngine',
+      error: file.path,
+    );
+
+    final sourceDataFuture = _parseFile(
+      file,
+      settings,
+      extractionMode: ExtractionMode.source,
+      requireBilingual: true,
+    );
+    final targetDataFuture = _parseFile(
+      file,
+      settings,
+      extractionMode: ExtractionMode.target,
+      requireBilingual: true,
+    );
+
+    final results = await Future.wait([sourceDataFuture, targetDataFuture]);
+    final sourceData = results[0];
+    final targetData = results[1];
+
+    final diff = DiffCalculator.calculateDiff(
+      data1: sourceData,
+      data2: targetData,
+      ignoreCase: settings.ignoreCase,
+      ignorePatterns: settings.ignorePatterns,
+      ignoreWhitespace: settings.ignoreWhitespace,
+      comparisonMode: settings.comparisonMode,
+      similarityThreshold: settings.similarityThreshold,
+    );
+    developer.log('Bilingual comparison finished', name: 'ComparisonEngine');
+    return ComparisonResult(sourceData, targetData, diff);
+  }
 }
 
 // Helper class for parameters to compute function
@@ -73,5 +150,13 @@ class _ComputeParseParams {
   final String filePath;
   final LocalizationParser parser;
   final Map<String, dynamic> settingsAsJson;
-  _ComputeParseParams(this.filePath, this.parser, this.settingsAsJson);
-} 
+  final ExtractionMode extractionMode;
+  final bool requireBilingual;
+  _ComputeParseParams(
+    this.filePath,
+    this.parser,
+    this.settingsAsJson,
+    this.extractionMode,
+    this.requireBilingual,
+  );
+}

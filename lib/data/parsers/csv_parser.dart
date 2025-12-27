@@ -10,7 +10,12 @@ import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
 class CsvParser extends LocalizationParser {
   @override
-  Future<Map<String, String>> parse(File file, AppSettings settings) async {
+  Future<Map<String, String>> parse(
+    File file,
+    AppSettings settings, {
+    ExtractionMode extractionMode = ExtractionMode.target,
+    bool requireBilingual = false,
+  }) async {
     final Map<String, String> translations = {};
     try {
       // Respect the encoding setting from AppSettings

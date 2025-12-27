@@ -605,6 +605,18 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   
                               final lineNumber = (index + 1).toString().padLeft(3, '0');
   
+                              // Get font family from settings
+                              final lineSettingsState = context.watch<SettingsBloc>().state;
+                              String lineFontFamily = 'Consolas, Monaco, monospace';
+                              double lineFontSize = 12.0;
+                              if (lineSettingsState.status == SettingsStatus.loaded) {
+                                try {
+                                  final ff = lineSettingsState.appSettings.diffFontFamily;
+                                  if (ff.isNotEmpty && ff != 'System Default') lineFontFamily = ff;
+                                  lineFontSize = lineSettingsState.appSettings.diffFontSize;
+                                } catch (_) {}
+                              }
+  
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -615,8 +627,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                       lineNumber,
                                       style: TextStyle(
                                         color: theme.colorScheme.outline,
-                                        fontFamily: 'monospace',
-                                        fontSize: 12,
+                                        fontFamily: lineFontFamily,
+                                        fontSize: lineFontSize,
                                       ),
                                       textAlign: TextAlign.end,
                                     ),
@@ -1235,9 +1247,24 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     final textMuted = isDark ? Colors.grey[500]! : Colors.grey[500]!;
     
     final settingsState = context.watch<SettingsBloc>().state;
+    // Get font family from settings, with safe fallback for old data
+    String fontFamily;
+    try {
+      fontFamily = settingsState.status == SettingsStatus.loaded 
+          ? settingsState.appSettings.diffFontFamily 
+          : 'System Default';
+      if (fontFamily.isEmpty) fontFamily = 'System Default';
+    } catch (_) {
+      fontFamily = 'System Default';
+    }
+    // Map font family name to actual font family string
+    final String actualFontFamily = fontFamily == 'System Default' 
+        ? 'Consolas, Monaco, monospace' 
+        : fontFamily;
+    
     // Monospace text style for values
     final monoStyle = TextStyle(
-      fontFamily: 'Consolas, Monaco, monospace',
+      fontFamily: actualFontFamily,
       fontSize: settingsState.status == SettingsStatus.loaded ? settingsState.appSettings.diffFontSize : 14.0,
       height: 1.4,
     );

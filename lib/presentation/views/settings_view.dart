@@ -60,6 +60,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   final List<String> _encodings = ['UTF-8', 'UTF-16', 'UTF-16BE', 'UTF-16LE', 'ASCII', 'ISO-8859-1'];
   final List<String> _themeModes = ['System', 'Light', 'Dark', 'Amoled'];
   final List<String> _comparisonModes = ['Key-based', 'Order-based', 'Smart Match'];
+  final List<String> _fontFamilies = [
+    'System Default',
+    'JetBrains Mono',
+    'Fira Code',
+    'Source Code Pro',
+    'Cascadia Code',
+    'Roboto Mono',
+  ];
 
   final Map<String, _ThemePreset> _themePresets = {
     'Default': const _ThemePreset(
@@ -1025,6 +1033,37 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   ),
                   _buildSettingRow(
                     context: context,
+                    label: 'Diff Font Family',
+                    description: 'Font for comparison view',
+                    control: Builder(
+                      builder: (context) {
+                        // Safe getter for diffFontFamily - handles old data gracefully
+                        String fontFamily;
+                        try {
+                          fontFamily = settings.diffFontFamily;
+                          if (fontFamily.isEmpty) fontFamily = 'System Default';
+                        } catch (_) {
+                          fontFamily = 'System Default';
+                        }
+                        return _buildDropdown(
+                          context,
+                          fontFamily,
+                          _fontFamilies,
+                          (val) {
+                            if (val != null) {
+                              context.read<SettingsBloc>().add(UpdateDiffFontFamily(val));
+                            }
+                          },
+                          isDark,
+                          isAmoled,
+                        );
+                      },
+                    ),
+                    isDark: isDark,
+                    isAmoled: isAmoled,
+                  ),
+                  _buildSettingRow(
+                    context: context,
                     label: 'Accent Color',
               control: Row(
                 children: [
@@ -1126,6 +1165,19 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   }
 
   Widget _buildPreviewPanel(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+    // Get font family with safe fallback
+    String fontFamily;
+    try {
+      fontFamily = settings.diffFontFamily;
+      if (fontFamily.isEmpty) fontFamily = 'System Default';
+    } catch (_) {
+      fontFamily = 'System Default';
+    }
+    final String actualFontFamily = fontFamily == 'System Default' 
+        ? 'Consolas, Monaco, monospace' 
+        : fontFamily;
+    final double fontSize = settings.diffFontSize;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -1175,6 +1227,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   value: '"Hello, welcome to our app!"',
                   isDark: isDark,
                   isAmoled: isAmoled,
+                  fontFamily: actualFontFamily,
+                  fontSize: fontSize,
                 ),
                 const SizedBox(height: 8),
                 _buildPreviewEntry(
@@ -1186,6 +1240,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   value: '"Greetings, user"',
                   isDark: isDark,
                   isAmoled: isAmoled,
+                  fontFamily: actualFontFamily,
+                  fontSize: fontSize,
                 ),
                 const SizedBox(height: 8),
                 _buildPreviewEntry(
@@ -1197,6 +1253,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   value: '"Submit" → "Continue"',
                   isDark: isDark,
                   isAmoled: isAmoled,
+                  fontFamily: actualFontFamily,
+                  fontSize: fontSize,
                 ),
               ],
             ),
@@ -1215,6 +1273,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     required String value,
     required bool isDark,
     required bool isAmoled,
+    required String fontFamily,
+    required double fontSize,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1233,7 +1293,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               '$lineNumber',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                fontFamily: 'monospace',
+                fontFamily: fontFamily,
                 fontSize: 11,
               ),
             ),
@@ -1263,8 +1323,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               overflow: TextOverflow.ellipsis,
               text: TextSpan(
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                  fontSize: 12,
+                  fontFamily: fontFamily,
+                  fontSize: fontSize,
                 ),
                 children: [
                   TextSpan(

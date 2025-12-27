@@ -24,6 +24,10 @@ mobile platforms.
   without jargon. If a technical term is unavoidable, translate it immediately.
 * **Clarification:** If a request is ambiguous, ask only about user-facing
   behavior, visuals, or workflow. Do not ask technical questions.
+* **No placeholders:** Do not leave stubbed or placeholder implementations
+  (e.g., TODOs, empty functions, mock returns, placeholder UI text). Implement
+  real behavior; if blocked, explain what is missing in plain language and
+  propose a user-facing alternative.
 * **Dependencies:** When suggesting new dependencies from `pub.dev`, explain
   their benefits.
 * **Formatting:** Use the `dart_format` tool to ensure consistent code

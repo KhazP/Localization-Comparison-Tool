@@ -39,6 +39,8 @@ see or experience. When you do:
 ## Section 5: Engineering Standards
 Apply these automatically without discussion:
 - Write clean, well-organized, maintainable code.
+- Do not ship placeholders. Implement real behavior; if blocked, explain what
+  is missing in plain language and propose a user-facing alternative.
 - Implement comprehensive automated testing (unit, integration, end-to-end).
 - Build in self-verification so the system checks itself.
 - Handle errors gracefully with friendly, non-technical messages.

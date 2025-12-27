@@ -155,6 +155,10 @@ class AppSettings extends HiveObject {
   @HiveField(47, defaultValue: false)
   bool useMicaEffect;
 
+  // Diff Font Family
+  @HiveField(48, defaultValue: 'System Default')
+  String diffFontFamily;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -204,6 +208,7 @@ class AppSettings extends HiveObject {
     required this.similarityThreshold,
     required this.comparisonMode,
     required this.useMicaEffect,
+    required this.diffFontFamily,
   });
 
   // Default settings
@@ -257,6 +262,7 @@ class AppSettings extends HiveObject {
       similarityThreshold: 0.85,
       comparisonMode: 'Key-based',
       useMicaEffect: false,
+      diffFontFamily: 'System Default',
     );
   }
 
@@ -311,6 +317,7 @@ class AppSettings extends HiveObject {
       similarityThreshold: (json['similarityThreshold'] as num?)?.toDouble() ?? 0.85,
       comparisonMode: json['comparisonMode'] as String? ?? 'Key-based',
       useMicaEffect: json['useMicaEffect'] as bool? ?? false,
+      diffFontFamily: json['diffFontFamily'] as String? ?? 'System Default',
     );
   }
 
@@ -365,6 +372,7 @@ class AppSettings extends HiveObject {
       'similarityThreshold': similarityThreshold,
       'comparisonMode': comparisonMode,
       'useMicaEffect': useMicaEffect,
+      'diffFontFamily': diffFontFamily,
     };
   }
 
@@ -417,6 +425,7 @@ class AppSettings extends HiveObject {
     double? similarityThreshold,
     String? comparisonMode,
     bool? useMicaEffect,
+    String? diffFontFamily,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -467,6 +476,7 @@ class AppSettings extends HiveObject {
       similarityThreshold: similarityThreshold ?? this.similarityThreshold,
       comparisonMode: comparisonMode ?? this.comparisonMode,
       useMicaEffect: useMicaEffect ?? this.useMicaEffect,
+      diffFontFamily: diffFontFamily ?? this.diffFontFamily,
     );
   }
 } 

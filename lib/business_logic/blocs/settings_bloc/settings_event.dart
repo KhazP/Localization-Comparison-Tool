@@ -123,6 +123,13 @@ class UpdateDiffFontSize extends SettingsEvent {
   List<Object> get props => [fontSize];
 }
 
+class UpdateDiffFontFamily extends SettingsEvent {
+  final String fontFamily;
+  const UpdateDiffFontFamily(this.fontFamily);
+  @override
+  List<Object> get props => [fontFamily];
+}
+
 class UpdateDefaultSourceEncoding extends SettingsEvent {
   final String encoding;
   const UpdateDefaultSourceEncoding(this.encoding);

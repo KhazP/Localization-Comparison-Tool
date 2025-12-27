@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 
 class GitView extends StatelessWidget {
@@ -685,6 +686,18 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   Widget _buildDiffPane(String content, bool isBase, ThemeBloc themeBloc, ScrollController scrollController) {
     final otherContent = isBase ? (_targetContent ?? '') : (_baseContent ?? '');
     
+    // Get font settings
+    final settingsState = context.watch<SettingsBloc>().state;
+    String fontFamily = 'Consolas, Monaco, monospace';
+    double fontSize = 12.0;
+    if (settingsState.status == SettingsStatus.loaded) {
+      try {
+        final ff = settingsState.appSettings.diffFontFamily;
+        if (ff.isNotEmpty && ff != 'System Default') fontFamily = ff;
+        fontSize = settingsState.appSettings.diffFontSize;
+      } catch (_) {}
+    }
+    
     if (content.isEmpty) {
       return Center(
         child: Column(
@@ -751,8 +764,8 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                       child: Text(
                         '${index + 1}',
                         style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
+                          fontFamily: fontFamily,
+                          fontSize: fontSize,
                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                         ),
                       ),
@@ -760,7 +773,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                     Expanded(
                       child: SelectableText(
                         line.isEmpty ? ' ' : line,
-                        style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                        style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
                       ),
                     ),
                   ],

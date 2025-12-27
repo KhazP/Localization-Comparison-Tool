@@ -730,6 +730,18 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       double statusW, double keyW, double oldValW, double newValW,
       bool isDark, bool isAmoled, Color rowAltBg, Color textColor, Color subtleText, Color borderCol, AppThemeState themeState) {
     
+    // Get font settings
+    final settingsState = context.watch<SettingsBloc>().state;
+    String fontFamily = 'Consolas, Monaco, monospace';
+    double fontSize = 12.0;
+    if (settingsState.status == SettingsStatus.loaded) {
+      try {
+        final ff = settingsState.appSettings.diffFontFamily;
+        if (ff.isNotEmpty && ff != 'System Default') fontFamily = ff;
+        fontSize = settingsState.appSettings.diffFontSize;
+      } catch (_) {}
+    }
+    
     final key = entry.key;
     final status = entry.value.status;
     final similarity = entry.value.similarity;
@@ -769,23 +781,23 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       oldValueWidget = DiffHighlighter.buildDiffText(
         file1Value, file2Value,
         isSource: true,
-        baseStyle: TextStyle(color: textColor, fontSize: 12),
+        baseStyle: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily),
         maxLines: 2,
         deletionColor: themeState.diffRemovedColor,
       );
       newValueWidget = DiffHighlighter.buildDiffText(
         file1Value, file2Value,
         isSource: false,
-        baseStyle: TextStyle(color: textColor, fontSize: 12),
+        baseStyle: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily),
         maxLines: 2,
         insertionColor: themeState.diffAddedColor,
       );
     } else if (status == StringComparisonStatus.added) {
-      oldValueWidget = Text('—', style: TextStyle(color: subtleText, fontSize: 12));
-      newValueWidget = Text(file2Value, style: TextStyle(color: textColor, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis);
+      oldValueWidget = Text('—', style: TextStyle(color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
+      newValueWidget = Text(file2Value, style: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily), maxLines: 2, overflow: TextOverflow.ellipsis);
     } else {
-      oldValueWidget = Text(file1Value, style: TextStyle(color: textColor, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis);
-      newValueWidget = Text('—', style: TextStyle(color: subtleText, fontSize: 12));
+      oldValueWidget = Text(file1Value, style: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily), maxLines: 2, overflow: TextOverflow.ellipsis);
+      newValueWidget = Text('—', style: TextStyle(color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
     }
 
     return Container(
@@ -800,7 +812,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           Container(
             width: 40,
             alignment: Alignment.center,
-            child: Text('${globalIndex + 1}', style: TextStyle(color: subtleText, fontSize: 11, fontFamily: 'monospace')),
+            child: Text('${globalIndex + 1}', style: TextStyle(color: subtleText, fontSize: fontSize, fontFamily: fontFamily)),
           ),
           Container(width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
           
@@ -826,7 +838,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             width: keyW - 1,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(key, style: TextStyle(color: textColor, fontSize: 12, fontFamily: 'monospace'), maxLines: 2, overflow: TextOverflow.ellipsis),
+              child: Text(key, style: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily), maxLines: 2, overflow: TextOverflow.ellipsis),
             ),
           ),
           Container(width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),

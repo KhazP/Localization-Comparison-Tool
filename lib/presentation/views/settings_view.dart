@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -28,12 +29,13 @@ class SettingsView extends StatefulWidget {
   State<SettingsView> createState() => _SettingsViewState();
 }
 
-class _SettingsViewState extends State<SettingsView> with SingleTickerProviderStateMixin {
+class _SettingsViewState extends State<SettingsView>
+    with SingleTickerProviderStateMixin {
   SettingsCategory _selectedCategory = SettingsCategory.general;
   final TextEditingController _newPatternController = TextEditingController();
   final ScrollController _navScrollController = ScrollController();
   final ScrollController _contentScrollController = ScrollController();
-  
+
   PackageInfo? _packageInfo;
   String _platformInfo = 'Loading...';
 
@@ -41,7 +43,18 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   late Animation<double> _fadeAnimation;
 
   final List<String> _fileFormats = [
-    'json', 'xml', 'yaml', 'yml', 'csv', 'arb', 'xliff', 'properties', 'resx', 'lang', 'txt', 'docx'
+    'json',
+    'xml',
+    'yaml',
+    'yml',
+    'csv',
+    'arb',
+    'xliff',
+    'properties',
+    'resx',
+    'lang',
+    'txt',
+    'docx'
   ];
   final List<String> _appLanguages = [
     'Auto-Detect',
@@ -56,10 +69,26 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     '中文 (ZH)',
     '한국어 (KR)',
   ];
-  final List<String> _defaultViews = ['Basic Comparison', 'History View', 'Files', 'Last Used View'];
-  final List<String> _encodings = ['UTF-8', 'UTF-16', 'UTF-16BE', 'UTF-16LE', 'ASCII', 'ISO-8859-1'];
+  final List<String> _defaultViews = [
+    'Basic Comparison',
+    'History View',
+    'Files',
+    'Last Used View'
+  ];
+  final List<String> _encodings = [
+    'UTF-8',
+    'UTF-16',
+    'UTF-16BE',
+    'UTF-16LE',
+    'ASCII',
+    'ISO-8859-1'
+  ];
   final List<String> _themeModes = ['System', 'Light', 'Dark', 'Amoled'];
-  final List<String> _comparisonModes = ['Key-based', 'Order-based', 'Smart Match'];
+  final List<String> _comparisonModes = [
+    'Key-based',
+    'Order-based',
+    'Smart Match'
+  ];
   final List<String> _fontFamilies = [
     'System Default',
     'JetBrains Mono',
@@ -76,8 +105,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       modified: Color(0xFFFFC107),
     ),
     'Colorblind-Friendly': const _ThemePreset(
-      added: Color(0xFF0077BB),    // Blue
-      removed: Color(0xFFEE7733),  // Orange
+      added: Color(0xFF0077BB), // Blue
+      removed: Color(0xFFEE7733), // Orange
       modified: Color(0xFF009988), // Teal
     ),
     'High Contrast': const _ThemePreset(
@@ -86,18 +115,18 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       modified: Colors.yellowAccent,
     ),
     'Nord': const _ThemePreset(
-      added: Color(0xFFA3BE8C),    // Nord green
-      removed: Color(0xFFBF616A),  // Nord red
+      added: Color(0xFFA3BE8C), // Nord green
+      removed: Color(0xFFBF616A), // Nord red
       modified: Color(0xFFEBCB8B), // Nord yellow
     ),
     'Solarized': const _ThemePreset(
-      added: Color(0xFF859900),    // Solarized green
-      removed: Color(0xFFDC322F),  // Solarized red
+      added: Color(0xFF859900), // Solarized green
+      removed: Color(0xFFDC322F), // Solarized red
       modified: Color(0xFFB58900), // Solarized yellow
     ),
     'Monokai': const _ThemePreset(
-      added: Color(0xFFA6E22E),    // Monokai green
-      removed: Color(0xFFF92672),  // Monokai pink/red
+      added: Color(0xFFA6E22E), // Monokai green
+      removed: Color(0xFFF92672), // Monokai pink/red
       modified: Color(0xFFFD971F), // Monokai orange
     ),
   };
@@ -141,7 +170,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   }
 
   Color _getTextSecondaryColor(bool isDark) {
-    return isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary;
+    return isDark
+        ? AppThemeV2.darkTextSecondary
+        : AppThemeV2.lightTextSecondary;
   }
 
   @override
@@ -200,8 +231,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             // Determine if AMOLED mode is active
             final bool isAmoled = isDark &&
                 state.appSettings.appThemeMode.toLowerCase() == 'amoled';
-            
-            if (state.status == SettingsStatus.loading || state.status == SettingsStatus.initial) {
+
+            if (state.status == SettingsStatus.loading ||
+                state.status == SettingsStatus.initial) {
               return Row(
                 children: [
                   _buildNavigationPanel(context, isDark, isAmoled, colorScheme),
@@ -225,9 +257,11 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.error_outline, size: 48, color: AppThemeV2.error),
+                          Icon(Icons.error_outline,
+                              size: 48, color: AppThemeV2.error),
                           const SizedBox(height: 16),
-                          Text('Error loading settings', style: theme.textTheme.titleMedium),
+                          Text('Error loading settings',
+                              style: theme.textTheme.titleMedium),
                         ],
                       ),
                     ),
@@ -239,7 +273,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               children: [
                 _buildNavigationPanel(context, isDark, isAmoled, colorScheme),
                 Expanded(
-                  child: _buildSettingsContent(context, state.appSettings, isDark, isAmoled),
+                  child: _buildSettingsContent(
+                      context, state.appSettings, isDark, isAmoled),
                 ),
               ],
             );
@@ -249,7 +284,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildNavigationPanel(BuildContext context, bool isDark, bool isAmoled, ColorScheme colorScheme) {
+  Widget _buildNavigationPanel(BuildContext context, bool isDark, bool isAmoled,
+      ColorScheme colorScheme) {
     return Container(
       width: 240,
       decoration: BoxDecoration(
@@ -276,14 +312,15 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.settings_rounded, color: Colors.white, size: 20),
+                  child: const Icon(Icons.settings_rounded,
+                      color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Settings',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
@@ -299,7 +336,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               thumbVisibility: true,
               child: ListView(
                 controller: _navScrollController,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 children: SettingsCategory.values.map((category) {
                   return _buildNavItem(context, category, isDark);
                 }).toList(),
@@ -311,10 +349,11 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildNavItem(BuildContext context, SettingsCategory category, bool isDark) {
+  Widget _buildNavItem(
+      BuildContext context, SettingsCategory category, bool isDark) {
     final isSelected = _selectedCategory == category;
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Material(
@@ -344,17 +383,22 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   size: 20,
                   color: isSelected
                       ? theme.colorScheme.primary
-                      : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                      : (isDark
+                          ? AppThemeV2.darkTextMuted
+                          : AppThemeV2.lightTextMuted),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     _getCategoryLabel(category),
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected
                           ? theme.colorScheme.primary
-                          : (isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary),
+                          : (isDark
+                              ? AppThemeV2.darkTextSecondary
+                              : AppThemeV2.lightTextSecondary),
                     ),
                   ),
                 ),
@@ -429,9 +473,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     }
   }
 
-  Widget _buildSettingsContent(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildSettingsContent(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -456,8 +501,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               ),
               if (_selectedCategory != SettingsCategory.about)
                 TextButton.icon(
-                  onPressed: () => _showResetCategoryDialog(context, _selectedCategory),
-                  icon: Icon(Icons.refresh_rounded, size: 18, color: _getTextMutedColor(isDark)),
+                  onPressed: () =>
+                      _showResetCategoryDialog(context, _selectedCategory),
+                  icon: Icon(Icons.refresh_rounded,
+                      size: 18, color: _getTextMutedColor(isDark)),
                   label: Text(
                     'Reset',
                     style: TextStyle(color: _getTextMutedColor(isDark)),
@@ -466,7 +513,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Content
           Expanded(
             child: Scrollbar(
@@ -487,7 +534,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   },
                   child: KeyedSubtree(
                     key: ValueKey(_selectedCategory),
-                    child: _buildCategoryContent(context, settings, isDark, isAmoled),
+                    child: _buildCategoryContent(
+                        context, settings, isDark, isAmoled),
                   ),
                 ),
               ),
@@ -498,7 +546,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildCategoryContent(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildCategoryContent(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     switch (_selectedCategory) {
       case SettingsCategory.general:
         return _buildGeneralSettings(context, settings, isDark, isAmoled);
@@ -511,9 +560,11 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       case SettingsCategory.aiServices:
         return _buildAiServicesSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.versionControl:
-        return _buildVersionControlSettings(context, settings, isDark, isAmoled);
+        return _buildVersionControlSettings(
+            context, settings, isDark, isAmoled);
       case SettingsCategory.windowsIntegrations:
-        return _buildWindowsIntegrationsSettings(context, settings, isDark, isAmoled);
+        return _buildWindowsIntegrationsSettings(
+            context, settings, isDark, isAmoled);
       case SettingsCategory.about:
         return _buildAboutSettings(context, isDark, isAmoled);
     }
@@ -547,9 +598,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: _getTextSecondaryColor(isDark),
-              ),
+                    fontWeight: FontWeight.w600,
+                    color: _getTextSecondaryColor(isDark),
+                  ),
             ),
           ),
           Divider(
@@ -590,8 +641,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: _getTextMutedColor(isDark),
-                        ),
+                              color: _getTextMutedColor(isDark),
+                            ),
                       ),
                     ],
                   ],
@@ -632,7 +683,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: items.contains(value) ? value : items.first,
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
           onChanged: onChanged,
           style: Theme.of(context).textTheme.bodyMedium,
           borderRadius: BorderRadius.circular(8),
@@ -645,7 +698,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // GENERAL SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildGeneralSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildGeneralSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
@@ -658,8 +712,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               context: context,
               label: 'Language',
               description: 'Application interface language',
-              control: _buildDropdown(context, settings.appLanguage, _appLanguages, (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateAppLanguage(val));
+              control: _buildDropdown(
+                  context, settings.appLanguage, _appLanguages, (val) {
+                if (val != null)
+                  context.read<SettingsBloc>().add(UpdateAppLanguage(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -668,8 +724,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               context: context,
               label: 'Default View',
               description: 'View to show on startup',
-              control: _buildDropdown(context, settings.defaultViewOnStartup, _defaultViews, (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateDefaultViewOnStartup(val));
+              control: _buildDropdown(
+                  context, settings.defaultViewOnStartup, _defaultViews, (val) {
+                if (val != null)
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultViewOnStartup(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -680,7 +740,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Check for updates on startup',
               control: Switch(
                 value: settings.autoCheckForUpdates,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateAutoCheckForUpdates(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateAutoCheckForUpdates(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -701,7 +763,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Restore window size and position on startup',
               control: Switch(
                 value: settings.rememberWindowPosition,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateRememberWindowPosition(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateRememberWindowPosition(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -713,7 +777,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Automatically load the last comparison on startup',
               control: Switch(
                 value: settings.openLastProjectOnStartup,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateOpenLastProjectOnStartup(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateOpenLastProjectOnStartup(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -725,7 +791,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Minimize window to system tray on startup',
               control: Switch(
                 value: settings.startMinimizedToTray,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateStartMinimizedToTray(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateStartMinimizedToTray(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -757,8 +825,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   Text(
                     'This will reset all settings to their default values',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                    ),
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
+                        ),
                   ),
                 ],
               ),
@@ -773,7 +843,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // COMPARISON SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildComparisonSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildComparisonSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
@@ -788,7 +859,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Treat "Key" and "key" as the same',
               control: Switch(
                 value: settings.ignoreCase,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateIgnoreCase(val)),
+                onChanged: (val) =>
+                    context.read<SettingsBloc>().add(UpdateIgnoreCase(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -800,7 +872,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Ignore leading/trailing spaces',
               control: Switch(
                 value: settings.ignoreWhitespace,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateIgnoreWhitespace(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateIgnoreWhitespace(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -809,7 +883,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Similarity Threshold',
-              description: 'Minimum similarity for "Modified" detection (${(settings.similarityThreshold * 100).round()}%)',
+              description:
+                  'Minimum similarity for "Modified" detection (${(settings.similarityThreshold * 100).round()}%)',
               control: SizedBox(
                 width: 200,
                 child: Slider(
@@ -818,7 +893,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   max: 1.0,
                   divisions: 10,
                   label: '${(settings.similarityThreshold * 100).round()}%',
-                  onChanged: (val) => context.read<SettingsBloc>().add(UpdateSimilarityThreshold(val)),
+                  onChanged: (val) => context
+                      .read<SettingsBloc>()
+                      .add(UpdateSimilarityThreshold(val)),
                 ),
               ),
               isDark: isDark,
@@ -831,25 +908,38 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               control: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildDropdown(context, settings.comparisonMode, _comparisonModes, (val) {
-                    if (val != null) context.read<SettingsBloc>().add(UpdateComparisonMode(val));
+                  _buildDropdown(
+                      context, settings.comparisonMode, _comparisonModes,
+                      (val) {
+                    if (val != null)
+                      context
+                          .read<SettingsBloc>()
+                          .add(UpdateComparisonMode(val));
                   }, isDark, isAmoled),
                   const SizedBox(width: 8),
                   Tooltip(
                     richMessage: const TextSpan(
                       children: [
-                        TextSpan(text: 'Key-based: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                            text: 'Key-based: ',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         TextSpan(text: 'Matches by key name (default).\n\n'),
-                        TextSpan(text: 'Order-based: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                            text: 'Order-based: ',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         TextSpan(text: 'Matches by position in file.\n\n'),
-                        TextSpan(text: 'Smart Match: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                            text: 'Smart Match: ',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
                         TextSpan(text: 'Detects moved/renamed keys.'),
                       ],
                     ),
                     child: Icon(
                       Icons.info_outline_rounded,
                       size: 18,
-                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                      color: isDark
+                          ? AppThemeV2.darkTextMuted
+                          : AppThemeV2.lightTextMuted,
                     ),
                   ),
                 ],
@@ -872,13 +962,16 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 child: Text(
                   'No patterns configured',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                    fontStyle: FontStyle.italic,
-                  ),
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted,
+                        fontStyle: FontStyle.italic,
+                      ),
                 ),
               )
             else
-              ...settings.ignorePatterns.map((pattern) => _buildPatternItem(context, pattern, isDark)),
+              ...settings.ignorePatterns.map(
+                  (pattern) => _buildPatternItem(context, pattern, isDark)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildPatternPresets(context),
@@ -889,7 +982,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 onPressed: () => _showAddPatternDialog(context, isDark),
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: const Text('Add Pattern'),
-                style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 40)),
+                style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40)),
               ),
             ),
           ],
@@ -906,20 +1000,23 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           Icon(
             Icons.code_rounded,
             size: 16,
-            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            color:
+                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               pattern,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontFamily: 'monospace',
-              ),
+                    fontFamily: 'monospace',
+                  ),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppThemeV2.error),
-            onPressed: () => context.read<SettingsBloc>().add(RemoveIgnorePattern(pattern)),
+            icon: Icon(Icons.delete_outline_rounded,
+                size: 18, color: AppThemeV2.error),
+            onPressed: () =>
+                context.read<SettingsBloc>().add(RemoveIgnorePattern(pattern)),
             tooltip: 'Remove pattern',
           ),
         ],
@@ -934,21 +1031,23 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       'Placeholders': ['^TODO_.*', '^PLACEHOLDER_.*'],
       'Dev Only': ['^DEBUG_.*', '^DEV_.*'],
     };
-    
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: presets.entries.map((entry) => 
-        OutlinedButton.icon(
-          icon: const Icon(Icons.add, size: 16),
-          label: Text(entry.key),
-          onPressed: () {
-            for (final pattern in entry.value) {
-              context.read<SettingsBloc>().add(AddIgnorePattern(pattern));
-            }
-          },
-        ),
-      ).toList(),
+      children: presets.entries
+          .map(
+            (entry) => OutlinedButton.icon(
+              icon: const Icon(Icons.add, size: 16),
+              label: Text(entry.key),
+              onPressed: () {
+                for (final pattern in entry.value) {
+                  context.read<SettingsBloc>().add(AddIgnorePattern(pattern));
+                }
+              },
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -961,10 +1060,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           onPressed: () {
             final preset = entry.value;
             context.read<SettingsBloc>().add(UpdateDiffColors(
-              addedColor: preset.added.toARGB32(),
-              removedColor: preset.removed.toARGB32(),
-              modifiedColor: preset.modified.toARGB32(),
-            ));
+                  addedColor: preset.added.toARGB32(),
+                  removedColor: preset.removed.toARGB32(),
+                  modifiedColor: preset.modified.toARGB32(),
+                ));
           },
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -980,10 +1079,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // APPEARANCE SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildAppearanceSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildAppearanceSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
-
         _buildSettingsCard(
           context: context,
           title: 'Theme',
@@ -994,77 +1093,83 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               context: context,
               label: 'Application Theme',
               description: 'Choose light, dark, or AMOLED',
-              control: _buildDropdown(context, settings.appThemeMode, _themeModes, (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateAppThemeMode(val));
+              control: _buildDropdown(
+                  context, settings.appThemeMode, _themeModes, (val) {
+                if (val != null)
+                  context.read<SettingsBloc>().add(UpdateAppThemeMode(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
             ),
-                  _buildSettingRow(
-                    context: context,
-                    label: 'Diff Font Size',
-                    description: 'Adjust the font size of the comparison view',
-                    control: SizedBox(
-                      width: 200,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Expanded(
-                            child: Slider(
-                              value: settings.diffFontSize,
-                              min: 10,
-                              max: 18,
-                              divisions: 8,
-                              label: '${settings.diffFontSize.round()}px',
-                              onChanged: (value) => context.read<SettingsBloc>().add(UpdateDiffFontSize(value)),
-                              activeColor: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${settings.diffFontSize.round()}px',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
+            _buildSettingRow(
+              context: context,
+              label: 'Diff Font Size',
+              description: 'Adjust the font size of the comparison view',
+              control: SizedBox(
+                width: 200,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: settings.diffFontSize,
+                        min: 10,
+                        max: 18,
+                        divisions: 8,
+                        label: '${settings.diffFontSize.round()}px',
+                        onChanged: (value) => context
+                            .read<SettingsBloc>()
+                            .add(UpdateDiffFontSize(value)),
+                        activeColor: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    isDark: isDark,
-                    isAmoled: isAmoled,
-                  ),
-                  _buildSettingRow(
-                    context: context,
-                    label: 'Diff Font Family',
-                    description: 'Font for comparison view',
-                    control: Builder(
-                      builder: (context) {
-                        // Safe getter for diffFontFamily - handles old data gracefully
-                        String fontFamily;
-                        try {
-                          fontFamily = settings.diffFontFamily;
-                          if (fontFamily.isEmpty) fontFamily = 'System Default';
-                        } catch (_) {
-                          fontFamily = 'System Default';
-                        }
-                        return _buildDropdown(
-                          context,
-                          fontFamily,
-                          _fontFamilies,
-                          (val) {
-                            if (val != null) {
-                              context.read<SettingsBloc>().add(UpdateDiffFontFamily(val));
-                            }
-                          },
-                          isDark,
-                          isAmoled,
-                        );
-                      },
+                    const SizedBox(width: 8),
+                    Text(
+                      '${settings.diffFontSize.round()}px',
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    isDark: isDark,
-                    isAmoled: isAmoled,
-                  ),
-                  _buildSettingRow(
-                    context: context,
-                    label: 'Accent Color',
+                  ],
+                ),
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Diff Font Family',
+              description: 'Font for comparison view',
+              control: Builder(
+                builder: (context) {
+                  // Safe getter for diffFontFamily - handles old data gracefully
+                  String fontFamily;
+                  try {
+                    fontFamily = settings.diffFontFamily;
+                    if (fontFamily.isEmpty) fontFamily = 'System Default';
+                  } catch (_) {
+                    fontFamily = 'System Default';
+                  }
+                  return _buildDropdown(
+                    context,
+                    fontFamily,
+                    _fontFamilies,
+                    (val) {
+                      if (val != null) {
+                        context
+                            .read<SettingsBloc>()
+                            .add(UpdateDiffFontFamily(val));
+                      }
+                    },
+                    isDark,
+                    isAmoled,
+                  );
+                },
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Accent Color',
               control: Row(
                 children: [
                   Container(
@@ -1080,7 +1185,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   ),
                   const SizedBox(width: 12),
                   TextButton(
-                    onPressed: () => _showAccentColorPicker(context, Color(settings.accentColorValue)),
+                    onPressed: () => _showAccentColorPicker(
+                        context, Color(settings.accentColorValue)),
                     child: const Text('Change'),
                   ),
                 ],
@@ -1102,8 +1208,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               child: Text(
                 'Presets',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             ),
             Padding(
@@ -1116,17 +1222,31 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               indent: 16,
               endIndent: 16,
             ),
-            _buildColorRow(context, 'Added', Color(settings.diffAddedColor), (color) {
-              context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.toARGB32()));
+            _buildColorRow(context, 'Added', Color(settings.diffAddedColor),
+                (color) {
+              context
+                  .read<SettingsBloc>()
+                  .add(UpdateDiffAddedColor(color.toARGB32()));
             }, isDark, isAmoled),
-            _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor), (color) {
-              context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.toARGB32()));
+            _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor),
+                (color) {
+              context
+                  .read<SettingsBloc>()
+                  .add(UpdateDiffRemovedColor(color.toARGB32()));
             }, isDark, isAmoled),
-            _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor), (color) {
-              context.read<SettingsBloc>().add(UpdateDiffModifiedColor(color.toARGB32()));
+            _buildColorRow(
+                context, 'Modified', Color(settings.diffModifiedColor),
+                (color) {
+              context
+                  .read<SettingsBloc>()
+                  .add(UpdateDiffModifiedColor(color.toARGB32()));
             }, isDark, isAmoled),
-            _buildColorRow(context, 'Identical', Color(settings.diffIdenticalColor), (color) {
-              context.read<SettingsBloc>().add(UpdateDiffIdenticalColor(color.toARGB32()));
+            _buildColorRow(
+                context, 'Identical', Color(settings.diffIdenticalColor),
+                (color) {
+              context
+                  .read<SettingsBloc>()
+                  .add(UpdateDiffIdenticalColor(color.toARGB32()));
             }, isDark, isAmoled, showDivider: false),
           ],
         ),
@@ -1167,7 +1287,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildPreviewPanel(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildPreviewPanel(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     // Get font family with safe fallback
     String fontFamily;
     try {
@@ -1176,11 +1297,11 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     } catch (_) {
       fontFamily = 'System Default';
     }
-    final String actualFontFamily = fontFamily == 'System Default' 
-        ? 'Consolas, Monaco, monospace' 
+    final String actualFontFamily = fontFamily == 'System Default'
+        ? 'Consolas, Monaco, monospace'
         : fontFamily;
     final double fontSize = settings.diffFontSize;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -1206,9 +1327,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 Text(
                   'Live Preview',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: _getTextSecondaryColor(isDark),
-                  ),
+                        fontWeight: FontWeight.w600,
+                        color: _getTextSecondaryColor(isDark),
+                      ),
                 ),
               ],
             ),
@@ -1308,10 +1429,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             child: Text(
               '$lineNumber',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                fontFamily: fontFamily,
-                fontSize: 11,
-              ),
+                    color: isDark
+                        ? AppThemeV2.darkTextMuted
+                        : AppThemeV2.lightTextMuted,
+                    fontFamily: fontFamily,
+                    fontSize: 11,
+                  ),
             ),
           ),
           const SizedBox(width: 8),
@@ -1339,9 +1462,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               overflow: TextOverflow.ellipsis,
               text: TextSpan(
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontFamily: fontFamily,
-                  fontSize: fontSize,
-                ),
+                      fontFamily: fontFamily,
+                      fontSize: fontSize,
+                    ),
                 children: [
                   TextSpan(
                     text: key,
@@ -1353,13 +1476,17 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   TextSpan(
                     text: ': ',
                     style: TextStyle(
-                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                      color: isDark
+                          ? AppThemeV2.darkTextMuted
+                          : AppThemeV2.lightTextMuted,
                     ),
                   ),
                   TextSpan(
                     text: value,
                     style: TextStyle(
-                      color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                      color: isDark
+                          ? AppThemeV2.darkTextSecondary
+                          : AppThemeV2.lightTextSecondary,
                     ),
                   ),
                 ],
@@ -1371,11 +1498,19 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-
   // FILE HANDLING SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildFileHandlingSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Future<void> _pickBackupDirectory() async {
+    final selected = await FilePicker.platform.getDirectoryPath();
+    if (!mounted || selected == null) {
+      return;
+    }
+    context.read<SettingsBloc>().add(UpdateBackupDirectory(selected));
+  }
+
+  Widget _buildFileHandlingSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
@@ -1387,8 +1522,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Source Format',
-              control: _buildDropdown(context, settings.defaultSourceFormat, ['Auto', ..._fileFormats], (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateDefaultSourceFormat(val));
+              control: _buildDropdown(context, settings.defaultSourceFormat,
+                  ['Auto', ..._fileFormats], (val) {
+                if (val != null)
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultSourceFormat(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -1396,8 +1535,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Target Format',
-              control: _buildDropdown(context, settings.defaultTargetFormat, ['Auto', ..._fileFormats], (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateDefaultTargetFormat(val));
+              control: _buildDropdown(context, settings.defaultTargetFormat,
+                  ['Auto', ..._fileFormats], (val) {
+                if (val != null)
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultTargetFormat(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -1414,8 +1557,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Source Encoding',
-              control: _buildDropdown(context, settings.defaultSourceEncoding, _encodings, (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateDefaultSourceEncoding(val));
+              control: _buildDropdown(
+                  context, settings.defaultSourceEncoding, _encodings, (val) {
+                if (val != null)
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultSourceEncoding(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -1423,8 +1570,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Target Encoding',
-              control: _buildDropdown(context, settings.defaultTargetEncoding, _encodings, (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateDefaultTargetEncoding(val));
+              control: _buildDropdown(
+                  context, settings.defaultTargetEncoding, _encodings, (val) {
+                if (val != null)
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultTargetEncoding(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -1435,7 +1586,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Automatically detect file encoding',
               control: Switch(
                 value: settings.autoDetectEncoding,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateAutoDetectEncoding(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateAutoDetectEncoding(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -1453,8 +1606,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Default Export Format',
-              control: _buildDropdown(context, settings.defaultExportFormat, ['CSV', 'JSON', 'Excel'], (val) {
-                if (val != null) context.read<SettingsBloc>().add(UpdateDefaultExportFormat(val));
+              control: _buildDropdown(context, settings.defaultExportFormat,
+                  ['CSV', 'JSON', 'Excel'], (val) {
+                if (val != null)
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultExportFormat(val));
               }, isDark, isAmoled),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -1465,7 +1622,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Required for Excel compatibility',
               control: Switch(
                 value: settings.includeUtf8Bom,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateIncludeUtf8Bom(val)),
+                onChanged: (val) =>
+                    context.read<SettingsBloc>().add(UpdateIncludeUtf8Bom(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -1476,8 +1634,97 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               label: 'Open Folder After Export',
               control: Switch(
                 value: settings.openFolderAfterExport,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateOpenFolderAfterExport(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateOpenFolderAfterExport(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+              showDivider: false,
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Backup',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Auto-Backup',
+              description: 'Create backup before overwriting files',
+              control: Switch(
+                value: settings.autoBackup,
+                onChanged: (val) =>
+                    context.read<SettingsBloc>().add(UpdateAutoBackup(val)),
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Backup Folder',
+              description: 'Leave empty to use the same folder',
+              control: SizedBox(
+                width: 320,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: TextEditingController(
+                          text: settings.backupDirectory,
+                        ),
+                        onChanged: (value) => context
+                            .read<SettingsBloc>()
+                            .add(UpdateBackupDirectory(value)),
+                        decoration: InputDecoration(
+                          hintText: 'Use original file folder',
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: _pickBackupDirectory,
+                      icon: const Icon(
+                        Icons.folder_open_rounded,
+                        size: 18,
+                      ),
+                      label: const Text('Browse'),
+                    ),
+                  ],
+                ),
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Backups to Keep',
+              description: 'Number of backup copies to retain',
+              control: SizedBox(
+                width: 150,
+                child: Slider(
+                  value: settings.backupsToKeep.toDouble(),
+                  min: 1,
+                  max: 10,
+                  divisions: 9,
+                  label: settings.backupsToKeep.toString(),
+                  onChanged: (val) => context
+                      .read<SettingsBloc>()
+                      .add(UpdateBackupsToKeep(val.round())),
+                  activeColor: Theme.of(context).colorScheme.primary,
+                ),
               ),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -1493,8 +1740,16 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // AI SERVICES SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildAiServicesSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
-    final llmModels = ['Gemini 1.5 Flash', 'Gemini 1.5 Pro', 'GPT-4o', 'GPT-4o-mini', 'Claude 3.5 Sonnet', 'DeepSeek-V3'];
+  Widget _buildAiServicesSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+    final llmModels = [
+      'Gemini 1.5 Flash',
+      'Gemini 1.5 Pro',
+      'GPT-4o',
+      'GPT-4o-mini',
+      'Claude 3.5 Sonnet',
+      'DeepSeek-V3'
+    ];
 
     return Column(
       children: [
@@ -1512,7 +1767,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               label: 'Enable AI Translation',
               control: Switch(
                 value: settings.enableAiTranslation,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateEnableAiTranslation(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateEnableAiTranslation(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -1524,7 +1781,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Required for fast translate',
               control: _buildDropdown(
                 context,
-                settings.defaultAiModel.isEmpty ? 'Select model...' : settings.defaultAiModel,
+                settings.defaultAiModel.isEmpty
+                    ? 'Select model...'
+                    : settings.defaultAiModel,
                 ['Select model...', ...llmModels],
                 (val) {
                   if (val != null && val != 'Select model...') {
@@ -1536,10 +1795,11 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               ),
               isAmoled: isAmoled,
             ),
-             _buildSettingRow(
+            _buildSettingRow(
               context: context,
               label: 'Confidence Threshold',
-              description: '${(settings.translationConfidenceThreshold * 100).round()}%',
+              description:
+                  '${(settings.translationConfidenceThreshold * 100).round()}%',
               control: SizedBox(
                 width: 150,
                 child: Slider(
@@ -1547,7 +1807,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   min: 0.0,
                   max: 1.0,
                   divisions: 20,
-                  onChanged: (val) => context.read<SettingsBloc>().add(UpdateTranslationConfidenceThreshold(val)),
+                  onChanged: (val) => context
+                      .read<SettingsBloc>()
+                      .add(UpdateTranslationConfidenceThreshold(val)),
                   activeColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
@@ -1589,23 +1851,28 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
-             Padding(
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(
+                  Text(
                     'System Context',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     maxLines: 3,
-                    controller: TextEditingController(text: settings.systemTranslationContext),
-                    onChanged: (val) => context.read<SettingsBloc>().add(UpdateSystemTranslationContext(val)),
+                    controller: TextEditingController(
+                        text: settings.systemTranslationContext),
+                    onChanged: (val) => context
+                        .read<SettingsBloc>()
+                        .add(UpdateSystemTranslationContext(val)),
                     decoration: InputDecoration(
-                      hintText: 'e.g., This is a fantasy RPG game. Use informal tone and "gamer" terminology.',
-                      hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                      hintText:
+                          'e.g., This is a fantasy RPG game. Use informal tone and "gamer" terminology.',
+                      hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400]),
                       filled: true,
                       fillColor: isAmoled
                           ? AppThemeV2.amoledSurface
@@ -1636,12 +1903,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Add prev/next strings to prompt',
               control: Switch(
                 value: settings.includeContextStrings,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateIncludeContextStrings(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateIncludeContextStrings(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
-          isAmoled: isAmoled,
+              isAmoled: isAmoled,
             ),
-             if (settings.includeContextStrings)
+            if (settings.includeContextStrings)
               _buildSettingRow(
                 context: context,
                 label: 'Context Range',
@@ -1654,11 +1923,13 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                     max: 5,
                     divisions: 4,
                     label: settings.contextStringsCount.toString(),
-                    onChanged: (val) => context.read<SettingsBloc>().add(UpdateContextStringsCount(val.round())),
+                    onChanged: (val) => context
+                        .read<SettingsBloc>()
+                        .add(UpdateContextStringsCount(val.round())),
                     activeColor: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-            isAmoled: isAmoled,
+                isAmoled: isAmoled,
                 showDivider: false,
               ),
           ],
@@ -1668,40 +1939,48 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         // CLASSIC APIs (Legacy)
         // -----------------------------------------------------------
         Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              title: Text(
-                'Classic Translation APIs (Legacy)', 
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: Text('Classic Translation APIs (Legacy)',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: isDark ? Colors.grey[400] : Colors.grey[600]
-                )
-              ),
-              tilePadding: EdgeInsets.zero,
-              children: [
-                _buildSettingsCard(
-                  context: context,
-                  title: 'DeepL & Google',
-                  isDark: isDark,
-          isAmoled: isAmoled,
-                  children: [
-                     _buildSettingRow(
-                      context: context,
-                      label: 'Legacy Service Provider',
-                       control: _buildDropdown(context, settings.aiTranslationService, ['Google Translate', 'DeepL', 'Azure Translator'], (val) {
-                        if (val != null) context.read<SettingsBloc>().add(UpdateAiTranslationService(val));
-                      }, isDark, isAmoled),
-                  isAmoled: isAmoled,
-                    ),
-                    _buildApiKeyRow(context, 'Google Translate API', settings.googleTranslateApiKey, (val) {
-                      context.read<SettingsBloc>().add(UpdateGoogleTranslateApiKey(val));
+                    color: isDark ? Colors.grey[400] : Colors.grey[600])),
+            tilePadding: EdgeInsets.zero,
+            children: [
+              _buildSettingsCard(
+                context: context,
+                title: 'DeepL & Google',
+                isDark: isDark,
+                isAmoled: isAmoled,
+                children: [
+                  _buildSettingRow(
+                    context: context,
+                    label: 'Legacy Service Provider',
+                    control: _buildDropdown(
+                        context,
+                        settings.aiTranslationService,
+                        ['Google Translate', 'DeepL', 'Azure Translator'],
+                        (val) {
+                      if (val != null)
+                        context
+                            .read<SettingsBloc>()
+                            .add(UpdateAiTranslationService(val));
                     }, isDark, isAmoled),
-                    _buildApiKeyRow(context, 'DeepL API Key', settings.deeplApiKey, (val) {
-                      context.read<SettingsBloc>().add(UpdateDeeplApiKey(val));
-                    }, isDark, isAmoled, showDivider: false),
-                  ],
-                ),
-              ],
-            ),
+                    isAmoled: isAmoled,
+                  ),
+                  _buildApiKeyRow(context, 'Google Translate API',
+                      settings.googleTranslateApiKey, (val) {
+                    context
+                        .read<SettingsBloc>()
+                        .add(UpdateGoogleTranslateApiKey(val));
+                  }, isDark, isAmoled),
+                  _buildApiKeyRow(
+                      context, 'DeepL API Key', settings.deeplApiKey, (val) {
+                    context.read<SettingsBloc>().add(UpdateDeeplApiKey(val));
+                  }, isDark, isAmoled, showDivider: false),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1719,12 +1998,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     return Column(
       children: [
         _buildTextFieldRow(
-          context, 
-          label, 
-          value, 
-          onChanged, 
-          isDark, 
-          isAmoled, 
+          context,
+          label,
+          value,
+          onChanged,
+          isDark,
+          isAmoled,
           showDivider: showDivider,
           hintText: 'Paste your $label here',
         ),
@@ -1736,7 +2015,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // VERSION CONTROL SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildVersionControlSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildVersionControlSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
@@ -1751,11 +2031,13 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Enable version control features',
               control: Switch(
                 value: settings.enableGitIntegration,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateEnableGitIntegration(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateEnableGitIntegration(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
-          isAmoled: isAmoled,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -1763,11 +2045,13 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Commit changes on save',
               control: Switch(
                 value: settings.autoCommitOnSave,
-                onChanged: (val) => context.read<SettingsBloc>().add(UpdateAutoCommitOnSave(val)),
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateAutoCommitOnSave(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
-          isAmoled: isAmoled,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -1794,9 +2078,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // WINDOWS INTEGRATIONS SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildWindowsIntegrationsSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+  Widget _buildWindowsIntegrationsSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     final isWindows = Platform.isWindows;
-    
+
     return Column(
       children: [
         if (!isWindows)
@@ -1804,13 +2089,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             context: context,
             title: 'Platform Notice',
             isDark: isDark,
-          isAmoled: isAmoled,
+            isAmoled: isAmoled,
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.info_outline,
+                        color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -1832,13 +2118,18 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             _buildSettingRow(
               context: context,
               label: 'Use Mica Effect',
-              description: 'Enable Windows 11 Mica transparency (requires restart)',
+              description:
+                  'Enable Windows 11 Mica transparency (requires restart)',
               control: Switch(
                 value: settings.useMicaEffect,
-                onChanged: isWindows ? (val) => context.read<SettingsBloc>().add(UpdateUseMicaEffect(val)) : null,
+                onChanged: isWindows
+                    ? (val) => context
+                        .read<SettingsBloc>()
+                        .add(UpdateUseMicaEffect(val))
+                    : null,
               ),
               isDark: isDark,
-          isAmoled: isAmoled,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -1857,25 +2148,35 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   Text(
                     'Add "Open with Localizer" to the Windows Explorer right-click menu for folders.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                    ),
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: isWindows ? () async {
-                            final success = await WindowsIntegrationService.addToContextMenu();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success ? 'Context menu added!' : 'Failed to add context menu'),
-                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
-                                ),
-                              );
-                            }
-                          } : null,
+                          onPressed: isWindows
+                              ? () async {
+                                  final success =
+                                      await WindowsIntegrationService
+                                          .addToContextMenu();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success
+                                            ? 'Context menu added!'
+                                            : 'Failed to add context menu'),
+                                        backgroundColor: success
+                                            ? Colors.green
+                                            : AppThemeV2.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                           icon: const Icon(Icons.add_rounded, size: 18),
                           label: const Text('Add to Context Menu'),
                         ),
@@ -1883,17 +2184,25 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: isWindows ? () async {
-                            final success = await WindowsIntegrationService.removeFromContextMenu();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success ? 'Context menu removed!' : 'Failed to remove context menu'),
-                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
-                                ),
-                              );
-                            }
-                          } : null,
+                          onPressed: isWindows
+                              ? () async {
+                                  final success =
+                                      await WindowsIntegrationService
+                                          .removeFromContextMenu();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success
+                                            ? 'Context menu removed!'
+                                            : 'Failed to remove context menu'),
+                                        backgroundColor: success
+                                            ? Colors.green
+                                            : AppThemeV2.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                           icon: const Icon(Icons.remove_rounded, size: 18),
                           label: const Text('Remove'),
                         ),
@@ -1919,25 +2228,35 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   Text(
                     'Register .loc files to open with Localizer when double-clicked.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                    ),
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: isWindows ? () async {
-                            final success = await WindowsIntegrationService.registerFileAssociation();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success ? 'File association registered!' : 'Failed to register'),
-                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
-                                ),
-                              );
-                            }
-                          } : null,
+                          onPressed: isWindows
+                              ? () async {
+                                  final success =
+                                      await WindowsIntegrationService
+                                          .registerFileAssociation();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success
+                                            ? 'File association registered!'
+                                            : 'Failed to register'),
+                                        backgroundColor: success
+                                            ? Colors.green
+                                            : AppThemeV2.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                           icon: const Icon(Icons.link_rounded, size: 18),
                           label: const Text('Register .loc Files'),
                         ),
@@ -1945,17 +2264,25 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: isWindows ? () async {
-                            final success = await WindowsIntegrationService.unregisterFileAssociation();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success ? 'File association removed!' : 'Failed to remove'),
-                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
-                                ),
-                              );
-                            }
-                          } : null,
+                          onPressed: isWindows
+                              ? () async {
+                                  final success =
+                                      await WindowsIntegrationService
+                                          .unregisterFileAssociation();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success
+                                            ? 'File association removed!'
+                                            : 'Failed to remove'),
+                                        backgroundColor: success
+                                            ? Colors.green
+                                            : AppThemeV2.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                           icon: const Icon(Icons.link_off_rounded, size: 18),
                           label: const Text('Unregister'),
                         ),
@@ -1981,25 +2308,35 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   Text(
                     'Register localizer:// URLs to open this application.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                    ),
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: isWindows ? () async {
-                            final success = await WindowsIntegrationService.registerProtocolHandler();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success ? 'Protocol handler registered!' : 'Failed to register'),
-                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
-                                ),
-                              );
-                            }
-                          } : null,
+                          onPressed: isWindows
+                              ? () async {
+                                  final success =
+                                      await WindowsIntegrationService
+                                          .registerProtocolHandler();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success
+                                            ? 'Protocol handler registered!'
+                                            : 'Failed to register'),
+                                        backgroundColor: success
+                                            ? Colors.green
+                                            : AppThemeV2.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                           icon: const Icon(Icons.public_rounded, size: 18),
                           label: const Text('Register Protocol'),
                         ),
@@ -2007,17 +2344,25 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: isWindows ? () async {
-                            final success = await WindowsIntegrationService.unregisterProtocolHandler();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success ? 'Protocol handler removed!' : 'Failed to remove'),
-                                  backgroundColor: success ? Colors.green : AppThemeV2.error,
-                                ),
-                              );
-                            }
-                          } : null,
+                          onPressed: isWindows
+                              ? () async {
+                                  final success =
+                                      await WindowsIntegrationService
+                                          .unregisterProtocolHandler();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(success
+                                            ? 'Protocol handler removed!'
+                                            : 'Failed to remove'),
+                                        backgroundColor: success
+                                            ? Colors.green
+                                            : AppThemeV2.error,
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
                           icon: const Icon(Icons.public_off_rounded, size: 18),
                           label: const Text('Unregister'),
                         ),
@@ -2054,7 +2399,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           decoration: InputDecoration(
             hintText: hintText ?? 'Enter $label',
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -2078,9 +2424,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
-            _buildInfoRow(context, 'Version', _packageInfo?.version ?? 'Loading...', isDark, isAmoled),
-            _buildInfoRow(context, 'Build', _packageInfo?.buildNumber ?? 'Loading...', isDark, isAmoled),
-            _buildInfoRow(context, 'Platform', _platformInfo, isDark, isAmoled, showDivider: false),
+            _buildInfoRow(context, 'Version',
+                _packageInfo?.version ?? 'Loading...', isDark, isAmoled),
+            _buildInfoRow(context, 'Build',
+                _packageInfo?.buildNumber ?? 'Loading...', isDark, isAmoled),
+            _buildInfoRow(context, 'Platform', _platformInfo, isDark, isAmoled,
+                showDivider: false),
           ],
         ),
         _buildSettingsCard(
@@ -2089,24 +2438,42 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
-            _buildLinkRow(context, 'GitHub Repository', Icons.code_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain'), isDark, isAmoled),
-            _buildLinkRow(context, 'Report Issue', Icons.bug_report_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain/issues'), isDark, isAmoled),
-            _buildLinkRow(context, 'Licenses', Icons.article_rounded, () => _showLicensesDialog(context, isDark), isDark, isAmoled, showDivider: false),
+            _buildLinkRow(
+                context,
+                'GitHub Repository',
+                Icons.code_rounded,
+                () => _launchUrl('https://github.com/KhazP/LocalizerAppMain'),
+                isDark,
+                isAmoled),
+            _buildLinkRow(
+                context,
+                'Report Issue',
+                Icons.bug_report_rounded,
+                () => _launchUrl(
+                    'https://github.com/KhazP/LocalizerAppMain/issues'),
+                isDark,
+                isAmoled),
+            _buildLinkRow(context, 'Licenses', Icons.article_rounded,
+                () => _showLicensesDialog(context, isDark), isDark, isAmoled,
+                showDivider: false),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value, bool isDark, bool isAmoled, {bool showDivider = true}) {
+  Widget _buildInfoRow(BuildContext context, String label, String value,
+      bool isDark, bool isAmoled,
+      {bool showDivider = true}) {
     return _buildSettingRow(
       context: context,
       label: label,
       control: Text(
         value,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-        ),
+              color:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            ),
       ),
       isDark: isDark,
       isAmoled: isAmoled,
@@ -2131,13 +2498,18 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+                Icon(icon,
+                    size: 20, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
-                Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium)),
+                Expanded(
+                    child: Text(label,
+                        style: Theme.of(context).textTheme.bodyMedium)),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
-                  color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                  color: isDark
+                      ? AppThemeV2.darkTextMuted
+                      : AppThemeV2.lightTextMuted,
                 ),
               ],
             ),
@@ -2158,7 +2530,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // DIALOGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  void _showColorPicker(BuildContext context, Color initialColor, ValueChanged<Color> onColorSelected) {
+  void _showColorPicker(BuildContext context, Color initialColor,
+      ValueChanged<Color> onColorSelected) {
     Color pickerColor = initialColor;
     showDialog(
       context: context,
@@ -2199,18 +2572,20 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     String? errorMessage;
     String testString = '';
     bool? matchResult;
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) {
           void submitPattern() {
             if (_newPatternController.text.isNotEmpty && errorMessage == null) {
-              context.read<SettingsBloc>().add(AddIgnorePattern(_newPatternController.text));
+              context
+                  .read<SettingsBloc>()
+                  .add(AddIgnorePattern(_newPatternController.text));
               Navigator.of(dialogContext).pop();
             }
           }
-          
+
           void validateAndTest(String pattern) {
             try {
               final regex = RegExp(pattern);
@@ -2229,7 +2604,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               });
             }
           }
-          
+
           return AlertDialog(
             title: const Text('Add Ignore Pattern'),
             content: Column(
@@ -2268,7 +2643,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      matchResult! ? '✓ Pattern matches test string' : '✗ Pattern does not match',
+                      matchResult!
+                          ? '✓ Pattern matches test string'
+                          : '✗ Pattern does not match',
                       style: TextStyle(
                         color: matchResult! ? Colors.green : Colors.red,
                         fontSize: 12,
@@ -2283,7 +2660,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 child: const Text('Cancel'),
               ),
               FilledButton(
-                onPressed: errorMessage == null && _newPatternController.text.isNotEmpty ? submitPattern : null,
+                onPressed: errorMessage == null &&
+                        _newPatternController.text.isNotEmpty
+                    ? submitPattern
+                    : null,
                 child: const Text('Add'),
               ),
             ],
@@ -2293,13 +2673,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-
-  void _showResetCategoryDialog(BuildContext context, SettingsCategory category) {
+  void _showResetCategoryDialog(
+      BuildContext context, SettingsCategory category) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text('Reset ${_getCategoryTitle(category)}?'),
-        content: const Text('This will reset all settings in this category to their default values.'),
+        content: const Text(
+            'This will reset all settings in this category to their default values.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
@@ -2335,9 +2716,11 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${_getCategoryTitle(category)} reset to defaults'),
+                  content:
+                      Text('${_getCategoryTitle(category)} reset to defaults'),
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
               );
             },
@@ -2354,7 +2737,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Reset All Settings?'),
-        content: const Text('This will permanently reset all settings to their factory defaults. This action cannot be undone.'),
+        content: const Text(
+            'This will permanently reset all settings to their factory defaults. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),

@@ -18,11 +18,11 @@ import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; /
 import 'package:uuid/uuid.dart'; // For generating unique IDs for history
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
-import 'package:localizer_app_main/presentation/views/advanced_diff_view.dart'; 
+import 'package:localizer_app_main/presentation/views/advanced_diff_view.dart';
 // import 'package:localizer_app_main/presentation/views/ai_translation_settings_view.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
-
+import 'package:localizer_app_main/core/services/backup_service.dart';
 
 // Enum for filter status in Basic View
 enum BasicDiffFilter { all, added, removed, modified }
@@ -51,16 +51,18 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     } else {
       // Fallback if callback not provided
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Navigation to AI Settings not available')),
+        const SnackBar(
+            content: Text('Navigation to AI Settings not available')),
       );
     }
   }
+
   File? _file1;
   File? _file2;
   // Store the latest comparison results for the analytics bar
   ComparisonResult? _latestComparisonResult;
   BasicDiffFilter _currentFilter = BasicDiffFilter.all;
-  
+
   // Drag & drop state
   bool _isDraggingOverFile1 = false;
   bool _isDraggingOverFile2 = false;
@@ -86,36 +88,36 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   void _tryAutoLoadLastProject() {
     if (_hasAutoLoadedLastProject) return;
-    
+
     final settingsState = context.read<SettingsBloc>().state;
     final historyState = context.read<HistoryBloc>().state;
 
     // If settings or history aren't ready (and history isn't error), wait
     if (settingsState.status != SettingsStatus.loaded) {
-       return;
+      return;
     }
-    
+
     // If feature disabled, stop checking
     if (!settingsState.appSettings.openLastProjectOnStartup) {
-       if (mounted) setState(() => _isCheckingAutoLoad = false);
-       return;
+      if (mounted) setState(() => _isCheckingAutoLoad = false);
+      return;
     }
 
     // Feature is enabled. Check history.
     if (historyState is HistoryLoading) return; // Wait for history
 
     if (historyState is HistoryLoaded) {
-       if (historyState.history.isNotEmpty) {
-           _hasAutoLoadedLastProject = true;
-           _loadRecentComparison(historyState.history.first);
-           // Keeps _isCheckingAutoLoad = true until comparison starts/succeeds
-       } else {
-           // History empty, stop checking
-           if (mounted) setState(() => _isCheckingAutoLoad = false);
-       }
-    } else if (historyState is HistoryError) {
-        // Error loading history, stop checking
+      if (historyState.history.isNotEmpty) {
+        _hasAutoLoadedLastProject = true;
+        _loadRecentComparison(historyState.history.first);
+        // Keeps _isCheckingAutoLoad = true until comparison starts/succeeds
+      } else {
+        // History empty, stop checking
         if (mounted) setState(() => _isCheckingAutoLoad = false);
+      }
+    } else if (historyState is HistoryError) {
+      // Error loading history, stop checking
+      if (mounted) setState(() => _isCheckingAutoLoad = false);
     }
   }
 
@@ -136,7 +138,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           _file2 = File(result.files.single.path!);
         }
       });
-      
+
       // Update file watcher when files change
       _updateFileWatcher();
     }
@@ -154,10 +156,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       final settingsState = context.read<SettingsBloc>().state;
       if (settingsState.status == SettingsStatus.loaded) {
         context.read<ComparisonBloc>().add(CompareFilesRequested(
-          file1: _file1!,
-          file2: _file2!,
-          settings: settingsState.appSettings,
-        ));
+              file1: _file1!,
+              file2: _file2!,
+              settings: settingsState.appSettings,
+            ));
       }
       _updateFileWatcher();
     } else {
@@ -170,12 +172,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   void _updateFileWatcher() {
     final settingsState = context.read<SettingsBloc>().state;
     final isAutoReloadEnabled = settingsState.status == SettingsStatus.loaded &&
-                                settingsState.appSettings.autoReloadOnChange;
+        settingsState.appSettings.autoReloadOnChange;
 
     if (isAutoReloadEnabled && _file1 != null && _file2 != null) {
       context.read<FileWatcherBloc>().add(
-        StartWatchingFiles(_file1!.path, _file2!.path),
-      );
+            StartWatchingFiles(_file1!.path, _file2!.path),
+          );
     } else {
       context.read<FileWatcherBloc>().add(StopWatchingFiles());
     }
@@ -184,7 +186,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   void _onFileDropped(List<XFile> files, int fileNumber) {
     if (files.isNotEmpty) {
       final file = File(files.first.path);
-      
+
       // Validate file extension
       if (_isValidFileType(file.path)) {
         setState(() {
@@ -194,14 +196,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             _file2 = file;
           }
         });
-        
+
         // Update file watcher when files change
         _updateFileWatcher();
-        
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('File ${fileNumber == 1 ? "1" : "2"} selected: ${file.path.split(Platform.pathSeparator).last}'),
+            content: Text(
+                'File ${fileNumber == 1 ? "1" : "2"} selected: ${file.path.split(Platform.pathSeparator).last}'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -209,7 +212,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         // Show error for invalid file type
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Invalid file type. Please select a supported localization file.'),
+            content: Text(
+                'Invalid file type. Please select a supported localization file.'),
             backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 3),
           ),
@@ -221,8 +225,19 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   bool _isValidFileType(String filePath) {
     final extension = filePath.toLowerCase().split('.').last;
     const supportedExtensions = [
-      'json', 'xml', 'xliff', 'xlf', 'tmx', 'csv', 'yaml', 'yml', 
-      'properties', 'resx', 'txt', 'docx', 'lang'
+      'json',
+      'xml',
+      'xliff',
+      'xlf',
+      'tmx',
+      'csv',
+      'yaml',
+      'yml',
+      'properties',
+      'resx',
+      'txt',
+      'docx',
+      'lang'
     ];
     return supportedExtensions.contains(extension);
   }
@@ -232,23 +247,26 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AdvancedDiffView(comparisonResult: _latestComparisonResult!),
+          builder: (context) =>
+              AdvancedDiffView(comparisonResult: _latestComparisonResult!),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please perform a comparison first to see advanced details.')),
+        const SnackBar(
+            content: Text(
+                'Please perform a comparison first to see advanced details.')),
       );
     }
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     // Determine if Amoled mode is active
     final settingsState = context.watch<SettingsBloc>().state;
     final bool isAmoled = settingsState.status == SettingsStatus.loaded &&
-                        Theme.of(context).brightness == Brightness.dark &&
-                        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+        Theme.of(context).brightness == Brightness.dark &&
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
     return MultiBlocListener(
       listeners: [
@@ -296,111 +314,119 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               final settingsStateForReload = context.read<SettingsBloc>().state;
               if (settingsStateForReload.status == SettingsStatus.loaded) {
                 context.read<ComparisonBloc>().add(
-                  CompareFilesRequested(
-                    file1: File(state.file1Path),
-                    file2: File(state.file2Path),
-                    settings: settingsStateForReload.appSettings,
-                  ),
-                );
+                      CompareFilesRequested(
+                        file1: File(state.file1Path),
+                        file2: File(state.file2Path),
+                        settings: settingsStateForReload.appSettings,
+                      ),
+                    );
               }
             }
           },
         ),
       ],
       child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          // File Selection Section
-          Card(
-            color: isAmoled ? Colors.black : Theme.of(context).cardColor,
-            elevation: isAmoled ? 0.3 : 1.0, 
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-              side: BorderSide(
-                color: isAmoled ? Colors.grey[850]! : Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            // File Selection Section
+            Card(
+              color: isAmoled ? Colors.black : Theme.of(context).cardColor,
+              elevation: isAmoled ? 0.3 : 1.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                side: BorderSide(
+                  color: isAmoled
+                      ? Colors.grey[850]!
+                      : Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                ),
               ),
-            ),
-            margin: const EdgeInsets.only(bottom: 12.0),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      _buildFilePicker(
-                        context: context,
-                        title: 'Source File',
-                        file: _file1,
-                        fileNumber: 1,
-                        onPressed: () => _pickFile(1),
-                        isDraggingOver: _isDraggingOverFile1,
-                        isAmoled: isAmoled,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildFilePicker(
-                        context: context,
-                        title: 'Target File',
-                        file: _file2,
-                        fileNumber: 2,
-                        onPressed: () => _pickFile(2),
-                        isDraggingOver: _isDraggingOverFile2,
-                        isAmoled: isAmoled,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 40,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.compare_arrows, size: 18),
-                      label: const Text('Compare Files'),
-                      onPressed: (_file1 != null && _file2 != null) ? _startComparison : null,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Analytics and Actions Bar - Modified Layout
-          _buildAnalyticsAndActionsBar(), 
-          const SizedBox(height: 16.0), // Reduced bottom margin
-          BlocBuilder<ProgressBloc, ProgressState>(
-            builder: (context, state) {
-              if (state is ProgressLoading) {
-                double progress = state.total > 0 ? state.current / state.total : 0.0;
-                return Column(
+              margin: const EdgeInsets.only(bottom: 12.0),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
                   children: [
-                    LinearProgressIndicator(value: progress),
-                    const SizedBox(height: 8),
-                    Text(state.message ?? 'Processing...'),
-                    const SizedBox(height: 8), // Space before diff list
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        _buildFilePicker(
+                          context: context,
+                          title: 'Source File',
+                          file: _file1,
+                          fileNumber: 1,
+                          onPressed: () => _pickFile(1),
+                          isDraggingOver: _isDraggingOverFile1,
+                          isAmoled: isAmoled,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildFilePicker(
+                          context: context,
+                          title: 'Target File',
+                          file: _file2,
+                          fileNumber: 2,
+                          onPressed: () => _pickFile(2),
+                          isDraggingOver: _isDraggingOverFile2,
+                          isAmoled: isAmoled,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 40,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.compare_arrows, size: 18),
+                        label: const Text('Compare Files'),
+                        onPressed: (_file1 != null && _file2 != null)
+                            ? _startComparison
+                            : null,
+                      ),
+                    ),
                   ],
-                );
-              }
-              if (state is ProgressFailure) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom:8.0),
-                    child: Text('Error during processing: ${state.error}', style: TextStyle(color: Theme.of(context).colorScheme.error))
+                ),
+              ),
+            ),
+            // Analytics and Actions Bar - Modified Layout
+            _buildAnalyticsAndActionsBar(),
+            const SizedBox(height: 16.0), // Reduced bottom margin
+            BlocBuilder<ProgressBloc, ProgressState>(
+              builder: (context, state) {
+                if (state is ProgressLoading) {
+                  double progress =
+                      state.total > 0 ? state.current / state.total : 0.0;
+                  return Column(
+                    children: [
+                      LinearProgressIndicator(value: progress),
+                      const SizedBox(height: 8),
+                      Text(state.message ?? 'Processing...'),
+                      const SizedBox(height: 8), // Space before diff list
+                    ],
                   );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-          Expanded(
-            child: BlocConsumer<ComparisonBloc, ComparisonState>(
-              listener: (context, state) {
-                 // When comparison state changes, we are definitely no longer checking auto load
-                 if (state is ComparisonLoading || state is ComparisonSuccess || state is ComparisonFailure) {
+                }
+                if (state is ProgressFailure) {
+                  return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text('Error during processing: ${state.error}',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error)));
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            Expanded(
+              child: BlocConsumer<ComparisonBloc, ComparisonState>(
+                listener: (context, state) {
+                  // When comparison state changes, we are definitely no longer checking auto load
+                  if (state is ComparisonLoading ||
+                      state is ComparisonSuccess ||
+                      state is ComparisonFailure) {
                     if (_isCheckingAutoLoad) {
-                        setState(() => _isCheckingAutoLoad = false);
+                      setState(() => _isCheckingAutoLoad = false);
                     }
-                 }
+                  }
 
-                 if (state is ComparisonSuccess) {
+                  if (state is ComparisonSuccess) {
                     // Update file references in the UI
                     setState(() {
                       _file1 = state.file1;
@@ -413,274 +439,350 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       final result = state.result;
                       int added = 0, removed = 0, modified = 0, identical = 0;
                       result.diff.forEach((key, statusDetail) {
-                          switch (statusDetail.status) {
-                              case StringComparisonStatus.added: added++; break;
-                              case StringComparisonStatus.removed: removed++; break;
-                              case StringComparisonStatus.modified: modified++; break;
-                              case StringComparisonStatus.identical: identical++; break;
-                          }
+                        switch (statusDetail.status) {
+                          case StringComparisonStatus.added:
+                            added++;
+                            break;
+                          case StringComparisonStatus.removed:
+                            removed++;
+                            break;
+                          case StringComparisonStatus.modified:
+                            modified++;
+                            break;
+                          case StringComparisonStatus.identical:
+                            identical++;
+                            break;
+                        }
                       });
                       // Ensure file paths from the state are used for history
                       final session = ComparisonSession(
-                          id: const Uuid().v4(), 
-                          timestamp: DateTime.now(), 
-                          file1Path: state.file1.path, // Use path from state
-                          file2Path: state.file2.path, // Use path from state
-                          stringsAdded: added,
-                          stringsRemoved: removed,
-                          stringsModified: modified,
-                          stringsIdentical: identical,
+                        id: const Uuid().v4(),
+                        timestamp: DateTime.now(),
+                        file1Path: state.file1.path, // Use path from state
+                        file2Path: state.file2.path, // Use path from state
+                        stringsAdded: added,
+                        stringsRemoved: removed,
+                        stringsModified: modified,
+                        stringsIdentical: identical,
                       );
                       context.read<HistoryBloc>().add(AddToHistory(session));
                     }
-                 } else if (state is ComparisonFailure) {
+                  } else if (state is ComparisonFailure) {
                     // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
                     // Or just show the error via ProgressBloc/Snackbar
-                     ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Comparison failed: ${state.error}')),
-                      );
-                 }
-              },
-              builder: (context, state) {
-                final theme = Theme.of(context);
-                
-                Widget content;
-                if (_isCheckingAutoLoad) {
-                   content = const Center(key: ValueKey('checking'), child: CircularProgressIndicator());
-                } else if (state is ComparisonLoading) {
-                  content = const Center(key: ValueKey('loading'), child: Text('Comparison in progress...'));
-                } else if (state is ComparisonSuccess) {
-                  var diffEntries = state.result.diff.entries.toList();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Comparison failed: ${state.error}')),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  final theme = Theme.of(context);
 
-                  // Apply filter
-                  if (_currentFilter != BasicDiffFilter.all) {
-                    diffEntries = diffEntries.where((entry) {
-                      switch (_currentFilter) {
-                        case BasicDiffFilter.added:
-                          return entry.value.status == StringComparisonStatus.added;
-                        case BasicDiffFilter.removed:
-                          return entry.value.status == StringComparisonStatus.removed;
-                        case BasicDiffFilter.modified:
-                           return entry.value.status == StringComparisonStatus.modified;
-                        default:
-                          return true;
+                  Widget content;
+                  if (_isCheckingAutoLoad) {
+                    content = const Center(
+                        key: ValueKey('checking'),
+                        child: CircularProgressIndicator());
+                  } else if (state is ComparisonLoading) {
+                    content = const Center(
+                        key: ValueKey('loading'),
+                        child: Text('Comparison in progress...'));
+                  } else if (state is ComparisonSuccess) {
+                    var diffEntries = state.result.diff.entries.toList();
+
+                    // Apply filter
+                    if (_currentFilter != BasicDiffFilter.all) {
+                      diffEntries = diffEntries.where((entry) {
+                        switch (_currentFilter) {
+                          case BasicDiffFilter.added:
+                            return entry.value.status ==
+                                StringComparisonStatus.added;
+                          case BasicDiffFilter.removed:
+                            return entry.value.status ==
+                                StringComparisonStatus.removed;
+                          case BasicDiffFilter.modified:
+                            return entry.value.status ==
+                                StringComparisonStatus.modified;
+                          default:
+                            return true;
+                        }
+                      }).toList();
+                    }
+
+                    // Hide identical entries if setting is disabled and we are in 'All' filter
+                    final showIdentical =
+                        settingsState.appSettings.showIdenticalEntries;
+                    int hiddenIdenticalCount = 0;
+                    if (!showIdentical &&
+                        _currentFilter == BasicDiffFilter.all) {
+                      final identicals = diffEntries
+                          .where((entry) =>
+                              entry.value.status ==
+                              StringComparisonStatus.identical)
+                          .toList();
+                      hiddenIdenticalCount = identicals.length;
+                      if (hiddenIdenticalCount > 0) {
+                        diffEntries = diffEntries
+                            .where((entry) =>
+                                entry.value.status !=
+                                StringComparisonStatus.identical)
+                            .toList();
                       }
-                    }).toList();
-                  }
-
-                  // Hide identical entries if setting is disabled and we are in 'All' filter
-                  final showIdentical = settingsState.appSettings.showIdenticalEntries;
-                  int hiddenIdenticalCount = 0;
-                  if (!showIdentical && _currentFilter == BasicDiffFilter.all) {
-                    final identicals = diffEntries.where((entry) => entry.value.status == StringComparisonStatus.identical).toList();
-                    hiddenIdenticalCount = identicals.length;
-                    if (hiddenIdenticalCount > 0) {
-                       diffEntries = diffEntries.where((entry) => entry.value.status != StringComparisonStatus.identical).toList();
                     }
-                  }
 
-                  // Apply text search filter
-                  final int totalBeforeSearch = diffEntries.length;
-                  if (_searchQuery.isNotEmpty) {
-                    final query = _searchQuery.toLowerCase();
-                    diffEntries = diffEntries.where((entry) {
-                      final key = entry.key.toLowerCase();
-                      final value1 = (state.result.file1Data[entry.key] ?? '').toLowerCase();
-                      final value2 = (state.result.file2Data[entry.key] ?? '').toLowerCase();
-                      return key.contains(query) || value1.contains(query) || value2.contains(query);
-                    }).toList();
-                  }
-
-                  if (diffEntries.isEmpty) {
+                    // Apply text search filter
+                    final int totalBeforeSearch = diffEntries.length;
                     if (_searchQuery.isNotEmpty) {
-                      content = Center(
-                        key: const ValueKey('empty_search'),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.search_off, size: 48, color: theme.colorScheme.onSurface.withAlpha(100)),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No matches found for "$_searchQuery"',
-                              style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(150)),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Showing 0 of $totalBeforeSearch entries',
-                              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withAlpha(100)),
-                            ),
-                          ],
-                        ),
-                      );
-
-                    } else if (_searchQuery.isEmpty && !state.result.diff.values.any((e) => e.status != StringComparisonStatus.identical)) {
-                         content = const Center(key: ValueKey('identical'), child: Text('Files are identical.'));
-                    } else if (diffEntries.isEmpty && hiddenIdenticalCount > 0) {
-                         // If we hid everything (e.g. only identicals existed and we hid them)
-                         content = Column(
-                           key: const ValueKey('hidden_identical'),
-                           mainAxisAlignment: MainAxisAlignment.center,
-                           children: [
-                              Text('$hiddenIdenticalCount identical entries hidden', style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(150))),
-                              const SizedBox(height: 8),
-                              TextButton(
-                                onPressed: () {
-                                  context.read<SettingsBloc>().add(const UpdateShowIdenticalEntries(true));
-                                },
-                                child: const Text('Show Identical Entries'),
-                              )
-                           ],
-                         );
-                    } else {
-                       content = const Center(key: ValueKey('no_diff'), child: Text('No differences found based on keys.'));
+                      final query = _searchQuery.toLowerCase();
+                      diffEntries = diffEntries.where((entry) {
+                        final key = entry.key.toLowerCase();
+                        final value1 = (state.result.file1Data[entry.key] ?? '')
+                            .toLowerCase();
+                        final value2 = (state.result.file2Data[entry.key] ?? '')
+                            .toLowerCase();
+                        return key.contains(query) ||
+                            value1.contains(query) ||
+                            value2.contains(query);
+                      }).toList();
                     }
-                  } else {
-                    content = Column(
-                      key: const ValueKey('results'),
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Hidden entries summary
-                        if (hiddenIdenticalCount > 0)
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.visibility_off_outlined, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '$hiddenIdenticalCount identical entries hidden',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontStyle: FontStyle.italic,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const Spacer(),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    minimumSize: const Size(60, 24),
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  onPressed: () {
-                                     context.read<SettingsBloc>().add(const UpdateShowIdenticalEntries(true));
-                                  },
-                                  child: const Text('Show'),
-                                ),
-                              ],
-                            ),
+
+                    if (diffEntries.isEmpty) {
+                      if (_searchQuery.isNotEmpty) {
+                        content = Center(
+                          key: const ValueKey('empty_search'),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.search_off,
+                                  size: 48,
+                                  color: theme.colorScheme.onSurface
+                                      .withAlpha(100)),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No matches found for "$_searchQuery"',
+                                style: TextStyle(
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha(150)),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Showing 0 of $totalBeforeSearch entries',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha(100)),
+                              ),
+                            ],
                           ),
-  
-                        // Result count header when search is active
-                        if (_searchQuery.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                            child: Text(
-                              'Showing ${diffEntries.length} of $totalBeforeSearch entries',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: theme.colorScheme.onSurface.withAlpha(150),
+                        );
+                      } else if (_searchQuery.isEmpty &&
+                          !state.result.diff.values.any((e) =>
+                              e.status != StringComparisonStatus.identical)) {
+                        content = const Center(
+                            key: ValueKey('identical'),
+                            child: Text('Files are identical.'));
+                      } else if (diffEntries.isEmpty &&
+                          hiddenIdenticalCount > 0) {
+                        // If we hid everything (e.g. only identicals existed and we hid them)
+                        content = Column(
+                          key: const ValueKey('hidden_identical'),
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                                '$hiddenIdenticalCount identical entries hidden',
+                                style: TextStyle(
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha(150))),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: () {
+                                context.read<SettingsBloc>().add(
+                                    const UpdateShowIdenticalEntries(true));
+                              },
+                              child: const Text('Show Identical Entries'),
+                            )
+                          ],
+                        );
+                      } else {
+                        content = const Center(
+                            key: ValueKey('no_diff'),
+                            child: Text('No differences found based on keys.'));
+                      }
+                    } else {
+                      content = Column(
+                        key: const ValueKey('results'),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Hidden entries summary
+                          if (hiddenIdenticalCount > 0)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                    color: theme.dividerColor
+                                        .withValues(alpha: 0.2)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.visibility_off_outlined,
+                                      size: 16,
+                                      color:
+                                          theme.colorScheme.onSurfaceVariant),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '$hiddenIdenticalCount identical entries hidden',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: const Size(60, 24),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    onPressed: () {
+                                      context.read<SettingsBloc>().add(
+                                          const UpdateShowIdenticalEntries(
+                                              true));
+                                    },
+                                    child: const Text('Show'),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // Result count header when search is active
+                          if (_searchQuery.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 8),
+                              child: Text(
+                                'Showing ${diffEntries.length} of $totalBeforeSearch entries',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.onSurface
+                                      .withAlpha(150),
+                                ),
+                              ),
+                            ),
+                          Expanded(
+                            child: Scrollbar(
+                              controller: _scrollController,
+                              thumbVisibility: true,
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                itemCount: diffEntries.length,
+                                itemBuilder: (context, index) {
+                                  final entry = diffEntries[index];
+                                  final key = entry.key;
+                                  final statusDetail = entry.value;
+                                  final status = statusDetail.status;
+                                  final value1 = state.result.file1Data[key];
+                                  final value2 = state.result.file2Data[key];
+
+                                  final lineNumber =
+                                      (index + 1).toString().padLeft(3, '0');
+
+                                  // Get font family from settings
+                                  final lineSettingsState =
+                                      context.watch<SettingsBloc>().state;
+                                  String lineFontFamily =
+                                      'Consolas, Monaco, monospace';
+                                  double lineFontSize = 12.0;
+                                  if (lineSettingsState.status ==
+                                      SettingsStatus.loaded) {
+                                    try {
+                                      final ff = lineSettingsState
+                                          .appSettings.diffFontFamily;
+                                      if (ff.isNotEmpty &&
+                                          ff != 'System Default')
+                                        lineFontFamily = ff;
+                                      lineFontSize = lineSettingsState
+                                          .appSettings.diffFontSize;
+                                    } catch (_) {}
+                                  }
+
+                                  return Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        padding: const EdgeInsets.fromLTRB(
+                                            8, 4, 8, 4),
+                                        child: Text(
+                                          lineNumber,
+                                          style: TextStyle(
+                                            color: theme.colorScheme.outline,
+                                            fontFamily: lineFontFamily,
+                                            fontSize: lineFontSize,
+                                          ),
+                                          textAlign: TextAlign.end,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: _buildDiffListItem(
+                                          key: key,
+                                          status: status,
+                                          value1: value1,
+                                          value2: value2,
+                                          isAmoled: isAmoled,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ),
                           ),
-                        Expanded(
-                          child: Scrollbar(
-                            controller: _scrollController,
-                            thumbVisibility: true,
-                            child: ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: diffEntries.length,
-                            itemBuilder: (context, index) {
-                              final entry = diffEntries[index];
-                              final key = entry.key;
-                              final statusDetail = entry.value;
-                              final status = statusDetail.status;
-                              final value1 = state.result.file1Data[key];
-                              final value2 = state.result.file2Data[key];
-  
-                              final lineNumber = (index + 1).toString().padLeft(3, '0');
-  
-                              // Get font family from settings
-                              final lineSettingsState = context.watch<SettingsBloc>().state;
-                              String lineFontFamily = 'Consolas, Monaco, monospace';
-                              double lineFontSize = 12.0;
-                              if (lineSettingsState.status == SettingsStatus.loaded) {
-                                try {
-                                  final ff = lineSettingsState.appSettings.diffFontFamily;
-                                  if (ff.isNotEmpty && ff != 'System Default') lineFontFamily = ff;
-                                  lineFontSize = lineSettingsState.appSettings.diffFontSize;
-                                } catch (_) {}
-                              }
-  
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 48,
-                                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                                    child: Text(
-                                      lineNumber,
-                                      style: TextStyle(
-                                        color: theme.colorScheme.outline,
-                                        fontFamily: lineFontFamily,
-                                        fontSize: lineFontSize,
-                                      ),
-                                      textAlign: TextAlign.end,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _buildDiffListItem(
-                                      key: key,
-                                      status: status,
-                                      value1: value1,
-                                      value2: value2,
-                                      isAmoled: isAmoled,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      ],
-                    );
+                        ],
+                      );
+                    }
+                  } else if (state is ComparisonFailure) {
+                    content = Center(
+                        key: const ValueKey('failure'),
+                        child: Text('Comparison Failed: ${state.error}',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error)));
+                  } else {
+                    content = _buildEmptyState(context, isAmoled);
                   }
-                } else if (state is ComparisonFailure) {
-                  content = Center(key: const ValueKey('failure'), child: Text('Comparison Failed: ${state.error}', style: TextStyle(color: Theme.of(context).colorScheme.error)));
-                } else {
-                  content = _buildEmptyState(context, isAmoled);
-                }
 
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  child: content,
-                );
-              },
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: content,
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 
   Future<void> _exportResult() async {
     if (_latestComparisonResult == null) return;
-    
+
     final settings = context.read<SettingsBloc>().state.appSettings;
     final format = settings.defaultExportFormat;
-    
+
     if (format == 'Excel') {
       await _exportToExcel();
     } else if (format == 'JSON') {
@@ -693,36 +795,41 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   Future<void> _exportToExcel() async {
     var excel = Excel.createExcel();
     Sheet sheetObject = excel['Sheet1'];
-    
+
     // Header
     sheetObject.appendRow([
-      TextCellValue('Status'), 
-      TextCellValue('String Key'), 
-      TextCellValue('Old Value (Source)'), 
-      TextCellValue('New Value (Target)'), 
+      TextCellValue('Status'),
+      TextCellValue('String Key'),
+      TextCellValue('Old Value (Source)'),
+      TextCellValue('New Value (Target)'),
       TextCellValue('Similarity')
     ]);
-    
+
     for (var entry in _latestComparisonResult!.diff.entries) {
       final key = entry.key;
       final status = entry.value.status;
       final similarity = entry.value.similarity;
       final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
       final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-      
-      String statusText = status == StringComparisonStatus.added ? 'ADDED' 
-          : status == StringComparisonStatus.removed ? 'REMOVED' : 'MODIFIED';
-      String simText = similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-      
+
+      String statusText = status == StringComparisonStatus.added
+          ? 'ADDED'
+          : status == StringComparisonStatus.removed
+              ? 'REMOVED'
+              : 'MODIFIED';
+      String simText =
+          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
+
       sheetObject.appendRow([
-        TextCellValue(statusText), 
-        TextCellValue(key), 
+        TextCellValue(statusText),
+        TextCellValue(key),
         TextCellValue(status == StringComparisonStatus.added ? '' : file1Value),
-        TextCellValue(status == StringComparisonStatus.removed ? '' : file2Value),
+        TextCellValue(
+            status == StringComparisonStatus.removed ? '' : file2Value),
         TextCellValue(simText)
       ]);
     }
-    
+
     // Save
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save Excel Report',
@@ -730,30 +837,38 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       type: FileType.custom,
       allowedExtensions: ['xlsx'],
     );
-    
+
     if (outputPath != null) {
       try {
+        final settings = context.read<SettingsBloc>().state.appSettings;
+        await BackupService().createBackupIfNeeded(
+          targetPath: outputPath,
+          settings: settings,
+        );
         var fileBytes = excel.save();
         if (fileBytes != null) {
           File(outputPath)
             ..createSync(recursive: true)
             ..writeAsBytesSync(fileBytes);
-            
+
           if (mounted) {
-             final settings = context.read<SettingsBloc>().state.appSettings;
-             if (settings.openFolderAfterExport && Platform.isWindows) {
-               Process.run('explorer.exe', [File(outputPath).parent.path]);
-             }
+            if (settings.openFolderAfterExport && Platform.isWindows) {
+              Process.run('explorer.exe', [File(outputPath).parent.path]);
+            }
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Excel saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+              SnackBar(
+                  content: Text('Excel saved to: $outputPath'),
+                  behavior: SnackBarBehavior.floating),
             );
           }
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save Excel: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('Failed to save Excel: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -768,12 +883,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       final similarity = entry.value.similarity;
       final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
       final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-      
+
       jsonData.add({
         'status': status.name,
         'key': key,
         'old_value': status == StringComparisonStatus.added ? null : file1Value,
-        'new_value': status == StringComparisonStatus.removed ? null : file2Value,
+        'new_value':
+            status == StringComparisonStatus.removed ? null : file2Value,
         'similarity': similarity
       });
     }
@@ -786,23 +902,31 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
-    
+
     if (outputPath != null) {
       try {
+        final settings = context.read<SettingsBloc>().state.appSettings;
+        await BackupService().createBackupIfNeeded(
+          targetPath: outputPath,
+          settings: settings,
+        );
         await File(outputPath).writeAsString(jsonString);
         if (mounted) {
-             final settings = context.read<SettingsBloc>().state.appSettings;
-             if (settings.openFolderAfterExport && Platform.isWindows) {
-               Process.run('explorer.exe', [File(outputPath).parent.path]);
-             }
+          if (settings.openFolderAfterExport && Platform.isWindows) {
+            Process.run('explorer.exe', [File(outputPath).parent.path]);
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('JSON saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+            SnackBar(
+                content: Text('JSON saved to: $outputPath'),
+                behavior: SnackBarBehavior.floating),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save JSON: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('Failed to save JSON: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -810,26 +934,41 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   Future<void> _exportToCsv() async {
-    List<List<dynamic>> csvData = [['Status', 'String Key', 'Old Value (Source)', 'New Value (Target)', 'Similarity']];
+    List<List<dynamic>> csvData = [
+      [
+        'Status',
+        'String Key',
+        'Old Value (Source)',
+        'New Value (Target)',
+        'Similarity'
+      ]
+    ];
     for (var entry in _latestComparisonResult!.diff.entries) {
       final key = entry.key;
       final status = entry.value.status;
       final similarity = entry.value.similarity;
       final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
       final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-      
-      String statusText = status == StringComparisonStatus.added ? 'ADDED' 
-          : status == StringComparisonStatus.removed ? 'REMOVED' : 'MODIFIED';
-      String simText = similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-      
-      csvData.add([statusText, key, 
+
+      String statusText = status == StringComparisonStatus.added
+          ? 'ADDED'
+          : status == StringComparisonStatus.removed
+              ? 'REMOVED'
+              : 'MODIFIED';
+      String simText =
+          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
+
+      csvData.add([
+        statusText,
+        key,
         status == StringComparisonStatus.added ? '' : file1Value,
         status == StringComparisonStatus.removed ? '' : file2Value,
-        simText]);
+        simText
+      ]);
     }
-    
+
     String csvString = const ListToCsvConverter().convert(csvData);
-    
+
     final settings = context.read<SettingsBloc>().state.appSettings;
     if (settings.includeUtf8Bom) {
       csvString = '\uFEFF$csvString';
@@ -841,22 +980,30 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       type: FileType.custom,
       allowedExtensions: ['csv'],
     );
-    
+
     if (outputPath != null) {
       try {
+        await BackupService().createBackupIfNeeded(
+          targetPath: outputPath,
+          settings: settings,
+        );
         await File(outputPath).writeAsString(csvString);
         if (mounted) {
-             if (settings.openFolderAfterExport && Platform.isWindows) {
-               Process.run('explorer.exe', [File(outputPath).parent.path]);
-             }
+          if (settings.openFolderAfterExport && Platform.isWindows) {
+            Process.run('explorer.exe', [File(outputPath).parent.path]);
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('CSV saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+            SnackBar(
+                content: Text('CSV saved to: $outputPath'),
+                behavior: SnackBarBehavior.floating),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save CSV: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('Failed to save CSV: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -885,8 +1032,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       tooltipPath = file.path;
       final parts = file.path.split(Platform.isWindows ? '\\' : '/');
       final fileName = parts.last;
-      fileExtension = fileName.contains('.') ? fileName.split('.').last.toUpperCase() : null;
-      
+      fileExtension = fileName.contains('.')
+          ? fileName.split('.').last.toUpperCase()
+          : null;
+
       // Abbreviate long paths: show .../<parent>/<filename>
       if (parts.length > 2 && file.path.length > 40) {
         displayText = '.../${parts[parts.length - 2]}/$fileName';
@@ -894,18 +1043,21 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         displayText = fileName;
       }
     } else {
-      displayText = isDraggingOver ? 'Drop file here' : 'Drop file or click to browse';
+      displayText =
+          isDraggingOver ? 'Drop file here' : 'Drop file or click to browse';
     }
 
-    Color borderColor = isDraggingOver 
-        ? theme.colorScheme.primary 
-        : (hasFile ? theme.colorScheme.primary.withValues(alpha: 0.3) : theme.dividerColor);
-    Color backgroundColor = isDraggingOver 
-        ? theme.colorScheme.primary.withValues(alpha: 0.08) 
+    Color borderColor = isDraggingOver
+        ? theme.colorScheme.primary
+        : (hasFile
+            ? theme.colorScheme.primary.withValues(alpha: 0.3)
+            : theme.dividerColor);
+    Color backgroundColor = isDraggingOver
+        ? theme.colorScheme.primary.withValues(alpha: 0.08)
         : (isAmoled
             ? (hasFile ? Colors.grey[900]! : Colors.transparent)
-            : (hasFile 
-                ? theme.colorScheme.primary.withValues(alpha: 0.04) 
+            : (hasFile
+                ? theme.colorScheme.primary.withValues(alpha: 0.04)
                 : theme.cardColor.withValues(alpha: 0.5)));
 
     // Active state (file loaded): compact inline layout ~44px
@@ -938,7 +1090,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           onTap: onPressed,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+            padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding, vertical: verticalPadding),
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(10.0),
@@ -951,10 +1104,14 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               children: [
                 // Icon
                 Icon(
-                  hasFile ? Icons.description_rounded : Icons.cloud_upload_outlined,
-                  color: isDraggingOver 
+                  hasFile
+                      ? Icons.description_rounded
+                      : Icons.cloud_upload_outlined,
+                  color: isDraggingOver
                       ? theme.colorScheme.primary
-                      : (hasFile ? theme.colorScheme.primary : theme.colorScheme.primary.withValues(alpha: 0.5)),
+                      : (hasFile
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.primary.withValues(alpha: 0.5)),
                   size: hasFile ? 20 : 24,
                 ),
                 const SizedBox(width: 12),
@@ -968,7 +1125,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       Text(
                         title,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.3,
                         ),
@@ -981,10 +1139,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         child: Text(
                           displayText,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: hasFile ? FontWeight.w600 : FontWeight.w400,
-                            color: hasFile 
-                                ? theme.colorScheme.onSurface 
-                                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontWeight:
+                                hasFile ? FontWeight.w600 : FontWeight.w400,
+                            color: hasFile
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -997,7 +1157,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 if (hasFile && fileExtension != null) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
@@ -1065,12 +1226,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       });
     }
 
-    final Color cardBg = isAmoled
-        ? Colors.black
-        : (theme.cardTheme.color ?? theme.cardColor);
-    final Color borderColor = isAmoled
-        ? Colors.grey[850]!
-        : theme.dividerColor;
+    final Color cardBg =
+        isAmoled ? Colors.black : (theme.cardTheme.color ?? theme.cardColor);
+    final Color borderColor = isAmoled ? Colors.grey[850]! : theme.dividerColor;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
@@ -1086,15 +1244,20 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             flex: 3,
             child: Row(
               children: [
-                _buildStatsChart(addedCount, removedCount, modifiedCount, themeState),
+                _buildStatsChart(
+                    addedCount, removedCount, modifiedCount, themeState),
                 const SizedBox(width: 16),
-                _buildCompactStat('Total', totalKeys, theme.colorScheme.onSurface.withAlpha(180)),
+                _buildCompactStat('Total', totalKeys,
+                    theme.colorScheme.onSurface.withAlpha(180)),
                 const SizedBox(width: 16),
-                _buildCompactStat('+${addedCount}', null, themeState.diffAddedColor),
+                _buildCompactStat(
+                    '+${addedCount}', null, themeState.diffAddedColor),
                 const SizedBox(width: 12),
-                _buildCompactStat('-${removedCount}', null, themeState.diffRemovedColor),
+                _buildCompactStat(
+                    '-${removedCount}', null, themeState.diffRemovedColor),
                 const SizedBox(width: 12),
-                _buildCompactStat('~${modifiedCount}', null, themeState.diffModifiedColor),
+                _buildCompactStat(
+                    '~${modifiedCount}', null, themeState.diffModifiedColor),
                 const SizedBox(width: 12),
                 _buildFileWatcherStatus(settingsState, isAmoled, isDarkMode),
               ],
@@ -1138,7 +1301,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         constraints: const BoxConstraints(),
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: borderColor),
@@ -1149,10 +1313,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                  borderSide:
+                      BorderSide(color: theme.colorScheme.primary, width: 1.5),
                 ),
                 filled: true,
-                fillColor: isAmoled ? Colors.grey[900] : (isDarkMode ? const Color(0xFF252530) : Colors.grey[50]),
+                fillColor: isAmoled
+                    ? Colors.grey[900]
+                    : (isDarkMode ? const Color(0xFF252530) : Colors.grey[50]),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
@@ -1186,15 +1353,20 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 // Toggle Identical Logic
                 IconButton(
                   icon: Icon(
-                    settingsState.appSettings.showIdenticalEntries ? Icons.visibility : Icons.visibility_off,
-                    color: settingsState.appSettings.showIdenticalEntries 
-                        ? theme.colorScheme.onSurface.withAlpha(180) 
+                    settingsState.appSettings.showIdenticalEntries
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: settingsState.appSettings.showIdenticalEntries
+                        ? theme.colorScheme.onSurface.withAlpha(180)
                         : theme.colorScheme.onSurface.withAlpha(100),
                     size: 20,
                   ),
-                  tooltip: settingsState.appSettings.showIdenticalEntries ? 'Hide identical entries' : 'Show identical entries',
+                  tooltip: settingsState.appSettings.showIdenticalEntries
+                      ? 'Hide identical entries'
+                      : 'Show identical entries',
                   onPressed: () {
-                    context.read<SettingsBloc>().add(UpdateShowIdenticalEntries(!settingsState.appSettings.showIdenticalEntries));
+                    context.read<SettingsBloc>().add(UpdateShowIdenticalEntries(
+                        !settingsState.appSettings.showIdenticalEntries));
                   },
                 ),
                 _buildFilterIconButton(
@@ -1246,7 +1418,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     );
   }
 
-  Widget _buildStatsChart(int added, int removed, int modified, AppThemeState themeState) {
+  Widget _buildStatsChart(
+      int added, int removed, int modified, AppThemeState themeState) {
     final total = added + removed + modified;
     if (total == 0) return const SizedBox.shrink();
 
@@ -1323,7 +1496,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: isActive
-                ? Border.all(color: color.withAlpha(isDark ? 150 : 100), width: 1.5)
+                ? Border.all(
+                    color: color.withAlpha(isDark ? 150 : 100), width: 1.5)
                 : null,
           ),
           child: Icon(
@@ -1355,19 +1529,22 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     );
   }
 
-  Widget _buildFileWatcherStatus(SettingsState settingsState, bool isAmoled, bool isDarkMode) {
+  Widget _buildFileWatcherStatus(
+      SettingsState settingsState, bool isAmoled, bool isDarkMode) {
     final isAutoReloadEnabled = settingsState.status == SettingsStatus.loaded &&
-                                settingsState.appSettings.autoReloadOnChange;
-    
+        settingsState.appSettings.autoReloadOnChange;
+
     return BlocBuilder<FileWatcherBloc, FileWatcherState>(
       builder: (context, watcherState) {
-        final isWatching = watcherState is FileWatcherActive && watcherState.isEnabled;
-        
+        final isWatching =
+            watcherState is FileWatcherActive && watcherState.isEnabled;
+
         return Tooltip(
-          message: 'File Watching: ${isWatching ? "ON" : "OFF"}\nAutomatically recompare when files change on disk',
+          message:
+              'File Watching: ${isWatching ? "ON" : "OFF"}\nAutomatically recompare when files change on disk',
           waitDuration: const Duration(milliseconds: 500),
           child: InputChip(
-             avatar: isWatching 
+            avatar: isWatching
                 ? const _PulsingIndicator()
                 : Icon(
                     Icons.visibility_off,
@@ -1388,7 +1565,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             showCheckmark: false,
             onSelected: (value) => _toggleFileWatching(value),
             backgroundColor: Colors.transparent,
-            selectedColor: isDarkMode ? Colors.green.withValues(alpha: 0.15) : Colors.green.withValues(alpha: 0.1),
+            selectedColor: isDarkMode
+                ? Colors.green.withValues(alpha: 0.15)
+                : Colors.green.withValues(alpha: 0.1),
             side: BorderSide(
               color: isWatching
                   ? (isDarkMode ? Colors.green[700]! : Colors.green[600]!)
@@ -1401,7 +1580,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       },
     );
   }
-
 
   Widget _buildDiffListItem({
     required String key,
@@ -1441,29 +1619,33 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         statusLabel = 'IDENTICAL';
     }
 
-    final borderColor = isAmoled ? Colors.grey[850]! : (isDark ? const Color(0xFF2E2E38) : Colors.grey[200]!);
+    final borderColor = isAmoled
+        ? Colors.grey[850]!
+        : (isDark ? const Color(0xFF2E2E38) : Colors.grey[200]!);
     final textMuted = isDark ? Colors.grey[500]! : Colors.grey[500]!;
-    
+
     final settingsState = context.watch<SettingsBloc>().state;
     // Get font family from settings, with safe fallback for old data
     String fontFamily;
     try {
-      fontFamily = settingsState.status == SettingsStatus.loaded 
-          ? settingsState.appSettings.diffFontFamily 
+      fontFamily = settingsState.status == SettingsStatus.loaded
+          ? settingsState.appSettings.diffFontFamily
           : 'System Default';
       if (fontFamily.isEmpty) fontFamily = 'System Default';
     } catch (_) {
       fontFamily = 'System Default';
     }
     // Map font family name to actual font family string
-    final String actualFontFamily = fontFamily == 'System Default' 
-        ? 'Consolas, Monaco, monospace' 
+    final String actualFontFamily = fontFamily == 'System Default'
+        ? 'Consolas, Monaco, monospace'
         : fontFamily;
-    
+
     // Monospace text style for values
     final monoStyle = TextStyle(
       fontFamily: actualFontFamily,
-      fontSize: settingsState.status == SettingsStatus.loaded ? settingsState.appSettings.diffFontSize : 14.0,
+      fontSize: settingsState.status == SettingsStatus.loaded
+          ? settingsState.appSettings.diffFontSize
+          : 14.0,
       height: 1.4,
     );
 
@@ -1492,7 +1674,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             // Content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -1515,7 +1698,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         const SizedBox(width: 8),
                         // Compact status chip (just dot + label)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: statusColor.withAlpha(isDark ? 35 : 25),
                             borderRadius: BorderRadius.circular(4),
@@ -1558,10 +1742,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: themeState.diffRemovedColor.withAlpha(isDark ? 20 : 15),
+                                color: themeState.diffRemovedColor
+                                    .withAlpha(isDark ? 20 : 15),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
-                                  color: themeState.diffRemovedColor.withAlpha(isDark ? 40 : 30),
+                                  color: themeState.diffRemovedColor
+                                      .withAlpha(isDark ? 40 : 30),
                                 ),
                               ),
                               child: Column(
@@ -1580,9 +1766,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                   Text(
                                     value1 ?? '--',
                                     style: monoStyle.copyWith(
-                                      color: theme.colorScheme.onSurface.withAlpha(220),
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha(220),
                                       decoration: TextDecoration.lineThrough,
-                                      decorationColor: themeState.diffRemovedColor.withAlpha(150),
+                                      decorationColor: themeState
+                                          .diffRemovedColor
+                                          .withAlpha(150),
                                     ),
                                     maxLines: 4,
                                     overflow: TextOverflow.ellipsis,
@@ -1607,10 +1796,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: themeState.diffAddedColor.withAlpha(isDark ? 20 : 15),
+                                color: themeState.diffAddedColor
+                                    .withAlpha(isDark ? 20 : 15),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
-                                  color: themeState.diffAddedColor.withAlpha(isDark ? 40 : 30),
+                                  color: themeState.diffAddedColor
+                                      .withAlpha(isDark ? 40 : 30),
                                 ),
                               ),
                               child: Column(
@@ -1629,7 +1820,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                   Text(
                                     value2 ?? '--',
                                     style: monoStyle.copyWith(
-                                      color: theme.colorScheme.onSurface.withAlpha(220),
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha(220),
                                     ),
                                     maxLines: 4,
                                     overflow: TextOverflow.ellipsis,
@@ -1645,7 +1837,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Source: ', style: TextStyle(fontSize: 11, color: textMuted, fontWeight: FontWeight.w500)),
+                          Text('Source: ',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: textMuted,
+                                  fontWeight: FontWeight.w500)),
                           Expanded(
                             child: Text(
                               value1 ?? '--',
@@ -1664,7 +1860,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Value: ', style: TextStyle(fontSize: 11, color: textMuted, fontWeight: FontWeight.w500)),
+                          Text('Value: ',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: textMuted,
+                                  fontWeight: FontWeight.w500)),
                           Expanded(
                             child: Text(
                               value2 ?? '--',
@@ -1682,12 +1882,17 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Value: ', style: TextStyle(fontSize: 11, color: textMuted, fontWeight: FontWeight.w500)),
+                          Text('Value: ',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: textMuted,
+                                  fontWeight: FontWeight.w500)),
                           Expanded(
                             child: Text(
                               value1 ?? '--',
                               style: monoStyle.copyWith(
-                                color: theme.colorScheme.onSurface.withAlpha(180),
+                                color:
+                                    theme.colorScheme.onSurface.withAlpha(180),
                               ),
                               maxLines: 4,
                               overflow: TextOverflow.ellipsis,
@@ -1754,33 +1959,38 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 spacing: 8,
                 runSpacing: 8,
                 alignment: WrapAlignment.center,
-                children: ['.lang', '.json', '.xml', '.xliff', '.properties', '.yaml']
-                    .map((ext) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                            ),
-                          ),
-                          child: Text(
-                            ext,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: theme.colorScheme.primary,
-                              fontFamily: 'Consolas, Monaco, monospace',
-                            ),
-                          ),
-                        ))
-                    .toList(),
+                children:
+                    ['.lang', '.json', '.xml', '.xliff', '.properties', '.yaml']
+                        .map((ext) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary
+                                      .withValues(alpha: 0.15),
+                                ),
+                              ),
+                              child: Text(
+                                ext,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.primary,
+                                  fontFamily: 'Consolas, Monaco, monospace',
+                                ),
+                              ),
+                            ))
+                        .toList(),
               ),
               const SizedBox(height: 32),
               // Quick Tutorial Link
               TextButton.icon(
                 onPressed: () => _showQuickTutorialDialog(context),
-                icon: Icon(Icons.lightbulb_outline, size: 18, color: theme.colorScheme.secondary),
+                icon: Icon(Icons.lightbulb_outline,
+                    size: 18, color: theme.colorScheme.secondary),
                 label: Text(
                   'Quick Tutorial',
                   style: TextStyle(color: theme.colorScheme.secondary),
@@ -1790,12 +2000,14 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               // Recent Comparisons Section
               BlocBuilder<HistoryBloc, HistoryState>(
                 builder: (context, historyState) {
-                  if (historyState is HistoryLoaded && historyState.history.isNotEmpty) {
+                  if (historyState is HistoryLoaded &&
+                      historyState.history.isNotEmpty) {
                     final recentItems = historyState.history.take(5).toList();
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
+                        Divider(
+                            color: theme.dividerColor.withValues(alpha: 0.5)),
                         const SizedBox(height: 12),
                         Text(
                           'Recent Comparisons',
@@ -1805,7 +2017,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        ...recentItems.map((session) => _buildRecentComparisonItem(context, session, theme, textSecondary)),
+                        ...recentItems.map((session) =>
+                            _buildRecentComparisonItem(
+                                context, session, theme, textSecondary)),
                       ],
                     );
                   }
@@ -1819,17 +2033,20 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     );
   }
 
-  Widget _buildRecentComparisonItem(BuildContext context, ComparisonSession session, ThemeData theme, Color textSecondary) {
+  Widget _buildRecentComparisonItem(BuildContext context,
+      ComparisonSession session, ThemeData theme, Color textSecondary) {
     final sourceName = session.file1Path.split(Platform.pathSeparator).last;
     final targetName = session.file2Path.split(Platform.pathSeparator).last;
 
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.history, color: theme.colorScheme.primary.withValues(alpha: 0.7)),
+      leading: Icon(Icons.history,
+          color: theme.colorScheme.primary.withValues(alpha: 0.7)),
       title: Text(
         '$sourceName ↔ $targetName',
-        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+        style:
+            theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
@@ -1846,7 +2063,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     if (!file1.existsSync() || !file2.existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('One or both files from this session no longer exist.')),
+        const SnackBar(
+            content:
+                Text('One or both files from this session no longer exist.')),
       );
       return;
     }
@@ -1895,7 +2114,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             SizedBox(height: 8),
             Text('2. Click "Compare Files" to see the differences.'),
             SizedBox(height: 8),
-            Text('3. Use filters to focus on Added, Removed, or Modified keys.'),
+            Text(
+                '3. Use filters to focus on Added, Removed, or Modified keys.'),
             SizedBox(height: 8),
             Text('4. Enable File Watching to auto-recompare on file changes.'),
             SizedBox(height: 8),
@@ -1920,7 +2140,8 @@ class _PulsingIndicator extends StatefulWidget {
   State<_PulsingIndicator> createState() => _PulsingIndicatorState();
 }
 
-class _PulsingIndicatorState extends State<_PulsingIndicator> with SingleTickerProviderStateMixin {
+class _PulsingIndicatorState extends State<_PulsingIndicator>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _animation;
 
@@ -1949,9 +2170,9 @@ class _PulsingIndicatorState extends State<_PulsingIndicator> with SingleTickerP
     return FadeTransition(
       opacity: _animation,
       child: Icon(
-            Icons.visibility,
-            size: 16,
-            color: isDark ? Colors.green[400] : Colors.green[700],
+        Icons.visibility,
+        size: 16,
+        color: isDark ? Colors.green[400] : Colors.green[700],
       ),
     );
   }
@@ -1961,10 +2182,12 @@ class _AnimatedEmptyStateIcon extends StatefulWidget {
   const _AnimatedEmptyStateIcon();
 
   @override
-  State<_AnimatedEmptyStateIcon> createState() => _AnimatedEmptyStateIconState();
+  State<_AnimatedEmptyStateIcon> createState() =>
+      _AnimatedEmptyStateIconState();
 }
 
-class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon> with SingleTickerProviderStateMixin {
+class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _rotationAnimation;
   late final Animation<double> _scaleAnimation;
@@ -1976,13 +2199,15 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon> with S
       vsync: this,
       duration: const Duration(seconds: 3),
     )..repeat(reverse: true);
-    
-    _rotationAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(CurvedAnimation(
+
+    _rotationAnimation =
+        Tween<double>(begin: -0.05, end: 0.05).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
     ));
-    
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(CurvedAnimation(
+
+    _scaleAnimation =
+        Tween<double>(begin: 0.95, end: 1.05).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
     ));
@@ -2014,4 +2239,4 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon> with S
       },
     );
   }
-} 
+}

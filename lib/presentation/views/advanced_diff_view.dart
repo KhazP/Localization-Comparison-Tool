@@ -8,6 +8,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
+import 'package:localizer_app_main/core/services/backup_service.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
 
@@ -52,10 +53,10 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   double _keyWidth = 0.28;
   double _oldValueWidth = 0.31;
   double _newValueWidth = 0.31;
-  
+
   // Minimum column widths
   static const double _minColWidth = 0.08;
-  
+
   // Thresholds
   static const double _highSimilarityThreshold = 0.7;
   static const double _lowSimilarityThreshold = 0.4;
@@ -67,8 +68,6 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   static const Color _borderColor = Color(0xFF30363D);
   static const Color _textPrimary = Color(0xFFE6EDF3);
   static const Color _textSecondary = Color(0xFF8B949E);
-
-
 
   @override
   void initState() {
@@ -87,18 +86,31 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     int added = 0, removed = 0, modified = 0;
     for (var entry in widget.comparisonResult.diff.entries) {
       switch (entry.value.status) {
-        case StringComparisonStatus.added: added++; break;
-        case StringComparisonStatus.removed: removed++; break;
-        case StringComparisonStatus.modified: modified++; break;
-        default: break;
+        case StringComparisonStatus.added:
+          added++;
+          break;
+        case StringComparisonStatus.removed:
+          removed++;
+          break;
+        case StringComparisonStatus.modified:
+          modified++;
+          break;
+        default:
+          break;
       }
     }
-    return {'added': added, 'removed': removed, 'modified': modified, 'total': added + removed + modified};
+    return {
+      'added': added,
+      'removed': removed,
+      'modified': modified,
+      'total': added + removed + modified
+    };
   }
 
   List<MapEntry<String, ComparisonStatusDetail>> get _paginatedEntries {
     final startIndex = _currentPage * _itemsPerPage;
-    final endIndex = (startIndex + _itemsPerPage).clamp(0, _processedDiffEntries.length);
+    final endIndex =
+        (startIndex + _itemsPerPage).clamp(0, _processedDiffEntries.length);
     if (startIndex >= _processedDiffEntries.length) return [];
     return _processedDiffEntries.sublist(startIndex, endIndex);
   }
@@ -117,7 +129,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   }
 
   void _processDiffEntries() {
-    List<MapEntry<String, ComparisonStatusDetail>> filteredEntries = widget.comparisonResult.diff.entries.where((entry) {
+    List<MapEntry<String, ComparisonStatusDetail>> filteredEntries =
+        widget.comparisonResult.diff.entries.where((entry) {
       final status = entry.value.status;
       final similarity = entry.value.similarity;
 
@@ -131,7 +144,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       }
 
       // Filter Logic (Union of selected filters)
-      if (_selectedFilters.contains(AdvancedDiffFilter.all) || _selectedFilters.isEmpty) {
+      if (_selectedFilters.contains(AdvancedDiffFilter.all) ||
+          _selectedFilters.isEmpty) {
         return true;
       }
 
@@ -148,18 +162,27 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       }
       // Granular modified filters
       if (!matches && status == StringComparisonStatus.modified) {
-         if (_selectedFilters.contains(AdvancedDiffFilter.modifiedHighSimilarity) && 
-             similarity != null && similarity >= _highSimilarityThreshold) {
-           matches = true;
-         }
-         if (!matches && _selectedFilters.contains(AdvancedDiffFilter.modifiedMediumSimilarity) && 
-             similarity != null && similarity >= _lowSimilarityThreshold && similarity < _highSimilarityThreshold) {
-           matches = true;
-         }
-         if (!matches && _selectedFilters.contains(AdvancedDiffFilter.modifiedLowSimilarity) && 
-             similarity != null && similarity < _lowSimilarityThreshold) {
-           matches = true;
-         }
+        if (_selectedFilters
+                .contains(AdvancedDiffFilter.modifiedHighSimilarity) &&
+            similarity != null &&
+            similarity >= _highSimilarityThreshold) {
+          matches = true;
+        }
+        if (!matches &&
+            _selectedFilters
+                .contains(AdvancedDiffFilter.modifiedMediumSimilarity) &&
+            similarity != null &&
+            similarity >= _lowSimilarityThreshold &&
+            similarity < _highSimilarityThreshold) {
+          matches = true;
+        }
+        if (!matches &&
+            _selectedFilters
+                .contains(AdvancedDiffFilter.modifiedLowSimilarity) &&
+            similarity != null &&
+            similarity < _lowSimilarityThreshold) {
+          matches = true;
+        }
       }
 
       return matches;
@@ -167,10 +190,13 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
     // Sorting
     if (_currentSortOrder == DiffViewSortOrder.alphabetical) {
-      filteredEntries.sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+      filteredEntries
+          .sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
     } else {
       final sourceKeys = widget.comparisonResult.file1Data.keys.toList();
-      final keyIndex = {for (var i = 0; i < sourceKeys.length; i++) sourceKeys[i]: i};
+      final keyIndex = {
+        for (var i = 0; i < sourceKeys.length; i++) sourceKeys[i]: i
+      };
       filteredEntries.sort((a, b) {
         final indexA = keyIndex[a.key] ?? -1;
         final indexB = keyIndex[b.key] ?? -1;
@@ -190,7 +216,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   Future<void> _exportResult(BuildContext context) async {
     final settings = context.read<SettingsBloc>().state.appSettings;
     final format = settings.defaultExportFormat;
-    
+
     if (format == 'Excel') {
       await _exportToExcel(context);
     } else if (format == 'JSON') {
@@ -203,36 +229,41 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   Future<void> _exportToExcel(BuildContext context) async {
     var excel = Excel.createExcel();
     Sheet sheetObject = excel['Sheet1'];
-    
+
     // Header
     sheetObject.appendRow([
-      TextCellValue('Status'), 
-      TextCellValue('String Key'), 
-      TextCellValue('Old Value (Source)'), 
-      TextCellValue('New Value (Target)'), 
+      TextCellValue('Status'),
+      TextCellValue('String Key'),
+      TextCellValue('Old Value (Source)'),
+      TextCellValue('New Value (Target)'),
       TextCellValue('Similarity')
     ]);
-    
+
     for (var entry in _processedDiffEntries) {
       final key = entry.key;
       final status = entry.value.status;
       final similarity = entry.value.similarity;
       final file1Value = widget.comparisonResult.file1Data[key] ?? '';
       final file2Value = widget.comparisonResult.file2Data[key] ?? '';
-      
-      String statusText = status == StringComparisonStatus.added ? 'ADDED' 
-          : status == StringComparisonStatus.removed ? 'REMOVED' : 'MODIFIED';
-      String simText = similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-      
+
+      String statusText = status == StringComparisonStatus.added
+          ? 'ADDED'
+          : status == StringComparisonStatus.removed
+              ? 'REMOVED'
+              : 'MODIFIED';
+      String simText =
+          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
+
       sheetObject.appendRow([
-        TextCellValue(statusText), 
-        TextCellValue(key), 
+        TextCellValue(statusText),
+        TextCellValue(key),
         TextCellValue(status == StringComparisonStatus.added ? '' : file1Value),
-        TextCellValue(status == StringComparisonStatus.removed ? '' : file2Value),
+        TextCellValue(
+            status == StringComparisonStatus.removed ? '' : file2Value),
         TextCellValue(simText)
       ]);
     }
-    
+
     // Save
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save Excel Report',
@@ -240,36 +271,44 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       type: FileType.custom,
       allowedExtensions: ['xlsx'],
     );
-    
+
     if (outputPath != null) {
       try {
+        final settings = context.read<SettingsBloc>().state.appSettings;
+        await BackupService().createBackupIfNeeded(
+          targetPath: outputPath,
+          settings: settings,
+        );
         var fileBytes = excel.save();
         if (fileBytes != null) {
           File(outputPath)
             ..createSync(recursive: true)
             ..writeAsBytesSync(fileBytes);
-            
+
           if (context.mounted) {
-             final settings = context.read<SettingsBloc>().state.appSettings;
-             if (settings.openFolderAfterExport) {
-               // Attempt to open folder
-               final folder = File(outputPath).parent.path;
-               // Open folder logic would go here, for now just notify
-               // On Windows we can try 'explorer.exe'
-               if (Platform.isWindows) {
-                 Process.run('explorer.exe', [folder]);
-               }
-             }
+            if (settings.openFolderAfterExport) {
+              // Attempt to open folder
+              final folder = File(outputPath).parent.path;
+              // Open folder logic would go here, for now just notify
+              // On Windows we can try 'explorer.exe'
+              if (Platform.isWindows) {
+                Process.run('explorer.exe', [folder]);
+              }
+            }
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Excel saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+              SnackBar(
+                  content: Text('Excel saved to: $outputPath'),
+                  behavior: SnackBarBehavior.floating),
             );
           }
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save Excel: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('Failed to save Excel: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -284,12 +323,13 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       final similarity = entry.value.similarity;
       final file1Value = widget.comparisonResult.file1Data[key] ?? '';
       final file2Value = widget.comparisonResult.file2Data[key] ?? '';
-      
+
       jsonData.add({
         'status': status.name,
         'key': key,
         'old_value': status == StringComparisonStatus.added ? null : file1Value,
-        'new_value': status == StringComparisonStatus.removed ? null : file2Value,
+        'new_value':
+            status == StringComparisonStatus.removed ? null : file2Value,
         'similarity': similarity
       });
     }
@@ -302,23 +342,31 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
-    
+
     if (outputPath != null) {
       try {
+        final settings = context.read<SettingsBloc>().state.appSettings;
+        await BackupService().createBackupIfNeeded(
+          targetPath: outputPath,
+          settings: settings,
+        );
         await File(outputPath).writeAsString(jsonString);
         if (context.mounted) {
-             final settings = context.read<SettingsBloc>().state.appSettings;
-             if (settings.openFolderAfterExport && Platform.isWindows) {
-               Process.run('explorer.exe', [File(outputPath).parent.path]);
-             }
+          if (settings.openFolderAfterExport && Platform.isWindows) {
+            Process.run('explorer.exe', [File(outputPath).parent.path]);
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('JSON saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+            SnackBar(
+                content: Text('JSON saved to: $outputPath'),
+                behavior: SnackBarBehavior.floating),
           );
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save JSON: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('Failed to save JSON: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -326,26 +374,41 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   }
 
   Future<void> _exportToCsv(BuildContext context) async {
-    List<List<dynamic>> csvData = [['Status', 'String Key', 'Old Value (Source)', 'New Value (Target)', 'Similarity']];
+    List<List<dynamic>> csvData = [
+      [
+        'Status',
+        'String Key',
+        'Old Value (Source)',
+        'New Value (Target)',
+        'Similarity'
+      ]
+    ];
     for (var entry in _processedDiffEntries) {
       final key = entry.key;
       final status = entry.value.status;
       final similarity = entry.value.similarity;
       final file1Value = widget.comparisonResult.file1Data[key] ?? '';
       final file2Value = widget.comparisonResult.file2Data[key] ?? '';
-      
-      String statusText = status == StringComparisonStatus.added ? 'ADDED' 
-          : status == StringComparisonStatus.removed ? 'REMOVED' : 'MODIFIED';
-      String simText = similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-      
-      csvData.add([statusText, key, 
+
+      String statusText = status == StringComparisonStatus.added
+          ? 'ADDED'
+          : status == StringComparisonStatus.removed
+              ? 'REMOVED'
+              : 'MODIFIED';
+      String simText =
+          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
+
+      csvData.add([
+        statusText,
+        key,
         status == StringComparisonStatus.added ? '' : file1Value,
         status == StringComparisonStatus.removed ? '' : file2Value,
-        simText]);
+        simText
+      ]);
     }
-    
+
     String csvString = const ListToCsvConverter().convert(csvData);
-    
+
     final settings = context.read<SettingsBloc>().state.appSettings;
     if (settings.includeUtf8Bom) {
       csvString = '\uFEFF$csvString';
@@ -357,22 +420,30 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       type: FileType.custom,
       allowedExtensions: ['csv'],
     );
-    
+
     if (outputPath != null) {
       try {
+        await BackupService().createBackupIfNeeded(
+          targetPath: outputPath,
+          settings: settings,
+        );
         await File(outputPath).writeAsString(csvString);
         if (context.mounted) {
-             if (settings.openFolderAfterExport && Platform.isWindows) {
-               Process.run('explorer.exe', [File(outputPath).parent.path]);
-             }
+          if (settings.openFolderAfterExport && Platform.isWindows) {
+            Process.run('explorer.exe', [File(outputPath).parent.path]);
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('CSV saved to: $outputPath'), behavior: SnackBarBehavior.floating),
+            SnackBar(
+                content: Text('CSV saved to: $outputPath'),
+                behavior: SnackBarBehavior.floating),
           );
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save CSV: $e'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text('Failed to save CSV: $e'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -390,12 +461,20 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
         // Use modern palette for dark mode, fallback for light
-        final bgColor = isDarkMode ? (isAmoled ? Colors.black : _bgPrimary) : Colors.grey[100]!;
-        final headerBg = isDarkMode ? (isAmoled ? const Color(0xFF111111) : _bgHeader) : Colors.grey[200]!;
-        final rowAltBg = isDarkMode ? (isAmoled ? const Color(0xFF0A0A0A) : _bgSecondary) : Colors.white;
+        final bgColor = isDarkMode
+            ? (isAmoled ? Colors.black : _bgPrimary)
+            : Colors.grey[100]!;
+        final headerBg = isDarkMode
+            ? (isAmoled ? const Color(0xFF111111) : _bgHeader)
+            : Colors.grey[200]!;
+        final rowAltBg = isDarkMode
+            ? (isAmoled ? const Color(0xFF0A0A0A) : _bgSecondary)
+            : Colors.white;
         final textColor = isDarkMode ? _textPrimary : Colors.black87;
         final subtleText = isDarkMode ? _textSecondary : Colors.grey[600]!;
-        final borderCol = isDarkMode ? (isAmoled ? Colors.grey[900]! : _borderColor) : Colors.grey[300]!;
+        final borderCol = isDarkMode
+            ? (isAmoled ? Colors.grey[900]! : _borderColor)
+            : Colors.grey[300]!;
 
         final themeState = context.watch<ThemeBloc>().state;
         final stats = _stats;
@@ -405,21 +484,25 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           body: Column(
             children: [
               // Compact Toolbar
-              _buildToolbar(context, isDarkMode, isAmoled, headerBg, textColor, subtleText, borderCol, stats, themeState),
-              
+              _buildToolbar(context, isDarkMode, isAmoled, headerBg, textColor,
+                  subtleText, borderCol, stats, themeState),
+
               // Filter Bar
-              _buildFilterBar(isDarkMode, textColor, borderCol, subtleText, themeState),
-              
+              _buildFilterBar(
+                  isDarkMode, textColor, borderCol, subtleText, themeState),
+
               // Divider
               Container(height: 1, color: borderCol),
-              
+
               // Table
               Expanded(
-                child: _buildTable(context, isDarkMode, isAmoled, headerBg, rowAltBg, textColor, subtleText, borderCol, themeState),
+                child: _buildTable(context, isDarkMode, isAmoled, headerBg,
+                    rowAltBg, textColor, subtleText, borderCol, themeState),
               ),
-              
+
               // Footer with pagination
-              _buildFooter(context, isDarkMode, isAmoled, headerBg, textColor, subtleText, borderCol),
+              _buildFooter(context, isDarkMode, isAmoled, headerBg, textColor,
+                  subtleText, borderCol),
             ],
           ),
         );
@@ -427,8 +510,16 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     );
   }
 
-  Widget _buildToolbar(BuildContext ctx, bool isDark, bool isAmoled, Color headerBg, Color textColor, 
-      Color subtleText, Color borderCol, Map<String, int> stats, AppThemeState themeState) {
+  Widget _buildToolbar(
+      BuildContext ctx,
+      bool isDark,
+      bool isAmoled,
+      Color headerBg,
+      Color textColor,
+      Color subtleText,
+      Color borderCol,
+      Map<String, int> stats,
+      AppThemeState themeState) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -446,22 +537,27 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
           const SizedBox(width: 8),
-          
+
           // Title
-          Text('Diff View', style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Diff View',
+              style: TextStyle(
+                  color: textColor, fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(width: 16),
-          
+
           // Stats badges
           _buildStatBadge('${stats['total']}', 'total', subtleText, isDark),
           const SizedBox(width: 8),
-          _buildStatBadge('${stats['added']}', 'added', themeState.diffAddedColor, isDark),
+          _buildStatBadge(
+              '${stats['added']}', 'added', themeState.diffAddedColor, isDark),
           const SizedBox(width: 8),
-          _buildStatBadge('${stats['removed']}', 'removed', themeState.diffRemovedColor, isDark),
+          _buildStatBadge('${stats['removed']}', 'removed',
+              themeState.diffRemovedColor, isDark),
           const SizedBox(width: 8),
-          _buildStatBadge('${stats['modified']}', 'mod', themeState.diffModifiedColor, isDark),
-          
+          _buildStatBadge('${stats['modified']}', 'mod',
+              themeState.diffModifiedColor, isDark),
+
           const Spacer(),
-          
+
           // Search field
           SizedBox(
             width: 200,
@@ -475,7 +571,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                 prefixIcon: Icon(Icons.search, color: subtleText, size: 18),
                 filled: true,
                 fillColor: isDark ? Colors.black26 : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
                   borderSide: BorderSide(color: borderCol),
@@ -486,7 +583,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: Theme.of(ctx).colorScheme.primary, width: 1.5),
+                  borderSide: BorderSide(
+                      color: Theme.of(ctx).colorScheme.primary, width: 1.5),
                 ),
               ),
               onChanged: (value) {
@@ -496,11 +594,11 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             ),
           ),
           const SizedBox(width: 12),
-          
+
           // Sort toggle
           _buildSortButton(isDark, textColor, subtleText, borderCol),
           const SizedBox(width: 8),
-          
+
           // Export button
           IconButton(
             icon: Icon(Icons.download_outlined, color: textColor, size: 20),
@@ -525,42 +623,47 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(count, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(count,
+              style: TextStyle(
+                  color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 11)),
+          Text(label,
+              style:
+                  TextStyle(color: color.withValues(alpha: 0.8), fontSize: 11)),
         ],
       ),
     );
   }
 
-  Widget _buildFilterBar(bool isDark, Color textColor, Color borderCol, Color subtleText, AppThemeState themeState) {
+  Widget _buildFilterBar(bool isDark, Color textColor, Color borderCol,
+      Color subtleText, AppThemeState themeState) {
     final allFilters = [
       AdvancedDiffFilter.all,
       AdvancedDiffFilter.added,
       AdvancedDiffFilter.removed,
       AdvancedDiffFilter.modified,
     ];
-    
+
     void toggleFilter(AdvancedDiffFilter filter) {
-        setState(() {
-            if (filter == AdvancedDiffFilter.all) {
-                _selectedFilters.clear();
-                _selectedFilters.add(AdvancedDiffFilter.all);
-            } else {
-                _selectedFilters.remove(AdvancedDiffFilter.all);
-                if (_selectedFilters.contains(filter)) {
-                    _selectedFilters.remove(filter);
-                } else {
-                    _selectedFilters.add(filter);
-                }
-                
-                // If nothing selected, revert to All
-                if (_selectedFilters.isEmpty) {
-                    _selectedFilters.add(AdvancedDiffFilter.all);
-                }
-            }
-            _processDiffEntries();
-        });
+      setState(() {
+        if (filter == AdvancedDiffFilter.all) {
+          _selectedFilters.clear();
+          _selectedFilters.add(AdvancedDiffFilter.all);
+        } else {
+          _selectedFilters.remove(AdvancedDiffFilter.all);
+          if (_selectedFilters.contains(filter)) {
+            _selectedFilters.remove(filter);
+          } else {
+            _selectedFilters.add(filter);
+          }
+
+          // If nothing selected, revert to All
+          if (_selectedFilters.isEmpty) {
+            _selectedFilters.add(AdvancedDiffFilter.all);
+          }
+        }
+        _processDiffEntries();
+      });
     }
 
     return Container(
@@ -574,98 +677,124 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            Text('Filters:', style: TextStyle(color: subtleText, fontSize: 13, fontWeight: FontWeight.w500)),
+            Text('Filters:',
+                style: TextStyle(
+                    color: subtleText,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500)),
             const SizedBox(width: 12),
             // Filter Chips
             ...allFilters.map((filter) {
-               bool isSelected = _selectedFilters.contains(filter);
-               String label = '';
-               Color? chipColor;
-               
-               switch (filter) {
-                   case AdvancedDiffFilter.all: label = 'All'; break;
-                   case AdvancedDiffFilter.added: 
-                       label = 'Added'; 
-                       chipColor = themeState.diffAddedColor;
-                       break;
-                   case AdvancedDiffFilter.removed: 
-                       label = 'Removed'; 
-                       chipColor = themeState.diffRemovedColor;
-                       break;
-                   case AdvancedDiffFilter.modified: 
-                       label = 'Modified'; 
-                       chipColor = themeState.diffModifiedColor;
-                       break;
-                   default: label = '';
-               }
-               
-               return Padding(
-                 padding: const EdgeInsets.only(right: 8),
-                 child: FilterChip(
-                   label: Text(label),
-                   selected: isSelected,
-                   onSelected: (_) => toggleFilter(filter),
-                   backgroundColor: isDark ? Colors.black26 : Colors.grey[200],
-                   selectedColor: (chipColor ?? Colors.blue).withValues(alpha: 0.2),
-                   checkmarkColor: chipColor ?? Colors.blue,
-                   labelStyle: TextStyle(
-                       color: isSelected ? (chipColor ?? Colors.blue) : textColor,
-                       fontSize: 12,
-                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                   ),
-                   side: BorderSide(
-                       color: isSelected ? (chipColor ?? Colors.blue) : borderCol,
-                       width: 1,
-                   ),
-                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                   showCheckmark: false,
-                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                   visualDensity: VisualDensity.compact,
-                 ),
-               );
+              bool isSelected = _selectedFilters.contains(filter);
+              String label = '';
+              Color? chipColor;
+
+              switch (filter) {
+                case AdvancedDiffFilter.all:
+                  label = 'All';
+                  break;
+                case AdvancedDiffFilter.added:
+                  label = 'Added';
+                  chipColor = themeState.diffAddedColor;
+                  break;
+                case AdvancedDiffFilter.removed:
+                  label = 'Removed';
+                  chipColor = themeState.diffRemovedColor;
+                  break;
+                case AdvancedDiffFilter.modified:
+                  label = 'Modified';
+                  chipColor = themeState.diffModifiedColor;
+                  break;
+                default:
+                  label = '';
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(label),
+                  selected: isSelected,
+                  onSelected: (_) => toggleFilter(filter),
+                  backgroundColor: isDark ? Colors.black26 : Colors.grey[200],
+                  selectedColor:
+                      (chipColor ?? Colors.blue).withValues(alpha: 0.2),
+                  checkmarkColor: chipColor ?? Colors.blue,
+                  labelStyle: TextStyle(
+                    color: isSelected ? (chipColor ?? Colors.blue) : textColor,
+                    fontSize: 12,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  side: BorderSide(
+                    color: isSelected ? (chipColor ?? Colors.blue) : borderCol,
+                    width: 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  showCheckmark: false,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                  visualDensity: VisualDensity.compact,
+                ),
+              );
             }),
-            Container(height: 20, width: 1, color: borderCol, margin: const EdgeInsets.symmetric(horizontal: 4)),
+            Container(
+                height: 20,
+                width: 1,
+                color: borderCol,
+                margin: const EdgeInsets.symmetric(horizontal: 4)),
             const SizedBox(width: 4),
-            
+
             // Granular Modified options
             ...[
-                 AdvancedDiffFilter.modifiedHighSimilarity, 
-                 AdvancedDiffFilter.modifiedMediumSimilarity, 
-                 AdvancedDiffFilter.modifiedLowSimilarity
+              AdvancedDiffFilter.modifiedHighSimilarity,
+              AdvancedDiffFilter.modifiedMediumSimilarity,
+              AdvancedDiffFilter.modifiedLowSimilarity
             ].map((filter) {
-               bool isSelected = _selectedFilters.contains(filter);
-               String label = '';
-               switch(filter) {
-                   case AdvancedDiffFilter.modifiedHighSimilarity: label = 'Mod. High (≥70%)'; break;
-                   case AdvancedDiffFilter.modifiedMediumSimilarity: label = 'Mod. Med (40-70%)'; break;
-                   case AdvancedDiffFilter.modifiedLowSimilarity: label = 'Mod. Low (<40%)'; break;
-                   default: break;
-               }
-               
-               return Padding(
-                 padding: const EdgeInsets.only(right: 8),
-                 child: FilterChip(
-                   label: Text(label),
-                   selected: isSelected,
-                   onSelected: (_) => toggleFilter(filter),
-                   backgroundColor: isDark ? Colors.black26 : Colors.grey[200],
-                   selectedColor: themeState.diffModifiedColor.withValues(alpha: 0.2),
-                   labelStyle: TextStyle(
-                       color: isSelected ? themeState.diffModifiedColor : textColor,
-                       fontSize: 12,
-                   ),
-                   side: BorderSide(
-                       color: isSelected ? themeState.diffModifiedColor : borderCol,
-                   ),
-                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                   showCheckmark: false,
-                   visualDensity: VisualDensity.compact,
-                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                 ),
-               );
+              bool isSelected = _selectedFilters.contains(filter);
+              String label = '';
+              switch (filter) {
+                case AdvancedDiffFilter.modifiedHighSimilarity:
+                  label = 'Mod. High (≥70%)';
+                  break;
+                case AdvancedDiffFilter.modifiedMediumSimilarity:
+                  label = 'Mod. Med (40-70%)';
+                  break;
+                case AdvancedDiffFilter.modifiedLowSimilarity:
+                  label = 'Mod. Low (<40%)';
+                  break;
+                default:
+                  break;
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(label),
+                  selected: isSelected,
+                  onSelected: (_) => toggleFilter(filter),
+                  backgroundColor: isDark ? Colors.black26 : Colors.grey[200],
+                  selectedColor:
+                      themeState.diffModifiedColor.withValues(alpha: 0.2),
+                  labelStyle: TextStyle(
+                    color:
+                        isSelected ? themeState.diffModifiedColor : textColor,
+                    fontSize: 12,
+                  ),
+                  side: BorderSide(
+                    color:
+                        isSelected ? themeState.diffModifiedColor : borderCol,
+                  ),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  showCheckmark: false,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+              );
             }),
-            
+
             // Clear All Button (appears if anything but All is selected)
             if (!_selectedFilters.contains(AdvancedDiffFilter.all))
               TextButton(
@@ -674,13 +803,14 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     _selectedFilters = {AdvancedDiffFilter.all};
                     _processDiffEntries();
                   });
-                }, 
+                },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   minimumSize: const Size(0, 32),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text('Clear', style: TextStyle(color: subtleText, fontSize: 12)),
+                child: Text('Clear',
+                    style: TextStyle(color: subtleText, fontSize: 12)),
               ),
           ],
         ),
@@ -688,12 +818,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     );
   }
 
-  Widget _buildSortButton(bool isDark, Color textColor, Color subtleText, Color borderCol) {
+  Widget _buildSortButton(
+      bool isDark, Color textColor, Color subtleText, Color borderCol) {
     return InkWell(
       onTap: () {
         setState(() {
-          _currentSortOrder = _currentSortOrder == DiffViewSortOrder.alphabetical
-              ? DiffViewSortOrder.fileOrder : DiffViewSortOrder.alphabetical;
+          _currentSortOrder =
+              _currentSortOrder == DiffViewSortOrder.alphabetical
+                  ? DiffViewSortOrder.fileOrder
+                  : DiffViewSortOrder.alphabetical;
         });
         _processDiffEntries();
       },
@@ -710,12 +843,17 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              _currentSortOrder == DiffViewSortOrder.alphabetical ? Icons.sort_by_alpha : Icons.format_list_numbered,
-              color: subtleText, size: 16,
+              _currentSortOrder == DiffViewSortOrder.alphabetical
+                  ? Icons.sort_by_alpha
+                  : Icons.format_list_numbered,
+              color: subtleText,
+              size: 16,
             ),
             const SizedBox(width: 6),
             Text(
-              _currentSortOrder == DiffViewSortOrder.alphabetical ? 'A-Z' : 'File',
+              _currentSortOrder == DiffViewSortOrder.alphabetical
+                  ? 'A-Z'
+                  : 'File',
               style: TextStyle(color: textColor, fontSize: 13),
             ),
           ],
@@ -724,8 +862,16 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     );
   }
 
-  Widget _buildTable(BuildContext ctx, bool isDark, bool isAmoled, Color headerBg, Color rowAltBg, 
-      Color textColor, Color subtleText, Color borderCol, AppThemeState themeState) {
+  Widget _buildTable(
+      BuildContext ctx,
+      bool isDark,
+      bool isAmoled,
+      Color headerBg,
+      Color rowAltBg,
+      Color textColor,
+      Color subtleText,
+      Color borderCol,
+      AppThemeState themeState) {
     if (_processedDiffEntries.isEmpty) {
       return Center(
         child: Column(
@@ -733,7 +879,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           children: [
             Icon(Icons.search_off, color: subtleText, size: 48),
             const SizedBox(height: 12),
-            Text('No results match your filters', style: TextStyle(color: subtleText, fontSize: 14)),
+            Text('No results match your filters',
+                style: TextStyle(color: subtleText, fontSize: 14)),
           ],
         ),
       );
@@ -750,8 +897,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         return Column(
           children: [
             // Header row with resizable dividers
-            _buildHeaderRow(statusW, keyW, oldValW, newValW, headerBg, textColor, borderCol, totalWidth),
-            
+            _buildHeaderRow(statusW, keyW, oldValW, newValW, headerBg,
+                textColor, borderCol, totalWidth),
+
             // Data rows
             Expanded(
               child: ListView.builder(
@@ -760,11 +908,22 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                   final entry = _paginatedEntries[index];
                   final globalIndex = _currentPage * _itemsPerPage + index;
                   final isAlt = index % 2 == 1;
-                  
+
                   return _buildDataRow(
-                    entry, globalIndex, isAlt, 
-                    statusW, keyW, oldValW, newValW,
-                    isDark, isAmoled, rowAltBg, textColor, subtleText, borderCol, themeState,
+                    entry,
+                    globalIndex,
+                    isAlt,
+                    statusW,
+                    keyW,
+                    oldValW,
+                    newValW,
+                    isDark,
+                    isAmoled,
+                    rowAltBg,
+                    textColor,
+                    subtleText,
+                    borderCol,
+                    themeState,
                   );
                 },
               ),
@@ -775,8 +934,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     );
   }
 
-  Widget _buildHeaderRow(double statusW, double keyW, double oldValW, double newValW, 
-      Color headerBg, Color textColor, Color borderCol, double totalWidth) {
+  Widget _buildHeaderRow(
+      double statusW,
+      double keyW,
+      double oldValW,
+      double newValW,
+      Color headerBg,
+      Color textColor,
+      Color borderCol,
+      double totalWidth) {
     return Container(
       height: 36,
       decoration: BoxDecoration(
@@ -789,34 +955,54 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           Container(
             width: 40,
             alignment: Alignment.center,
-            child: Text('#', style: TextStyle(color: textColor.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text('#',
+                style: TextStyle(
+                    color: textColor.withValues(alpha: 0.6),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
           ),
           _buildResizableDivider(0, borderCol, totalWidth),
-          
+
           // Status
           SizedBox(
             width: statusW - 6,
-            child: Text('Status', style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text('Status',
+                style: TextStyle(
+                    color: textColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
           ),
           _buildResizableDivider(1, borderCol, totalWidth),
-          
+
           // Key
           SizedBox(
             width: keyW - 6,
-            child: Text('String Key', style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text('String Key',
+                style: TextStyle(
+                    color: textColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
           ),
           _buildResizableDivider(2, borderCol, totalWidth),
-          
+
           // Old Value
           SizedBox(
             width: oldValW - 6,
-            child: Text('Old Value (Source)', style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text('Old Value (Source)',
+                style: TextStyle(
+                    color: textColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
           ),
           _buildResizableDivider(3, borderCol, totalWidth),
-          
+
           // New Value
           Expanded(
-            child: Text('New Value (Target)', style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text('New Value (Target)',
+                style: TextStyle(
+                    color: textColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -851,19 +1037,22 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       case 0: // Between row# and status - move status
         break;
       case 1: // Between status and key
-        if (_statusWidth + delta >= _minColWidth && _keyWidth - delta >= _minColWidth) {
+        if (_statusWidth + delta >= _minColWidth &&
+            _keyWidth - delta >= _minColWidth) {
           _statusWidth += delta;
           _keyWidth -= delta;
         }
         break;
       case 2: // Between key and old value
-        if (_keyWidth + delta >= _minColWidth && _oldValueWidth - delta >= _minColWidth) {
+        if (_keyWidth + delta >= _minColWidth &&
+            _oldValueWidth - delta >= _minColWidth) {
           _keyWidth += delta;
           _oldValueWidth -= delta;
         }
         break;
       case 3: // Between old and new value
-        if (_oldValueWidth + delta >= _minColWidth && _newValueWidth - delta >= _minColWidth) {
+        if (_oldValueWidth + delta >= _minColWidth &&
+            _newValueWidth - delta >= _minColWidth) {
           _oldValueWidth += delta;
           _newValueWidth -= delta;
         }
@@ -871,10 +1060,21 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     }
   }
 
-  Widget _buildDataRow(MapEntry<String, ComparisonStatusDetail> entry, int globalIndex, bool isAlt,
-      double statusW, double keyW, double oldValW, double newValW,
-      bool isDark, bool isAmoled, Color rowAltBg, Color textColor, Color subtleText, Color borderCol, AppThemeState themeState) {
-    
+  Widget _buildDataRow(
+      MapEntry<String, ComparisonStatusDetail> entry,
+      int globalIndex,
+      bool isAlt,
+      double statusW,
+      double keyW,
+      double oldValW,
+      double newValW,
+      bool isDark,
+      bool isAmoled,
+      Color rowAltBg,
+      Color textColor,
+      Color subtleText,
+      Color borderCol,
+      AppThemeState themeState) {
     // Get font settings
     final settingsState = context.watch<SettingsBloc>().state;
     String fontFamily = 'Consolas, Monaco, monospace';
@@ -886,7 +1086,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         fontSize = settingsState.appSettings.diffFontSize;
       } catch (_) {}
     }
-    
+
     final key = entry.key;
     final status = entry.value.status;
     final similarity = entry.value.similarity;
@@ -907,7 +1107,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         break;
       case StringComparisonStatus.modified:
         statusColor = themeState.diffModifiedColor;
-        statusText = similarity != null ? 'MOD ${(similarity * 100).toInt()}%' : 'MOD';
+        statusText =
+            similarity != null ? 'MOD ${(similarity * 100).toInt()}%' : 'MOD';
         break;
       default:
         statusColor = subtleText;
@@ -915,7 +1116,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     }
 
     // Row background with subtle status tint
-    final rowBg = isAlt ? rowAltBg : (isDark ? (isAmoled ? Colors.black : _bgPrimary) : Colors.white);
+    final rowBg = isAlt
+        ? rowAltBg
+        : (isDark ? (isAmoled ? Colors.black : _bgPrimary) : Colors.white);
     final tintedBg = Color.lerp(rowBg, statusColor, 0.03)!;
 
     // Build value widgets
@@ -924,32 +1127,49 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
     if (status == StringComparisonStatus.modified) {
       oldValueWidget = DiffHighlighter.buildDiffText(
-        file1Value, file2Value,
+        file1Value,
+        file2Value,
         isSource: true,
-        baseStyle: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+        baseStyle: TextStyle(
+            color: textColor, fontSize: fontSize, fontFamily: fontFamily),
         maxLines: 2,
         deletionColor: themeState.diffRemovedColor,
       );
       newValueWidget = DiffHighlighter.buildDiffText(
-        file1Value, file2Value,
+        file1Value,
+        file2Value,
         isSource: false,
-        baseStyle: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+        baseStyle: TextStyle(
+            color: textColor, fontSize: fontSize, fontFamily: fontFamily),
         maxLines: 2,
         insertionColor: themeState.diffAddedColor,
       );
     } else if (status == StringComparisonStatus.added) {
-      oldValueWidget = Text('—', style: TextStyle(color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
-      newValueWidget = Text(file2Value, style: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily), maxLines: 2, overflow: TextOverflow.ellipsis);
+      oldValueWidget = Text('—',
+          style: TextStyle(
+              color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
+      newValueWidget = Text(file2Value,
+          style: TextStyle(
+              color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis);
     } else {
-      oldValueWidget = Text(file1Value, style: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily), maxLines: 2, overflow: TextOverflow.ellipsis);
-      newValueWidget = Text('—', style: TextStyle(color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
+      oldValueWidget = Text(file1Value,
+          style: TextStyle(
+              color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis);
+      newValueWidget = Text('—',
+          style: TextStyle(
+              color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
     }
 
     return Container(
       height: 44,
       decoration: BoxDecoration(
         color: tintedBg,
-        border: Border(bottom: BorderSide(color: borderCol.withValues(alpha: 0.5))),
+        border:
+            Border(bottom: BorderSide(color: borderCol.withValues(alpha: 0.5))),
       ),
       child: Row(
         children: [
@@ -957,10 +1177,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           Container(
             width: 40,
             alignment: Alignment.center,
-            child: Text('${globalIndex + 1}', style: TextStyle(color: subtleText, fontSize: fontSize, fontFamily: fontFamily)),
+            child: Text('${globalIndex + 1}',
+                style: TextStyle(
+                    color: subtleText,
+                    fontSize: fontSize,
+                    fontFamily: fontFamily)),
           ),
-          Container(width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
-          
+          Container(
+              width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
+
           // Status badge
           SizedBox(
             width: statusW - 1,
@@ -972,22 +1197,35 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(3),
                 ),
-                child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                child: Text(statusText,
+                    style: TextStyle(
+                        color: statusColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center),
               ),
             ),
           ),
-          Container(width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
-          
+          Container(
+              width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
+
           // Key
           SizedBox(
             width: keyW - 1,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(key, style: TextStyle(color: textColor, fontSize: fontSize, fontFamily: fontFamily), maxLines: 2, overflow: TextOverflow.ellipsis),
+              child: Text(key,
+                  style: TextStyle(
+                      color: textColor,
+                      fontSize: fontSize,
+                      fontFamily: fontFamily),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis),
             ),
           ),
-          Container(width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
-          
+          Container(
+              width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
+
           // Old Value
           SizedBox(
             width: oldValW - 1,
@@ -996,8 +1234,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               child: oldValueWidget,
             ),
           ),
-          Container(width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
-          
+          Container(
+              width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
+
           // New Value
           Expanded(
             child: Padding(
@@ -1010,7 +1249,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     );
   }
 
-  Widget _buildFooter(BuildContext ctx, bool isDark, bool isAmoled, Color headerBg, Color textColor, Color subtleText, Color borderCol) {
+  Widget _buildFooter(BuildContext ctx, bool isDark, bool isAmoled,
+      Color headerBg, Color textColor, Color subtleText, Color borderCol) {
     return Container(
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1028,46 +1268,62 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               value: _itemsPerPage,
               dropdownColor: isDark ? _bgSecondary : Colors.white,
               style: TextStyle(color: textColor, fontSize: 12),
-              items: _itemsPerPageOptions.map((v) => DropdownMenuItem(value: v, child: Text('$v'))).toList(),
-              onChanged: (v) { if (v != null) _changeItemsPerPage(v); },
+              items: _itemsPerPageOptions
+                  .map((v) => DropdownMenuItem(value: v, child: Text('$v')))
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) _changeItemsPerPage(v);
+              },
             ),
           ),
-          
+
           const Spacer(),
-          
+
           // Page info
           Text(
             '${_currentPage * _itemsPerPage + 1}–${((_currentPage + 1) * _itemsPerPage).clamp(0, _processedDiffEntries.length)} of ${_processedDiffEntries.length}',
             style: TextStyle(color: subtleText, fontSize: 12),
           ),
           const SizedBox(width: 16),
-          
+
           // Page navigation
           IconButton(
-            icon: Icon(Icons.first_page, color: _currentPage > 0 ? textColor : subtleText, size: 18),
+            icon: Icon(Icons.first_page,
+                color: _currentPage > 0 ? textColor : subtleText, size: 18),
             onPressed: _currentPage > 0 ? () => _goToPage(0) : null,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),
           IconButton(
-            icon: Icon(Icons.chevron_left, color: _currentPage > 0 ? textColor : subtleText, size: 18),
-            onPressed: _currentPage > 0 ? () => _goToPage(_currentPage - 1) : null,
+            icon: Icon(Icons.chevron_left,
+                color: _currentPage > 0 ? textColor : subtleText, size: 18),
+            onPressed:
+                _currentPage > 0 ? () => _goToPage(_currentPage - 1) : null,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text('${_currentPage + 1} / $_totalPages', style: TextStyle(color: textColor, fontSize: 12)),
+            child: Text('${_currentPage + 1} / $_totalPages',
+                style: TextStyle(color: textColor, fontSize: 12)),
           ),
           IconButton(
-            icon: Icon(Icons.chevron_right, color: _currentPage < _totalPages - 1 ? textColor : subtleText, size: 18),
-            onPressed: _currentPage < _totalPages - 1 ? () => _goToPage(_currentPage + 1) : null,
+            icon: Icon(Icons.chevron_right,
+                color: _currentPage < _totalPages - 1 ? textColor : subtleText,
+                size: 18),
+            onPressed: _currentPage < _totalPages - 1
+                ? () => _goToPage(_currentPage + 1)
+                : null,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),
           IconButton(
-            icon: Icon(Icons.last_page, color: _currentPage < _totalPages - 1 ? textColor : subtleText, size: 18),
-            onPressed: _currentPage < _totalPages - 1 ? () => _goToPage(_totalPages - 1) : null,
+            icon: Icon(Icons.last_page,
+                color: _currentPage < _totalPages - 1 ? textColor : subtleText,
+                size: 18),
+            onPressed: _currentPage < _totalPages - 1
+                ? () => _goToPage(_totalPages - 1)
+                : null,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),

@@ -17,8 +17,8 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return AppSettings(
-      defaultSourceFormat: fields[0] == null ? 'json' : fields[0] as String,
-      defaultTargetFormat: fields[1] == null ? 'json' : fields[1] as String,
+      defaultSourceFormat: fields[0] == null ? 'Auto' : fields[0] as String,
+      defaultTargetFormat: fields[1] == null ? 'Auto' : fields[1] as String,
       ignorePatterns: fields[2] == null
           ? ['^//.*', '^#.*']
           : (fields[2] as List).cast<String>(),
@@ -78,13 +78,16 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       defaultExportFormat: fields[50] == null ? 'CSV' : fields[50] as String,
       includeUtf8Bom: fields[51] == null ? true : fields[51] as bool,
       openFolderAfterExport: fields[52] == null ? true : fields[52] as bool,
+      autoBackup: fields[53] == null ? true : fields[53] as bool,
+      backupDirectory: fields[54] == null ? '' : fields[54] as String,
+      backupsToKeep: fields[55] == null ? 5 : fields[55] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(53)
+      ..writeByte(56)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -190,7 +193,13 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(51)
       ..write(obj.includeUtf8Bom)
       ..writeByte(52)
-      ..write(obj.openFolderAfterExport);
+      ..write(obj.openFolderAfterExport)
+      ..writeByte(53)
+      ..write(obj.autoBackup)
+      ..writeByte(54)
+      ..write(obj.backupDirectory)
+      ..writeByte(55)
+      ..write(obj.backupsToKeep);
   }
 
   @override

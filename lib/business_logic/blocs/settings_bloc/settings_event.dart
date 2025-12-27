@@ -118,7 +118,8 @@ class UpdateDiffColors extends SettingsEvent {
   final int? addedColor;
   final int? removedColor;
   final int? modifiedColor;
-  const UpdateDiffColors({this.addedColor, this.removedColor, this.modifiedColor});
+  const UpdateDiffColors(
+      {this.addedColor, this.removedColor, this.modifiedColor});
   @override
   List<Object?> get props => [addedColor, removedColor, modifiedColor];
 }
@@ -205,6 +206,27 @@ class UpdateOpenFolderAfterExport extends SettingsEvent {
   const UpdateOpenFolderAfterExport(this.enable);
   @override
   List<Object> get props => [enable];
+}
+
+class UpdateAutoBackup extends SettingsEvent {
+  final bool enable;
+  const UpdateAutoBackup(this.enable);
+  @override
+  List<Object> get props => [enable];
+}
+
+class UpdateBackupDirectory extends SettingsEvent {
+  final String directory;
+  const UpdateBackupDirectory(this.directory);
+  @override
+  List<Object> get props => [directory];
+}
+
+class UpdateBackupsToKeep extends SettingsEvent {
+  final int count;
+  const UpdateBackupsToKeep(this.count);
+  @override
+  List<Object> get props => [count];
 }
 
 class ResetFileHandlingSettings extends SettingsEvent {}
@@ -395,4 +417,4 @@ class UpdateUseMicaEffect extends SettingsEvent {
   const UpdateUseMicaEffect(this.enabled);
   @override
   List<Object> get props => [enabled];
-} 
+}

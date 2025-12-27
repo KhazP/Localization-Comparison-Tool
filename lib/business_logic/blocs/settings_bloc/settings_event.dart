@@ -354,6 +354,13 @@ class UpdateIncludeContextStrings extends SettingsEvent {
   List<Object> get props => [include];
 }
 
+class UpdateEnableTranslationMemory extends SettingsEvent {
+  final bool enabled;
+  const UpdateEnableTranslationMemory(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
 // Version Control Events
 class UpdateDefaultGitRepositoryPath extends SettingsEvent {
   final String path;

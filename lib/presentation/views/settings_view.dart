@@ -1,11 +1,14 @@
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
+import 'package:localizer_app_main/data/services/translation_memory_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -36,6 +39,9 @@ class _SettingsViewState extends State<SettingsView>
   final TextEditingController _newPatternController = TextEditingController();
   final ScrollController _navScrollController = ScrollController();
   final ScrollController _contentScrollController = ScrollController();
+  TranslationMemoryService? _translationMemoryService;
+  Future<TranslationMemoryStats>? _translationMemoryStatsFuture;
+  bool _translationMemoryBusy = false;
 
   PackageInfo? _packageInfo;
   String _platformInfo = 'Loading...';
@@ -136,6 +142,11 @@ class _SettingsViewState extends State<SettingsView>
   void initState() {
     super.initState();
     _loadAppInfo();
+    if (sl.isRegistered<TranslationMemoryService>()) {
+      _translationMemoryService = sl<TranslationMemoryService>();
+      _translationMemoryStatsFuture =
+          _translationMemoryService?.getStats();
+    }
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -215,6 +226,190 @@ class _SettingsViewState extends State<SettingsView>
       return 'Linux';
     }
     return 'Unknown';
+  }
+
+  Future<void> _refreshTranslationMemoryStats() async {
+    if (_translationMemoryService == null) {
+      return;
+    }
+    setState(() {
+      _translationMemoryStatsFuture =
+          _translationMemoryService?.getStats();
+    });
+  }
+
+  String _formatMemorySize(int bytes) {
+    if (bytes <= 0) {
+      return '0 KB';
+    }
+    final kb = bytes / 1024;
+    if (kb < 1024) {
+      return '${kb.toStringAsFixed(1)} KB';
+    }
+    final mb = kb / 1024;
+    return '${mb.toStringAsFixed(1)} MB';
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _runTranslationMemoryAction(
+    Future<void> Function() action,
+  ) async {
+    if (_translationMemoryBusy) {
+      return;
+    }
+    setState(() => _translationMemoryBusy = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) {
+        setState(() => _translationMemoryBusy = false);
+      }
+    }
+  }
+
+  Future<void> _importTranslationMemory(BuildContext context) async {
+    final service = _translationMemoryService;
+    if (service == null) {
+      return;
+    }
+    await _runTranslationMemoryAction(() async {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['tmx', 'csv'],
+      );
+      if (result == null || result.files.single.path == null) {
+        return;
+      }
+      final file = File(result.files.single.path!);
+      final imported = await service.importFromFile(file);
+      await _refreshTranslationMemoryStats();
+      if (!mounted) {
+        return;
+      }
+      final message = imported > 0
+          ? 'Imported $imported items into memory.'
+          : 'No items were added.';
+      _showSnackBar(context, message);
+    });
+  }
+
+  Future<void> _exportTranslationMemoryTmx(BuildContext context) async {
+    final service = _translationMemoryService;
+    if (service == null) {
+      return;
+    }
+    await _runTranslationMemoryAction(() async {
+      final stats = await service.getStats();
+      if (stats.entryCount == 0) {
+        if (mounted) {
+          _showSnackBar(context, 'Nothing to export yet.');
+        }
+        return;
+      }
+      final outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Export TMX',
+        fileName: 'translation_memory.tmx',
+        type: FileType.custom,
+        allowedExtensions: ['tmx'],
+      );
+      if (outputPath == null) {
+        return;
+      }
+      await service.exportToTmx(File(outputPath));
+      if (mounted) {
+        _showSnackBar(context, 'TMX saved.');
+      }
+    });
+  }
+
+  Future<void> _exportTranslationMemoryCsv(BuildContext context) async {
+    final service = _translationMemoryService;
+    if (service == null) {
+      return;
+    }
+    await _runTranslationMemoryAction(() async {
+      final stats = await service.getStats();
+      if (stats.entryCount == 0) {
+        if (mounted) {
+          _showSnackBar(context, 'Nothing to export yet.');
+        }
+        return;
+      }
+      final outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Export CSV',
+        fileName: 'translation_memory.csv',
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+      if (outputPath == null) {
+        return;
+      }
+      await service.exportToCsv(File(outputPath));
+      if (mounted) {
+        _showSnackBar(context, 'CSV saved.');
+      }
+    });
+  }
+
+  Future<void> _confirmClearTranslationMemory(BuildContext context) async {
+    final service = _translationMemoryService;
+    if (service == null) {
+      return;
+    }
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear translation memory?'),
+        content: const Text(
+          'This removes all saved translation pairs on this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) {
+      return;
+    }
+
+    await _runTranslationMemoryAction(() async {
+      try {
+        await service.clearMemory();
+        await _refreshTranslationMemoryStats();
+        if (mounted) {
+          _showSnackBar(context, 'Translation memory cleared.');
+        }
+      } catch (e, s) {
+        developer.log(
+          'Failed to clear translation memory.',
+          name: 'translation_memory.clear',
+          error: e,
+          stackTrace: s,
+        );
+        if (mounted) {
+          _showSnackBar(context, 'Could not clear memory.');
+        }
+      }
+    });
   }
 
   @override
@@ -869,6 +1064,7 @@ class _SettingsViewState extends State<SettingsView>
               label: 'Ignore Case',
               description: 'Treat "Key" and "key" as the same',
               control: Switch(
+                key: const Key('settings_ignoreCase_switch'),
                 value: settings.ignoreCase,
                 onChanged: (val) =>
                     context.read<SettingsBloc>().add(UpdateIgnoreCase(val)),
@@ -882,6 +1078,7 @@ class _SettingsViewState extends State<SettingsView>
               label: 'Ignore Whitespace',
               description: 'Ignore leading/trailing spaces',
               control: Switch(
+                key: const Key('settings_ignoreWhitespace_switch'),
                 value: settings.ignoreWhitespace,
                 onChanged: (val) => context
                     .read<SettingsBloc>()
@@ -971,7 +1168,7 @@ class _SettingsViewState extends State<SettingsView>
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'No patterns configured',
+                  'No ignore patterns set.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: isDark
                             ? AppThemeV2.darkTextMuted
@@ -990,6 +1187,7 @@ class _SettingsViewState extends State<SettingsView>
             Padding(
               padding: const EdgeInsets.all(16),
               child: OutlinedButton.icon(
+                key: const Key('settings_addPattern_button'),
                 onPressed: () => _showAddPatternDialog(context, isDark),
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: const Text('Add Pattern'),
@@ -1005,6 +1203,7 @@ class _SettingsViewState extends State<SettingsView>
 
   Widget _buildPatternItem(BuildContext context, String pattern, bool isDark) {
     return Padding(
+      key: Key('ignorePattern_tile_$pattern'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -1024,6 +1223,7 @@ class _SettingsViewState extends State<SettingsView>
             ),
           ),
           IconButton(
+            key: Key('ignorePattern_delete_$pattern'),
             icon: Icon(Icons.delete_outline_rounded,
                 size: 18, color: AppThemeV2.error),
             onPressed: () =>
@@ -2059,6 +2259,112 @@ class _SettingsViewState extends State<SettingsView>
         ),
 
         // -----------------------------------------------------------
+        // TRANSLATION MEMORY
+        // -----------------------------------------------------------
+        _buildSettingsCard(
+          context: context,
+          title: 'Translation Memory',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Enable Translation Memory',
+              description: 'Suggest translations from local history',
+              control: Switch(
+                value: settings.enableTranslationMemory,
+                onChanged: (val) => context
+                    .read<SettingsBloc>()
+                    .add(UpdateEnableTranslationMemory(val)),
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+              showDivider: false,
+            ),
+            if (_translationMemoryService == null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                child: Text(
+                  'Translation memory is unavailable.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: _getTextMutedColor(isDark),
+                      ),
+                ),
+              )
+            else if (settings.enableTranslationMemory) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Statistics',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    FutureBuilder<TranslationMemoryStats>(
+                      future: _translationMemoryStatsFuture,
+                      builder: (context, snapshot) {
+                        final stats = snapshot.data;
+                        final entries = stats?.entryCount ?? 0;
+                        final size = stats == null
+                            ? '0 KB'
+                            : _formatMemorySize(stats.storageBytes);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Entries: $entries'),
+                            Text('Size: $size'),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              ButtonBar(
+                alignment: MainAxisAlignment.start,
+                children: [
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.file_upload),
+                    label: const Text('Import TMX/CSV'),
+                    onPressed: _translationMemoryBusy
+                        ? null
+                        : () => _importTranslationMemory(context),
+                  ),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.download),
+                    label: const Text('Export TMX'),
+                    onPressed: _translationMemoryBusy
+                        ? null
+                        : () => _exportTranslationMemoryTmx(context),
+                  ),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.table_chart_outlined),
+                    label: const Text('Export CSV'),
+                    onPressed: _translationMemoryBusy
+                        ? null
+                        : () => _exportTranslationMemoryCsv(context),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
+                    onPressed: _translationMemoryBusy
+                        ? null
+                        : () => _confirmClearTranslationMemory(context),
+                    child: const Text('Clear Memory'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+
+        // -----------------------------------------------------------
         // CLASSIC APIs (Legacy)
         // -----------------------------------------------------------
         Theme(
@@ -2881,6 +3187,7 @@ class _SettingsViewState extends State<SettingsView>
     String? errorMessage;
     String testString = '';
     bool? matchResult;
+    final settingsBloc = context.read<SettingsBloc>();
 
     showDialog(
       context: context,
@@ -2888,9 +3195,7 @@ class _SettingsViewState extends State<SettingsView>
         builder: (context, setState) {
           void submitPattern() {
             if (_newPatternController.text.isNotEmpty && errorMessage == null) {
-              context
-                  .read<SettingsBloc>()
-                  .add(AddIgnorePattern(_newPatternController.text));
+              settingsBloc.add(AddIgnorePattern(_newPatternController.text));
               Navigator.of(dialogContext).pop();
             }
           }
@@ -2921,6 +3226,7 @@ class _SettingsViewState extends State<SettingsView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
+                  key: const Key('addPattern_textField'),
                   controller: _newPatternController,
                   decoration: InputDecoration(
                     hintText: 'e.g., ^temp_.*',
@@ -2965,10 +3271,12 @@ class _SettingsViewState extends State<SettingsView>
             ),
             actions: [
               TextButton(
+                key: const Key('addPattern_cancelButton'),
                 onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text('Cancel'),
               ),
               FilledButton(
+                key: const Key('addPattern_addButton'),
                 onPressed: errorMessage == null &&
                         _newPatternController.text.isNotEmpty
                     ? submitPattern

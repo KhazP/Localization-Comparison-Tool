@@ -18,6 +18,10 @@ void main() {
   late MockApiKeyValidationService mockApiKeyValidationService;
   late SettingsBloc settingsBloc;
 
+  setUpAll(() {
+    registerFallbackValue(AppSettings.defaultSettings());
+  });
+
   setUp(() {
     mockSettingsRepository = MockSettingsRepository();
     mockSecureStorageService = MockSecureStorageService();
@@ -42,7 +46,8 @@ void main() {
         secureStorageService: mockSecureStorageService,
         apiKeyValidationService: mockApiKeyValidationService,
       );
-      expect(settingsBloc.state, SettingsState.initial());
+      expect(settingsBloc.state.status, SettingsStatus.initial);
+      expect(settingsBloc.state.appSettings, isA<AppSettings>());
     });
 
     blocTest<SettingsBloc, SettingsState>(
@@ -103,6 +108,8 @@ void main() {
             .thenAnswer((_) async => null);
         when(() => mockSecureStorageService.getOpenAiApiKey())
             .thenAnswer((_) async => null);
+        when(() => mockSettingsRepository.saveSettings(any()))
+            .thenAnswer((_) async {});
 
         return SettingsBloc(
           settingsRepository: mockSettingsRepository,

@@ -25,6 +25,8 @@ import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
+import 'package:localizer_app_main/data/services/'
+    'translation_memory_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
@@ -44,6 +46,7 @@ class MyApp extends StatelessWidget {
     final secureStorageService = sl<SecureStorageService>();
     final translationService = sl<TranslationService>();
     final translationCache = sl<LocalTranslationCache>();
+    final translationMemoryService = sl<TranslationMemoryService>();
     final gitService = sl<GitService>();
     final fileDiscoveryService = sl<FileDiscoveryService>();
     final fileWatcherService = sl<FileWatcherService>();
@@ -84,6 +87,8 @@ class MyApp extends StatelessWidget {
             create: (context) => TranslationBloc(
               translationService: translationService,
               translationCache: translationCache,
+              translationMemoryService: translationMemoryService,
+              settingsRepository: settingsRepository,
             ),
           ),
           BlocProvider<GitBloc>(

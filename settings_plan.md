@@ -650,10 +650,98 @@ _buildSettingsCard(
 **Priority:** 🟡 MEDIUM
 
 **Requirements:**
-1. Enable/disable translation memory
-2. Clear translation memory button
-3. Show memory size/entry count
-4. Import/export translation memory
+1. Enable/disable translation memory lookup.
+2. Clear translation memory (reset database).
+3. Database statistics: Show memory size (storage) and entry count.
+4. Import/Export compatibility:
+   - **TMX 1.4b** (Industry Standard): For Trados, Google Cloud Translation API, and most CAT tools.
+   - **CSV**: Simple format for glossaries (Source, Target columns).
+5. "Add to Memory" manual action/button in the UI.
+
+**Technical Implementation:**
+
+*Architecture:*
+- **Storage:** Local SQLite database (using `sqflite` + `sqflite_common_ffi` for Windows/Linux) to store Translation Units (TUs) efficiently.
+- **Service:** `TranslationMemoryService` to handle CRUD operations, fuzzy search, and Import/Export logic.
+- **Parsing:** Custom XML parser for TMX reading/writing (using `xml` package).
+
+*Storage Schema (SQLite):*
+```sql
+CREATE TABLE translation_units (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_lang TEXT NOT NULL,
+  target_lang TEXT NOT NULL,
+  source_text TEXT NOT NULL,
+  target_text TEXT NOT NULL,
+  created_at INTEGER,
+  usage_count INTEGER DEFAULT 0
+);
+CREATE INDEX idx_source_text ON translation_units(source_text);
+```
+
+*UI Configuration:*
+```dart
+_buildSettingsCard(
+  context: context,
+  title: 'Translation Memory',
+  isDark: isDark,
+  children: [
+     _buildSettingRow(
+      context: context,
+      label: 'Enable Translation Memory',
+      description: 'Suggest translations from local history',
+      control: Switch(
+        value: settings.enableTranslationMemory,
+        onChanged: (val) => context.read<SettingsBloc>().add(UpdateEnableTranslationMemory(val)),
+      ),
+      isDark: isDark,
+    ),
+    if (settings.enableTranslationMemory) ...[
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Statistics', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('Entries: 0'), // Placeholder for stream/future builder
+            const Text('Size: 0 KB'),
+          ],
+        ),
+      ),
+      ButtonBar(
+        alignment: MainAxisAlignment.start,
+        children: [
+          OutlinedButton.icon(
+            icon: const Icon(Icons.file_upload),
+            label: const Text('Import TMX/CSV'),
+            onPressed: () => _importTranslationMemory(context),
+          ),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.download),
+            label: const Text('Export TMX'),
+            onPressed: () => _exportTranslationMemory(context),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => _confirmClearMemory(context),
+            child: const Text('Clear Memory'),
+          ),
+        ],
+      ),
+    ],
+  ],
+),
+```
+
+*Interoperability Plan:*
+- **Import:**
+    - Detect file type (.tmx vs .csv).
+    - **TMX:** Parse `<tu>` elements. Extract `<seg>` for source and target languages matching the current project. Ignore props/metadata for MVP.
+    - **CSV:** Assume Column A = Source, Column B = Target (or ask user to map).
+- **Export:**
+    - **TMX:** Generate valid TMX 1.4b structure. Populate `<header>` with creation tool info.
+    - **CSV:** Simple dump of Source, Target.
 
 ---
 

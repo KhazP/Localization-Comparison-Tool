@@ -104,6 +104,9 @@ class AppSettings extends HiveObject {
   @HiveField(35, defaultValue: false)
   bool includeContextStrings;
 
+  @HiveField(58, defaultValue: true)
+  bool enableTranslationMemory;
+
   // Version Control Settings
   @HiveField(25, defaultValue: '')
   String defaultGitRepositoryPath;
@@ -225,6 +228,7 @@ class AppSettings extends HiveObject {
     required this.systemTranslationContext,
     required this.contextStringsCount,
     required this.includeContextStrings,
+    required this.enableTranslationMemory,
     required this.defaultGitRepositoryPath,
     required this.autoCommitOnSave,
     required this.gitUserName,
@@ -289,6 +293,7 @@ class AppSettings extends HiveObject {
       systemTranslationContext: '',
       contextStringsCount: 2,
       includeContextStrings: false,
+      enableTranslationMemory: true,
       defaultGitRepositoryPath: '',
       autoCommitOnSave: false,
       gitUserName: '',
@@ -355,6 +360,8 @@ class AppSettings extends HiveObject {
           json['systemTranslationContext'] as String? ?? '',
       contextStringsCount: json['contextStringsCount'] as int? ?? 2,
       includeContextStrings: json['includeContextStrings'] as bool? ?? false,
+      enableTranslationMemory:
+          json['enableTranslationMemory'] as bool? ?? true,
       defaultGitRepositoryPath: json['defaultGitRepositoryPath'] as String,
       autoCommitOnSave: json['autoCommitOnSave'] as bool,
       gitUserName: json['gitUserName'] as String,
@@ -421,6 +428,7 @@ class AppSettings extends HiveObject {
       'systemTranslationContext': systemTranslationContext,
       'contextStringsCount': contextStringsCount,
       'includeContextStrings': includeContextStrings,
+      'enableTranslationMemory': enableTranslationMemory,
       'defaultGitRepositoryPath': defaultGitRepositoryPath,
       'autoCommitOnSave': autoCommitOnSave,
       'gitUserName': gitUserName,
@@ -483,6 +491,7 @@ class AppSettings extends HiveObject {
     String? systemTranslationContext,
     int? contextStringsCount,
     bool? includeContextStrings,
+    bool? enableTranslationMemory,
     String? defaultGitRepositoryPath,
     bool? autoCommitOnSave,
     String? gitUserName,
@@ -550,6 +559,8 @@ class AppSettings extends HiveObject {
       contextStringsCount: contextStringsCount ?? this.contextStringsCount,
       includeContextStrings:
           includeContextStrings ?? this.includeContextStrings,
+      enableTranslationMemory:
+          enableTranslationMemory ?? this.enableTranslationMemory,
       defaultGitRepositoryPath:
           defaultGitRepositoryPath ?? this.defaultGitRepositoryPath,
       autoCommitOnSave: autoCommitOnSave ?? this.autoCommitOnSave,

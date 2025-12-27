@@ -56,6 +56,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       systemTranslationContext: fields[33] == null ? '' : fields[33] as String,
       contextStringsCount: fields[34] == null ? 2 : fields[34] as int,
       includeContextStrings: fields[35] == null ? false : fields[35] as bool,
+      enableTranslationMemory: fields[58] == null ? true : fields[58] as bool,
       defaultGitRepositoryPath: fields[25] == null ? '' : fields[25] as String,
       autoCommitOnSave: fields[26] == null ? false : fields[26] as bool,
       gitUserName: fields[27] == null ? '' : fields[27] as String,
@@ -89,7 +90,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(58)
+      ..writeByte(59)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -154,6 +155,8 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..write(obj.contextStringsCount)
       ..writeByte(35)
       ..write(obj.includeContextStrings)
+      ..writeByte(58)
+      ..write(obj.enableTranslationMemory)
       ..writeByte(25)
       ..write(obj.defaultGitRepositoryPath)
       ..writeByte(26)

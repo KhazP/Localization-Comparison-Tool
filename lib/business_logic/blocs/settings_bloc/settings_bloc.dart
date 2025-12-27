@@ -73,6 +73,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateSystemTranslationContext>(_onUpdateSystemTranslationContext);
     on<UpdateContextStringsCount>(_onUpdateContextStringsCount);
     on<UpdateIncludeContextStrings>(_onUpdateIncludeContextStrings);
+    on<UpdateEnableTranslationMemory>(_onUpdateEnableTranslationMemory);
     // Version Control Events
     on<UpdateDefaultGitRepositoryPath>(_onUpdateDefaultGitRepositoryPath);
     on<UpdateAutoCommitOnSave>(_onUpdateAutoCommitOnSave);
@@ -133,6 +134,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         geminiApiKey: geminiKey ?? settings.geminiApiKey,
         openaiApiKey: openaiKey ?? settings.openaiApiKey,
       );
+
+      await _saveSettingsToRepository(settings);
 
       emit(
           state.copyWith(appSettings: settings, status: SettingsStatus.loaded));
@@ -666,6 +669,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateIncludeContextStrings event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(includeContextStrings: event.include);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateEnableTranslationMemory(
+      UpdateEnableTranslationMemory event,
+      Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(
+      enableTranslationMemory: event.enabled,
+    );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

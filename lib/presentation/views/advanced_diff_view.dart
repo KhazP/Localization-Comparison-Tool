@@ -2,10 +2,13 @@ import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/core/services/diff_calculator.dart';
 import '../../core/services/localization_file_service.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
+import 'package:localizer_app_main/data/services/'
+    'translation_memory_service.dart';
 import 'package:csv/csv.dart';
 import '../../business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -60,6 +63,28 @@ class AdvancedDiffView extends StatefulWidget {
 }
 
 class _AdvancedDiffViewState extends State<AdvancedDiffView> {
+  static const Map<String, String> _languageNameMap = {
+    'english': 'en',
+    'turkish': 'tr',
+    'german': 'de',
+    'french': 'fr',
+    'spanish': 'es',
+    'italian': 'it',
+    'portuguese': 'pt',
+    'brazilian': 'pt-br',
+    'russian': 'ru',
+    'japanese': 'ja',
+    'korean': 'ko',
+    'chinese': 'zh',
+    'arabic': 'ar',
+    'polish': 'pl',
+    'dutch': 'nl',
+    'swedish': 'sv',
+    'norwegian': 'no',
+    'danish': 'da',
+    'finnish': 'fi',
+  };
+
   // Filter & Sort
   Set<AdvancedDiffFilter> _selectedFilters = {AdvancedDiffFilter.all};
   DiffViewSortOrder _currentSortOrder = DiffViewSortOrder.fileOrder;
@@ -67,11 +92,19 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   final LocalizationFileService _fileService = LocalizationFileService();
+  final TranslationMemoryService? _translationMemoryService =
+      sl.isRegistered<TranslationMemoryService>()
+          ? sl<TranslationMemoryService>()
+          : null;
   final Map<String, TextEditingController> _cellControllers = {};
   final Map<String, FocusNode> _cellFocusNodes = {};
   final Set<String> _editingCells = {};
   final Set<String> _savingCells = {};
   final Map<String, _EditContext> _editContexts = {};
+  bool _savingAllEdits = false;
+  bool _addingAllToMemory = false;
+  late final String _sourceLanguageCode;
+  late final String _targetLanguageCode;
 
   // Pagination
   int _currentPage = 0;
@@ -83,7 +116,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   double _keyWidth = 0.28;
   double _oldValueWidth = 0.31;
   double _newValueWidth = 0.31;
-  static const double _actionColumnWidth = 44;
+  static const double _actionColumnWidth = 76;
 
   // Minimum column widths
   static const double _minColWidth = 0.08;
@@ -103,6 +136,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   @override
   void initState() {
     super.initState();
+    _sourceLanguageCode = _detectLanguageFromPath(widget.sourceFile.path);
+    _targetLanguageCode = _detectLanguageFromPath(widget.targetFile.path);
     _processDiffEntries();
   }
 
@@ -386,6 +421,60 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  Future<void> _saveAllEdits() async {
+    if (_savingAllEdits) {
+      return;
+    }
+    if (_editingCells.isEmpty) {
+      _showMessage('No edits to save.');
+      return;
+    }
+    setState(() => _savingAllEdits = true);
+    int saved = 0;
+    int failed = 0;
+    final cells = List<String>.from(_editingCells);
+    for (final cellKey in cells) {
+      final context = _editContexts[cellKey];
+      final controller = _cellControllers[cellKey];
+      if (context == null || controller == null) {
+        continue;
+      }
+      if (_savingCells.contains(cellKey)) {
+        continue;
+      }
+      _savingCells.add(cellKey);
+      final success = await _saveEdit(
+        isSource: context.isSource,
+        key: context.key,
+        originalValue: context.originalValue,
+        newValue: controller.text,
+      );
+      _savingCells.remove(cellKey);
+      if (success) {
+        _stopEditing(cellKey);
+        saved++;
+      } else {
+        failed++;
+      }
+    }
+    if (mounted) {
+      setState(() => _savingAllEdits = false);
+    }
+    if (!mounted) {
+      return;
+    }
+    if (saved == 0 && failed == 0) {
+      _showMessage('No changes to save.');
+    } else if (failed == 0) {
+      _showMessage('Saved $saved changes.');
+    } else {
+      _showMessage(
+        'Saved $saved changes. $failed failed.',
+        isError: true,
+      );
+    }
   }
 
   Future<bool> _saveEdit({
@@ -701,6 +790,215 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         );
       },
     );
+  }
+
+  Future<void> _addToTranslationMemory({
+    required String sourceText,
+    required String targetText,
+  }) async {
+    final service = _translationMemoryService;
+    if (service == null) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Translation memory is unavailable.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    try {
+      await service.addTranslationUnit(
+        sourceLang: _sourceLanguageCode,
+        targetLang: _targetLanguageCode,
+        sourceText: sourceText,
+        targetText: targetText,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Saved to memory.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e, s) {
+      developer.log(
+        'Failed to save translation memory entry.',
+        name: 'translation_memory.add',
+        error: e,
+        stackTrace: s,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save to memory.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _addAllToTranslationMemory() async {
+    if (_addingAllToMemory) {
+      return;
+    }
+    final service = _translationMemoryService;
+    if (service == null) {
+      _showMessage('Translation memory is unavailable.', isError: true);
+      return;
+    }
+    setState(() => _addingAllToMemory = true);
+    int added = 0;
+    try {
+      for (final entry in _processedDiffEntries) {
+        if (entry.value.status != StringComparisonStatus.modified) {
+          continue;
+        }
+        final sourceText =
+            widget.comparisonResult.file1Data[entry.key]?.trim() ?? '';
+        final targetText =
+            widget.comparisonResult.file2Data[entry.key]?.trim() ?? '';
+        if (sourceText.isEmpty || targetText.isEmpty) {
+          continue;
+        }
+        await service.addTranslationUnit(
+          sourceLang: _sourceLanguageCode,
+          targetLang: _targetLanguageCode,
+          sourceText: sourceText,
+          targetText: targetText,
+        );
+        added++;
+      }
+    } catch (e, s) {
+      developer.log(
+        'Failed to add translation memory entries.',
+        name: 'translation_memory.add_all',
+        error: e,
+        stackTrace: s,
+      );
+      if (mounted) {
+        _showMessage('Could not add all to memory.', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _addingAllToMemory = false);
+      }
+    }
+    if (!mounted) {
+      return;
+    }
+    if (added == 0) {
+      _showMessage('Nothing to add yet.');
+    } else {
+      _showMessage('Added $added items to memory.');
+    }
+  }
+
+  String _detectLanguageFromPath(String filePath) {
+    final normalized = filePath.replaceAll('\\', '/').toLowerCase();
+    final segments = normalized.split('/');
+    final fileName = segments.isNotEmpty ? segments.last : normalized;
+    final baseName = fileName.contains('.')
+        ? fileName.split('.').first
+        : fileName;
+    final direct = _matchLocale(baseName);
+    if (direct != null) {
+      return direct;
+    }
+    final namedDirect = _matchLanguageName(baseName);
+    if (namedDirect != null) {
+      return namedDirect;
+    }
+    final tokensMatch = _matchLocaleInTokens(baseName);
+    if (tokensMatch != null) {
+      return tokensMatch;
+    }
+    final namedTokens = _matchLanguageNameInTokens(baseName);
+    if (namedTokens != null) {
+      return namedTokens;
+    }
+    for (final segment in segments.reversed) {
+      final segmentMatch = _matchLocale(segment);
+      if (segmentMatch != null) {
+        return segmentMatch;
+      }
+      final namedSegment = _matchLanguageName(segment);
+      if (namedSegment != null) {
+        return namedSegment;
+      }
+      final segmentTokens = _matchLocaleInTokens(segment);
+      if (segmentTokens != null) {
+        return segmentTokens;
+      }
+      final namedSegmentTokens = _matchLanguageNameInTokens(segment);
+      if (namedSegmentTokens != null) {
+        return namedSegmentTokens;
+      }
+    }
+    return 'und';
+  }
+
+  String? _matchLanguageName(String value) {
+    final normalized = value.replaceAll(RegExp(r'[^a-z]'), '');
+    if (normalized.isEmpty) {
+      return null;
+    }
+    return _languageNameMap[normalized];
+  }
+
+  String? _matchLanguageNameInTokens(String value) {
+    final tokens = value
+        .split(RegExp(r'[^a-z]+'))
+        .where((token) => token.isNotEmpty)
+        .toList();
+    for (final token in tokens) {
+      final match = _languageNameMap[token];
+      if (match != null) {
+        return match;
+      }
+    }
+    return null;
+  }
+
+  String? _matchLocale(String value) {
+    final match = RegExp(r'^([a-z]{2})(?:[-_]?([a-z]{2}))?$')
+        .firstMatch(value);
+    if (match == null) {
+      return null;
+    }
+    final language = match.group(1);
+    final region = match.group(2);
+    if (language == null || language.isEmpty) {
+      return null;
+    }
+    if (region == null || region.isEmpty) {
+      return language;
+    }
+    return '$language-$region';
+  }
+
+  String? _matchLocaleInTokens(String value) {
+    final tokens = value
+        .split(RegExp(r'[^a-z]+'))
+        .where((token) => token.isNotEmpty)
+        .toList();
+    for (var index = 0; index < tokens.length; index++) {
+      final token = tokens[index];
+      if (token.length != 2) {
+        continue;
+      }
+      if (index + 1 < tokens.length && tokens[index + 1].length == 2) {
+        return '${tokens[index]}-${tokens[index + 1]}';
+      }
+      return token;
+    }
+    return null;
   }
 
   Future<void> _exportResult(BuildContext context) async {
@@ -1385,6 +1683,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         final keyW = layoutWidth * _keyWidth;
         final oldValW = layoutWidth * _oldValueWidth;
         final newValW = layoutWidth * _newValueWidth;
+        final canSaveAll = !_savingAllEdits;
+        final canAddAll = !_addingAllToMemory;
 
         return Column(
           children: [
@@ -1399,6 +1699,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               borderCol,
               layoutWidth,
               _actionColumnWidth,
+              canSaveAll,
+              canAddAll,
             ),
 
             // Data rows
@@ -1445,7 +1747,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       Color textColor,
       Color borderCol,
       double availableWidth,
-      double actionW) {
+      double actionW,
+      bool canSaveAll,
+      bool canAddAll) {
     return Container(
       height: 36,
       decoration: BoxDecoration(
@@ -1510,10 +1814,38 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           Container(width: 1, height: 36, color: borderCol),
           SizedBox(
             width: actionW,
-            child: Icon(
-              Icons.delete_outline,
-              color: textColor.withValues(alpha: 0.6),
-              size: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.memory_rounded,
+                    color: canAddAll
+                        ? textColor.withValues(alpha: 0.8)
+                        : borderCol,
+                    size: 16,
+                  ),
+                  tooltip: 'Add all to memory',
+                  onPressed: canAddAll ? _addAllToTranslationMemory : null,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.save_rounded,
+                    color: canSaveAll
+                        ? textColor.withValues(alpha: 0.8)
+                        : borderCol,
+                    size: 16,
+                  ),
+                  tooltip: 'Save all edits',
+                  onPressed: canSaveAll ? _saveAllEdits : null,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                ),
+              ],
             ),
           ),
         ],
@@ -1605,6 +1937,11 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     final similarity = entry.value.similarity;
     final file1Value = widget.comparisonResult.file1Data[key];
     final file2Value = widget.comparisonResult.file2Data[key];
+    final sourceText = file1Value?.trim() ?? '';
+    final targetText = file2Value?.trim() ?? '';
+    final canAddToMemory = status == StringComparisonStatus.modified &&
+        sourceText.isNotEmpty &&
+        targetText.isNotEmpty;
 
     // Status styling
     Color statusColor;
@@ -1795,22 +2132,47 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
           SizedBox(
             width: actionW,
-            child: IconButton(
-              icon: Icon(
-                Icons.delete_outline,
-                color: canDeleteSource || canDeleteTarget
-                    ? subtleText
-                    : borderCol,
-                size: 18,
-              ),
-              tooltip: canDeleteSource || canDeleteTarget
-                  ? 'Delete'
-                  : 'Delete not available',
-              onPressed: canDeleteSource || canDeleteTarget
-                  ? () => _confirmDelete(key)
-                  : null,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.memory_rounded,
+                    color: canAddToMemory ? subtleText : borderCol,
+                    size: 18,
+                  ),
+                  tooltip: canAddToMemory
+                      ? 'Add to memory'
+                      : 'Needs both source and target',
+                  onPressed: canAddToMemory
+                      ? () => _addToTranslationMemory(
+                            sourceText: sourceText,
+                            targetText: targetText,
+                          )
+                      : null,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.delete_outline,
+                    color: canDeleteSource || canDeleteTarget
+                        ? subtleText
+                        : borderCol,
+                    size: 18,
+                  ),
+                  tooltip: canDeleteSource || canDeleteTarget
+                      ? 'Delete'
+                      : 'Delete not available',
+                  onPressed: canDeleteSource || canDeleteTarget
+                      ? () => _confirmDelete(key)
+                      : null,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                ),
+              ],
             ),
           ),
         ],

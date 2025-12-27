@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -168,15 +170,13 @@ void main() {
       AppSettings settingsBeforeAdd = AppSettings.defaultSettings().copyWith(ignorePatterns: []);
       AppSettings settingsAfterAdd = settingsBeforeAdd.copyWith(ignorePatterns: [newPattern]);
       final testBloc = MockSettingsBloc();
+      final controller = StreamController<SettingsState>();
 
       when(() => testBloc.add(AddIgnorePattern(newPattern))).thenReturn(null); // Still useful to verify the event is added
 
       whenListen(
         testBloc,
-        Stream.fromIterable([ // Define the sequence of states
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsBeforeAdd, apiKeyTests: defaultApiKeyTests), // Initial state
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsAfterAdd, apiKeyTests: defaultApiKeyTests)   // State after add
-        ]),
+        controller.stream,
         initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsBeforeAdd, apiKeyTests: defaultApiKeyTests),
       );
 
@@ -186,11 +186,22 @@ void main() {
       // Ensure it starts without the pattern
       expect(find.byKey(Key('ignorePattern_tile_$newPattern')), findsNothing); 
 
+      await tester.ensureVisible(
+        find.byKey(const Key('settings_addPattern_button')),
+      );
       await tester.tap(find.byKey(const Key('settings_addPattern_button')));
       await tester.pumpAndSettle(); // Dialog opens
 
       await tester.enterText(find.byKey(const Key('addPattern_textField')), newPattern);
       await tester.pump();
+
+      controller.add(
+        SettingsState(
+          status: SettingsStatus.loaded,
+          appSettings: settingsAfterAdd,
+          apiKeyTests: defaultApiKeyTests,
+        ),
+      );
 
       await tester.tap(find.byKey(const Key('addPattern_addButton')));
       // Crucial: After adding, the BLoC should have emitted settingsAfterAdd, so we need to pump for the UI to catch up.
@@ -199,6 +210,8 @@ void main() {
 
       verify(() => testBloc.add(AddIgnorePattern(newPattern))).called(1);
       expect(find.byKey(Key('ignorePattern_tile_$newPattern')), findsOneWidget);
+
+      await controller.close();
     });
 
     testWidgets('Removing an ignore pattern calls RemoveIgnorePattern event and pattern disappears', (WidgetTester tester) async {
@@ -207,16 +220,14 @@ void main() {
       AppSettings settingsWithPattern = AppSettings.defaultSettings().copyWith(ignorePatterns: [patternToRemove, otherPattern]);
       AppSettings settingsWithoutPattern = AppSettings.defaultSettings().copyWith(ignorePatterns: [otherPattern]);
       final testBloc = MockSettingsBloc();
+      final controller = StreamController<SettingsState>();
 
       // Stub the event addition (optional but good for verification clarity)
       when(() => testBloc.add(RemoveIgnorePattern(patternToRemove))).thenReturn(null);
 
       whenListen(
         testBloc,
-        Stream.fromIterable([ // Define the sequence of states
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithPattern, apiKeyTests: defaultApiKeyTests),    // Initial state with the pattern
-          SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithoutPattern, apiKeyTests: defaultApiKeyTests) // State after removal
-        ]),
+        controller.stream,
         initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithPattern, apiKeyTests: defaultApiKeyTests), // Start with the pattern present
       );
 
@@ -227,15 +238,27 @@ void main() {
       expect(find.byKey(Key('ignorePattern_tile_$patternToRemove')), findsOneWidget);
       expect(find.byKey(Key('ignorePattern_tile_$otherPattern')), findsOneWidget);
 
+      await tester.ensureVisible(
+        find.byKey(Key('ignorePattern_delete_$patternToRemove')),
+      );
       await tester.tap(find.byKey(Key('ignorePattern_delete_$patternToRemove')));
       // After tap, the BLoC should process RemoveIgnorePattern.
       // The whenListen stream will then emit settingsWithoutPattern.
       // pumpAndSettle allows the UI to rebuild with the new state.
+      controller.add(
+        SettingsState(
+          status: SettingsStatus.loaded,
+          appSettings: settingsWithoutPattern,
+          apiKeyTests: defaultApiKeyTests,
+        ),
+      );
       await tester.pumpAndSettle(); 
 
       verify(() => testBloc.add(RemoveIgnorePattern(patternToRemove))).called(1);
       expect(find.byKey(Key('ignorePattern_tile_$patternToRemove')), findsNothing); // Should now be gone
       expect(find.byKey(Key('ignorePattern_tile_$otherPattern')), findsOneWidget); // Other pattern should remain
+
+      await controller.close();
     });
 
     testWidgets('Cancelling add pattern dialog does not call AddIgnorePattern event', (WidgetTester tester) async {
@@ -251,6 +274,9 @@ void main() {
       await pumpSettingsView(tester, settingsBloc: testBloc);
       await navigateToCategory(tester, 'Comparison');
 
+      await tester.ensureVisible(
+        find.byKey(const Key('settings_addPattern_button')),
+      );
       await tester.tap(find.byKey(const Key('settings_addPattern_button')));
       await tester.pumpAndSettle(); // Dialog opens
 

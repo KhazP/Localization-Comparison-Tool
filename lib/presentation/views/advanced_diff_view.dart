@@ -1,13 +1,16 @@
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
+import 'package:localizer_app_main/core/services/diff_calculator.dart';
+import '../../core/services/localization_file_service.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:csv/csv.dart';
-import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import '../../business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
-import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
+import '../widgets/common/diff_highlighter.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
@@ -26,10 +29,31 @@ enum AdvancedDiffFilter {
 // Sort order
 enum DiffViewSortOrder { alphabetical, fileOrder }
 
+enum _DeleteTarget { source, target, both }
+
+class _EditContext {
+  _EditContext({
+    required this.isSource,
+    required this.key,
+    required this.originalValue,
+  });
+
+  final bool isSource;
+  final String key;
+  final String? originalValue;
+}
+
 class AdvancedDiffView extends StatefulWidget {
   final ComparisonResult comparisonResult;
+  final File sourceFile;
+  final File targetFile;
 
-  const AdvancedDiffView({super.key, required this.comparisonResult});
+  const AdvancedDiffView({
+    super.key,
+    required this.comparisonResult,
+    required this.sourceFile,
+    required this.targetFile,
+  });
 
   @override
   State<AdvancedDiffView> createState() => _AdvancedDiffViewState();
@@ -42,6 +66,12 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   List<MapEntry<String, ComparisonStatusDetail>> _processedDiffEntries = [];
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final LocalizationFileService _fileService = LocalizationFileService();
+  final Map<String, TextEditingController> _cellControllers = {};
+  final Map<String, FocusNode> _cellFocusNodes = {};
+  final Set<String> _editingCells = {};
+  final Set<String> _savingCells = {};
+  final Map<String, _EditContext> _editContexts = {};
 
   // Pagination
   int _currentPage = 0;
@@ -53,6 +83,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   double _keyWidth = 0.28;
   double _oldValueWidth = 0.31;
   double _newValueWidth = 0.31;
+  static const double _actionColumnWidth = 44;
 
   // Minimum column widths
   static const double _minColWidth = 0.08;
@@ -77,6 +108,14 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
   @override
   void dispose() {
+    for (final controller in _cellControllers.values) {
+      controller.dispose();
+    }
+    for (final focusNode in _cellFocusNodes.values) {
+      focusNode.dispose();
+    }
+    _cellControllers.clear();
+    _cellFocusNodes.clear();
     _searchController.dispose();
     super.dispose();
   }
@@ -128,7 +167,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     });
   }
 
-  void _processDiffEntries() {
+  void _processDiffEntries({bool resetPage = true}) {
     List<MapEntry<String, ComparisonStatusDetail>> filteredEntries =
         widget.comparisonResult.diff.entries.where((entry) {
       final status = entry.value.status;
@@ -207,10 +246,461 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       });
     }
 
+    final totalPages =
+        (filteredEntries.length / _itemsPerPage).ceil();
+    final maxPage = totalPages > 0 ? totalPages - 1 : 0;
+    final nextPage = resetPage ? 0 : _currentPage;
+
     setState(() {
       _processedDiffEntries = filteredEntries;
-      _currentPage = 0;
+      _currentPage = nextPage.clamp(0, maxPage);
     });
+  }
+
+  String _cellKey(String key, bool isSource) {
+    return '${isSource ? 'source' : 'target'}::$key';
+  }
+
+  TextEditingController _ensureController(String cellKey) {
+    return _cellControllers.putIfAbsent(
+      cellKey,
+      () => TextEditingController(),
+    );
+  }
+
+  FocusNode _ensureFocusNode(String cellKey) {
+    return _cellFocusNodes.putIfAbsent(cellKey, () {
+      final focusNode = FocusNode(debugLabel: cellKey);
+      focusNode.addListener(() {
+        if (!focusNode.hasFocus && _editingCells.contains(cellKey)) {
+          final context = _editContexts[cellKey];
+          if (context == null) {
+            return;
+          }
+          _commitEdit(
+            cellKey: cellKey,
+            isSource: context.isSource,
+            key: context.key,
+            originalValue: context.originalValue,
+            newValue: _cellControllers[cellKey]?.text ?? '',
+          );
+        }
+      });
+      return focusNode;
+    });
+  }
+
+  void _startEditing({
+    required String cellKey,
+    required String initialValue,
+    required bool isSource,
+    required String key,
+    required String? originalValue,
+  }) {
+    final controller = _ensureController(cellKey);
+    controller.text = initialValue;
+    controller.selection = TextSelection.collapsed(
+      offset: controller.text.length,
+    );
+    final focusNode = _ensureFocusNode(cellKey);
+    setState(() {
+      _editingCells.add(cellKey);
+      _editContexts[cellKey] = _EditContext(
+        isSource: isSource,
+        key: key,
+        originalValue: originalValue,
+      );
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      focusNode.requestFocus();
+    });
+  }
+
+  void _stopEditing(String cellKey) {
+    if (_editingCells.remove(cellKey)) {
+      _editContexts.remove(cellKey);
+      setState(() {});
+    }
+  }
+
+  void _clearCellState(String key) {
+    for (final isSource in [true, false]) {
+      final cellKey = _cellKey(key, isSource);
+      _editingCells.remove(cellKey);
+      _editContexts.remove(cellKey);
+      _cellControllers.remove(cellKey)?.dispose();
+      _cellFocusNodes.remove(cellKey)?.dispose();
+    }
+  }
+
+  void _replaceComparisonData({
+    Map<String, String>? sourceData,
+    Map<String, String>? targetData,
+    bool resetPage = false,
+  }) {
+    if (sourceData != null) {
+      widget.comparisonResult.file1Data
+        ..clear()
+        ..addAll(sourceData);
+    }
+    if (targetData != null) {
+      widget.comparisonResult.file2Data
+        ..clear()
+        ..addAll(targetData);
+    }
+    _refreshDiff(resetPage: resetPage);
+  }
+
+  void _refreshDiff({bool resetPage = false}) {
+    final settingsState = context.read<SettingsBloc>().state;
+    if (settingsState.status != SettingsStatus.loaded) {
+      return;
+    }
+    final settings = settingsState.appSettings;
+    final diff = DiffCalculator.calculateDiff(
+      data1: widget.comparisonResult.file1Data,
+      data2: widget.comparisonResult.file2Data,
+      ignoreCase: settings.ignoreCase,
+      ignorePatterns: settings.ignorePatterns,
+      ignoreWhitespace: settings.ignoreWhitespace,
+      comparisonMode: settings.comparisonMode,
+      similarityThreshold: settings.similarityThreshold,
+    );
+    widget.comparisonResult.diff
+      ..clear()
+      ..addAll(diff);
+    _processDiffEntries(resetPage: resetPage);
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : null,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<bool> _saveEdit({
+    required bool isSource,
+    required String key,
+    required String? originalValue,
+    required String newValue,
+  }) async {
+    if (originalValue == null && newValue.trim().isEmpty) {
+      return true;
+    }
+    if (originalValue != null && newValue == originalValue) {
+      return true;
+    }
+
+    final settingsState = context.read<SettingsBloc>().state;
+    if (settingsState.status != SettingsStatus.loaded) {
+      _showMessage('Please try again in a moment.', isError: true);
+      return false;
+    }
+
+    final settings = settingsState.appSettings;
+    final file = isSource ? widget.sourceFile : widget.targetFile;
+    final forcedFormat = isSource
+        ? settings.defaultSourceFormat
+        : settings.defaultTargetFormat;
+    final encodingName = isSource
+        ? settings.defaultSourceEncoding
+        : settings.defaultTargetEncoding;
+
+    if (!_fileService.canEditFile(file, forcedFormat: forcedFormat)) {
+      _showMessage(
+        'Editing is not available for this file type.',
+        isError: true,
+      );
+      return false;
+    }
+
+    try {
+      final updated = await _fileService.upsertEntry(
+        file: file,
+        key: key,
+        value: newValue,
+        settings: settings,
+        encodingName: encodingName,
+        forcedFormat: forcedFormat,
+        relatedValue:
+            isSource ? null : widget.comparisonResult.file1Data[key],
+      );
+      if (!mounted) {
+        return false;
+      }
+      _replaceComparisonData(
+        sourceData: isSource ? updated : null,
+        targetData: isSource ? null : updated,
+      );
+      _showMessage(
+        isSource ? 'Saved to the source file.' : 'Saved to the target file.',
+      );
+      return true;
+    } catch (e, s) {
+      developer.log(
+        'Failed to save entry',
+        name: 'AdvancedDiffView',
+        error: e,
+        stackTrace: s,
+      );
+      _showMessage('Sorry, that change did not save.', isError: true);
+      return false;
+    }
+  }
+
+  Future<void> _commitEdit({
+    required String cellKey,
+    required bool isSource,
+    required String key,
+    required String? originalValue,
+    required String newValue,
+  }) async {
+    if (!_editingCells.contains(cellKey)) {
+      return;
+    }
+    if (_savingCells.contains(cellKey)) {
+      return;
+    }
+    _savingCells.add(cellKey);
+    final success = await _saveEdit(
+      isSource: isSource,
+      key: key,
+      originalValue: originalValue,
+      newValue: newValue,
+    );
+    _savingCells.remove(cellKey);
+    if (success) {
+      _stopEditing(cellKey);
+    }
+  }
+
+  Future<void> _deleteKey({
+    required String key,
+    required bool deleteSource,
+    required bool deleteTarget,
+  }) async {
+    if (!deleteSource && !deleteTarget) {
+      return;
+    }
+
+    final settingsState = context.read<SettingsBloc>().state;
+    if (settingsState.status != SettingsStatus.loaded) {
+      _showMessage('Please try again in a moment.', isError: true);
+      return;
+    }
+
+    final settings = settingsState.appSettings;
+    Map<String, String>? sourceData;
+    Map<String, String>? targetData;
+    var hasError = false;
+
+    if (deleteSource) {
+      try {
+        sourceData = await _fileService.deleteEntry(
+          file: widget.sourceFile,
+          key: key,
+          settings: settings,
+          encodingName: settings.defaultSourceEncoding,
+          forcedFormat: settings.defaultSourceFormat,
+        );
+      } catch (e, s) {
+        developer.log(
+          'Failed to delete source entry',
+          name: 'AdvancedDiffView',
+          error: e,
+          stackTrace: s,
+        );
+        hasError = true;
+      }
+    }
+
+    if (deleteTarget) {
+      try {
+        targetData = await _fileService.deleteEntry(
+          file: widget.targetFile,
+          key: key,
+          settings: settings,
+          encodingName: settings.defaultTargetEncoding,
+          forcedFormat: settings.defaultTargetFormat,
+        );
+      } catch (e, s) {
+        developer.log(
+          'Failed to delete target entry',
+          name: 'AdvancedDiffView',
+          error: e,
+          stackTrace: s,
+        );
+        hasError = true;
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (sourceData != null || targetData != null) {
+      _clearCellState(key);
+      _replaceComparisonData(
+        sourceData: sourceData,
+        targetData: targetData,
+      );
+    }
+
+    if (hasError) {
+      _showMessage('Sorry, that delete did not finish.', isError: true);
+      return;
+    }
+
+    if (deleteSource && deleteTarget) {
+      _showMessage('Deleted from both files.');
+    } else if (deleteSource) {
+      _showMessage('Deleted from the source file.');
+    } else if (deleteTarget) {
+      _showMessage('Deleted from the target file.');
+    }
+  }
+
+  Future<void> _confirmDelete(String key) async {
+    final hasSource = widget.comparisonResult.file1Data.containsKey(key);
+    final hasTarget = widget.comparisonResult.file2Data.containsKey(key);
+
+    final choice = await showDialog<_DeleteTarget>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete this key?'),
+          content: const Text('Choose where to remove it.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            if (hasSource)
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(context).pop(_DeleteTarget.source),
+                child: const Text('Source only'),
+              ),
+            if (hasTarget)
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(context).pop(_DeleteTarget.target),
+                child: const Text('Target only'),
+              ),
+            if (hasSource && hasTarget)
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(context).pop(_DeleteTarget.both),
+                child: const Text('Both'),
+              ),
+          ],
+        );
+      },
+    );
+
+    if (choice == null) {
+      return;
+    }
+
+    switch (choice) {
+      case _DeleteTarget.source:
+        await _deleteKey(key: key, deleteSource: true, deleteTarget: false);
+        break;
+      case _DeleteTarget.target:
+        await _deleteKey(key: key, deleteSource: false, deleteTarget: true);
+        break;
+      case _DeleteTarget.both:
+        await _deleteKey(key: key, deleteSource: true, deleteTarget: true);
+        break;
+    }
+  }
+
+  Widget _buildEditableCell({
+    required String entryKey,
+    required bool isSource,
+    required String? currentValue,
+    required Widget displayWidget,
+    required TextStyle textStyle,
+    required Color subtleText,
+    required bool canEdit,
+  }) {
+    final cellKey = _cellKey(entryKey, isSource);
+    if (!canEdit) {
+      return Tooltip(
+        message: 'Editing is not available for this file type.',
+        child: displayWidget,
+      );
+    }
+
+    if (!_editingCells.contains(cellKey)) {
+      return Tooltip(
+        message: 'Click to edit',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _startEditing(
+            cellKey: cellKey,
+            initialValue: currentValue ?? '',
+            isSource: isSource,
+            key: entryKey,
+            originalValue: currentValue,
+          ),
+          child: SizedBox.expand(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: IgnorePointer(child: displayWidget),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final controller = _ensureController(cellKey);
+    final focusNode = _ensureFocusNode(cellKey);
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      style: textStyle,
+      maxLines: 1,
+      textInputAction: TextInputAction.done,
+      decoration: InputDecoration(
+        isDense: true,
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        hintText: currentValue == null ? 'Add text' : null,
+        hintStyle: TextStyle(
+          color: subtleText,
+          fontSize: textStyle.fontSize,
+        ),
+      ),
+      onTapOutside: (_) {
+        _commitEdit(
+          cellKey: cellKey,
+          isSource: isSource,
+          key: entryKey,
+          originalValue: currentValue,
+          newValue: controller.text,
+        );
+      },
+      onSubmitted: (value) {
+        _commitEdit(
+          cellKey: cellKey,
+          isSource: isSource,
+          key: entryKey,
+          originalValue: currentValue,
+          newValue: value,
+        );
+      },
+    );
   }
 
   Future<void> _exportResult(BuildContext context) async {
@@ -889,16 +1379,27 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
-        final statusW = totalWidth * _statusWidth;
-        final keyW = totalWidth * _keyWidth;
-        final oldValW = totalWidth * _oldValueWidth;
-        final newValW = totalWidth * _newValueWidth;
+        final availableWidth = totalWidth - _actionColumnWidth;
+        final layoutWidth = availableWidth > 1.0 ? availableWidth : 1.0;
+        final statusW = layoutWidth * _statusWidth;
+        final keyW = layoutWidth * _keyWidth;
+        final oldValW = layoutWidth * _oldValueWidth;
+        final newValW = layoutWidth * _newValueWidth;
 
         return Column(
           children: [
             // Header row with resizable dividers
-            _buildHeaderRow(statusW, keyW, oldValW, newValW, headerBg,
-                textColor, borderCol, totalWidth),
+            _buildHeaderRow(
+              statusW,
+              keyW,
+              oldValW,
+              newValW,
+              headerBg,
+              textColor,
+              borderCol,
+              layoutWidth,
+              _actionColumnWidth,
+            ),
 
             // Data rows
             Expanded(
@@ -917,6 +1418,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     keyW,
                     oldValW,
                     newValW,
+                    _actionColumnWidth,
                     isDark,
                     isAmoled,
                     rowAltBg,
@@ -942,7 +1444,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       Color headerBg,
       Color textColor,
       Color borderCol,
-      double totalWidth) {
+      double availableWidth,
+      double actionW) {
     return Container(
       height: 36,
       decoration: BoxDecoration(
@@ -961,7 +1464,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
           ),
-          _buildResizableDivider(0, borderCol, totalWidth),
+          _buildResizableDivider(0, borderCol, availableWidth),
 
           // Status
           SizedBox(
@@ -972,7 +1475,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
           ),
-          _buildResizableDivider(1, borderCol, totalWidth),
+          _buildResizableDivider(1, borderCol, availableWidth),
 
           // Key
           SizedBox(
@@ -983,7 +1486,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
           ),
-          _buildResizableDivider(2, borderCol, totalWidth),
+          _buildResizableDivider(2, borderCol, availableWidth),
 
           // Old Value
           SizedBox(
@@ -994,7 +1497,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
           ),
-          _buildResizableDivider(3, borderCol, totalWidth),
+          _buildResizableDivider(3, borderCol, availableWidth),
 
           // New Value
           Expanded(
@@ -1003,6 +1506,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     color: textColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
+          ),
+          Container(width: 1, height: 36, color: borderCol),
+          SizedBox(
+            width: actionW,
+            child: Icon(
+              Icons.delete_outline,
+              color: textColor.withValues(alpha: 0.6),
+              size: 16,
+            ),
           ),
         ],
       ),
@@ -1068,6 +1580,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       double keyW,
       double oldValW,
       double newValW,
+      double actionW,
       bool isDark,
       bool isAmoled,
       Color rowAltBg,
@@ -1090,8 +1603,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     final key = entry.key;
     final status = entry.value.status;
     final similarity = entry.value.similarity;
-    final file1Value = widget.comparisonResult.file1Data[key] ?? '--';
-    final file2Value = widget.comparisonResult.file2Data[key] ?? '--';
+    final file1Value = widget.comparisonResult.file1Data[key];
+    final file2Value = widget.comparisonResult.file2Data[key];
 
     // Status styling
     Color statusColor;
@@ -1125,22 +1638,26 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     Widget oldValueWidget;
     Widget newValueWidget;
 
+    final baseStyle = TextStyle(
+      color: textColor,
+      fontSize: fontSize,
+      fontFamily: fontFamily,
+    );
+
     if (status == StringComparisonStatus.modified) {
       oldValueWidget = DiffHighlighter.buildDiffText(
-        file1Value,
-        file2Value,
+        file1Value ?? '',
+        file2Value ?? '',
         isSource: true,
-        baseStyle: TextStyle(
-            color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+        baseStyle: baseStyle,
         maxLines: 2,
         deletionColor: themeState.diffRemovedColor,
       );
       newValueWidget = DiffHighlighter.buildDiffText(
-        file1Value,
-        file2Value,
+        file1Value ?? '',
+        file2Value ?? '',
         isSource: false,
-        baseStyle: TextStyle(
-            color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+        baseStyle: baseStyle,
         maxLines: 2,
         insertionColor: themeState.diffAddedColor,
       );
@@ -1148,21 +1665,51 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       oldValueWidget = Text('—',
           style: TextStyle(
               color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
-      newValueWidget = Text(file2Value,
-          style: TextStyle(
-              color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+      newValueWidget = Text(file2Value ?? '',
+          style: baseStyle,
           maxLines: 2,
           overflow: TextOverflow.ellipsis);
     } else {
-      oldValueWidget = Text(file1Value,
-          style: TextStyle(
-              color: textColor, fontSize: fontSize, fontFamily: fontFamily),
+      oldValueWidget = Text(file1Value ?? '',
+          style: baseStyle,
           maxLines: 2,
           overflow: TextOverflow.ellipsis);
       newValueWidget = Text('—',
           style: TextStyle(
               color: subtleText, fontSize: fontSize, fontFamily: fontFamily));
     }
+
+    final canEditSource = settingsState.status == SettingsStatus.loaded &&
+        _fileService.canEditFile(
+          widget.sourceFile,
+          forcedFormat: settingsState.appSettings.defaultSourceFormat,
+        );
+    final canEditTarget = settingsState.status == SettingsStatus.loaded &&
+        _fileService.canEditFile(
+          widget.targetFile,
+          forcedFormat: settingsState.appSettings.defaultTargetFormat,
+        );
+    final canDeleteSource = canEditSource && file1Value != null;
+    final canDeleteTarget = canEditTarget && file2Value != null;
+
+    final oldValueCell = _buildEditableCell(
+      entryKey: key,
+      isSource: true,
+      currentValue: file1Value,
+      displayWidget: oldValueWidget,
+      textStyle: baseStyle,
+      subtleText: subtleText,
+      canEdit: canEditSource,
+    );
+    final newValueCell = _buildEditableCell(
+      entryKey: key,
+      isSource: false,
+      currentValue: file2Value,
+      displayWidget: newValueWidget,
+      textStyle: baseStyle,
+      subtleText: subtleText,
+      canEdit: canEditTarget,
+    );
 
     return Container(
       height: 44,
@@ -1231,7 +1778,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             width: oldValW - 1,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: oldValueWidget,
+              child: oldValueCell,
             ),
           ),
           Container(
@@ -1241,7 +1788,29 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: newValueWidget,
+              child: newValueCell,
+            ),
+          ),
+          Container(
+              width: 1, height: 44, color: borderCol.withValues(alpha: 0.3)),
+          SizedBox(
+            width: actionW,
+            child: IconButton(
+              icon: Icon(
+                Icons.delete_outline,
+                color: canDeleteSource || canDeleteTarget
+                    ? subtleText
+                    : borderCol,
+                size: 18,
+              ),
+              tooltip: canDeleteSource || canDeleteTarget
+                  ? 'Delete'
+                  : 'Delete not available',
+              onPressed: canDeleteSource || canDeleteTarget
+                  ? () => _confirmDelete(key)
+                  : null,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             ),
           ),
         ],
@@ -1251,6 +1820,10 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
   Widget _buildFooter(BuildContext ctx, bool isDark, bool isAmoled,
       Color headerBg, Color textColor, Color subtleText, Color borderCol) {
+    final rangeStart = _currentPage * _itemsPerPage + 1;
+    final rangeEnd = ((_currentPage + 1) * _itemsPerPage)
+        .clamp(0, _processedDiffEntries.length);
+    final totalEntries = _processedDiffEntries.length;
     return Container(
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1281,7 +1854,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
           // Page info
           Text(
-            '${_currentPage * _itemsPerPage + 1}–${((_currentPage + 1) * _itemsPerPage).clamp(0, _processedDiffEntries.length)} of ${_processedDiffEntries.length}',
+            '$rangeStart–$rangeEnd of $totalEntries',
             style: TextStyle(color: subtleText, fontSize: 12),
           ),
           const SizedBox(width: 16),

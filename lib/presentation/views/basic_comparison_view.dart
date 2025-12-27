@@ -243,12 +243,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   void _navigateToAdvancedView() {
-    if (_latestComparisonResult != null) {
+    if (_latestComparisonResult != null && _file1 != null && _file2 != null) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              AdvancedDiffView(comparisonResult: _latestComparisonResult!),
+          builder: (context) => AdvancedDiffView(
+            comparisonResult: _latestComparisonResult!,
+            sourceFile: _file1!,
+            targetFile: _file2!,
+          ),
         ),
       );
     } else {

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
@@ -196,7 +197,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
               darkTheme = AppThemeV2.createDarkTheme(themeState.accentColor);
             }
 
-            return MaterialApp(
+            final app = MaterialApp(
               debugShowCheckedModeBanner: kDebugMode,
               title: 'Localization Comparison Tool',
               theme: AppThemeV2.createLightTheme(themeState.accentColor),
@@ -204,9 +205,176 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
               themeMode: themeState.themeMode,
               home: MyHomePage(initialSession: _initialSession),
             );
+
+            // PlatformMenuBar is only supported on macOS
+            if (Platform.isMacOS) {
+              return PlatformMenuBar(
+                menus: _buildPlatformMenus(context),
+                child: app,
+              );
+            }
+            return app;
           },
         ),
       ),
     );
+  }
+
+  /// Build platform-native menus for macOS (and other desktop platforms).
+  /// This provides the standard App, File, Edit, View, Help menu structure.
+  List<PlatformMenu> _buildPlatformMenus(BuildContext context) {
+    return [
+      // App Menu (macOS only - automatically uses app name)
+      PlatformMenu(
+        label: 'Localizer',
+        menus: [
+          PlatformMenuItem(
+            label: 'About Localizer',
+            onSelected: () {
+              showAboutDialog(
+                context: context,
+                applicationName: 'Localizer',
+                applicationVersion: '1.0.0',
+                applicationLegalese: '© 2024 Localizer',
+              );
+            },
+          ),
+          const PlatformMenuItemGroup(members: []),
+          if (Platform.isMacOS)
+            const PlatformProvidedMenuItem(
+              type: PlatformProvidedMenuItemType.hide,
+            ),
+          if (Platform.isMacOS)
+            const PlatformProvidedMenuItem(
+              type: PlatformProvidedMenuItemType.hideOtherApplications,
+            ),
+          if (Platform.isMacOS)
+            const PlatformProvidedMenuItem(
+              type: PlatformProvidedMenuItemType.showAllApplications,
+            ),
+          const PlatformMenuItemGroup(members: []),
+          const PlatformProvidedMenuItem(
+            type: PlatformProvidedMenuItemType.quit,
+          ),
+        ],
+      ),
+      // File Menu
+      PlatformMenu(
+        label: 'File',
+        menus: [
+          PlatformMenuItem(
+            label: 'Open Files...',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyO, meta: true),
+            onSelected: () {
+              // Trigger file open - this would need to communicate with HomeView
+              debugPrint('Open Files triggered from menu');
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Open Folder...',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyO, meta: true, shift: true),
+            onSelected: () {
+              debugPrint('Open Folder triggered from menu');
+            },
+          ),
+          const PlatformMenuItemGroup(members: []),
+          PlatformMenuItem(
+            label: 'Export Results...',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyE, meta: true),
+            onSelected: () {
+              debugPrint('Export triggered from menu');
+            },
+          ),
+        ],
+      ),
+      // Edit Menu
+      // Note: Some PlatformProvidedMenuItemType values (undo, redo, cut, copy, paste)
+      // are only available in newer Flutter versions. Using custom items for compatibility.
+      PlatformMenu(
+        label: 'Edit',
+        menus: [
+          PlatformMenuItem(
+            label: 'Undo',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, meta: true),
+            onSelected: null, // System handles this
+          ),
+          PlatformMenuItem(
+            label: 'Redo',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true),
+            onSelected: null,
+          ),
+          const PlatformMenuItemGroup(members: []),
+          PlatformMenuItem(
+            label: 'Cut',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
+            onSelected: null,
+          ),
+          PlatformMenuItem(
+            label: 'Copy',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
+            onSelected: null,
+          ),
+          PlatformMenuItem(
+            label: 'Paste',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
+            onSelected: null,
+          ),
+          PlatformMenuItem(
+            label: 'Select All',
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
+            onSelected: null,
+          ),
+        ],
+      ),
+      // View Menu
+      PlatformMenu(
+        label: 'View',
+        menus: [
+          if (Platform.isMacOS)
+            const PlatformProvidedMenuItem(
+              type: PlatformProvidedMenuItemType.toggleFullScreen,
+            ),
+          PlatformMenuItem(
+            label: 'Zoom In',
+            shortcut: const SingleActivator(LogicalKeyboardKey.equal, meta: true),
+            onSelected: () {
+              debugPrint('Zoom In triggered');
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Zoom Out',
+            shortcut: const SingleActivator(LogicalKeyboardKey.minus, meta: true),
+            onSelected: () {
+              debugPrint('Zoom Out triggered');
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Reset Zoom',
+            shortcut: const SingleActivator(LogicalKeyboardKey.digit0, meta: true),
+            onSelected: () {
+              debugPrint('Reset Zoom triggered');
+            },
+          ),
+        ],
+      ),
+      // Help Menu
+      PlatformMenu(
+        label: 'Help',
+        menus: [
+          PlatformMenuItem(
+            label: 'Documentation',
+            onSelected: () {
+              debugPrint('Documentation triggered');
+            },
+          ),
+          PlatformMenuItem(
+            label: 'Report an Issue',
+            onSelected: () {
+              debugPrint('Report Issue triggered');
+            },
+          ),
+        ],
+      ),
+    ];
   }
 }

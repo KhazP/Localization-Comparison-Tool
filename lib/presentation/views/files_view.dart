@@ -90,6 +90,18 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
+    
+    // AMOLED detection
+    final settingsState = context.watch<SettingsBloc>().state;
+    final bool isAmoled = isDark && 
+        settingsState.status == SettingsStatus.loaded &&
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+    
+    // AMOLED-aware color helpers
+    Color getCardColor() => isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    Color getSurfaceColor() => isAmoled ? AppThemeV2.amoledSurface : (isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface);
+    Color getBorderColor() => isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    Color getBorderSubtleColor() => isAmoled ? AppThemeV2.amoledBorderSubtle : (isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle);
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -139,6 +151,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       _sourceDirectory = path;
                       _isDraggingSource = false;
                     }),
+                    isAmoled: isAmoled,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -168,6 +181,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       _targetDirectory = path;
                       _isDraggingTarget = false;
                     }),
+                    isAmoled: isAmoled,
                   ),
                 ),
               ],
@@ -249,10 +263,10 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+                  color: getCardColor(),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                    color: getBorderColor(),
                   ),
                 ),
                 child: ClipRRect(
@@ -317,10 +331,17 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     required VoidCallback onDragEnter,
     required VoidCallback onDragExit,
     required Function(String) onDrop,
+    bool isAmoled = false,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final hasDirectory = directory != null;
+    
+    // AMOLED-aware colors
+    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    final surfaceColor = isAmoled ? AppThemeV2.amoledSurface : (isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface);
+    final borderSubtleColor = isAmoled ? AppThemeV2.amoledBorderSubtle : (isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle);
 
     return DropTarget(
       onDragEntered: (_) => onDragEnter(),
@@ -339,21 +360,21 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDragging
-              ? accentColor.withValues(alpha: 0.1)
-              : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard),
+              ? accentColor.withOpacity(0.1)
+              : cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDragging
                 ? accentColor
                 : hasDirectory
-                    ? accentColor.withValues(alpha: 0.5)
-                    : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
+                    ? accentColor.withOpacity(0.5)
+                    : borderColor,
             width: isDragging ? 2 : 1,
           ),
           boxShadow: isDragging
               ? [
                   BoxShadow(
-                    color: accentColor.withValues(alpha: 0.2),
+                    color: accentColor.withOpacity(0.2),
                     blurRadius: 12,
                     spreadRadius: 2,
                   )

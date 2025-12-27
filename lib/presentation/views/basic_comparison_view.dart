@@ -334,6 +334,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         fileNumber: 1,
                         onPressed: () => _pickFile(1),
                         isDraggingOver: _isDraggingOverFile1,
+                        isAmoled: isAmoled,
                       ),
                       const SizedBox(width: 12),
                       _buildFilePicker(
@@ -343,6 +344,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         fileNumber: 2,
                         onPressed: () => _pickFile(2),
                         isDraggingOver: _isDraggingOverFile2,
+                        isAmoled: isAmoled,
                       ),
                     ],
                   ),
@@ -665,6 +667,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     required int fileNumber,
     required VoidCallback onPressed,
     required bool isDraggingOver,
+    required bool isAmoled,
   }) {
     final theme = Theme.of(context);
     // isDarkMode is implicit in theme.brightness
@@ -696,9 +699,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         : (hasFile ? theme.colorScheme.primary.withValues(alpha: 0.3) : theme.dividerColor);
     Color backgroundColor = isDraggingOver 
         ? theme.colorScheme.primary.withValues(alpha: 0.08) 
-        : (hasFile 
-            ? theme.colorScheme.primary.withValues(alpha: 0.04) 
-            : theme.cardColor.withValues(alpha: 0.5));
+        : (isAmoled
+            ? (hasFile ? Colors.grey[900]! : Colors.transparent)
+            : (hasFile 
+                ? theme.colorScheme.primary.withValues(alpha: 0.04) 
+                : theme.cardColor.withValues(alpha: 0.5)));
 
     // Active state (file loaded): compact inline layout ~44px
     // Idle state (empty): slightly larger ~70px for easy drop

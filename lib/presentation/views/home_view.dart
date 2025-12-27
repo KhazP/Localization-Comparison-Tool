@@ -85,17 +85,17 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     String nextMode;
     switch (currentMode.toLowerCase()) {
       case 'light':
-        nextMode = 'dark';
+        nextMode = 'Dark';
         break;
       case 'dark':
-        nextMode = 'amoled';
+        nextMode = 'Amoled';
         break;
       case 'amoled':
-        nextMode = 'system';
+        nextMode = 'System';
         break;
       case 'system':
       default:
-        nextMode = 'light';
+        nextMode = 'Light';
         break;
     }
     
@@ -106,6 +106,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final settingsState = context.watch<SettingsBloc>().state;
+    final isAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
     return Scaffold(
       body: Row(
@@ -113,11 +115,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           // Navigation Rail
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).navigationRailTheme.backgroundColor ?? 
-                     (isDarkMode ? AppThemeV2.darkCard : AppThemeV2.lightCard),
+              color: Theme.of(context).navigationRailTheme.backgroundColor ??
+                  (isAmoled
+                      ? AppThemeV2.amoledSurface
+                      : (isDarkMode ? AppThemeV2.darkCard : AppThemeV2.lightCard)),
               border: Border(
                 right: BorderSide(
-                  color: Theme.of(context).dividerColor,
+                  color: isAmoled ? AppThemeV2.amoledBorder : Theme.of(context).dividerColor,
                 ),
               ),
             ),

@@ -5,6 +5,20 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 class SettingsRepository {
   static const String _boxName = 'app_settings_box';
 
+  String _normalizeThemeMode(String value) {
+    switch (value.toLowerCase()) {
+      case 'light':
+        return 'Light';
+      case 'dark':
+        return 'Dark';
+      case 'amoled':
+        return 'Amoled';
+      case 'system':
+      default:
+        return 'System';
+    }
+  }
+
   Future<void> init() async {
     if (!Hive.isBoxOpen(_boxName)) {
       try {
@@ -27,6 +41,11 @@ class SettingsRepository {
       if (settings == null) {
         settings = AppSettings.defaultSettings();
         await saveSettings(settings); 
+      }
+      final normalizedThemeMode = _normalizeThemeMode(settings.appThemeMode);
+      if (settings.appThemeMode != normalizedThemeMode) {
+        settings.appThemeMode = normalizedThemeMode;
+        await saveSettings(settings);
       }
       return settings;
     } catch (e) {

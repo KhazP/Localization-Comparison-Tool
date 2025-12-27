@@ -27,11 +27,15 @@
         "http",
         "intl",
         "libgit2dart",
+        "macos_dock_progress",
+        "macos_ui",
+        "macos_window_utils",
         "package_info_plus",
         "path",
         "protocol_handler",
         "screen_retriever",
         "string_similarity",
+        "tray_manager",
         "url_launcher",
         "uuid",
         "watcher",
@@ -158,6 +162,32 @@
       ]
     },
     {
+      "name": "macos_dock_progress",
+      "version": "0.1.0",
+      "dependencies": [
+        "flutter",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "macos_ui",
+      "version": "2.2.0",
+      "dependencies": [
+        "appkit_ui_element_colors",
+        "equatable",
+        "flutter",
+        "gradient_borders",
+        "macos_window_utils"
+      ]
+    },
+    {
+      "name": "macos_window_utils",
+      "version": "1.9.0",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
       "name": "protocol_handler",
       "version": "0.1.6",
       "dependencies": [
@@ -187,6 +217,15 @@
       "dependencies": [
         "flutter",
         "path"
+      ]
+    },
+    {
+      "name": "windows_single_instance",
+      "version": "1.1.0",
+      "dependencies": [
+        "ffi",
+        "flutter",
+        "win32"
       ]
     },
     {
@@ -966,6 +1005,37 @@
       ]
     },
     {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
+      "name": "equatable",
+      "version": "2.0.7",
+      "dependencies": [
+        "collection",
+        "meta"
+      ]
+    },
+    {
+      "name": "appkit_ui_element_colors",
+      "version": "1.0.1",
+      "dependencies": [
+        "equatable",
+        "flutter",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "gradient_borders",
+      "version": "1.0.2",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
       "name": "win32",
       "version": "5.14.0",
       "dependencies": [
@@ -1170,14 +1240,6 @@
       ]
     },
     {
-      "name": "equatable",
-      "version": "2.0.7",
-      "dependencies": [
-        "collection",
-        "meta"
-      ]
-    },
-    {
       "name": "archive",
       "version": "3.6.1",
       "dependencies": [
@@ -1194,13 +1256,6 @@
       "name": "sprintf",
       "version": "7.0.0",
       "dependencies": []
-    },
-    {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
-      ]
     },
     {
       "name": "flutter_plugin_android_lifecycle",
@@ -1479,17 +1534,23 @@
       ]
     },
     {
-      "name": "windows_single_instance",
-      "version": "1.1.0",
+      "name": "tray_manager",
+      "version": "0.2.4",
       "dependencies": [
-        "ffi",
         "flutter",
-        "win32"
+        "menu_base",
+        "path",
+        "shortid"
       ]
     },
     {
-      "name": "macos_window_utils",
-      "version": "1.9.0",
+      "name": "shortid",
+      "version": "0.1.2",
+      "dependencies": []
+    },
+    {
+      "name": "menu_base",
+      "version": "0.1.1",
       "dependencies": [
         "flutter"
       ]

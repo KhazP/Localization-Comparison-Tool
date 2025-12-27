@@ -131,6 +131,16 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
+    
+    // AMOLED detection
+    final settingsState = context.watch<SettingsBloc>().state;
+    final bool isAmoled = isDark && 
+        settingsState.status == SettingsStatus.loaded &&
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+    
+    // AMOLED-aware color helpers
+    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -179,10 +189,10 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+                        color: cardColor,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                          color: borderColor,
                         ),
                       ),
                       child: TextField(
@@ -213,10 +223,10 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                   // Sort dropdown
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                        color: borderColor,
                       ),
                     ),
                     child: PopupMenuButton<String>(
@@ -494,6 +504,17 @@ class _HistoryCardState extends State<_HistoryCard> {
     final file2Name = session.file2Path.split(Platform.pathSeparator).last;
 
     final themeState = context.watch<ThemeBloc>().state;
+    
+    // AMOLED detection
+    final settingsState = context.watch<SettingsBloc>().state;
+    final bool isAmoled = isDark && 
+        settingsState.status == SettingsStatus.loaded &&
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+    
+    // AMOLED-aware colors
+    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final cardHoverColor = isAmoled ? AppThemeV2.amoledCardHover : (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover);
+    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
 
     // Determine the dominant status color for the left border
     Color statusColor;
@@ -506,7 +527,7 @@ class _HistoryCardState extends State<_HistoryCard> {
     } else if (session.stringsAdded > 0 || session.stringsRemoved > 0) {
       statusColor = themeState.diffModifiedColor;
     } else {
-      statusColor = isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder;
+      statusColor = borderColor;
     }
 
     return MouseRegion(
@@ -516,12 +537,10 @@ class _HistoryCardState extends State<_HistoryCard> {
         duration: const Duration(milliseconds: 150),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: _isHovered
-              ? (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover)
-              : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard),
+          color: _isHovered ? cardHoverColor : cardColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            color: borderColor,
           ),
         ),
         child: Material(

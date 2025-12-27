@@ -18,11 +18,11 @@ class AppThemeV2 {
 
   // AMOLED Theme Colors (Pure black for OLED displays)
   static const Color amoledBackground = Color(0xFF000000);
-  static const Color amoledSurface = Color(0xFF0A0A0A);
-  static const Color amoledCard = Color(0xFF121212);
-  static const Color amoledCardHover = Color(0xFF1A1A1A);
-  static const Color amoledBorder = Color(0xFF1E1E1E);
-  static const Color amoledBorderSubtle = Color(0xFF151515);
+  static const Color amoledSurface = Color(0xFF000000);
+  static const Color amoledCard = Color(0xFF000000);
+  static const Color amoledCardHover = Color(0xFF181818);
+  static const Color amoledBorder = Color(0xFF333333);
+  static const Color amoledBorderSubtle = Color(0xFF222222);
 
   // Light Theme Colors
   static const Color lightBackground = Color(0xFFF8F9FC);

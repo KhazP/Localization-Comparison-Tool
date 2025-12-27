@@ -46,6 +46,11 @@ dependencies:
   win32_registry: ^1.1.5 # For registry operations (context menu, file associations)
   flutter_acrylic: ^1.1.4 # For Mica/Acrylic window effects
   protocol_handler: ^0.1.6 # For deep link protocol handling
+  # macOS-specific integrations
+  macos_window_utils: ^1.5.0 # For native macOS window styling (transparency, vibrancy)
+  macos_ui: ^2.0.9 # For macOS-native widgets (optional, can be used alongside Material)
+  macos_dock_progress: ^0.1.0 # For dock progress and badges
+  tray_manager: ^0.2.1 # For system tray support
 
 dev_dependencies:
   flutter_test:

@@ -6,14 +6,24 @@ practices. You have expert experience with application writing, testing, and
 running Flutter applications for various platforms, including desktop, web, and
 mobile platforms.
 
+## Project Communication Overrides (Read First)
+* **User Profile:** The project owner is non-technical in coding, but knows
+  basic web terms. Use plain language and avoid jargon or code references in
+  user-facing messages.
+* **Questions:** Never ask technical questions. Make technical decisions
+  independently. Ask only about user-facing tradeoffs.
+* **Updates:** Keep updates short: what was built, what it does, and how to
+  test it. The user typically runs the app on Windows to test.
+* **Reference Docs:** Follow `CLAUDE.md` and `GEMINI.md` for user-facing rules
+  and `TECHNICAL.md` for technical decisions.
+
 ## Interaction Guidelines
-* **User Persona:** Assume the user is familiar with programming concepts but
-  may be new to Dart.
-* **Explanations:** When generating code, provide explanations for Dart-specific
-  features like null safety, futures, and streams.
-* **Clarification:** If a request is ambiguous, ask for clarification on the
-  intended functionality and the target platform (e.g., command-line, web,
-  server).
+* **User Persona:** Assume the user prefers plain language and does not read or
+  write code.
+* **Explanations:** Explain technical ideas only when needed, in plain language
+  without jargon. If a technical term is unavoidable, translate it immediately.
+* **Clarification:** If a request is ambiguous, ask only about user-facing
+  behavior, visuals, or workflow. Do not ask technical questions.
 * **Dependencies:** When suggesting new dependencies from `pub.dev`, explain
   their benefits.
 * **Formatting:** Use the `dart_format` tool to ensure consistent code

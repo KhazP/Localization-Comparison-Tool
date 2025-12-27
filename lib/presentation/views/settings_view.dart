@@ -77,6 +77,21 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       removed: Colors.redAccent,
       modified: Colors.yellowAccent,
     ),
+    'Nord': const _ThemePreset(
+      added: Color(0xFFA3BE8C),    // Nord green
+      removed: Color(0xFFBF616A),  // Nord red
+      modified: Color(0xFFEBCB8B), // Nord yellow
+    ),
+    'Solarized': const _ThemePreset(
+      added: Color(0xFF859900),    // Solarized green
+      removed: Color(0xFFDC322F),  // Solarized red
+      modified: Color(0xFFB58900), // Solarized yellow
+    ),
+    'Monokai': const _ThemePreset(
+      added: Color(0xFFA6E22E),    // Monokai green
+      removed: Color(0xFFF92672),  // Monokai pink/red
+      modified: Color(0xFFFD971F), // Monokai orange
+    ),
   };
 
   @override
@@ -92,6 +107,33 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       curve: Curves.easeOut,
     );
     _animationController.forward();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AMOLED-AWARE COLOR HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Color _getSurfaceColor(bool isDark, bool isAmoled) {
+    if (isAmoled) return AppThemeV2.amoledSurface;
+    return isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface;
+  }
+
+  Color _getCardColor(bool isDark, bool isAmoled) {
+    if (isAmoled) return AppThemeV2.amoledCard;
+    return isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard;
+  }
+
+  Color _getBorderColor(bool isDark, bool isAmoled) {
+    if (isAmoled) return AppThemeV2.amoledBorder;
+    return isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder;
+  }
+
+  Color _getTextMutedColor(bool isDark) {
+    return isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted;
+  }
+
+  Color _getTextSecondaryColor(bool isDark) {
+    return isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary;
   }
 
   @override
@@ -145,24 +187,33 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
       opacity: _fadeAnimation,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Row(
-          children: [
-            // Left Navigation Panel
-            _buildNavigationPanel(context, isDark, colorScheme),
-            // Main Content
-            Expanded(
-              child: BlocBuilder<SettingsBloc, SettingsState>(
-                builder: (context, state) {
-                  if (state.status == SettingsStatus.loading || state.status == SettingsStatus.initial) {
-                    return Center(
+        body: BlocBuilder<SettingsBloc, SettingsState>(
+          builder: (context, state) {
+            // Determine if AMOLED mode is active
+            final bool isAmoled = isDark &&
+                state.appSettings.appThemeMode.toLowerCase() == 'amoled';
+            
+            if (state.status == SettingsStatus.loading || state.status == SettingsStatus.initial) {
+              return Row(
+                children: [
+                  _buildNavigationPanel(context, isDark, isAmoled, colorScheme),
+                  Expanded(
+                    child: Center(
                       child: CircularProgressIndicator(
                         strokeWidth: 3,
                         color: colorScheme.primary,
                       ),
-                    );
-                  }
-                  if (state.status == SettingsStatus.error) {
-                    return Center(
+                    ),
+                  ),
+                ],
+              );
+            }
+            if (state.status == SettingsStatus.error) {
+              return Row(
+                children: [
+                  _buildNavigationPanel(context, isDark, isAmoled, colorScheme),
+                  Expanded(
+                    child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -171,26 +222,33 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                           Text('Error loading settings', style: theme.textTheme.titleMedium),
                         ],
                       ),
-                    );
-                  }
-                  return _buildSettingsContent(context, state.appSettings, isDark);
-                },
-              ),
-            ),
-          ],
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                _buildNavigationPanel(context, isDark, isAmoled, colorScheme),
+                Expanded(
+                  child: _buildSettingsContent(context, state.appSettings, isDark, isAmoled),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildNavigationPanel(BuildContext context, bool isDark, ColorScheme colorScheme) {
+  Widget _buildNavigationPanel(BuildContext context, bool isDark, bool isAmoled, ColorScheme colorScheme) {
     return Container(
       width: 240,
       decoration: BoxDecoration(
-        color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface,
+        color: _getSurfaceColor(isDark, isAmoled),
         border: Border(
           right: BorderSide(
-            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            color: _getBorderColor(isDark, isAmoled),
           ),
         ),
       ),
@@ -223,7 +281,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             ),
           ),
           Divider(
-            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            color: _getBorderColor(isDark, isAmoled),
             height: 1,
           ),
           // Navigation Items
@@ -363,7 +421,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     }
   }
 
-  Widget _buildSettingsContent(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildSettingsContent(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     final theme = Theme.of(context);
     
     return Padding(
@@ -391,10 +449,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               if (_selectedCategory != SettingsCategory.about)
                 TextButton.icon(
                   onPressed: () => _showResetCategoryDialog(context, _selectedCategory),
-                  icon: Icon(Icons.refresh_rounded, size: 18, color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                  icon: Icon(Icons.refresh_rounded, size: 18, color: _getTextMutedColor(isDark)),
                   label: Text(
                     'Reset',
-                    style: TextStyle(color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                    style: TextStyle(color: _getTextMutedColor(isDark)),
                   ),
                 ),
             ],
@@ -412,7 +470,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   duration: const Duration(milliseconds: 200),
                   child: KeyedSubtree(
                     key: ValueKey(_selectedCategory),
-                    child: _buildCategoryContent(context, settings, isDark),
+                    child: _buildCategoryContent(context, settings, isDark, isAmoled),
                   ),
                 ),
               ),
@@ -423,24 +481,24 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildCategoryContent(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildCategoryContent(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     switch (_selectedCategory) {
       case SettingsCategory.general:
-        return _buildGeneralSettings(context, settings, isDark);
+        return _buildGeneralSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.comparisonEngine:
-        return _buildComparisonSettings(context, settings, isDark);
+        return _buildComparisonSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.appearance:
-        return _buildAppearanceSettings(context, settings, isDark);
+        return _buildAppearanceSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.fileHandling:
-        return _buildFileHandlingSettings(context, settings, isDark);
+        return _buildFileHandlingSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.aiServices:
-        return _buildAiServicesSettings(context, settings, isDark);
+        return _buildAiServicesSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.versionControl:
-        return _buildVersionControlSettings(context, settings, isDark);
+        return _buildVersionControlSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.windowsIntegrations:
-        return _buildWindowsIntegrationsSettings(context, settings, isDark);
+        return _buildWindowsIntegrationsSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.about:
-        return _buildAboutSettings(context, isDark);
+        return _buildAboutSettings(context, isDark, isAmoled);
     }
   }
 
@@ -453,14 +511,15 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     required String title,
     required List<Widget> children,
     bool isDark = false,
+    bool isAmoled = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+        color: _getCardColor(isDark, isAmoled),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+          color: _getBorderColor(isDark, isAmoled),
         ),
       ),
       child: Column(
@@ -472,12 +531,12 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                color: _getTextSecondaryColor(isDark),
               ),
             ),
           ),
           Divider(
-            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            color: _getBorderColor(isDark, isAmoled),
             height: 1,
           ),
           ...children,
@@ -492,6 +551,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     required Widget control,
     String? description,
     bool isDark = false,
+    bool isAmoled = false,
     bool showDivider = true,
   }) {
     return Column(
@@ -513,7 +573,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          color: _getTextMutedColor(isDark),
                         ),
                       ),
                     ],
@@ -526,7 +586,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         ),
         if (showDivider)
           Divider(
-            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            color: _getBorderColor(isDark, isAmoled),
             height: 1,
             indent: 16,
             endIndent: 16,
@@ -541,14 +601,15 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     List<String> items,
     ValueChanged<String?> onChanged,
     bool isDark,
+    bool isAmoled,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightBackground,
+        color: _getSurfaceColor(isDark, isAmoled),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+          color: _getBorderColor(isDark, isAmoled),
         ),
       ),
       child: DropdownButtonHideUnderline(
@@ -567,13 +628,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // GENERAL SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildGeneralSettings(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildGeneralSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
           context: context,
           title: 'Application',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
@@ -581,8 +643,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Application interface language',
               control: _buildDropdown(context, settings.appLanguage, _appLanguages, (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateAppLanguage(val));
-              }, isDark),
+              }, isDark, isAmoled),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -590,8 +653,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'View to show on startup',
               control: _buildDropdown(context, settings.defaultViewOnStartup, _defaultViews, (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateDefaultViewOnStartup(val));
-              }, isDark),
+              }, isDark, isAmoled),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -603,6 +667,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -611,6 +676,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Startup Options',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
@@ -622,6 +688,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -633,6 +700,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -644,6 +712,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -652,6 +721,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Danger Zone',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
@@ -686,13 +756,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // COMPARISON SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildComparisonSettings(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildComparisonSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
           context: context,
           title: 'Comparison Behavior',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
@@ -704,6 +775,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -715,6 +787,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -732,6 +805,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 ),
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -742,7 +816,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 children: [
                   _buildDropdown(context, settings.comparisonMode, _comparisonModes, (val) {
                     if (val != null) context.read<SettingsBloc>().add(UpdateComparisonMode(val));
-                  }, isDark),
+                  }, isDark, isAmoled),
                   const SizedBox(width: 8),
                   Tooltip(
                     richMessage: const TextSpan(
@@ -764,6 +838,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 ],
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -772,6 +847,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Ignore Patterns',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             if (settings.ignorePatterns.isEmpty)
               Padding(
@@ -887,7 +963,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // APPEARANCE SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildAppearanceSettings(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildAppearanceSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
 
@@ -895,6 +971,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Theme',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
@@ -902,8 +979,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               description: 'Choose light, dark, or AMOLED',
               control: _buildDropdown(context, settings.appThemeMode, _themeModes, (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateAppThemeMode(val));
-              }, isDark),
+              }, isDark, isAmoled),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
                   _buildSettingRow(
                     context: context,
@@ -934,6 +1012,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       ),
                     ),
                     isDark: isDark,
+                    isAmoled: isAmoled,
                   ),
                   _buildSettingRow(
                     context: context,
@@ -947,7 +1026,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       color: Color(settings.accentColorValue),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                        color: _getBorderColor(isDark, isAmoled),
                       ),
                     ),
                   ),
@@ -959,6 +1038,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 ],
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -967,6 +1047,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Diff Colors',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -982,23 +1063,23 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               child: _buildPresetButtons(context),
             ),
             Divider(
-              color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+              color: _getBorderColor(isDark, isAmoled),
               height: 1,
               indent: 16,
               endIndent: 16,
             ),
             _buildColorRow(context, 'Added', Color(settings.diffAddedColor), (color) {
               context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.toARGB32()));
-            }, isDark),
+            }, isDark, isAmoled),
             _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor), (color) {
               context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.toARGB32()));
-            }, isDark),
+            }, isDark, isAmoled),
             _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor), (color) {
               context.read<SettingsBloc>().add(UpdateDiffModifiedColor(color.toARGB32()));
-            }, isDark, showDivider: false),
+            }, isDark, isAmoled, showDivider: false),
           ],
         ),
-        _buildPreviewPanel(context, settings, isDark),
+        _buildPreviewPanel(context, settings, isDark, isAmoled),
       ],
     );
   }
@@ -1008,7 +1089,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     String label,
     Color color,
     ValueChanged<Color> onChanged,
-    bool isDark, {
+    bool isDark,
+    bool isAmoled, {
     bool showDivider = true,
   }) {
     return _buildSettingRow(
@@ -1024,7 +1106,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             color: color,
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+              color: _getBorderColor(isDark, isAmoled),
             ),
           ),
         ),
@@ -1034,14 +1116,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildPreviewPanel(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildPreviewPanel(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
+        color: _getCardColor(isDark, isAmoled),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+          color: _getBorderColor(isDark, isAmoled),
         ),
       ),
       child: Column(
@@ -1054,21 +1136,21 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 Icon(
                   Icons.visibility_rounded,
                   size: 16,
-                  color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                  color: _getTextMutedColor(isDark),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Live Preview',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                    color: _getTextSecondaryColor(isDark),
                   ),
                 ),
               ],
             ),
           ),
           Divider(
-            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            color: _getBorderColor(isDark, isAmoled),
             height: 1,
           ),
           Padding(
@@ -1083,6 +1165,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   key: 'welcome_message',
                   value: '"Hello, welcome to our app!"',
                   isDark: isDark,
+                  isAmoled: isAmoled,
                 ),
                 const SizedBox(height: 8),
                 _buildPreviewEntry(
@@ -1093,6 +1176,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   key: 'old_greeting',
                   value: '"Greetings, user"',
                   isDark: isDark,
+                  isAmoled: isAmoled,
                 ),
                 const SizedBox(height: 8),
                 _buildPreviewEntry(
@@ -1103,6 +1187,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   key: 'button_label',
                   value: '"Submit" → "Continue"',
                   isDark: isDark,
+                  isAmoled: isAmoled,
                 ),
               ],
             ),
@@ -1120,6 +1205,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     required String key,
     required String value,
     required bool isDark,
+    required bool isAmoled,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1204,29 +1290,32 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // FILE HANDLING SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildFileHandlingSettings(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildFileHandlingSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
           context: context,
           title: 'File Formats',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
               label: 'Source Format',
               control: _buildDropdown(context, settings.defaultSourceFormat, _fileFormats, (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateDefaultSourceFormat(val));
-              }, isDark),
+              }, isDark, isAmoled),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
               label: 'Target Format',
               control: _buildDropdown(context, settings.defaultTargetFormat, _fileFormats, (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateDefaultTargetFormat(val));
-              }, isDark),
+              }, isDark, isAmoled),
               isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -1235,22 +1324,25 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Encoding',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
               label: 'Source Encoding',
               control: _buildDropdown(context, settings.defaultSourceEncoding, _encodings, (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateDefaultSourceEncoding(val));
-              }, isDark),
+              }, isDark, isAmoled),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
               label: 'Target Encoding',
               control: _buildDropdown(context, settings.defaultTargetEncoding, _encodings, (val) {
                 if (val != null) context.read<SettingsBloc>().add(UpdateDefaultTargetEncoding(val));
-              }, isDark),
+              }, isDark, isAmoled),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -1262,6 +1354,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -1274,7 +1367,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // AI SERVICES SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildAiServicesSettings(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildAiServicesSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     final llmModels = ['Gemini 1.5 Flash', 'Gemini 1.5 Pro', 'GPT-4o', 'GPT-4o-mini', 'Claude 3.5 Sonnet', 'DeepSeek-V3'];
 
     return Column(
@@ -1286,6 +1379,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'AI Translation (LLM)',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
@@ -1296,6 +1390,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -1311,8 +1406,9 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   }
                 },
                 isDark,
+                isAmoled,
               ),
-              isDark: isDark,
+              isAmoled: isAmoled,
             ),
              _buildSettingRow(
               context: context,
@@ -1330,15 +1426,31 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 ),
               ),
               isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: true,
             ),
             const SizedBox(height: 8),
-            _buildApiKeyRow(context, 'Gemini API Key', settings.geminiApiKey, (val) {
-              context.read<SettingsBloc>().add(UpdateGeminiApiKey(val));
-            }, isDark),
-            _buildApiKeyRow(context, 'OpenAI API Key', settings.openaiApiKey, (val) {
-              context.read<SettingsBloc>().add(UpdateOpenAiApiKey(val));
-            }, isDark, showDivider: false),
+            _buildApiKeyRow(
+              context,
+              'Gemini API Key',
+              settings.geminiApiKey,
+              (val) {
+                context.read<SettingsBloc>().add(UpdateGeminiApiKey(val));
+              },
+              isDark,
+              isAmoled,
+            ),
+            _buildApiKeyRow(
+              context,
+              'OpenAI API Key',
+              settings.openaiApiKey,
+              (val) {
+                context.read<SettingsBloc>().add(UpdateOpenAiApiKey(val));
+              },
+              isDark,
+              isAmoled,
+              showDivider: false,
+            ),
           ],
         ),
 
@@ -1349,6 +1461,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Translation Context',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
              Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1368,10 +1481,16 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                       hintText: 'e.g., This is a fantasy RPG game. Use informal tone and "gamer" terminology.',
                       hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
                       filled: true,
-                      fillColor: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightBackground,
+                      fillColor: isAmoled
+                          ? AppThemeV2.amoledSurface
+                          : (isDark
+                              ? AppThemeV2.darkSurface
+                              : AppThemeV2.lightBackground),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
+                        borderSide: BorderSide(
+                          color: _getBorderColor(isDark, isAmoled),
+                        ),
                       ),
                     ),
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -1380,10 +1499,10 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
               ),
             ),
             Divider(
-              color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
-               height: 24,
-               indent: 16,
-               endIndent: 16,
+              color: _getBorderColor(isDark, isAmoled),
+              height: 24,
+              indent: 16,
+              endIndent: 16,
             ),
             _buildSettingRow(
               context: context,
@@ -1394,7 +1513,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 onChanged: (val) => context.read<SettingsBloc>().add(UpdateIncludeContextStrings(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
-              isDark: isDark,
+          isAmoled: isAmoled,
             ),
              if (settings.includeContextStrings)
               _buildSettingRow(
@@ -1413,7 +1532,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                     activeColor: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                isDark: isDark,
+            isAmoled: isAmoled,
                 showDivider: false,
               ),
           ],
@@ -1437,21 +1556,22 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                   context: context,
                   title: 'DeepL & Google',
                   isDark: isDark,
+          isAmoled: isAmoled,
                   children: [
                      _buildSettingRow(
                       context: context,
                       label: 'Legacy Service Provider',
                        control: _buildDropdown(context, settings.aiTranslationService, ['Google Translate', 'DeepL', 'Azure Translator'], (val) {
                         if (val != null) context.read<SettingsBloc>().add(UpdateAiTranslationService(val));
-                      }, isDark),
-                      isDark: isDark,
+                      }, isDark, isAmoled),
+                  isAmoled: isAmoled,
                     ),
                     _buildApiKeyRow(context, 'Google Translate API', settings.googleTranslateApiKey, (val) {
                       context.read<SettingsBloc>().add(UpdateGoogleTranslateApiKey(val));
-                    }, isDark),
+                    }, isDark, isAmoled),
                     _buildApiKeyRow(context, 'DeepL API Key', settings.deeplApiKey, (val) {
                       context.read<SettingsBloc>().add(UpdateDeeplApiKey(val));
-                    }, isDark, showDivider: false),
+                    }, isDark, isAmoled, showDivider: false),
                   ],
                 ),
               ],
@@ -1466,7 +1586,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     String label,
     String value,
     ValueChanged<String> onChanged,
-    bool isDark, {
+    bool isDark,
+    bool isAmoled, {
     bool showDivider = true,
   }) {
     return Column(
@@ -1477,6 +1598,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           value, 
           onChanged, 
           isDark, 
+          isAmoled, 
           showDivider: showDivider,
           hintText: 'Paste your $label here',
         ),
@@ -1488,13 +1610,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // VERSION CONTROL SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildVersionControlSettings(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildVersionControlSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
           context: context,
           title: 'Git Integration',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
@@ -1506,6 +1629,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+          isAmoled: isAmoled,
             ),
             _buildSettingRow(
               context: context,
@@ -1517,6 +1641,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
+          isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -1525,13 +1650,14 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Git User',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildTextFieldRow(context, 'Name', settings.gitUserName, (val) {
               context.read<SettingsBloc>().add(UpdateGitUserName(val));
-            }, isDark),
+            }, isDark, isAmoled),
             _buildTextFieldRow(context, 'Email', settings.gitUserEmail, (val) {
               context.read<SettingsBloc>().add(UpdateGitUserEmail(val));
-            }, isDark, showDivider: false),
+            }, isDark, isAmoled, showDivider: false),
           ],
         ),
       ],
@@ -1542,7 +1668,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // WINDOWS INTEGRATIONS SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildWindowsIntegrationsSettings(BuildContext context, AppSettings settings, bool isDark) {
+  Widget _buildWindowsIntegrationsSettings(BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
     final isWindows = Platform.isWindows;
     
     return Column(
@@ -1552,6 +1678,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
             context: context,
             title: 'Platform Notice',
             isDark: isDark,
+          isAmoled: isAmoled,
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -1574,6 +1701,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Visual Effects',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             _buildSettingRow(
               context: context,
@@ -1584,6 +1712,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
                 onChanged: isWindows ? (val) => context.read<SettingsBloc>().add(UpdateUseMicaEffect(val)) : null,
               ),
               isDark: isDark,
+          isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -1592,6 +1721,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Explorer Integration',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
@@ -1653,6 +1783,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'File Associations',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
@@ -1714,6 +1845,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
           context: context,
           title: 'Protocol Handler',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
@@ -1780,7 +1912,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     String label,
     String value,
     ValueChanged<String> onChanged,
-    bool isDark, {
+    bool isDark,
+    bool isAmoled, {
     bool showDivider = true,
     String? hintText,
   }) {
@@ -1801,6 +1934,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         ),
       ),
       isDark: isDark,
+      isAmoled: isAmoled,
       showDivider: showDivider,
     );
   }
@@ -1809,34 +1943,36 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
   // ABOUT SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildAboutSettings(BuildContext context, bool isDark) {
+  Widget _buildAboutSettings(BuildContext context, bool isDark, bool isAmoled) {
     return Column(
       children: [
         _buildSettingsCard(
           context: context,
           title: 'Application Info',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
-            _buildInfoRow(context, 'Version', _packageInfo?.version ?? 'Loading...', isDark),
-            _buildInfoRow(context, 'Build', _packageInfo?.buildNumber ?? 'Loading...', isDark),
-            _buildInfoRow(context, 'Platform', _platformInfo, isDark, showDivider: false),
+            _buildInfoRow(context, 'Version', _packageInfo?.version ?? 'Loading...', isDark, isAmoled),
+            _buildInfoRow(context, 'Build', _packageInfo?.buildNumber ?? 'Loading...', isDark, isAmoled),
+            _buildInfoRow(context, 'Platform', _platformInfo, isDark, isAmoled, showDivider: false),
           ],
         ),
         _buildSettingsCard(
           context: context,
           title: 'Links',
           isDark: isDark,
+          isAmoled: isAmoled,
           children: [
-            _buildLinkRow(context, 'GitHub Repository', Icons.code_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain'), isDark),
-            _buildLinkRow(context, 'Report Issue', Icons.bug_report_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain/issues'), isDark),
-            _buildLinkRow(context, 'Licenses', Icons.article_rounded, () => _showLicensesDialog(context, isDark), isDark, showDivider: false),
+            _buildLinkRow(context, 'GitHub Repository', Icons.code_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain'), isDark, isAmoled),
+            _buildLinkRow(context, 'Report Issue', Icons.bug_report_rounded, () => _launchUrl('https://github.com/KhazP/LocalizerAppMain/issues'), isDark, isAmoled),
+            _buildLinkRow(context, 'Licenses', Icons.article_rounded, () => _showLicensesDialog(context, isDark), isDark, isAmoled, showDivider: false),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value, bool isDark, {bool showDivider = true}) {
+  Widget _buildInfoRow(BuildContext context, String label, String value, bool isDark, bool isAmoled, {bool showDivider = true}) {
     return _buildSettingRow(
       context: context,
       label: label,
@@ -1847,6 +1983,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         ),
       ),
       isDark: isDark,
+      isAmoled: isAmoled,
       showDivider: showDivider,
     );
   }
@@ -1856,7 +1993,8 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
     String label,
     IconData icon,
     VoidCallback onTap,
-    bool isDark, {
+    bool isDark,
+    bool isAmoled, {
     bool showDivider = true,
   }) {
     return Column(
@@ -1881,7 +2019,7 @@ class _SettingsViewState extends State<SettingsView> with SingleTickerProviderSt
         ),
         if (showDivider)
           Divider(
-            color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+            color: _getBorderColor(isDark, isAmoled),
             height: 1,
             indent: 16,
             endIndent: 16,

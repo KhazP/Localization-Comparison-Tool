@@ -8,6 +8,7 @@ import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/presentation/app.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:localizer_app_main/core/services/macos_integration_service.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
@@ -46,16 +47,28 @@ Future<void> main(List<String> args) async {
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
 
+    // macOS: Initialize specific integrations
+    if (Platform.isMacOS) {
+      await MacOSIntegrationService.initializeWindowStyling();
+      await MacOSIntegrationService.initializeSystemTray();
+    }
+
     // Windows: Initialize Acrylic/Mica effect
     if (Platform.isWindows && initialAppSettings.useMicaEffect) {
       await Window.initialize();
       final isDark = initialAppSettings.appThemeMode == 'Dark' || 
                      initialAppSettings.appThemeMode == 'Amoled' ||
                      initialAppSettings.appThemeMode == 'System'; // Assume dark for system on Windows
+      
+      // Set transparent background to allow Mica effect to show through
+      await windowManager.setBackgroundColor(Colors.transparent);
+      
+      // Apply Mica effect (Windows 11+) with Acrylic fallback (Windows 10)
       await Window.setEffect(
         effect: WindowEffect.mica,
         dark: isDark,
       );
+      
       // Make title bar match the window effect
       await windowManager.setTitleBarStyle(
         TitleBarStyle.normal,

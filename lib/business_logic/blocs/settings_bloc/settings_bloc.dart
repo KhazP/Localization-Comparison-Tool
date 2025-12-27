@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
+import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
@@ -10,12 +11,15 @@ part 'settings_state.dart';
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository _settingsRepository;
   final SecureStorageService _secureStorageService;
+  final ApiKeyValidationService _apiKeyValidationService;
 
   SettingsBloc({
     required SettingsRepository settingsRepository,
     required SecureStorageService secureStorageService,
+    required ApiKeyValidationService apiKeyValidationService,
   })  : _settingsRepository = settingsRepository,
         _secureStorageService = secureStorageService,
+        _apiKeyValidationService = apiKeyValidationService,
         super(SettingsState.initial()) {
     on<LoadSettings>(_onLoadSettings);
     on<UpdateDefaultSourceFormat>(_onUpdateDefaultSourceFormat);
@@ -64,6 +68,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     on<UpdateGeminiApiKey>(_onUpdateGeminiApiKey);
     on<UpdateOpenAiApiKey>(_onUpdateOpenAiApiKey);
+    on<TestApiKey>(_onTestApiKey);
     on<UpdateDefaultAiModel>(_onUpdateDefaultAiModel);
     on<UpdateSystemTranslationContext>(_onUpdateSystemTranslationContext);
     on<UpdateContextStringsCount>(_onUpdateContextStringsCount);
@@ -141,6 +146,24 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       openaiApiKey: '',
     );
     await _settingsRepository.saveSettings(storageSettings);
+  }
+
+  Map<ApiProvider, ApiKeyTestResult> _initialApiKeyTests() {
+    return {
+      ApiProvider.googleTranslate: const ApiKeyTestResult.idle(),
+      ApiProvider.deepl: const ApiKeyTestResult.idle(),
+      ApiProvider.gemini: const ApiKeyTestResult.idle(),
+      ApiProvider.openAi: const ApiKeyTestResult.idle(),
+    };
+  }
+
+  Map<ApiProvider, ApiKeyTestResult> _updateApiKeyTest(
+    ApiProvider provider,
+    ApiKeyTestResult result,
+  ) {
+    final updated = Map<ApiProvider, ApiKeyTestResult>.from(state.apiKeyTests);
+    updated[provider] = result;
+    return updated;
   }
 
   Future<void> _onUpdateDefaultSourceFormat(
@@ -476,7 +499,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await _secureStorageService.clearAllKeys();
     final defaultSettings = AppSettings.defaultSettings();
     await _saveSettingsToRepository(defaultSettings);
-    emit(state.copyWith(appSettings: defaultSettings));
+    emit(state.copyWith(
+      appSettings: defaultSettings,
+      apiKeyTests: _initialApiKeyTests(),
+    ));
   }
 
   // AI Services Event Handlers
@@ -494,7 +520,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final newSettings =
         state.appSettings.copyWith(googleTranslateApiKey: event.apiKey);
     await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
+    emit(state.copyWith(
+      appSettings: newSettings,
+      apiKeyTests: _updateApiKeyTest(
+        ApiProvider.googleTranslate,
+        const ApiKeyTestResult.idle(),
+      ),
+    ));
   }
 
   Future<void> _onUpdateDeeplApiKey(
@@ -502,7 +534,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await _secureStorageService.storeDeepLApiKey(event.apiKey);
     final newSettings = state.appSettings.copyWith(deeplApiKey: event.apiKey);
     await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
+    emit(state.copyWith(
+      appSettings: newSettings,
+      apiKeyTests: _updateApiKeyTest(
+        ApiProvider.deepl,
+        const ApiKeyTestResult.idle(),
+      ),
+    ));
   }
 
   Future<void> _onUpdateEnableAiTranslation(
@@ -527,7 +565,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await _secureStorageService.storeGeminiApiKey(event.apiKey);
     final newSettings = state.appSettings.copyWith(geminiApiKey: event.apiKey);
     await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
+    emit(state.copyWith(
+      appSettings: newSettings,
+      apiKeyTests: _updateApiKeyTest(
+        ApiProvider.gemini,
+        const ApiKeyTestResult.idle(),
+      ),
+    ));
   }
 
   Future<void> _onUpdateOpenAiApiKey(
@@ -535,7 +579,55 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await _secureStorageService.storeOpenAiApiKey(event.apiKey);
     final newSettings = state.appSettings.copyWith(openaiApiKey: event.apiKey);
     await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
+    emit(state.copyWith(
+      appSettings: newSettings,
+      apiKeyTests: _updateApiKeyTest(
+        ApiProvider.openAi,
+        const ApiKeyTestResult.idle(),
+      ),
+    ));
+  }
+
+  Future<void> _onTestApiKey(
+      TestApiKey event, Emitter<SettingsState> emit) async {
+    final trimmedKey = event.apiKey.trim();
+    if (trimmedKey.isEmpty) {
+      emit(state.copyWith(
+        apiKeyTests: _updateApiKeyTest(
+          event.provider,
+          const ApiKeyTestResult(
+            status: ApiKeyTestStatus.failure,
+            message: 'Please enter a key first.',
+          ),
+        ),
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      apiKeyTests: _updateApiKeyTest(
+        event.provider,
+        const ApiKeyTestResult(
+          status: ApiKeyTestStatus.testing,
+          message: 'Checking...',
+        ),
+      ),
+    ));
+
+    final result =
+        await _apiKeyValidationService.testApiKey(event.provider, trimmedKey);
+    emit(state.copyWith(
+      apiKeyTests: _updateApiKeyTest(
+        event.provider,
+        ApiKeyTestResult(
+          status: result.success
+              ? ApiKeyTestStatus.success
+              : ApiKeyTestStatus.failure,
+          message: result.message,
+          usage: result.usage,
+        ),
+      ),
+    ));
   }
 
   Future<void> _onUpdateDefaultAiModel(
@@ -637,7 +729,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       includeContextStrings: defaultSettings.includeContextStrings,
     );
     await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
+    emit(state.copyWith(
+      appSettings: newSettings,
+      apiKeyTests: _initialApiKeyTests(),
+    ));
   }
 
   Future<void> _onResetVersionControlSettings(

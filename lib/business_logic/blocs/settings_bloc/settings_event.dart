@@ -239,6 +239,9 @@ class ResetAppearanceSettings extends SettingsEvent {}
 
 class ResetAllSettings extends SettingsEvent {}
 
+/// Status for API key validation.
+enum ApiKeyTestStatus { idle, testing, success, failure }
+
 // AI Services Events
 class UpdateAiTranslationService extends SettingsEvent {
   final String service;
@@ -287,6 +290,19 @@ class UpdateOpenAiApiKey extends SettingsEvent {
   const UpdateOpenAiApiKey(this.apiKey);
   @override
   List<Object> get props => [apiKey];
+}
+
+/// Triggers validation for a specific provider key.
+class TestApiKey extends SettingsEvent {
+  final ApiProvider provider;
+  final String apiKey;
+  const TestApiKey({
+    required this.provider,
+    required this.apiKey,
+  });
+
+  @override
+  List<Object> get props => [provider, apiKey];
 }
 
 class UpdateDefaultAiModel extends SettingsEvent {

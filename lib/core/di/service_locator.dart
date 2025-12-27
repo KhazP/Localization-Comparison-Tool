@@ -7,6 +7,7 @@ import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
+import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
 
 /// Global service locator instance
@@ -26,6 +27,9 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<LocalTranslationCache>(() => LocalTranslationCache());
   sl.registerLazySingleton<TranslationService>(
     () => GoogleTranslationService(secureStorage: sl<SecureStorageService>()),
+  );
+  sl.registerLazySingleton<ApiKeyValidationService>(
+    () => ApiKeyValidationService(),
   );
   
   // Git service

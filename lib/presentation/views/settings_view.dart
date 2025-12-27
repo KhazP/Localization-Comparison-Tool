@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -273,8 +274,8 @@ class _SettingsViewState extends State<SettingsView>
               children: [
                 _buildNavigationPanel(context, isDark, isAmoled, colorScheme),
                 Expanded(
-                  child: _buildSettingsContent(
-                      context, state.appSettings, isDark, isAmoled),
+                  child:
+                      _buildSettingsContent(context, state, isDark, isAmoled),
                 ),
               ],
             );
@@ -474,8 +475,13 @@ class _SettingsViewState extends State<SettingsView>
   }
 
   Widget _buildSettingsContent(
-      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+    BuildContext context,
+    SettingsState state,
+    bool isDark,
+    bool isAmoled,
+  ) {
     final theme = Theme.of(context);
+    final settings = state.appSettings;
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -534,8 +540,8 @@ class _SettingsViewState extends State<SettingsView>
                   },
                   child: KeyedSubtree(
                     key: ValueKey(_selectedCategory),
-                    child: _buildCategoryContent(
-                        context, settings, isDark, isAmoled),
+                    child:
+                        _buildCategoryContent(context, state, isDark, isAmoled),
                   ),
                 ),
               ),
@@ -547,7 +553,12 @@ class _SettingsViewState extends State<SettingsView>
   }
 
   Widget _buildCategoryContent(
-      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+    BuildContext context,
+    SettingsState state,
+    bool isDark,
+    bool isAmoled,
+  ) {
+    final settings = state.appSettings;
     switch (_selectedCategory) {
       case SettingsCategory.general:
         return _buildGeneralSettings(context, settings, isDark, isAmoled);
@@ -558,7 +569,7 @@ class _SettingsViewState extends State<SettingsView>
       case SettingsCategory.fileHandling:
         return _buildFileHandlingSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.aiServices:
-        return _buildAiServicesSettings(context, settings, isDark, isAmoled);
+        return _buildAiServicesSettings(context, state, isDark, isAmoled);
       case SettingsCategory.versionControl:
         return _buildVersionControlSettings(
             context, settings, isDark, isAmoled);
@@ -1741,7 +1752,12 @@ class _SettingsViewState extends State<SettingsView>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildAiServicesSettings(
-      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+    BuildContext context,
+    SettingsState state,
+    bool isDark,
+    bool isAmoled,
+  ) {
+    final settings = state.appSettings;
     final llmModels = [
       'Gemini 1.5 Flash',
       'Gemini 1.5 Pro',
@@ -1818,25 +1834,43 @@ class _SettingsViewState extends State<SettingsView>
               showDivider: true,
             ),
             const SizedBox(height: 8),
-            _buildApiKeyRow(
-              context,
-              'Gemini API Key',
-              settings.geminiApiKey,
-              (val) {
+            _buildApiKeyRowWithTest(
+              context: context,
+              label: 'Gemini API Key',
+              value: settings.geminiApiKey,
+              onChanged: (val) {
                 context.read<SettingsBloc>().add(UpdateGeminiApiKey(val));
               },
-              isDark,
-              isAmoled,
+              onTest: () {
+                context.read<SettingsBloc>().add(TestApiKey(
+                      provider: ApiProvider.gemini,
+                      apiKey: settings.geminiApiKey,
+                    ));
+              },
+              testResult:
+                  state.apiKeyTests[ApiProvider.gemini] ??
+                      const ApiKeyTestResult.idle(),
+              isDark: isDark,
+              isAmoled: isAmoled,
             ),
-            _buildApiKeyRow(
-              context,
-              'OpenAI API Key',
-              settings.openaiApiKey,
-              (val) {
+            _buildApiKeyRowWithTest(
+              context: context,
+              label: 'OpenAI API Key',
+              value: settings.openaiApiKey,
+              onChanged: (val) {
                 context.read<SettingsBloc>().add(UpdateOpenAiApiKey(val));
               },
-              isDark,
-              isAmoled,
+              onTest: () {
+                context.read<SettingsBloc>().add(TestApiKey(
+                      provider: ApiProvider.openAi,
+                      apiKey: settings.openaiApiKey,
+                    ));
+              },
+              testResult:
+                  state.apiKeyTests[ApiProvider.openAi] ??
+                      const ApiKeyTestResult.idle(),
+              isDark: isDark,
+              isAmoled: isAmoled,
               showDivider: false,
             ),
           ],
@@ -1967,16 +2001,46 @@ class _SettingsViewState extends State<SettingsView>
                     }, isDark, isAmoled),
                     isAmoled: isAmoled,
                   ),
-                  _buildApiKeyRow(context, 'Google Translate API',
-                      settings.googleTranslateApiKey, (val) {
-                    context
-                        .read<SettingsBloc>()
-                        .add(UpdateGoogleTranslateApiKey(val));
-                  }, isDark, isAmoled),
-                  _buildApiKeyRow(
-                      context, 'DeepL API Key', settings.deeplApiKey, (val) {
-                    context.read<SettingsBloc>().add(UpdateDeeplApiKey(val));
-                  }, isDark, isAmoled, showDivider: false),
+                  _buildApiKeyRowWithTest(
+                    context: context,
+                    label: 'Google Translate API',
+                    value: settings.googleTranslateApiKey,
+                    onChanged: (val) {
+                      context
+                          .read<SettingsBloc>()
+                          .add(UpdateGoogleTranslateApiKey(val));
+                    },
+                    onTest: () {
+                      context.read<SettingsBloc>().add(TestApiKey(
+                            provider: ApiProvider.googleTranslate,
+                            apiKey: settings.googleTranslateApiKey,
+                          ));
+                    },
+                    testResult:
+                        state.apiKeyTests[ApiProvider.googleTranslate] ??
+                            const ApiKeyTestResult.idle(),
+                    isDark: isDark,
+                    isAmoled: isAmoled,
+                  ),
+                  _buildApiKeyRowWithTest(
+                    context: context,
+                    label: 'DeepL API Key',
+                    value: settings.deeplApiKey,
+                    onChanged: (val) {
+                      context.read<SettingsBloc>().add(UpdateDeeplApiKey(val));
+                    },
+                    onTest: () {
+                      context.read<SettingsBloc>().add(TestApiKey(
+                            provider: ApiProvider.deepl,
+                            apiKey: settings.deeplApiKey,
+                          ));
+                    },
+                    testResult: state.apiKeyTests[ApiProvider.deepl] ??
+                        const ApiKeyTestResult.idle(),
+                    isDark: isDark,
+                    isAmoled: isAmoled,
+                    showDivider: false,
+                  ),
                 ],
               ),
             ],
@@ -1986,27 +2050,115 @@ class _SettingsViewState extends State<SettingsView>
     );
   }
 
-  Widget _buildApiKeyRow(
-    BuildContext context,
-    String label,
-    String value,
-    ValueChanged<String> onChanged,
-    bool isDark,
-    bool isAmoled, {
+  Widget _buildApiKeyRowWithTest({
+    required BuildContext context,
+    required String label,
+    required String value,
+    required ValueChanged<String> onChanged,
+    required VoidCallback onTest,
+    required ApiKeyTestResult testResult,
+    required bool isDark,
+    required bool isAmoled,
     bool showDivider = true,
   }) {
+    final statusWidget = _buildApiKeyStatus(
+      context: context,
+      result: testResult,
+      isDark: isDark,
+    );
+    final isTesting = testResult.status == ApiKeyTestStatus.testing;
+
     return Column(
       children: [
-        _buildTextFieldRow(
-          context,
-          label,
-          value,
-          onChanged,
-          isDark,
-          isAmoled,
+        _buildSettingRow(
+          context: context,
+          label: label,
+          control: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 200,
+                child: TextField(
+                  controller: TextEditingController(text: value),
+                  obscureText: true,
+                  onChanged: onChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Enter API key',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: value.isNotEmpty && !isTesting ? onTest : null,
+                child: Text(isTesting ? 'Testing...' : 'Test'),
+              ),
+            ],
+          ),
+          isDark: isDark,
+          isAmoled: isAmoled,
           showDivider: showDivider,
-          hintText: 'Paste your $label here',
         ),
+        if (statusWidget != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+            child: statusWidget,
+          ),
+      ],
+    );
+  }
+
+  Widget? _buildApiKeyStatus({
+    required BuildContext context,
+    required ApiKeyTestResult result,
+    required bool isDark,
+  }) {
+    if (result.status == ApiKeyTestStatus.idle) {
+      return null;
+    }
+
+    Color statusColor;
+    switch (result.status) {
+      case ApiKeyTestStatus.testing:
+        statusColor = isDark ? Colors.grey[400]! : Colors.grey[700]!;
+        break;
+      case ApiKeyTestStatus.success:
+        statusColor = Colors.green;
+        break;
+      case ApiKeyTestStatus.failure:
+        statusColor = Colors.redAccent;
+        break;
+      case ApiKeyTestStatus.idle:
+        statusColor = isDark ? Colors.grey[400]! : Colors.grey[700]!;
+        break;
+    }
+
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          result.message,
+          style: textTheme.bodySmall?.copyWith(color: statusColor),
+        ),
+        if (result.usage != null && result.usage!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              result.usage!,
+              style: textTheme.bodySmall?.copyWith(
+                color: isDark ? Colors.grey[400] : Colors.grey[700],
+              ),
+            ),
+          ),
       ],
     );
   }

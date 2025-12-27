@@ -22,6 +22,7 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
+import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
     final fileWatcherService = sl<FileWatcherService>();
     final settingsRepository = sl<SettingsRepository>();
     final historyRepository = sl<LocalHistoryRepository>();
+    final apiKeyValidationService = sl<ApiKeyValidationService>();
 
     return MultiRepositoryProvider(
       providers: [
@@ -60,6 +62,7 @@ class MyApp extends StatelessWidget {
             create: (context) => SettingsBloc(
               settingsRepository: settingsRepository,
               secureStorageService: secureStorageService,
+              apiKeyValidationService: apiKeyValidationService,
             )..add(LoadSettings()),
           ),
           BlocProvider<ThemeBloc>(

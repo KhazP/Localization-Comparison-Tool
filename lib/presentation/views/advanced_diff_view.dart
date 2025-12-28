@@ -19,6 +19,8 @@ import '../widgets/common/diff_highlighter.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
+import 'package:string_similarity/string_similarity.dart'; // Import string_similarity
+import 'package:flutter/services.dart';
 
 // Filter options
 enum AdvancedDiffFilter { all, added, removed, modified }
@@ -89,6 +91,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   List<MapEntry<String, ComparisonStatusDetail>> _processedDiffEntries = [];
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   final LocalizationFileService _fileService = LocalizationFileService();
   final TranslationMemoryService? _translationMemoryService =
       sl.isRegistered<TranslationMemoryService>()
@@ -103,6 +106,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   bool _addingAllToMemory = false;
   bool _runningFuzzyFill = false;
   bool _exportingFuzzyReport = false;
+  bool _isRegexEnabled = false;
+  bool _isFuzzyEnabled = false;
   late final String _sourceLanguageCode;
   late final String _targetLanguageCode;
   String? _sourceLanguageOverride;
@@ -168,9 +173,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     for (final focusNode in _cellFocusNodes.values) {
       focusNode.dispose();
     }
-    _cellControllers.clear();
     _cellFocusNodes.clear();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -231,9 +236,48 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
       // Search filter
       if (_searchQuery.isNotEmpty) {
-        final key = entry.key.toLowerCase();
-        final query = _searchQuery.toLowerCase();
-        if (!key.contains(query)) return false;
+        final query = _isRegexEnabled ? _searchQuery : _searchQuery.toLowerCase();
+        
+        final key = entry.key;
+        final val1 = widget.comparisonResult.file1Data[key] ?? '';
+        final val2 = widget.comparisonResult.file2Data[key] ?? '';
+
+        bool diffMatches = false;
+
+        if (_isRegexEnabled) {
+          try {
+             final regex = RegExp(query, caseSensitive: false);
+             if (regex.hasMatch(key) || regex.hasMatch(val1) || regex.hasMatch(val2)) {
+               diffMatches = true;
+             }
+          } catch (_) {
+            // Invalid regex, treat as no match or ignore? 
+            // Better to ignore to avoid crashing, waiting for valid regex
+            return false; 
+          }
+        } else if (_isFuzzyEnabled) {
+          final qLower = query.toLowerCase();
+          if (key.toLowerCase().contains(qLower) || 
+              val1.toLowerCase().contains(qLower) || 
+              val2.toLowerCase().contains(qLower)) {
+            diffMatches = true;
+          } else {
+             // Similarity check
+             if (val1.similarityTo(query) > 0.4 || val2.similarityTo(query) > 0.4) {
+               diffMatches = true;
+             }
+          }
+        } else {
+           // Standard contains
+           final qLower = query.toLowerCase();
+           if (key.toLowerCase().contains(qLower) || 
+               val1.toLowerCase().contains(qLower) || 
+               val2.toLowerCase().contains(qLower)) {
+             diffMatches = true;
+           }
+        }
+
+        if (!diffMatches) return false;
       }
 
       // Filter Logic (Union of selected filters)
@@ -1814,10 +1858,19 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         final themeState = context.watch<ThemeBloc>().state;
         final stats = _stats;
 
-        return Scaffold(
-          backgroundColor: bgColor,
-          body: Column(
+        return CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+               _searchFocusNode.requestFocus();
+            }
+          },
+          child: Focus(
+            autofocus: true, 
+            child: Scaffold(
+            backgroundColor: bgColor,
+            body: Column(
             children: [
+
               // Compact Toolbar
               _buildToolbar(context, isDarkMode, isAmoled, headerBg, textColor,
                   subtleText, borderCol, stats, themeState),
@@ -1856,7 +1909,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                   subtleText, borderCol),
             ],
           ),
-        );
+        ),
+      ),
+    );
       },
     );
   }
@@ -2024,13 +2079,14 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
           // Search field
           SizedBox(
-            width: 200,
+            width: 250,
             height: 32,
             child: TextField(
               controller: _searchController,
+              focusNode: _searchFocusNode,
               style: TextStyle(color: textColor, fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'Search keys...',
+                hintText: 'Search keys & values...',
                 hintStyle: TextStyle(color: subtleText, fontSize: 13),
                 prefixIcon: Icon(Icons.search, color: subtleText, size: 18),
                 filled: true,
@@ -2056,6 +2112,38 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                 _processDiffEntries();
               },
             ),
+          ),
+          const SizedBox(width: 8),
+          
+          // Regex Toggle
+          _buildSearchToggle(
+            'Regex', 
+            '.*', 
+            _isRegexEnabled, 
+            (val) => setState(() {
+               _isRegexEnabled = val;
+                // If fuzzy is on, turn it off
+               if (val) _isFuzzyEnabled = false;
+               _processDiffEntries();
+            }),
+            Theme.of(ctx),
+             isDark
+          ),
+          const SizedBox(width: 4),
+          
+          // Fuzzy Toggle
+          _buildSearchToggle(
+            'Fuzzy', 
+            '~', 
+            _isFuzzyEnabled, 
+            (val) => setState(() {
+               _isFuzzyEnabled = val;
+               // If regex is on, turn it off
+               if (val) _isRegexEnabled = false;
+               _processDiffEntries();
+            }),
+             Theme.of(ctx),
+             isDark
           ),
           const SizedBox(width: 12),
 
@@ -3447,6 +3535,47 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchToggle(String tooltip, String label, bool isEnabled,
+      Function(bool) onChanged, ThemeData theme, bool isDark) {
+    
+    final colorScheme = theme.colorScheme;
+    final activeColor = colorScheme.primary;
+    final inactiveColor = isDark ? Colors.white70 : Colors.black87;
+    final activeBg = activeColor.withValues(alpha: 0.15);
+    final inactiveBg = Colors.transparent;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => onChanged(!isEnabled),
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isEnabled ? activeBg : inactiveBg,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: isEnabled ? activeColor.withValues(alpha: 0.5) : (isDark ? Colors.white12 : Colors.black12),
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isEnabled ? FontWeight.bold : FontWeight.normal,
+                color: isEnabled ? activeColor : inactiveColor,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

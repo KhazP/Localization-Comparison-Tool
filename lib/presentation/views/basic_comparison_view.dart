@@ -23,9 +23,13 @@ import 'package:localizer_app_main/presentation/views/advanced_diff_view.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
+import 'package:localizer_app_main/core/services/problem_detector.dart';
+import 'package:string_similarity/string_similarity.dart';
+import 'package:flutter/services.dart';
 
 // Enum for filter status in Basic View
-enum BasicDiffFilter { all, added, removed, modified }
+
+enum BasicDiffFilter { all, added, removed, modified, problems }
 
 class BasicComparisonView extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -73,7 +77,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   // Search/filter state
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
+  bool _isRegexEnabled = false;
+  bool _isFuzzyEnabled = false;
 
   // Flag to ensure we only auto-load the last project once
   bool _hasAutoLoadedLastProject = false;
@@ -128,7 +136,14 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  bool _detectProblem(String source, String? target) {
+    if (ProblemDetector.hasEmptyTarget(target)) return true;
+    if (ProblemDetector.hasPlaceholderMismatch(source, target)) return true;
+    return false;
   }
 
   Future<void> _pickFile(int fileNumber) async {
@@ -332,7 +347,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         Theme.of(context).brightness == Brightness.dark &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
-    return MultiBlocListener(
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+          _searchFocusNode.requestFocus();
+        },
+      },
+      child: Focus(
+        autofocus: true,
+        child: MultiBlocListener(
       listeners: [
         // Auto-load last project on startup if setting is enabled
         BlocListener<HistoryBloc, HistoryState>(
@@ -609,6 +632,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     var diffEntries = state.result.diff.entries.toList();
 
                     // Apply filter
+
                     if (_currentFilter != BasicDiffFilter.all) {
                       diffEntries = diffEntries.where((entry) {
                         switch (_currentFilter) {
@@ -621,6 +645,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           case BasicDiffFilter.modified:
                             return entry.value.status ==
                                 StringComparisonStatus.modified;
+                          case BasicDiffFilter.problems:
+                            final key = entry.key;
+                            final value1 = state.result.file1Data[key] ?? '';
+                            final value2 = state.result.file2Data[key];
+                            return _detectProblem(value1, value2);
                           default:
                             return true;
                         }
@@ -651,16 +680,41 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     // Apply text search filter
                     final int totalBeforeSearch = diffEntries.length;
                     if (_searchQuery.isNotEmpty) {
-                      final query = _searchQuery.toLowerCase();
+                      final query = _isRegexEnabled ? _searchQuery : _searchQuery.toLowerCase();
                       diffEntries = diffEntries.where((entry) {
-                        final key = entry.key.toLowerCase();
-                        final value1 = (state.result.file1Data[entry.key] ?? '')
-                            .toLowerCase();
-                        final value2 = (state.result.file2Data[entry.key] ?? '')
-                            .toLowerCase();
-                        return key.contains(query) ||
-                            value1.contains(query) ||
-                            value2.contains(query);
+                        final key = entry.key; // Keys are case-sensitive usually, but let's be generous
+                        final value1 = (state.result.file1Data[entry.key] ?? '');
+                        final value2 = (state.result.file2Data[entry.key] ?? '');
+                        
+                        // Regex Search
+                        if (_isRegexEnabled) {
+                          try {
+                            final regex = RegExp(query, caseSensitive: false);
+                            return regex.hasMatch(key) || 
+                                   regex.hasMatch(value1) || 
+                                   regex.hasMatch(value2);
+                          } catch (e) {
+                            return false; // Invalid regex
+                          }
+                        }
+
+                        // Fuzzy Search
+                        if (_isFuzzyEnabled) {
+                           // Check key normally
+                           if (key.toLowerCase().contains(query)) return true;
+                           
+                           if (value1.toLowerCase().contains(query) || value2.toLowerCase().contains(query)) return true;
+                           
+                           // If not found by contains, try similarity
+                           if (value1.similarityTo(query) > 0.4 || value2.similarityTo(query) > 0.4) return true;
+                           
+                           return false;
+                        }
+
+                        // Standard Search
+                        return key.toLowerCase().contains(query) ||
+                            value1.toLowerCase().contains(query) ||
+                            value2.toLowerCase().contains(query);
                       }).toList();
                     }
 
@@ -889,6 +943,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               ),
             ),
           ],
+        ),
+      ),
         ),
       ),
     );
@@ -1390,11 +1446,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
           // Search Field
           Container(
-            width: 200,
+            width: 320,
             height: 32,
             margin: const EdgeInsets.symmetric(horizontal: 12),
             child: TextField(
               controller: _searchController,
+              focusNode: _searchFocusNode,
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onSurface,
@@ -1448,6 +1505,30 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
+          
+          // Search Toggles
+          _buildSearchToggle(
+            'Regex', 
+            '.*', 
+            _isRegexEnabled, 
+            (val) => setState(() {
+              _isRegexEnabled = val;
+              if (val) _isFuzzyEnabled = false;
+            }),
+            theme
+          ),
+          const SizedBox(width: 4),
+          _buildSearchToggle(
+            'Fuzzy', 
+            '~', 
+            _isFuzzyEnabled, 
+            (val) => setState(() {
+              _isFuzzyEnabled = val;
+              if (val) _isRegexEnabled = false;
+            }),
+            theme
+          ),
+          const SizedBox(width: 8),
 
           // Filter Toggle Buttons (icon-only to prevent overflow)
           Container(
@@ -1472,6 +1553,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   Icons.edit_outlined,
                   context.watch<ThemeBloc>().state.diffModifiedColor,
                   'Show Changed',
+                ),
+                _buildFilterIconButton(
+                  BasicDiffFilter.problems,
+                  Icons.warning_amber_rounded,
+                  Colors.orange,
+                  'Show Problems',
                 ),
                 const SizedBox(width: 8),
                 // Toggle Identical Logic
@@ -1532,6 +1619,39 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchToggle(String tooltip, String label, bool value, Function(bool) onChanged, ThemeData theme) {
+    // Determine active color
+    final isActive = value;
+    final activeColor = theme.colorScheme.primary;
+    final inactiveColor = theme.colorScheme.onSurface.withValues(alpha: 0.5);
+
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: BoxDecoration(
+            color: isActive ? activeColor.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: isActive ? activeColor : Colors.transparent,
+            )
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: isActive ? activeColor : inactiveColor,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -2245,36 +2245,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Supported formats
+              // Supported formats with tooltips
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 alignment: WrapAlignment.center,
-                children:
-                    ['.lang', '.json', '.xml', '.xliff', '.properties', '.yaml']
-                        .map((ext) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.06),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: theme.colorScheme.primary
-                                      .withValues(alpha: 0.15),
-                                ),
-                              ),
-                              child: Text(
-                                ext,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: theme.colorScheme.primary,
-                                  fontFamily: 'Consolas, Monaco, monospace',
-                                ),
-                              ),
-                            ))
-                        .toList(),
+                children: _buildFormatBadges(theme),
               ),
               const SizedBox(height: 32),
               // Quick Tutorial Link
@@ -2398,40 +2374,165 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   void _showQuickTutorialDialog(BuildContext context) {
     final theme = Theme.of(context);
+    final isAmoled = theme.brightness == Brightness.dark &&
+        context.read<SettingsBloc>().state.appSettings.appThemeMode.toLowerCase() == 'amoled';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isAmoled ? Colors.black : theme.dialogBackgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: isAmoled ? BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)) : BorderSide.none,
+        ),
         title: Row(
           children: [
-            Icon(Icons.lightbulb, color: theme.colorScheme.secondary),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.lightbulb_rounded, color: theme.colorScheme.secondary, size: 24),
+            ),
+            const SizedBox(width: 12),
             const Text('Quick Tutorial'),
           ],
         ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-                '1. Drag & drop two files, or use Bilingual Mode for a single file with both languages.'),
-            SizedBox(height: 8),
-            Text('2. Click Compare to see the differences.'),
-            SizedBox(height: 8),
-            Text('3. Use filters to focus on Extra, Missing, or Changed keys.'),
-            SizedBox(height: 8),
-            Text('4. Enable File Watching to auto-recompare on file changes.'),
-            SizedBox(height: 8),
-            Text('5. Use "Advanced" view for detailed diff analysis.'),
-          ],
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTutorialStep(
+                theme: theme,
+                icon: Icons.file_upload_outlined,
+                title: 'Import & Sync',
+                description: 'Drag & drop two files, or use "Bilingual Mode" for a single file containing both languages.',
+              ),
+              const SizedBox(height: 16),
+              _buildTutorialStep(
+                theme: theme,
+                icon: Icons.compare_arrows_rounded,
+                title: 'Smart Comparison',
+                description: 'See additions, removals, and modifications immediately with smart key-based matching.',
+              ),
+              const SizedBox(height: 16),
+              _buildTutorialStep(
+                theme: theme,
+                icon: Icons.auto_awesome_outlined,
+                title: 'Quality & AI',
+                description: 'Spot translation issues automatically and use AI suggestions to fix missing keys.',
+              ),
+              const SizedBox(height: 16),
+              _buildTutorialStep(
+                theme: theme,
+                icon: Icons.folder_copy_outlined,
+                title: 'Version Control',
+                description: 'Use the Git tab to compare branches, view diffs, and resolve conflicts directly.',
+              ),
+              const SizedBox(height: 16),
+              _buildTutorialStep(
+                theme: theme,
+                icon: Icons.insights_outlined,
+                title: 'Deep Insights',
+                description: 'Switch to "Advanced View" for detailed metrics, charts, and complex diff analysis.',
+              ),
+            ],
+          ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Got it!'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 45),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Get Started'),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildTutorialStep({
+    required ThemeData theme,
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: theme.colorScheme.primary.withValues(alpha: 0.8), size: 28),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildFormatBadges(ThemeData theme) {
+    const formatDescriptions = {
+      '.lang': 'Key-value language files',
+      '.json': 'JSON localization files (i18next, Flutter, etc.)',
+      '.xml': 'Android XML strings',
+      '.xliff': 'XLIFF translation interchange format',
+      '.properties': 'Java .properties files',
+      '.yaml': 'YAML localization files (Rails, Flutter)',
+    };
+
+    return formatDescriptions.entries.map((entry) {
+      return Tooltip(
+        message: entry.value,
+        preferBelow: true,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.help,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Text(
+              entry.key,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.primary,
+                fontFamily: 'Consolas, Monaco, monospace',
+              ),
+            ),
+          ),
+        ),
+      );
+    }).toList();
   }
 }
 
@@ -2491,28 +2592,32 @@ class _AnimatedEmptyStateIcon extends StatefulWidget {
 class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _rotationAnimation;
-  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _floatAnimation;
+  late final Animation<double> _pulseAnimation;
+  late final Animation<double> _rotateAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(milliseconds: 3000),
     )..repeat(reverse: true);
 
-    _rotationAnimation =
-        Tween<double>(begin: -0.05, end: 0.05).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    // Smooth floating up and down
+    _floatAnimation = Tween<double>(begin: 0, end: -12).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+    );
 
-    _scaleAnimation =
-        Tween<double>(begin: 0.95, end: 1.05).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    // Pulsing background glow
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+    );
+
+    // Very subtle rotation for more "life"
+    _rotateAnimation = Tween<double>(begin: -0.05, end: 0.05).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+    );
   }
 
   @override
@@ -2524,18 +2629,48 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Transform.rotate(
-          angle: _rotationAnimation.value,
-          child: Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Icon(
-              Icons.compare_arrows_rounded,
-              size: 48,
-              color: theme.colorScheme.primary.withValues(alpha: 0.7),
-            ),
+        return SizedBox(
+          width: 100,
+          height: 100,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pulsing background glow
+              Transform.scale(
+                scale: _pulseAnimation.value,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withValues(alpha: 0.2 * (2 - _pulseAnimation.value)),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Floating and rotating icon
+              Transform.translate(
+                offset: Offset(0, _floatAnimation.value),
+                child: Transform.rotate(
+                  angle: _rotateAnimation.value,
+                  child: Icon(
+                    Icons.compare_arrows_rounded,
+                    size: 48,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },

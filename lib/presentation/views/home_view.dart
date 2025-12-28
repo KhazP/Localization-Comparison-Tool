@@ -21,9 +21,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _fabAnimationController;
+  
+  // Hover states for navigation items
+  final List<bool> _hoverStates = List.filled(6, false);
 
   @override
   void initState() {
@@ -143,42 +146,48 @@ class _MyHomePageState extends State<MyHomePage>
               backgroundColor: Colors.transparent,
               indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
               labelType: NavigationRailLabelType.all,
-              destinations: const [
-                NavigationRailDestination(
-                  icon: Icon(Icons.compare_arrows_outlined),
-                  selectedIcon: Icon(Icons.compare_arrows),
-                  label: Text('Compare'),
-                  padding: EdgeInsets.symmetric(vertical: 4),
+              destinations: [
+                _buildNavDestination(
+                  index: 0,
+                  icon: Icons.compare_arrows_outlined,
+                  selectedIcon: Icons.compare_arrows,
+                  label: 'Compare',
+                  colorScheme: colorScheme,
                 ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.history_outlined),
-                  selectedIcon: Icon(Icons.history),
-                  label: Text('History'),
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                _buildNavDestination(
+                  index: 1,
+                  icon: Icons.history_outlined,
+                  selectedIcon: Icons.history,
+                  label: 'History',
+                  colorScheme: colorScheme,
                 ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.insights_outlined),
-                  selectedIcon: Icon(Icons.insights),
-                  label: Text('Dashboard'),
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                _buildNavDestination(
+                  index: 2,
+                  icon: Icons.insights_outlined,
+                  selectedIcon: Icons.insights,
+                  label: 'Dashboard',
+                  colorScheme: colorScheme,
                 ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.folder_outlined),
-                  selectedIcon: Icon(Icons.folder),
-                  label: Text('Files'),
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                _buildNavDestination(
+                  index: 3,
+                  icon: Icons.folder_outlined,
+                  selectedIcon: Icons.folder,
+                  label: 'Files',
+                  colorScheme: colorScheme,
                 ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.source_outlined),
-                  selectedIcon: Icon(Icons.source),
-                  label: Text('Git'),
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                _buildNavDestination(
+                  index: 4,
+                  icon: Icons.source_outlined,
+                  selectedIcon: Icons.source,
+                  label: 'Git',
+                  colorScheme: colorScheme,
                 ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.settings_outlined),
-                  selectedIcon: Icon(Icons.settings),
-                  label: Text('Settings'),
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                _buildNavDestination(
+                  index: 5,
+                  icon: Icons.settings_outlined,
+                  selectedIcon: Icons.settings,
+                  label: 'Settings',
+                  colorScheme: colorScheme,
                 ),
               ],
               trailing: Expanded(
@@ -262,6 +271,57 @@ class _MyHomePageState extends State<MyHomePage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Builds a navigation destination with hover animation effects
+  NavigationRailDestination _buildNavDestination({
+    required int index,
+    required IconData icon,
+    required IconData selectedIcon,
+    required String label,
+    required ColorScheme colorScheme,
+  }) {
+    final isSelected = _selectedIndex == index;
+    final isHovered = _hoverStates[index];
+    
+    return NavigationRailDestination(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      icon: MouseRegion(
+        onEnter: (_) => setState(() => _hoverStates[index] = true),
+        onExit: (_) => setState(() => _hoverStates[index] = false),
+        child: AnimatedScale(
+          scale: isHovered && !isSelected ? 1.1 : 1.0,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOutCubic,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: isHovered && !isSelected 
+                  ? colorScheme.primary.withValues(alpha: 0.08)
+                  : Colors.transparent,
+            ),
+            child: Icon(
+              icon,
+              color: isHovered ? colorScheme.primary.withValues(alpha: 0.7) : null,
+            ),
+          ),
+        ),
+      ),
+      selectedIcon: Icon(selectedIcon),
+      label: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 150),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          color: isSelected 
+              ? colorScheme.primary 
+              : (isHovered ? colorScheme.primary.withValues(alpha: 0.7) : null),
+        ),
+        child: Text(label),
       ),
     );
   }

@@ -108,6 +108,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateAiTemperature>(_onUpdateAiTemperature);
     on<UpdateMaxTokens>(_onUpdateMaxTokens);
     on<FetchAvailableModels>(_onFetchAvailableModels);
+    // Update Settings Events
+    on<UpdateAutoDownloadUpdate>(_onUpdateAutoDownloadUpdate);
+    on<UpdateLastUpdateCheckTime>(_onUpdateLastUpdateCheckTime);
+    on<UpdateSkipVersion>(_onUpdateSkipVersion);
   }
 
   Future<void> _onLoadSettings(
@@ -976,6 +980,31 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         add(UpdateDefaultAiModel(models.first));
       }
     }
+  }
+
+  // Update Settings Event Handlers
+  Future<void> _onUpdateAutoDownloadUpdate(
+      UpdateAutoDownloadUpdate event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(autoDownloadUpdate: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateLastUpdateCheckTime(
+      UpdateLastUpdateCheckTime event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(lastUpdateCheckTime: event.timestamp);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateSkipVersion(
+      UpdateSkipVersion event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(skipVersion: event.version);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
   }
 }
 

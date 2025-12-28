@@ -15,6 +15,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:localizer_app_main/core/services/windows_integration_service.dart';
+import 'package:localizer_app_main/data/services/update_checker_service.dart';
+import 'package:intl/intl.dart';
 
 enum SettingsCategory {
   general,
@@ -46,6 +48,11 @@ class _SettingsViewState extends State<SettingsView>
 
   PackageInfo? _packageInfo;
   String _platformInfo = 'Loading...';
+
+  // Update checker state
+  UpdateCheckerService? _updateCheckerService;
+  UpdateCheckResult? _updateCheckResult;
+  bool _isCheckingForUpdates = false;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -148,6 +155,7 @@ class _SettingsViewState extends State<SettingsView>
       _translationMemoryStatsFuture =
           _translationMemoryService?.getStats();
     }
+    _updateCheckerService = UpdateCheckerService();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -194,6 +202,7 @@ class _SettingsViewState extends State<SettingsView>
     _navScrollController.dispose();
     _contentScrollController.dispose();
     _animationController.dispose();
+    _updateCheckerService?.dispose();
     super.dispose();
   }
 
@@ -3265,6 +3274,9 @@ class _SettingsViewState extends State<SettingsView>
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildAboutSettings(BuildContext context, bool isDark, bool isAmoled) {
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    final theme = Theme.of(context);
+    
     return Column(
       children: [
         _buildSettingsCard(
@@ -3279,6 +3291,190 @@ class _SettingsViewState extends State<SettingsView>
                 _packageInfo?.buildNumber ?? 'Loading...', isDark, isAmoled),
             _buildInfoRow(context, 'Platform', _platformInfo, isDark, isAmoled,
                 showDivider: false),
+          ],
+        ),
+        // Update Information Card
+        _buildSettingsCard(
+          context: context,
+          title: 'Update Information',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            // Version status row
+            _buildSettingRow(
+              context: context,
+              label: 'Current Version',
+              control: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _packageInfo?.version ?? 'Loading...',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: _getTextMutedColor(isDark),
+                    ),
+                  ),
+                  if (_updateCheckResult?.updateAvailable == true) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppThemeV2.success.withAlpha(25),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppThemeV2.success.withAlpha(100),
+                        ),
+                      ),
+                      child: Text(
+                        'Update Available!',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppThemeV2.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            // Latest version row (only show if checked)
+            if (_updateCheckResult != null)
+              _buildSettingRow(
+                context: context,
+                label: 'Latest Version',
+                control: Text(
+                  _updateCheckResult!.latestVersion,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: _updateCheckResult!.updateAvailable
+                        ? AppThemeV2.success
+                        : _getTextMutedColor(isDark),
+                    fontWeight: _updateCheckResult!.updateAvailable
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                isDark: isDark,
+                isAmoled: isAmoled,
+              ),
+            // Last checked row
+            _buildSettingRow(
+              context: context,
+              label: 'Last Checked',
+              control: Text(
+                _formatLastChecked(settings.lastUpdateCheckTime),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: _getTextMutedColor(isDark),
+                ),
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            // Check for updates button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _isCheckingForUpdates
+                          ? null
+                          : () => _checkForUpdates(context),
+                      icon: _isCheckingForUpdates
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            )
+                          : const Icon(Icons.refresh_rounded, size: 18),
+                      label: Text(
+                        _isCheckingForUpdates
+                            ? 'Checking...'
+                            : 'Check for Updates',
+                      ),
+                    ),
+                  ),
+                  if (_updateCheckResult?.changelog != null &&
+                      _updateCheckResult!.changelog!.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => _showChangelogDialog(context, isDark),
+                      icon: const Icon(Icons.notes_rounded, size: 18),
+                      label: const Text("What's New"),
+                    ),
+                  ],
+                  if (_updateCheckResult?.updateAvailable == true &&
+                      _updateCheckResult?.downloadUrl != null) ...[
+                    const SizedBox(width: 12),
+                    FilledButton.icon(
+                      onPressed: () =>
+                          _launchUrl(_updateCheckResult!.downloadUrl!),
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: const Text('Download'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppThemeV2.success,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Divider(
+              color: _getBorderColor(isDark, isAmoled),
+              height: 1,
+              indent: 16,
+              endIndent: 16,
+            ),
+            // Auto check for updates toggle
+            _buildSettingRow(
+              context: context,
+              label: 'Auto-check for updates',
+              description: 'Check for updates when the app starts',
+              control: Switch(
+                value: settings.autoCheckForUpdates,
+                onChanged: (value) {
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateAutoCheckForUpdates(value));
+                },
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            // Error message if update check failed
+            if (_updateCheckResult?.error != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppThemeV2.error.withAlpha(25),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppThemeV2.error.withAlpha(50)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded,
+                          size: 18, color: AppThemeV2.error),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Could not check for updates. Please check your internet connection.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppThemeV2.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
         _buildSettingsCard(
@@ -3308,6 +3504,124 @@ class _SettingsViewState extends State<SettingsView>
           ],
         ),
       ],
+    );
+  }
+
+  String _formatLastChecked(String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty) {
+      return 'Never';
+    }
+    try {
+      final dateTime = DateTime.parse(timestamp);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+
+      if (difference.inMinutes < 1) {
+        return 'Just now';
+      } else if (difference.inHours < 1) {
+        return '${difference.inMinutes} minutes ago';
+      } else if (difference.inDays < 1) {
+        return '${difference.inHours} hours ago';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        return DateFormat('MMM d, yyyy').format(dateTime);
+      }
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
+  Future<void> _checkForUpdates(BuildContext context) async {
+    if (_updateCheckerService == null || _isCheckingForUpdates) return;
+
+    setState(() {
+      _isCheckingForUpdates = true;
+    });
+
+    try {
+      final result = await _updateCheckerService!.checkForUpdates();
+      if (mounted) {
+        setState(() {
+          _updateCheckResult = result;
+          _isCheckingForUpdates = false;
+        });
+
+        // Update the last check time in settings
+        context.read<SettingsBloc>().add(
+              UpdateLastUpdateCheckTime(DateTime.now().toIso8601String()),
+            );
+
+        // Show a snackbar with the result
+        final message = result.error != null
+            ? 'Could not check for updates'
+            : result.updateAvailable
+                ? 'Update available: v${result.latestVersion}'
+                : 'You are using the latest version';
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isCheckingForUpdates = false;
+        });
+      }
+    }
+  }
+
+  void _showChangelogDialog(BuildContext context, bool isDark) {
+    if (_updateCheckResult?.changelog == null) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.notes_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Text("What's New in v${_updateCheckResult!.latestVersion}"),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: SelectableText(
+              _updateCheckResult!.changelog!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ),
+        actions: [
+          if (_updateCheckResult?.downloadUrl != null)
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _launchUrl(_updateCheckResult!.downloadUrl!);
+              },
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: const Text('Download Update'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppThemeV2.success,
+              ),
+            ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 

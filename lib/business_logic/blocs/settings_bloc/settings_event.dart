@@ -532,3 +532,25 @@ class UpdateUseMicaEffect extends SettingsEvent {
   @override
   List<Object> get props => [enabled];
 }
+
+// Update Settings Events
+class UpdateAutoDownloadUpdate extends SettingsEvent {
+  final bool enabled;
+  const UpdateAutoDownloadUpdate(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateLastUpdateCheckTime extends SettingsEvent {
+  final String? timestamp;
+  const UpdateLastUpdateCheckTime(this.timestamp);
+  @override
+  List<Object?> get props => [timestamp];
+}
+
+class UpdateSkipVersion extends SettingsEvent {
+  final String version;
+  const UpdateSkipVersion(this.version);
+  @override
+  List<Object> get props => [version];
+}

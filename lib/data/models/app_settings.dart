@@ -225,6 +225,16 @@ class AppSettings extends HiveObject {
   @HiveField(55, defaultValue: 5)
   int backupsToKeep;
 
+  // Update Settings
+  @HiveField(69, defaultValue: false)
+  bool autoDownloadUpdate;
+
+  @HiveField(70)
+  String? lastUpdateCheckTime;
+
+  @HiveField(71, defaultValue: '')
+  String skipVersion;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -295,6 +305,9 @@ class AppSettings extends HiveObject {
     required this.autoBackup,
     required this.backupDirectory,
     required this.backupsToKeep,
+    required this.autoDownloadUpdate,
+    this.lastUpdateCheckTime,
+    required this.skipVersion,
   });
 
   // Default settings
@@ -370,6 +383,9 @@ class AppSettings extends HiveObject {
       autoBackup: true,
       backupDirectory: '',
       backupsToKeep: 5,
+      autoDownloadUpdate: false,
+      lastUpdateCheckTime: null,
+      skipVersion: '',
     );
   }
 
@@ -451,6 +467,9 @@ class AppSettings extends HiveObject {
       autoBackup: json['autoBackup'] as bool? ?? true,
       backupDirectory: json['backupDirectory'] as String? ?? '',
       backupsToKeep: json['backupsToKeep'] as int? ?? 5,
+      autoDownloadUpdate: json['autoDownloadUpdate'] as bool? ?? false,
+      lastUpdateCheckTime: json['lastUpdateCheckTime'] as String?,
+      skipVersion: json['skipVersion'] as String? ?? '',
     );
   }
 
@@ -526,6 +545,9 @@ class AppSettings extends HiveObject {
       'backupsToKeep': backupsToKeep,
       'aiTemperature': aiTemperature,
       'maxTokens': maxTokens,
+      'autoDownloadUpdate': autoDownloadUpdate,
+      'lastUpdateCheckTime': lastUpdateCheckTime,
+      'skipVersion': skipVersion,
     };
   }
 
@@ -599,6 +621,9 @@ class AppSettings extends HiveObject {
     bool? autoBackup,
     String? backupDirectory,
     int? backupsToKeep,
+    bool? autoDownloadUpdate,
+    String? lastUpdateCheckTime,
+    String? skipVersion,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -684,6 +709,9 @@ class AppSettings extends HiveObject {
       autoBackup: autoBackup ?? this.autoBackup,
       backupDirectory: backupDirectory ?? this.backupDirectory,
       backupsToKeep: backupsToKeep ?? this.backupsToKeep,
+      autoDownloadUpdate: autoDownloadUpdate ?? this.autoDownloadUpdate,
+      lastUpdateCheckTime: lastUpdateCheckTime ?? this.lastUpdateCheckTime,
+      skipVersion: skipVersion ?? this.skipVersion,
     );
   }
 }

@@ -236,6 +236,9 @@ class AppSettings extends HiveObject {
   String skipVersion;
 
   // Telemetry Settings
+  // TODO: Integrate Firebase Analytics for anonymous usage statistics
+  // TODO: Integrate Firebase Crashlytics for crash reporting
+  // These settings currently only store user preferences - no data is collected yet
   @HiveField(72, defaultValue: false)
   bool enableAnonymousUsageStatistics;
 

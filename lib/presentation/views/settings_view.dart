@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -3841,6 +3842,49 @@ class _SettingsViewState extends State<SettingsView>
             ),
           ],
         ),
+        // Settings Management Card
+        _buildSettingsCard(
+          context: context,
+          title: 'Settings Management',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Export your settings to a file to back them up or share with other machines. Import settings from a previously exported file.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: _getTextMutedColor(isDark),
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.upload_rounded, size: 18),
+                          label: const Text('Export Settings'),
+                          onPressed: () => _exportSettings(context),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.download_rounded, size: 18),
+                          label: const Text('Import Settings'),
+                          onPressed: () => _importSettings(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         _buildSettingsCard(
           context: context,
           title: 'Links',
@@ -3987,6 +4031,147 @@ class _SettingsViewState extends State<SettingsView>
         ],
       ),
     );
+  }
+
+  Future<void> _exportSettings(BuildContext context) async {
+    try {
+      final settings = context.read<SettingsBloc>().state.appSettings;
+      final jsonString = const JsonEncoder.withIndent('  ').convert(settings.toJson());
+      
+      // Generate default filename with timestamp
+      final timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
+      final defaultFileName = 'localizer_settings_$timestamp.json';
+      
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Export Settings',
+        fileName: defaultFileName,
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      
+      if (result != null) {
+        final file = File(result);
+        await file.writeAsString(jsonString);
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Settings exported successfully!'),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              backgroundColor: AppThemeV2.success,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      developer.log('Error exporting settings: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to export settings: ${e.toString()}'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: AppThemeV2.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importSettings(BuildContext context) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Import Settings',
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        allowMultiple: false,
+      );
+      
+      if (result != null && result.files.isNotEmpty) {
+        final filePath = result.files.first.path;
+        if (filePath == null) return;
+        
+        final file = File(filePath);
+        final jsonString = await file.readAsString();
+        final jsonMap = json.decode(jsonString) as Map<String, dynamic>;
+        
+        // Validate the JSON has expected structure
+        if (!jsonMap.containsKey('appThemeMode') || !jsonMap.containsKey('defaultSourceFormat')) {
+          throw const FormatException('Invalid settings file format');
+        }
+        
+        // Show confirmation dialog
+        if (context.mounted) {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.amber),
+                  SizedBox(width: 12),
+                  Text('Import Settings?'),
+                ],
+              ),
+              content: const Text(
+                'This will replace all your current settings with the imported ones. '
+                'This action cannot be undone.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Import'),
+                ),
+              ],
+            ),
+          );
+          
+          if (confirmed != true) return;
+          
+          // Parse and apply the settings
+          final importedSettings = AppSettings.fromJson(jsonMap);
+          
+          // Apply all settings through the bloc
+          // Apply all settings through the bloc - use the new atomic event
+          context.read<SettingsBloc>().add(ReplaceAllSettings(importedSettings));
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Settings imported successfully!'),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                backgroundColor: AppThemeV2.success,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      developer.log('Error importing settings: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to import settings: ${e.toString()}'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: AppThemeV2.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildInfoRow(BuildContext context, String label, String value,

@@ -569,3 +569,15 @@ class UpdateEnableCrashReporting extends SettingsEvent {
   @override
   List<Object> get props => [enabled];
 }
+
+// Settings Import/Export Events
+class ExportSettings extends SettingsEvent {}
+
+class ImportSettings extends SettingsEvent {}
+
+class ReplaceAllSettings extends SettingsEvent {
+  final AppSettings settings;
+  const ReplaceAllSettings(this.settings);
+  @override
+  List<Object> get props => [settings];
+}

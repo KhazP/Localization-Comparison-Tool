@@ -116,6 +116,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateEnableAnonymousUsageStatistics>(
         _onUpdateEnableAnonymousUsageStatistics);
     on<UpdateEnableCrashReporting>(_onUpdateEnableCrashReporting);
+    // Import/Export Events
+    on<ReplaceAllSettings>(_onReplaceAllSettings);
   }
 
   Future<void> _onLoadSettings(
@@ -1029,6 +1031,27 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onReplaceAllSettings(
+      ReplaceAllSettings event, Emitter<SettingsState> emit) async {
+    await _saveSettingsToRepository(event.settings);
+    
+    // Also update secure storage if API keys are present in the imported settings
+    if (event.settings.googleTranslateApiKey.isNotEmpty) {
+      await _secureStorageService.storeGoogleApiKey(event.settings.googleTranslateApiKey);
+    }
+    if (event.settings.deeplApiKey.isNotEmpty) {
+      await _secureStorageService.storeDeepLApiKey(event.settings.deeplApiKey);
+    }
+    if (event.settings.geminiApiKey.isNotEmpty) {
+      await _secureStorageService.storeGeminiApiKey(event.settings.geminiApiKey);
+    }
+    if (event.settings.openaiApiKey.isNotEmpty) {
+      await _secureStorageService.storeOpenAiApiKey(event.settings.openaiApiKey);
+    }
+    
+    emit(state.copyWith(appSettings: event.settings));
   }
 }
 

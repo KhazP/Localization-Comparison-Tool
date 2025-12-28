@@ -16,6 +16,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:localizer_app_main/core/services/windows_integration_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
+import 'package:localizer_app_main/data/services/system_info_service.dart';
 import 'package:intl/intl.dart';
 
 enum SettingsCategory {
@@ -53,6 +54,10 @@ class _SettingsViewState extends State<SettingsView>
   UpdateCheckerService? _updateCheckerService;
   UpdateCheckResult? _updateCheckResult;
   bool _isCheckingForUpdates = false;
+
+  // System info state
+  SystemInfoService? _systemInfoService;
+  SystemInfo? _systemInfo;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -156,6 +161,8 @@ class _SettingsViewState extends State<SettingsView>
           _translationMemoryService?.getStats();
     }
     _updateCheckerService = UpdateCheckerService();
+    _systemInfoService = SystemInfoService();
+    _loadSystemInfo();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -220,6 +227,23 @@ class _SettingsViewState extends State<SettingsView>
       if (mounted) {
         setState(() {
           _platformInfo = 'Unknown Platform';
+        });
+      }
+    }
+  }
+
+  Future<void> _loadSystemInfo() async {
+    try {
+      final info = await _systemInfoService?.getSystemInfo();
+      if (mounted && info != null) {
+        setState(() {
+          _systemInfo = info;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _systemInfo = SystemInfo.error();
         });
       }
     }
@@ -3475,6 +3499,61 @@ class _SettingsViewState extends State<SettingsView>
                   ),
                 ),
               ),
+          ],
+        ),
+        // System Information Card
+        _buildSettingsCard(
+          context: context,
+          title: 'System Information',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildInfoRow(
+              context,
+              'Dart Version',
+              _systemInfo?.dartVersion ?? 'Loading...',
+              isDark,
+              isAmoled,
+            ),
+            _buildInfoRow(
+              context,
+              'Available Disk Space',
+              _systemInfo?.availableDiskSpace ?? 'Loading...',
+              isDark,
+              isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Memory Usage',
+              control: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _systemInfo != null
+                        ? '${_systemInfo!.memoryUsage} / ${_systemInfo!.totalMemory}'
+                        : 'Loading...',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: _getTextMutedColor(isDark),
+                    ),
+                  ),
+                ],
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  setState(() {
+                    _systemInfo = null;
+                  });
+                  await _loadSystemInfo();
+                },
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Refresh'),
+              ),
+            ),
           ],
         ),
         _buildSettingsCard(

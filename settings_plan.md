@@ -656,94 +656,9 @@ _buildSettingsCard(
 4. Import/Export compatibility:
    - **TMX 1.4b** (Industry Standard): For Trados, Google Cloud Translation API, and most CAT tools.
    - **CSV**: Simple format for glossaries (Source, Target columns).
-5. "Add to Memory" manual action/button in the UI.
-
-**Technical Implementation:**
-
-*Architecture:*
-- **Storage:** Local SQLite database (using `sqflite` + `sqflite_common_ffi` for Windows/Linux) to store Translation Units (TUs) efficiently.
-- **Service:** `TranslationMemoryService` to handle CRUD operations, fuzzy search, and Import/Export logic.
-- **Parsing:** Custom XML parser for TMX reading/writing (using `xml` package).
-
-*Storage Schema (SQLite):*
-```sql
-CREATE TABLE translation_units (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source_lang TEXT NOT NULL,
-  target_lang TEXT NOT NULL,
-  source_text TEXT NOT NULL,
-  target_text TEXT NOT NULL,
-  created_at INTEGER,
-  usage_count INTEGER DEFAULT 0
-);
-CREATE INDEX idx_source_text ON translation_units(source_text);
-```
-
-*UI Configuration:*
-```dart
-_buildSettingsCard(
-  context: context,
-  title: 'Translation Memory',
-  isDark: isDark,
-  children: [
-     _buildSettingRow(
-      context: context,
-      label: 'Enable Translation Memory',
-      description: 'Suggest translations from local history',
-      control: Switch(
-        value: settings.enableTranslationMemory,
-        onChanged: (val) => context.read<SettingsBloc>().add(UpdateEnableTranslationMemory(val)),
-      ),
-      isDark: isDark,
-    ),
-    if (settings.enableTranslationMemory) ...[
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Statistics', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            const Text('Entries: 0'), // Placeholder for stream/future builder
-            const Text('Size: 0 KB'),
-          ],
-        ),
-      ),
-      ButtonBar(
-        alignment: MainAxisAlignment.start,
-        children: [
-          OutlinedButton.icon(
-            icon: const Icon(Icons.file_upload),
-            label: const Text('Import TMX/CSV'),
-            onPressed: () => _importTranslationMemory(context),
-          ),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.download),
-            label: const Text('Export TMX'),
-            onPressed: () => _exportTranslationMemory(context),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            onPressed: () => _confirmClearMemory(context),
-            child: const Text('Clear Memory'),
-          ),
-        ],
-      ),
-    ],
-  ],
-),
-```
-
-*Interoperability Plan:*
-- **Import:**
-    - Detect file type (.tmx vs .csv).
-    - **TMX:** Parse `<tu>` elements. Extract `<seg>` for source and target languages matching the current project. Ignore props/metadata for MVP.
-    - **CSV:** Assume Column A = Source, Column B = Target (or ask user to map).
-- **Export:**
+  5. "Add to Memory" manual action/button in the UI.
     - **TMX:** Generate valid TMX 1.4b structure. Populate `<header>` with creation tool info.
     - **CSV:** Simple dump of Source, Target.
-
----
 
 ## 6. Version Control Enhancements
 
@@ -842,15 +757,15 @@ _buildSettingsCard(
 3. Changelog viewer
 4. Auto-download update toggle
 
-### 7.2 Add System Information
+### 7.2 Add System Information ✅
 
 **Priority:** 🟢 LOW
 
 **Requirements:**
-1. Show Flutter version
-2. Show Dart version
-3. Show available disk space
-4. Show memory usage
+1. ~~Show Flutter version~~ (Shows Dart version instead, as Flutter version is not accessible at runtime)
+2. ✅ Show Dart version
+3. ✅ Show available disk space
+4. ✅ Show memory usage
 
 ### 7.3 Add Telemetry Settings
 
@@ -967,7 +882,7 @@ _buildSettingsCard(
 | 6.2 | Commit Templates | 🟢 LOW | Low | Version Control |
 | 6.3 | SSH Configuration | 🟢 LOW | Medium | Version Control |
 | 7.1 | Update Information | 🟡 MEDIUM | Medium | About |
-| 7.2 | System Information | 🟢 LOW | Low | About |
+| 7.2 | System Information ✅ | 🟢 LOW | Low | About |
 | 7.3 | Telemetry Settings | 🟡 MEDIUM | Low | About |
 | 8.1 | Settings Search | 🔴 HIGH | Medium | Cross-Cutting |
 | 8.2 | Import/Export Settings | 🟡 MEDIUM | Medium | Cross-Cutting |
@@ -1004,7 +919,7 @@ _buildSettingsCard(
 20. 3.2 Line Height Control
 21. 6.2 Commit Templates
 22. 6.3 SSH Configuration
-23. 7.2 System Information
+22. ✅ 7.2 System Information
 24. 8.3 Settings Profiles
 25. 4.3 File Associations (platform-specific, complex)
 26. 5.3 Translation Memory (requires database work)

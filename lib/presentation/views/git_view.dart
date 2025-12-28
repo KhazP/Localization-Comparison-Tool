@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
+
+import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
 
 class GitView extends StatelessWidget {
   const GitView({super.key});
@@ -25,33 +30,89 @@ class GitView extends StatelessWidget {
           const _RepositorySelector(),
           const Divider(height: 32),
           // Main Content Area (Branches, Diff)
+          // Main Content Area (Branches, Diff)
           Expanded(
-            child: BlocBuilder<GitBloc, GitState>(
-              builder: (context, state) {
-                if (state is GitInitial) {
-                  return const Center(child: Text('Select a repository to begin.'));
-                } else if (state is GitLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is GitError) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 48),
-                        const SizedBox(height: 16),
-                        Text('Error: ${state.message}', style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                      ],
-                    ),
+            child: BlocListener<GitBloc, GitState>(
+              listener: (context, state) {
+                if (state is GitOperationSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message), backgroundColor: Colors.green),
                   );
-                } else if (state is GitRepositorySelected) {
-                  return const Center(child: CircularProgressIndicator()); 
-                } else if (state is GitBranchesLoaded) {
-                  return _ComparisonControls(
-                    state: state,
-                    repoPath: state.repoPath,
+                  // Optionally reload branches to clear "Success" state if needed, 
+                  // but simpler is to let the BlocBuilder re-render the underlying Loaded state 
+                  // or have the bloc emit Loaded immediately after Success.
+                  // Actually, "GitOperationSuccess" replaces the state, so the UI would disappear 
+                  // if we don't switch back.
+                  // BETTER PATTERN: The bloc should emit Success then immediately emit Loaded/Previous.
+                  // OR: Use a "ActionStatus" stream distinct from main state.
+                  // SIMPLEST FIX for now: Auto-reload after success.
+                  context.read<GitBloc>().add(LoadBranches());
+                } else if (state is GitError) {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message), backgroundColor: Theme.of(context).colorScheme.error),
+                  );
+                  // Attempt to recover state if possible, or stay in Error if it's fatal.
+                  // If it was a transient error (like Pull failed), we might want to go back to Loaded?
+                  // For now, let's try to reload branches to see if we can recover the view.
+                  context.read<GitBloc>().add(LoadBranches());
+                }
+              },
+              child: BlocBuilder<GitBloc, GitState>(
+                buildWhen: (previous, current) {
+                  // Don't rebuild basic UI for transient states if we want to keep the view visible behind the toast
+                  // But our states ARE mutually exclusive in this Bloc.
+                  // So we DO need to handle building.
+                  return current is! GitOperationSuccess; 
+                },
+                builder: (context, state) {
+                  if (state is GitInitial) {
+                    return const Center(child: Text('Select a repository to begin.'));
+                  } else if (state is GitLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is GitError) {
+                    // If error is permanent (like repo load fail), show it.
+                    // If transient (pull fail), the listener handled it and we triggered reload.
+                    // But until reload finishes, what do we show?
+                    // Let's show the error properly here too if it persists.
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 48),
+                          const SizedBox(height: 16),
+                          Text('Error: ${state.message}', style: TextStyle(color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          FilledButton(onPressed: () => context.read<GitBloc>().add(LoadBranches()), child: const Text('Retry'))
+                        ],
+                      ),
+                    );
+                  } else if (state is GitRepositorySelected) {
+                    return const Center(child: CircularProgressIndicator()); 
+                  } else if (state is GitBranchesLoaded) {
+                  return Column(
+                    children: [
+                      // Action Bar (New)
+                      _RepoActionsToolbar(
+                        repoPath: state.repoPath,
+                        currentBranch: state.branches.firstWhere((b) => b.name == state.branches.first.name, orElse: () => GitBranch('Unknown', '')).name, // Logic improved below
+                        branches: state.branches,
+                      ),
+                      const Divider(),
+                      Expanded(
+                        child: _ComparisonControls(
+                          state: state,
+                          repoPath: state.repoPath,
+                        ),
+                      ),
+                    ],
                   );
                 } else if (state is GitComparisonInProgress) {
                    return const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Comparing...')]));
+                } else if (state is GitConflictsDetected) {
+                  return ConflictResolutionView(
+                    repoPath: state.repoPath,
+                    conflictedFiles: state.conflictedFiles,
+                  );
                 } else if (state is GitComparisonResult) {
                   return _ComparisonResultList(
                     diffFiles: state.diffFiles, 
@@ -66,6 +127,7 @@ class GitView extends StatelessWidget {
               },
             ),
           ),
+        ),
         ],
       ),
     );
@@ -130,12 +192,12 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
   String? _baseCommitSha;
   String? _targetCommitSha;
 
-
   @override
   void initState() {
     super.initState();
     _initializeDefaults();
   }
+
 
   void _initializeDefaults() {
     if (widget.state.branches.isNotEmpty) {
@@ -163,30 +225,72 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
   Widget build(BuildContext context) {
     final mode = widget.state.mode;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Mode Toggle
-        Center(
-          child: SegmentedButton<ComparisonMode>(
-            segments: const [
-              ButtonSegment(value: ComparisonMode.branch, label: Text('Branch Comparison'), icon: Icon(Icons.call_split)),
-              ButtonSegment(value: ComparisonMode.commit, label: Text('Commit Comparison'), icon: Icon(Icons.history)),
-            ],
-            selected: {mode},
-            onSelectionChanged: (newSelection) {
-              context.read<GitBloc>().add(SwitchComparisonMode(newSelection.first));
-            },
-          ),
-        ),
-        const SizedBox(height: 24),
-        
-        if (mode == ComparisonMode.branch) 
-          _buildBranchControls(context)
-        else 
-          _buildCommitControls(context),
-      ],
+    return Card(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      elevation: 0,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Mode Toggle
+            Center(
+              child: SegmentedButton<ComparisonMode>(
+                segments: const [
+                  ButtonSegment(
+                    value: ComparisonMode.branch,
+                    label: Text('Branch Comparison'),
+                    icon: Icon(Icons.call_split),
+                  ),
+                  ButtonSegment(
+                    value: ComparisonMode.commit,
+                    label: Text('Commit Comparison'),
+                    icon: Icon(Icons.history),
+                  ),
+                ],
+                selected: {mode},
+                onSelectionChanged: (newSelection) {
+                  context
+                      .read<GitBloc>()
+                      .add(SwitchComparisonMode(newSelection.first));
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (mode == ComparisonMode.branch)
+              _buildBranchControls(context)
+            else
+              _buildCommitControls(context),
+
+            const SizedBox(height: 24),
+            // Compare Action Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: _canCompare() ? _performCompare : null,
+                icon: const Icon(Icons.compare_arrows),
+                label: const Text('Compare', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+          ],
+      ),
     );
+  }
+
+  bool _canCompare() {
+    if (widget.state.mode == ComparisonMode.branch) {
+      return _baseBranch != null && _targetBranch != null && _baseBranch != _targetBranch;
+    } else {
+      return _baseCommitSha != null && _targetCommitSha != null && _baseCommitSha != _targetCommitSha;
+    }
+  }
+
+  void _performCompare() {
+    final bloc = context.read<GitBloc>();
+    if (widget.state.mode == ComparisonMode.branch) {
+      bloc.add(CompareBranches(_baseBranch!, _targetBranch!));
+    } else {
+      bloc.add(CompareCommits(_baseCommitSha!, _targetCommitSha!));
+    }
   }
 
   Widget _buildBranchControls(BuildContext context) {
@@ -197,39 +301,51 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _baseBranch,
-                decoration: const InputDecoration(labelText: 'Base Branch', border: OutlineInputBorder()),
-                items: widget.state.branches.map((b) => DropdownMenuItem(value: b.name, child: Text(b.name))).toList(),
-                onChanged: (val) => setState(() => _baseBranch = val),
+                decoration: const InputDecoration(
+                  labelText: 'Base Branch',
+                  border: OutlineInputBorder(),
+                ),
+                items: widget.state.branches
+                    .map((b) => DropdownMenuItem(
+                          value: b.name,
+                          child: Text(b.name),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  setState(() => _baseBranch = val);
+                },
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Icon(Icons.arrow_forward),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: (_baseBranch != null && _targetBranch != null)
+                  ? _swapBranches
+                  : null,
+              icon: const Icon(Icons.swap_horiz),
+              tooltip: 'Swap branches',
             ),
+            const SizedBox(width: 8),
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _targetBranch,
-                decoration: const InputDecoration(labelText: 'Target Branch', border: OutlineInputBorder()),
-                items: widget.state.branches.map((b) => DropdownMenuItem(value: b.name, child: Text(b.name))).toList(),
-                onChanged: (val) => setState(() => _targetBranch = val),
+                decoration: const InputDecoration(
+                  labelText: 'Target Branch',
+                  border: OutlineInputBorder(),
+                ),
+                items: widget.state.branches
+                    .map((b) => DropdownMenuItem(
+                          value: b.name,
+                          child: Text(b.name),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  setState(() => _targetBranch = val);
+                },
               ),
             ),
           ],
         ),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: FilledButton.icon(
-            onPressed: (_baseBranch != null && _targetBranch != null)
-                ? () {
-                    context.read<GitBloc>().add(CompareBranches(_baseBranch!, _targetBranch!));
-                  }
-                : null,
-            icon: const Icon(Icons.compare),
-            label: const Text('Compare Branches'),
-          ),
-        ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -246,8 +362,16 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _filterBranch,
-                decoration: const InputDecoration(labelText: 'Filter Commits by Branch', border: OutlineInputBorder()),
-                items: widget.state.branches.map((b) => DropdownMenuItem(value: b.name, child: Text(b.name))).toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Filter Commits by Branch',
+                  border: OutlineInputBorder(),
+                ),
+                items: widget.state.branches
+                    .map((b) => DropdownMenuItem(
+                          value: b.name,
+                          child: Text(b.name),
+                        ))
+                    .toList(),
                 onChanged: (val) {
                   setState(() => _filterBranch = val);
                   if (val != null) {
@@ -258,11 +382,17 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
             ),
             const SizedBox(width: 16),
             if (isLoading)
-              const SizedBox(width: 24, height: 24, child: CircularProgressIndicator())
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(),
+              )
             else
               IconButton(
-                icon: const Icon(Icons.refresh), 
-                onPressed: () => context.read<GitBloc>().add(LoadCommits(branchName: _filterBranch)),
+                icon: const Icon(Icons.refresh),
+                onPressed: () => context
+                    .read<GitBloc>()
+                    .add(LoadCommits(branchName: _filterBranch)),
                 tooltip: 'Refresh Commits',
               ),
           ],
@@ -270,7 +400,10 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
         const SizedBox(height: 16),
         
         if (commits.isEmpty && !isLoading)
-           const Text('No commits found or loaded. Select a branch to load commits.'),
+          const Text(
+            'No commits found or loaded. '
+            'Select a branch to load commits.',
+          ),
 
         if (commits.isNotEmpty) ...[
           Row(
@@ -279,53 +412,261 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 child: DropdownButtonFormField<String>(
                   value: _baseCommitSha,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Base Commit (Older)', border: OutlineInputBorder()),
-                  items: commits.map((c) => DropdownMenuItem(
-                    value: c.sha, 
-                    child: Text(
-                      '${c.sha.substring(0, 7)} - ${c.message.split('\n').first}', 
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )).toList(),
-                  onChanged: (val) => setState(() => _baseCommitSha = val),
+                  decoration: const InputDecoration(
+                    labelText: 'Base Commit (Older)',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _buildCommitItems(context, commits),
+                  selectedItemBuilder: (ctx) => _buildSelectedCommitItems(ctx, commits),
+                  onChanged: (val) {
+                    setState(() => _baseCommitSha = val);
+                  },
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Icon(Icons.arrow_forward),
+              
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: IconButton(
+                  onPressed: (_baseCommitSha != null && _targetCommitSha != null) ? _swapCommits : null,
+                  icon: const Icon(Icons.swap_horiz),
+                  tooltip: 'Swap commits',
+                ),
               ),
+
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: _targetCommitSha,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Target Commit (Newer)', border: OutlineInputBorder()),
-                  items: commits.map((c) => DropdownMenuItem(
-                    value: c.sha, 
-                    child: Text(
-                      '${c.sha.substring(0, 7)} - ${c.message.split('\n').first}', 
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )).toList(),
-                  onChanged: (val) => setState(() => _targetCommitSha = val),
+                  decoration: const InputDecoration(
+                    labelText: 'Target Commit (Newer)',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _buildCommitItems(context, commits),
+                  selectedItemBuilder: (ctx) => _buildSelectedCommitItems(ctx, commits),
+                  onChanged: (val) {
+                    setState(() => _targetCommitSha = val);
+                  },
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: FilledButton.icon(
-              onPressed: (_baseCommitSha != null && _targetCommitSha != null)
-                  ? () {
-                      context.read<GitBloc>().add(CompareCommits(_baseCommitSha!, _targetCommitSha!));
-                    }
-                  : null,
-              icon: const Icon(Icons.history),
-              label: const Text('Compare Commits'),
-            ),
-          ),
+          const SizedBox(height: 8),
         ]
+      ],
+    );
+  }
+
+  void _swapCommits() {
+    if (_baseCommitSha == null || _targetCommitSha == null) {
+      return;
+    }
+    setState(() {
+      final swapped = _baseCommitSha;
+      _baseCommitSha = _targetCommitSha;
+      _targetCommitSha = swapped;
+    });
+  }
+
+  void _swapBranches() {
+    if (_baseBranch == null || _targetBranch == null) {
+      return;
+    }
+    setState(() {
+      final swapped = _baseBranch;
+      _baseBranch = _targetBranch;
+      _targetBranch = swapped;
+    });
+  }
+
+  List<DropdownMenuItem<String>> _buildCommitItems(
+    BuildContext context,
+    List<GitCommit> commits,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final dateFormat = DateFormat('MMM d, yyyy');
+
+    return commits
+        .map((commit) => DropdownMenuItem(
+              value: commit.sha,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    commit.message.split('\n').first,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${commit.author} • ${dateFormat.format(commit.date)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ))
+        .toList();
+  }
+
+  List<Widget> _buildSelectedCommitItems(
+    BuildContext context,
+    List<GitCommit> commits,
+  ) {
+    return commits.map((commit) {
+      return Text(
+        '${commit.sha.substring(0, 7)} - ${commit.message.split('\n').first}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }).toList();
+  }
+}
+
+
+
+class _RepoActionsToolbar extends StatelessWidget {
+  final String repoPath;
+  final String currentBranch; // In a real app we'd identify HEAD properly
+  final List<GitBranch> branches;
+
+  const _RepoActionsToolbar({
+    required this.repoPath,
+    required this.currentBranch,
+    required this.branches,
+  });
+
+  void _showCheckoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _BranchSelectionDialog(
+        title: 'Checkout Branch',
+        branches: branches,
+        onSelected: (branchName) {
+          context.read<GitBloc>().add(CheckoutBranch(branchName));
+        },
+      ),
+    );
+  }
+
+  void _showMergeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _BranchSelectionDialog(
+        title: 'Merge Branch into Current',
+        branches: branches,
+        excludeBranch: currentBranch, // Can't merge self
+        onSelected: (branchName) {
+           // Confirm merge
+           showDialog(context: context, builder: (c) => AlertDialog(
+             title: Text('Merge $branchName?'),
+             content: const Text('This will merge changes into your current working branch. Conflicts may occur.'),
+             actions: [
+               TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+               FilledButton(
+                 onPressed: () {
+                   Navigator.pop(c);
+                   context.read<GitBloc>().add(MergeBranch(branchName));
+                 }, 
+                 child: const Text('Merge')
+               ),
+             ],
+           ));
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Note: 'currentBranch' passed here is just the first one or logic from parent. 
+    // Ideally GitBloc should tell us which one is HEAD. 
+    // For now we will assume the user knows or we add a specific "HEAD" field to state later.
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      child: Row(
+        children: [
+          const Icon(Icons.call_split, size: 20),
+          const SizedBox(width: 8),
+          Text('Actions:', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
+          const SizedBox(width: 16),
+          
+          // Checkout
+          OutlinedButton.icon(
+            onPressed: () => _showCheckoutDialog(context),
+            icon: const Icon(Icons.switch_access_shortcut, size: 18),
+            label: const Text('Checkout'),
+          ),
+          const SizedBox(width: 8),
+
+          // Merge
+          OutlinedButton.icon(
+             onPressed: () => _showMergeDialog(context),
+             icon: const Icon(Icons.merge, size: 18),
+             label: const Text('Merge'),
+          ),
+          const SizedBox(width: 8),
+
+          // Pull
+          OutlinedButton.icon(
+            onPressed: () => context.read<GitBloc>().add(PullChanges()),
+            icon: const Icon(Icons.download, size: 18),
+            label: const Text('Pull'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BranchSelectionDialog extends StatelessWidget {
+  final String title;
+  final List<GitBranch> branches;
+  final Function(String) onSelected;
+  final String? excludeBranch;
+
+  const _BranchSelectionDialog({
+    required this.title,
+    required this.branches,
+    required this.onSelected,
+    this.excludeBranch,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = branches.where((b) => b.name != excludeBranch).toList();
+    
+    return AlertDialog(
+      title: Text(title),
+      content: SizedBox(
+        width: 300,
+        height: 300,
+        child: ListView.builder(
+          itemCount: filtered.length,
+          itemBuilder: (context, index) {
+            final branch = filtered[index];
+            return ListTile(
+              title: Text(branch.name),
+              leading: const Icon(Icons.code),
+              onTap: () {
+                Navigator.pop(context);
+                onSelected(branch.name);
+              },
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
       ],
     );
   }
@@ -373,10 +714,11 @@ class _ComparisonResultList extends StatelessWidget {
          ),
          Padding(
            padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-           child: Text(
-             'Comparing ${mode == ComparisonMode.commit ? 'Commit' : 'Branch'} $base → $target', 
-             style: Theme.of(context).textTheme.bodySmall
-           ),
+            child: Text(
+              "Comparing ${mode == ComparisonMode.commit ? 'Commit' : 'Branch'} "
+              "$base → $target",
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
          ),
          const SizedBox(height: 8),
          Expanded(

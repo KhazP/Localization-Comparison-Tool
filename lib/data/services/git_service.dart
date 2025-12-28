@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:io'; // process.run, file reading
 import 'package:libgit2dart/libgit2dart.dart';
 
 // Represents basic information about a Git branch
@@ -33,6 +34,20 @@ abstract class GitService {
   Future<List<GitDiffFile>> compareCommits(String repoPath, String baseSha, String targetSha);
   Future<String> getFileContentAtBranch(String repoPath, String branchName, String filePath);
   Future<List<String>> getFilesInCommit(String repoPath, String ref);
+  
+  // Conflict Management
+  Future<List<String>> getConflictedFiles(String repoPath);
+  Future<void> resolveConflict(String repoPath, String filePath, ResolutionStrategy strategy);
+  Future<void> resolveSingleConflict(String repoPath, String filePath, ConflictMarker marker, ResolutionStrategy strategy);
+  Future<void> markFileResolved(String repoPath, String filePath);
+  Future<void> abortMerge(String repoPath);
+  Future<List<ConflictMarker>> parseConflictMarkers(String filePath);
+
+  // Operations
+  Future<void> checkoutBranch(String repoPath, String branchName);
+  Future<void> mergeBranch(String repoPath, String branchName);
+  Future<void> gitFetch(String repoPath);
+  Future<void> pull(String repoPath);
 }
 
 class LibGit2DartService implements GitService {
@@ -334,4 +349,275 @@ class LibGit2DartService implements GitService {
       return [];
     }
   }
+
+  // --- CLI Fallback for Conflicts ---
+
+  Future<String> _runGitCommand(String repoPath, List<String> args) async {
+    try {
+      final process = await Process.run(
+        'git',
+        args,
+        workingDirectory: repoPath,
+        runInShell: true, 
+      );
+
+      if (process.exitCode != 0) {
+        throw Exception('Git command failed: ${process.stderr}');
+      }
+      return process.stdout.toString();
+    } catch (e) {
+      if (e.toString().contains('No such file or directory')) {
+        // Try 'cmd /c git ...' for Windows if direct call fails
+         try {
+            final process = await Process.run(
+              'cmd',
+              ['/c', 'git', ...args],
+              workingDirectory: repoPath,
+            );
+            if (process.exitCode != 0) throw Exception(process.stderr);
+            return process.stdout.toString();
+         } catch (inner) {
+            throw Exception('Git CL failed: $inner');
+         }
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<String>> getConflictedFiles(String repoPath) async {
+    try {
+      // 'git status --porcelain' returns short status codes
+      // U = Updated but unmerged
+      // AA = Both added
+      // DD = Both deleted
+      // ...
+      final output = await _runGitCommand(repoPath, ['status', '--porcelain']);
+      final files = <String>[];
+
+      for (final line in output.split('\n')) {
+        if (line.length < 4) continue;
+        final status = line.substring(0, 2);
+        final file = line.substring(3).trim();
+
+        // Check for conflict states
+        // UU: both modified
+        // AA: both added
+        // UD: deleted by them
+        // DU: deleted by us
+        // AU: added by us
+        // UA: added by them
+        if (['UU', 'AA', 'UD', 'DU', 'AU', 'UA', 'DD'].contains(status)) {
+          files.add(file);
+        }
+      }
+      return files;
+    } catch (e) {
+      developer.log('Error checking conflicts: $e', name: 'GitService');
+      return [];
+    }
+  }
+
+  @override
+  Future<void> resolveConflict(String repoPath, String filePath, ResolutionStrategy strategy) async {
+    try {
+      switch (strategy) {
+        case ResolutionStrategy.ours:
+          // Keep current version
+          await _runGitCommand(repoPath, ['checkout', '--ours', filePath]);
+          await _runGitCommand(repoPath, ['add', filePath]);
+          break;
+        case ResolutionStrategy.theirs:
+          // Accept incoming version
+          await _runGitCommand(repoPath, ['checkout', '--theirs', filePath]);
+          await _runGitCommand(repoPath, ['add', filePath]);
+          break;
+        case ResolutionStrategy.manual:
+          // User edited file manually, just add it
+          await _runGitCommand(repoPath, ['add', filePath]);
+          break;
+      }
+    } catch (e) {
+      developer.log('Error resolving conflict for $filePath: $e', name: 'GitService');
+      throw Exception('Failed to resolve conflict: $e');
+    }
+  }
+
+  @override
+  Future<void> abortMerge(String repoPath) async {
+    try {
+      await _runGitCommand(repoPath, ['merge', '--abort']);
+    } catch (e) {
+       developer.log('Error aborting merge: $e', name: 'GitService');
+       throw Exception('Failed to abort merge: $e');
+    }
+  }
+
+  @override
+  Future<List<ConflictMarker>> parseConflictMarkers(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!file.existsSync()) return [];
+
+      final content = await file.readAsString();
+      final markers = <ConflictMarker>[];
+
+      // Simplified regex for standard 2-way conflict block (ours vs theirs)
+      final markerRegex = RegExp(
+        r'<<<<<<<[^\r\n]*\r?\n([\s\S]*?)=======\r?\n([\s\S]*?)>>>>>>>[^\r\n]*',
+        multiLine: true,
+      );
+
+      final matches = markerRegex.allMatches(content);
+      
+      for (final match in matches) {
+          markers.add(ConflictMarker(
+            ours: match.group(1) ?? '',
+            theirs: match.group(2) ?? '',
+            start: match.start,
+            end: match.end,
+          ));
+      }
+
+      return markers;
+    } catch (e) {
+      developer.log('Error parsing conflict markers: $e', name: 'GitService');
+      return [];
+    }
+  }
+
+  @override
+  Future<void> resolveSingleConflict(
+    String repoPath,
+    String filePath,
+    ConflictMarker marker,
+    ResolutionStrategy strategy,
+  ) async {
+    try {
+      final file = File(filePath);
+      if (!file.existsSync()) {
+        throw Exception('File not found: $filePath');
+      }
+
+      final content = await file.readAsString();
+
+      // Validate marker still exists at the expected position
+      if (marker.start >= content.length || marker.end > content.length) {
+        throw Exception('Conflict marker position is invalid. File may have changed.');
+      }
+
+      final conflictBlock = content.substring(marker.start, marker.end);
+      if (!conflictBlock.startsWith('<<<<<<<')) {
+        throw Exception('Conflict marker not found at expected position. File may have changed.');
+      }
+
+      // Determine replacement content
+      String replacement;
+      switch (strategy) {
+        case ResolutionStrategy.ours:
+          replacement = marker.ours;
+          break;
+        case ResolutionStrategy.theirs:
+          replacement = marker.theirs;
+          break;
+        case ResolutionStrategy.manual:
+          throw Exception('Manual resolution requires editing the file directly.');
+      }
+
+      // Replace the conflict block with the chosen content
+      final newContent = content.substring(0, marker.start) +
+          replacement +
+          content.substring(marker.end);
+
+      await file.writeAsString(newContent);
+      developer.log('Resolved single conflict in $filePath', name: 'GitService');
+    } catch (e) {
+      developer.log('Error resolving single conflict: $e', name: 'GitService');
+      throw Exception('Failed to resolve conflict: $e');
+    }
+  }
+
+  @override
+  Future<void> markFileResolved(String repoPath, String filePath) async {
+    try {
+      await _runGitCommand(repoPath, ['add', filePath]);
+      developer.log('Marked $filePath as resolved', name: 'GitService');
+    } catch (e) {
+      developer.log('Error marking file as resolved: $e', name: 'GitService');
+      throw Exception('Failed to mark file as resolved: $e');
+    }
+  }
+
+  // --- Basic Git Operations ---
+
+  @override
+  Future<void> checkoutBranch(String repoPath, String branchName) async {
+    try {
+      await _runGitCommand(repoPath, ['checkout', branchName]);
+    } catch (e) {
+      developer.log('Error checking out branch $branchName: $e', name: 'GitService');
+      throw Exception('Failed to checkout branch: $e');
+    }
+  }
+
+  @override
+  Future<void> mergeBranch(String repoPath, String branchName) async {
+    try {
+      // We don't use --no-commit so we can detect conflicts naturally if they occur
+      await _runGitCommand(repoPath, ['merge', branchName]);
+    } catch (e) {
+      developer.log('Error merging branch $branchName: $e', name: 'GitService');
+      // If it's a conflict, git merge exits with non-zero. 
+      // check status to see if we satisfy "conflicted" state.
+      final conflicts = await getConflictedFiles(repoPath);
+      if (conflicts.isNotEmpty) {
+        // This is expected for conflicts, so we don't strictly throw "Failed", 
+        // but the caller (Bloc) needs to know we are in conflict.
+        // We can just return normally (void) and let the bloc check status.
+        return;
+      }
+      throw Exception('Failed to merge branch: $e');
+    }
+  }
+
+  @override
+  Future<void> gitFetch(String repoPath) async {
+    try {
+      await _runGitCommand(repoPath, ['fetch']);
+    } catch (e) {
+      // Non-critical often
+      developer.log('Error fetching: $e', name: 'GitService');
+    }
+  }
+
+  @override
+  Future<void> pull(String repoPath) async {
+    try {
+      await _runGitCommand(repoPath, ['pull']);
+    } catch (e) {
+      developer.log('Error pulling: $e', name: 'GitService');
+      
+      // Check for conflicts
+      final conflicts = await getConflictedFiles(repoPath);
+      if (conflicts.isNotEmpty) return;
+
+      throw Exception('Failed to pull: $e');
+    }
+  }
+}
+
+enum ResolutionStrategy { ours, theirs, manual }
+
+class ConflictMarker {
+  final String ours;
+  final String theirs;
+  final int start;
+  final int end;
+
+  ConflictMarker({
+    required this.ours,
+    required this.theirs,
+    required this.start,
+    required this.end,
+  });
 }

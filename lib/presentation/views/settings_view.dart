@@ -41,8 +41,10 @@ class _SettingsViewState extends State<SettingsView>
     with SingleTickerProviderStateMixin {
   SettingsCategory _selectedCategory = SettingsCategory.general;
   final TextEditingController _newPatternController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final ScrollController _navScrollController = ScrollController();
   final ScrollController _contentScrollController = ScrollController();
+  String _searchQuery = '';
   TranslationMemoryService? _translationMemoryService;
   Future<TranslationMemoryStats>? _translationMemoryStatsFuture;
   bool _translationMemoryBusy = false;
@@ -206,6 +208,7 @@ class _SettingsViewState extends State<SettingsView>
   @override
   void dispose() {
     _newPatternController.dispose();
+    _searchController.dispose();
     _navScrollController.dispose();
     _contentScrollController.dispose();
     _animationController.dispose();
@@ -514,8 +517,121 @@ class _SettingsViewState extends State<SettingsView>
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SETTINGS SEARCH DATA
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Data structure for searchable settings
+  static const Map<SettingsCategory, List<String>> _searchableSettings = {
+    SettingsCategory.general: [
+      'Language',
+      'Default View',
+      'Recent Files Count',
+      'Open Last Project',
+      'Confirm Before Exit',
+      'Show Notifications',
+    ],
+    SettingsCategory.comparisonEngine: [
+      'Comparison Mode',
+      'Similarity Threshold',
+      'Case Sensitive',
+      'Ignore Whitespace',
+      'Ignore Empty Lines',
+      'Ignore Comments',
+      'Ignore Patterns',
+    ],
+    SettingsCategory.appearance: [
+      'Theme',
+      'Theme Mode',
+      'Accent Color',
+      'Diff Font Size',
+      'Diff Font Family',
+      'Diff Colors',
+      'Added Color',
+      'Removed Color',
+      'Modified Color',
+      'Identical Color',
+      'Color Presets',
+      'Preview',
+    ],
+    SettingsCategory.fileHandling: [
+      'Source Format',
+      'Target Format',
+      'Default Encoding',
+      'Recent Project Count',
+      'Translation Memory',
+      'Import Memory',
+      'Export Memory',
+      'Clear Memory',
+    ],
+    SettingsCategory.aiServices: [
+      'OpenAI API Key',
+      'Anthropic API Key',
+      'Google AI API Key',
+      'AI Model',
+      'Temperature',
+      'Custom Prompt',
+    ],
+    SettingsCategory.versionControl: [
+      'Default Branch',
+      'Auto Stage',
+      'Commit Template',
+      'SSH Key',
+    ],
+    SettingsCategory.windowsIntegrations: [
+      'System Tray',
+      'Start Minimized',
+      'File Associations',
+      'Mica Effect',
+    ],
+    SettingsCategory.about: [
+      'Version',
+      'Check Updates',
+      'Auto Update',
+      'Changelog',
+      'License',
+      'Privacy Policy',
+      'Telemetry',
+      'Crash Reporting',
+    ],
+  };
+
+  /// Search settings and return matching categories with their matching terms
+  Map<SettingsCategory, List<String>> _getSearchResults() {
+    if (_searchQuery.isEmpty) {
+      return {};
+    }
+    final query = _searchQuery.toLowerCase();
+    final results = <SettingsCategory, List<String>>{};
+    
+    for (final entry in _searchableSettings.entries) {
+      final matches = entry.value
+          .where((setting) => setting.toLowerCase().contains(query))
+          .toList();
+      if (matches.isNotEmpty) {
+        results[entry.key] = matches;
+      }
+    }
+    return results;
+  }
+
+  /// Get filtered categories based on search query
+  List<SettingsCategory> _getFilteredCategories() {
+    if (_searchQuery.isEmpty) {
+      return SettingsCategory.values.toList();
+    }
+    final results = _getSearchResults();
+    if (results.isEmpty) {
+      return SettingsCategory.values.toList();
+    }
+    return results.keys.toList();
+  }
+
   Widget _buildNavigationPanel(BuildContext context, bool isDark, bool isAmoled,
       ColorScheme colorScheme) {
+    final filteredCategories = _getFilteredCategories();
+    final searchResults = _getSearchResults();
+    
     return Container(
       width: 240,
       decoration: BoxDecoration(
@@ -555,10 +671,94 @@ class _SettingsViewState extends State<SettingsView>
               ],
             ),
           ),
+          // Search Field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: TextField(
+              controller: _searchController,
+              style: Theme.of(context).textTheme.bodyMedium,
+              decoration: InputDecoration(
+                hintText: 'Search settings...',
+                hintStyle: TextStyle(
+                  color: _getTextMutedColor(isDark),
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 18,
+                  color: _getTextMutedColor(isDark),
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: _getTextMutedColor(isDark),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                filled: true,
+                fillColor: _getCardColor(isDark, isAmoled),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: _getBorderColor(isDark, isAmoled),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: _getBorderColor(isDark, isAmoled),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: colorScheme.primary,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              onChanged: (query) => setState(() => _searchQuery = query),
+            ),
+          ),
           Divider(
             color: _getBorderColor(isDark, isAmoled),
             height: 1,
           ),
+          // Search results hint
+          if (_searchQuery.isNotEmpty && searchResults.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                '${searchResults.values.fold<int>(0, (sum, list) => sum + list.length)} results found',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ),
+          if (_searchQuery.isNotEmpty && searchResults.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'No matching settings',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _getTextMutedColor(isDark),
+                ),
+              ),
+            ),
           // Navigation Items
           Expanded(
             child: Scrollbar(
@@ -568,8 +768,14 @@ class _SettingsViewState extends State<SettingsView>
                 controller: _navScrollController,
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                children: SettingsCategory.values.map((category) {
-                  return _buildNavItem(context, category, isDark);
+                children: filteredCategories.map((category) {
+                  final matchCount = searchResults[category]?.length;
+                  return _buildNavItem(
+                    context,
+                    category,
+                    isDark,
+                    matchCount: matchCount,
+                  );
                 }).toList(),
               ),
             ),
@@ -580,9 +786,14 @@ class _SettingsViewState extends State<SettingsView>
   }
 
   Widget _buildNavItem(
-      BuildContext context, SettingsCategory category, bool isDark) {
+    BuildContext context,
+    SettingsCategory category,
+    bool isDark, {
+    int? matchCount,
+  }) {
     final isSelected = _selectedCategory == category;
     final theme = Theme.of(context);
+    final hasMatch = matchCount != null && matchCount > 0;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -598,12 +809,16 @@ class _SettingsViewState extends State<SettingsView>
             decoration: BoxDecoration(
               color: isSelected
                   ? theme.colorScheme.primary.withAlpha(25)
-                  : Colors.transparent,
+                  : hasMatch
+                      ? theme.colorScheme.primary.withAlpha(10)
+                      : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isSelected
                     ? theme.colorScheme.primary.withAlpha(50)
-                    : Colors.transparent,
+                    : hasMatch
+                        ? theme.colorScheme.primary.withAlpha(30)
+                        : Colors.transparent,
               ),
             ),
             child: Row(
@@ -611,7 +826,7 @@ class _SettingsViewState extends State<SettingsView>
                 Icon(
                   _getCategoryIcon(category),
                   size: 20,
-                  color: isSelected
+                  color: isSelected || hasMatch
                       ? theme.colorScheme.primary
                       : (isDark
                           ? AppThemeV2.darkTextMuted
@@ -626,12 +841,34 @@ class _SettingsViewState extends State<SettingsView>
                           isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected
                           ? theme.colorScheme.primary
-                          : (isDark
-                              ? AppThemeV2.darkTextSecondary
-                              : AppThemeV2.lightTextSecondary),
+                          : hasMatch
+                              ? theme.colorScheme.primary.withAlpha(200)
+                              : (isDark
+                                  ? AppThemeV2.darkTextSecondary
+                                  : AppThemeV2.lightTextSecondary),
                     ),
                   ),
                 ),
+                // Match count badge
+                if (hasMatch)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$matchCount',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

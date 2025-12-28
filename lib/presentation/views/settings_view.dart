@@ -3556,6 +3556,54 @@ class _SettingsViewState extends State<SettingsView>
             ),
           ],
         ),
+        // Privacy & Telemetry Card
+        _buildSettingsCard(
+          context: context,
+          title: 'Privacy & Telemetry',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Anonymous Usage Statistics',
+              description: 'Help improve the app by sending anonymous usage data',
+              control: Switch(
+                value: settings.enableAnonymousUsageStatistics,
+                onChanged: (value) {
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateEnableAnonymousUsageStatistics(value));
+                },
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildSettingRow(
+              context: context,
+              label: 'Crash Reporting',
+              description: 'Automatically send crash reports to help fix issues',
+              control: Switch(
+                value: settings.enableCrashReporting,
+                onChanged: (value) {
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateEnableCrashReporting(value));
+                },
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
+            _buildLinkRow(
+              context,
+              'Privacy Policy',
+              Icons.privacy_tip_rounded,
+              () => _launchUrl('https://github.com/KhazP/LocalizerAppMain/blob/main/PRIVACY.md'),
+              isDark,
+              isAmoled,
+              showDivider: false,
+            ),
+          ],
+        ),
         _buildSettingsCard(
           context: context,
           title: 'Links',

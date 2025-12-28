@@ -100,13 +100,16 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       autoDownloadUpdate: fields[69] == null ? false : fields[69] as bool,
       lastUpdateCheckTime: fields[70] as String?,
       skipVersion: fields[71] == null ? '' : fields[71] as String,
+      enableAnonymousUsageStatistics:
+          fields[72] == null ? false : fields[72] as bool,
+      enableCrashReporting: fields[73] == null ? true : fields[73] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(72)
+      ..writeByte(74)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -250,7 +253,11 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(70)
       ..write(obj.lastUpdateCheckTime)
       ..writeByte(71)
-      ..write(obj.skipVersion);
+      ..write(obj.skipVersion)
+      ..writeByte(72)
+      ..write(obj.enableAnonymousUsageStatistics)
+      ..writeByte(73)
+      ..write(obj.enableCrashReporting);
   }
 
   @override

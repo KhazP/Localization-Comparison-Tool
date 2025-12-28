@@ -757,24 +757,24 @@ _buildSettingsCard(
 3. Changelog viewer
 4. Auto-download update toggle
 
-### 7.2 Add System Information ✅
+### 7.2 Add System Information
 
 **Priority:** 🟢 LOW
 
 **Requirements:**
-1. ~~Show Flutter version~~ (Shows Dart version instead, as Flutter version is not accessible at runtime)
-2. ✅ Show Dart version
-3. ✅ Show available disk space
-4. ✅ Show memory usage
+1. Show Flutter version
+2. Show Dart version
+3. Show available disk space
+4. Show memory usage
 
-### 7.3 Add Telemetry Settings
+### 7.3 Add Telemetry Settings ✅
 
 **Priority:** 🟡 MEDIUM
 
 **Requirements:**
-1. Anonymous usage statistics toggle
-2. Crash reporting toggle
-3. Privacy policy link
+1. ✅ Anonymous usage statistics toggle
+2. ✅ Crash reporting toggle
+3. ✅ Privacy policy link
 
 ---
 
@@ -883,7 +883,7 @@ _buildSettingsCard(
 | 6.3 | SSH Configuration | 🟢 LOW | Medium | Version Control |
 | 7.1 | Update Information | 🟡 MEDIUM | Medium | About |
 | 7.2 | System Information ✅ | 🟢 LOW | Low | About |
-| 7.3 | Telemetry Settings | 🟡 MEDIUM | Low | About |
+| 7.3 | Telemetry Settings ✅ | 🟡 MEDIUM | Low | About |
 | 8.1 | Settings Search | 🔴 HIGH | Medium | Cross-Cutting |
 | 8.2 | Import/Export Settings | 🟡 MEDIUM | Medium | Cross-Cutting |
 | 8.3 | Settings Profiles | 🟢 LOW | High | Cross-Cutting |

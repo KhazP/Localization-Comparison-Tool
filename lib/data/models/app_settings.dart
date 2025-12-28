@@ -235,6 +235,13 @@ class AppSettings extends HiveObject {
   @HiveField(71, defaultValue: '')
   String skipVersion;
 
+  // Telemetry Settings
+  @HiveField(72, defaultValue: false)
+  bool enableAnonymousUsageStatistics;
+
+  @HiveField(73, defaultValue: true)
+  bool enableCrashReporting;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -308,6 +315,8 @@ class AppSettings extends HiveObject {
     required this.autoDownloadUpdate,
     this.lastUpdateCheckTime,
     required this.skipVersion,
+    required this.enableAnonymousUsageStatistics,
+    required this.enableCrashReporting,
   });
 
   // Default settings
@@ -386,6 +395,8 @@ class AppSettings extends HiveObject {
       autoDownloadUpdate: false,
       lastUpdateCheckTime: null,
       skipVersion: '',
+      enableAnonymousUsageStatistics: false,
+      enableCrashReporting: true,
     );
   }
 
@@ -470,6 +481,8 @@ class AppSettings extends HiveObject {
       autoDownloadUpdate: json['autoDownloadUpdate'] as bool? ?? false,
       lastUpdateCheckTime: json['lastUpdateCheckTime'] as String?,
       skipVersion: json['skipVersion'] as String? ?? '',
+      enableAnonymousUsageStatistics: json['enableAnonymousUsageStatistics'] as bool? ?? false,
+      enableCrashReporting: json['enableCrashReporting'] as bool? ?? true,
     );
   }
 
@@ -548,6 +561,8 @@ class AppSettings extends HiveObject {
       'autoDownloadUpdate': autoDownloadUpdate,
       'lastUpdateCheckTime': lastUpdateCheckTime,
       'skipVersion': skipVersion,
+      'enableAnonymousUsageStatistics': enableAnonymousUsageStatistics,
+      'enableCrashReporting': enableCrashReporting,
     };
   }
 
@@ -624,6 +639,8 @@ class AppSettings extends HiveObject {
     bool? autoDownloadUpdate,
     String? lastUpdateCheckTime,
     String? skipVersion,
+    bool? enableAnonymousUsageStatistics,
+    bool? enableCrashReporting,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -712,6 +729,8 @@ class AppSettings extends HiveObject {
       autoDownloadUpdate: autoDownloadUpdate ?? this.autoDownloadUpdate,
       lastUpdateCheckTime: lastUpdateCheckTime ?? this.lastUpdateCheckTime,
       skipVersion: skipVersion ?? this.skipVersion,
+      enableAnonymousUsageStatistics: enableAnonymousUsageStatistics ?? this.enableAnonymousUsageStatistics,
+      enableCrashReporting: enableCrashReporting ?? this.enableCrashReporting,
     );
   }
 }

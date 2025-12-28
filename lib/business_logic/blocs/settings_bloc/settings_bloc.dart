@@ -112,6 +112,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateAutoDownloadUpdate>(_onUpdateAutoDownloadUpdate);
     on<UpdateLastUpdateCheckTime>(_onUpdateLastUpdateCheckTime);
     on<UpdateSkipVersion>(_onUpdateSkipVersion);
+    // Telemetry Settings Events
+    on<UpdateEnableAnonymousUsageStatistics>(
+        _onUpdateEnableAnonymousUsageStatistics);
+    on<UpdateEnableCrashReporting>(_onUpdateEnableCrashReporting);
   }
 
   Future<void> _onLoadSettings(
@@ -1003,6 +1007,26 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateSkipVersion event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(skipVersion: event.version);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  // Telemetry Settings Event Handlers
+  Future<void> _onUpdateEnableAnonymousUsageStatistics(
+      UpdateEnableAnonymousUsageStatistics event,
+      Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(
+      enableAnonymousUsageStatistics: event.enabled,
+    );
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateEnableCrashReporting(
+      UpdateEnableCrashReporting event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(
+      enableCrashReporting: event.enabled,
+    );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

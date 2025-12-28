@@ -554,3 +554,18 @@ class UpdateSkipVersion extends SettingsEvent {
   @override
   List<Object> get props => [version];
 }
+
+// Telemetry Settings Events
+class UpdateEnableAnonymousUsageStatistics extends SettingsEvent {
+  final bool enabled;
+  const UpdateEnableAnonymousUsageStatistics(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateEnableCrashReporting extends SettingsEvent {
+  final bool enabled;
+  const UpdateEnableCrashReporting(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}

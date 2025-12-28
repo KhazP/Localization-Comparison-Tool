@@ -498,35 +498,29 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         Row(
                           children: [
                             Expanded(
-                              child: SizedBox(
-                                height: 40,
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.compare_arrows,
-                                      size: 18),
-                                  label: Text(_isBilingualMode
-                                      ? 'Compare File'
-                                      : 'Compare Files'),
-                                  onPressed: _isBilingualMode
-                                      ? (_bilingualFile != null
-                                          ? _startComparison
-                                          : null)
-                                      : (_file1 != null && _file2 != null
-                                          ? _startComparison
-                                          : null),
-                                ),
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.compare_arrows,
+                                    size: 18),
+                                label: Text(_isBilingualMode
+                                    ? 'Compare File'
+                                    : 'Compare Files'),
+                                onPressed: _isBilingualMode
+                                    ? (_bilingualFile != null
+                                        ? _startComparison
+                                        : null)
+                                    : (_file1 != null && _file2 != null
+                                        ? _startComparison
+                                        : null),
                               ),
                             ),
                             const SizedBox(width: 12),
-                            SizedBox(
-                              height: 40,
-                              child: OutlinedButton.icon(
-                                icon: const Icon(Icons.translate_rounded,
-                                    size: 18),
-                                label: Text(_isBilingualMode
-                                    ? 'Two Files'
-                                    : 'Bilingual Mode'),
-                                onPressed: _toggleComparisonMode,
-                              ),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.translate_rounded,
+                                  size: 18),
+                              label: Text(_isBilingualMode
+                                  ? 'Two Files'
+                                  : 'Bilingual Mode'),
+                              onPressed: _toggleComparisonMode,
                             ),
                           ],
                         ),

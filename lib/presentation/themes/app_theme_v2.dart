@@ -102,6 +102,7 @@ class AppThemeV2 {
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
+      iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
       inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: darkBorder,
@@ -170,6 +171,7 @@ class AppThemeV2 {
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
+      iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
       inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
       dividerTheme: DividerThemeData(
         color: darkBorder.withAlpha(150),
@@ -238,6 +240,7 @@ class AppThemeV2 {
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
+      iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
       inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: true, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: amoledBorder,
@@ -287,6 +290,7 @@ class AppThemeV2 {
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: false, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
+      iconButtonTheme: _buildIconButtonTheme(isDark: false, primaryColor: primary),
       inputDecorationTheme: _buildInputTheme(isDark: false, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: lightBorder,
@@ -405,58 +409,187 @@ class AppThemeV2 {
 
   static ElevatedButtonThemeData _buildElevatedButtonTheme(Color primaryColor) {
     return ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return primaryColor.withAlpha(100);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return HSLColor.fromColor(primaryColor).withLightness(
+              (HSLColor.fromColor(primaryColor).lightness * 1.1).clamp(0.0, 1.0),
+            ).toColor();
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return HSLColor.fromColor(primaryColor).withLightness(
+              (HSLColor.fromColor(primaryColor).lightness * 0.9).clamp(0.0, 1.0),
+            ).toColor();
+          }
+          return primaryColor;
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return Colors.white.withAlpha(150);
+          }
+          return Colors.white;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return Colors.white.withAlpha(30);
+          }
+          return Colors.white.withAlpha(20);
+        }),
+        elevation: WidgetStateProperty.all(0),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
-        textStyle: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
+        minimumSize: WidgetStateProperty.all(const Size(64, 44)),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
+        textStyle: WidgetStateProperty.all(
+          GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        animationDuration: const Duration(milliseconds: 200),
       ),
     );
   }
 
   static OutlinedButtonThemeData _buildOutlinedButtonTheme({required bool isDark, required Color primaryColor}) {
+    final borderColor = isDark ? darkBorder : lightBorder;
+    final textColor = isDark ? darkTextPrimary : lightTextPrimary;
+    
     return OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: isDark ? darkTextPrimary : lightTextPrimary,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        side: BorderSide(
-          color: isDark ? darkBorder : lightBorder,
-          width: 1.5,
+      style: ButtonStyle(
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return textColor.withAlpha(100);
+          }
+          if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) {
+            return primaryColor;
+          }
+          return textColor;
+        }),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return primaryColor.withAlpha(15);
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return primaryColor.withAlpha(25);
+          }
+          return Colors.transparent;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return primaryColor.withAlpha(20);
+          }
+          return primaryColor.withAlpha(10);
+        }),
+        side: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return BorderSide(color: borderColor.withAlpha(80), width: 1.5);
+          }
+          if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) {
+            return BorderSide(color: primaryColor.withAlpha(180), width: 1.5);
+          }
+          return BorderSide(color: borderColor, width: 1.5);
+        }),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+        minimumSize: WidgetStateProperty.all(const Size(64, 44)),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        textStyle: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+        textStyle: WidgetStateProperty.all(
+          GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
         ),
+        animationDuration: const Duration(milliseconds: 200),
       ),
     );
   }
 
   static TextButtonThemeData _buildTextButtonTheme(Color primaryColor) {
     return TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: primaryColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+      style: ButtonStyle(
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return primaryColor.withAlpha(100);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return HSLColor.fromColor(primaryColor).withLightness(
+              (HSLColor.fromColor(primaryColor).lightness * 1.1).clamp(0.0, 1.0),
+            ).toColor();
+          }
+          return primaryColor;
+        }),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return primaryColor.withAlpha(15);
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return primaryColor.withAlpha(25);
+          }
+          return Colors.transparent;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return primaryColor.withAlpha(30);
+          }
+          return primaryColor.withAlpha(15);
+        }),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
-        textStyle: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+        minimumSize: WidgetStateProperty.all(const Size(48, 36)),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
+        textStyle: WidgetStateProperty.all(
+          GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        animationDuration: const Duration(milliseconds: 200),
       ),
     );
   }
 
+  static IconButtonThemeData _buildIconButtonTheme({required bool isDark, required Color primaryColor}) {
+    final iconColor = isDark ? darkTextSecondary : lightTextSecondary;
+    
+    return IconButtonThemeData(
+      style: ButtonStyle(
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return iconColor.withAlpha(80);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return primaryColor;
+          }
+          return iconColor;
+        }),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return primaryColor.withAlpha(20);
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return primaryColor.withAlpha(30);
+          }
+          return Colors.transparent;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return primaryColor.withAlpha(30);
+          }
+          return primaryColor.withAlpha(15);
+        }),
+        minimumSize: WidgetStateProperty.all(const Size(40, 40)),
+        iconSize: WidgetStateProperty.all(20),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        animationDuration: const Duration(milliseconds: 150),
+      ),
+    );
+  }
   static InputDecorationTheme _buildInputTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
     final borderColor = isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder);
     final fillColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);

@@ -1254,18 +1254,12 @@ class _ActionButton extends StatelessWidget {
         onPressed: onPressed,
         icon: Icon(icon, size: 20),
         label: Text(label),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
       );
     }
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 20),
       label: Text(label),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-      ),
     );
   }
 }

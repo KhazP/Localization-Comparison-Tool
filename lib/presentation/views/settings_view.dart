@@ -95,6 +95,7 @@ class _SettingsViewState extends State<SettingsView>
   final List<String> _defaultViews = [
     'Basic Comparison',
     'History View',
+    'Quality Dashboard',
     'Files',
     'Last Used View'
   ];
@@ -160,8 +161,7 @@ class _SettingsViewState extends State<SettingsView>
     _loadAppInfo();
     if (sl.isRegistered<TranslationMemoryService>()) {
       _translationMemoryService = sl<TranslationMemoryService>();
-      _translationMemoryStatsFuture =
-          _translationMemoryService?.getStats();
+      _translationMemoryStatsFuture = _translationMemoryService?.getStats();
     }
     _updateCheckerService = UpdateCheckerService();
     _systemInfoService = SystemInfoService();
@@ -271,8 +271,7 @@ class _SettingsViewState extends State<SettingsView>
       return;
     }
     setState(() {
-      _translationMemoryStatsFuture =
-          _translationMemoryService?.getStats();
+      _translationMemoryStatsFuture = _translationMemoryService?.getStats();
     });
   }
 
@@ -604,7 +603,7 @@ class _SettingsViewState extends State<SettingsView>
     }
     final query = _searchQuery.toLowerCase();
     final results = <SettingsCategory, List<String>>{};
-    
+
     for (final entry in _searchableSettings.entries) {
       final matches = entry.value
           .where((setting) => setting.toLowerCase().contains(query))
@@ -632,7 +631,7 @@ class _SettingsViewState extends State<SettingsView>
       ColorScheme colorScheme) {
     final filteredCategories = _getFilteredCategories();
     final searchResults = _getSearchResults();
-    
+
     return Container(
       width: 240,
       decoration: BoxDecoration(
@@ -757,7 +756,7 @@ class _SettingsViewState extends State<SettingsView>
                 'No matching settings',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: _getTextMutedColor(isDark),
-                ),
+                    ),
               ),
             ),
           // Navigation Items
@@ -2422,9 +2421,7 @@ class _SettingsViewState extends State<SettingsView>
                 context: context,
                 label: 'Max Tokens',
                 description: 'Maximum response length',
-                control: _buildDropdown(
-                    context,
-                    settings.maxTokens.toString(),
+                control: _buildDropdown(context, settings.maxTokens.toString(),
                     ['256', '512', '1024', '2048', '4096', '8192'], (val) {
                   if (val != null)
                     context
@@ -2902,12 +2899,16 @@ class _SettingsViewState extends State<SettingsView>
               control: SizedBox(
                 width: 150,
                 child: TextField(
-                  controller: TextEditingController(text: settings.defaultBranch),
-                  onChanged: (val) => context.read<SettingsBloc>().add(UpdateDefaultBranch(val)),
+                  controller:
+                      TextEditingController(text: settings.defaultBranch),
+                  onChanged: (val) => context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultBranch(val)),
                   decoration: const InputDecoration(
                     hintText: 'main',
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                 ),
               ),
@@ -2921,12 +2922,16 @@ class _SettingsViewState extends State<SettingsView>
               control: SizedBox(
                 width: 150,
                 child: TextField(
-                  controller: TextEditingController(text: settings.defaultRemote),
-                  onChanged: (val) => context.read<SettingsBloc>().add(UpdateDefaultRemote(val)),
+                  controller:
+                      TextEditingController(text: settings.defaultRemote),
+                  onChanged: (val) => context
+                      .read<SettingsBloc>()
+                      .add(UpdateDefaultRemote(val)),
                   decoration: const InputDecoration(
                     hintText: 'origin',
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                 ),
               ),
@@ -2949,12 +2954,16 @@ class _SettingsViewState extends State<SettingsView>
                 children: [
                   TextField(
                     maxLines: 2,
-                    controller: TextEditingController(text: settings.commitMessageTemplate),
-                    onChanged: (val) => context.read<SettingsBloc>().add(UpdateCommitMessageTemplate(val)),
+                    controller: TextEditingController(
+                        text: settings.commitMessageTemplate),
+                    onChanged: (val) => context
+                        .read<SettingsBloc>()
+                        .add(UpdateCommitMessageTemplate(val)),
                     decoration: InputDecoration(
                       labelText: 'Commit Message Template',
                       hintText: 'Update localization: {files}',
-                      helperText: 'Variables: {date}, {files}, {added}, {removed}, {modified}',
+                      helperText:
+                          'Variables: {date}, {files}, {added}, {removed}, {modified}',
                       helperMaxLines: 2,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -2983,13 +2992,15 @@ class _SettingsViewState extends State<SettingsView>
                       _buildCommitPresetChip(
                         context: context,
                         label: 'Detailed',
-                        template: '[{date}] Localization update\n\nModified: {modified}\nAdded: {added}\nRemoved: {removed}',
+                        template:
+                            '[{date}] Localization update\n\nModified: {modified}\nAdded: {added}\nRemoved: {removed}',
                         isDark: isDark,
                       ),
                       _buildCommitPresetChip(
                         context: context,
                         label: 'Conventional',
-                        template: 'chore(i18n): update translations\n\nFiles: {files}',
+                        template:
+                            'chore(i18n): update translations\n\nFiles: {files}',
                         isDark: isDark,
                       ),
                     ],
@@ -3014,14 +3025,18 @@ class _SettingsViewState extends State<SettingsView>
                     children: [
                       Expanded(
                         child: TextField(
-                          controller: TextEditingController(text: settings.sshKeyPath),
-                          onChanged: (val) => context.read<SettingsBloc>().add(UpdateSshKeyPath(val)),
+                          controller:
+                              TextEditingController(text: settings.sshKeyPath),
+                          onChanged: (val) => context
+                              .read<SettingsBloc>()
+                              .add(UpdateSshKeyPath(val)),
                           decoration: InputDecoration(
                             labelText: 'SSH Key Path',
                             hintText: Platform.isWindows
                                 ? 'C:\\Users\\....\\.ssh\\id_rsa'
                                 : '~/.ssh/id_rsa',
-                            helperText: 'Path to your private SSH key for Git operations',
+                            helperText:
+                                'Path to your private SSH key for Git operations',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -3040,7 +3055,9 @@ class _SettingsViewState extends State<SettingsView>
                           if (result != null && result.files.isNotEmpty) {
                             final path = result.files.first.path;
                             if (path != null && context.mounted) {
-                              context.read<SettingsBloc>().add(UpdateSshKeyPath(path));
+                              context
+                                  .read<SettingsBloc>()
+                                  .add(UpdateSshKeyPath(path));
                             }
                           }
                         },
@@ -3061,20 +3078,25 @@ class _SettingsViewState extends State<SettingsView>
                                   final file = File(pubKeyPath);
                                   if (await file.exists()) {
                                     final content = await file.readAsString();
-                                    await Clipboard.setData(ClipboardData(text: content.trim()));
+                                    await Clipboard.setData(
+                                        ClipboardData(text: content.trim()));
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         const SnackBar(
-                                          content: Text('Public key copied to clipboard!'),
+                                          content: Text(
+                                              'Public key copied to clipboard!'),
                                           backgroundColor: Colors.green,
                                         ),
                                       );
                                     }
                                   } else {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
-                                          content: Text('Public key not found: $pubKeyPath'),
+                                          content: Text(
+                                              'Public key not found: $pubKeyPath'),
                                           backgroundColor: AppThemeV2.error,
                                         ),
                                       );
@@ -3084,7 +3106,8 @@ class _SettingsViewState extends State<SettingsView>
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Error reading public key: $e'),
+                                        content: Text(
+                                            'Error reading public key: $e'),
                                         backgroundColor: AppThemeV2.error,
                                       ),
                                     );
@@ -3096,7 +3119,8 @@ class _SettingsViewState extends State<SettingsView>
                       Text(
                         'Copies {key}.pub to clipboard',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDark ? Colors.grey[500] : Colors.grey[600],
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[600],
                             ),
                       ),
                     ],
@@ -3273,8 +3297,8 @@ class _SettingsViewState extends State<SettingsView>
                 .map((entry) {
               final ext = entry.key;
               final description = entry.value;
-              final isRegistered =
-                  isWindows && WindowsIntegrationService.isFileExtensionRegistered(ext);
+              final isRegistered = isWindows &&
+                  WindowsIntegrationService.isFileExtensionRegistered(ext);
 
               return _buildSettingRow(
                 context: context,
@@ -3318,8 +3342,9 @@ class _SettingsViewState extends State<SettingsView>
                                             ? '$ext registered!'
                                             : '$ext unregistered!')
                                         : 'Failed to ${val ? 'register' : 'unregister'} $ext'),
-                                    backgroundColor:
-                                        success ? Colors.green : AppThemeV2.error,
+                                    backgroundColor: success
+                                        ? Colors.green
+                                        : AppThemeV2.error,
                                   ),
                                 );
                                 // Trigger rebuild to update status
@@ -3333,7 +3358,8 @@ class _SettingsViewState extends State<SettingsView>
                 ),
                 isDark: isDark,
                 isAmoled: isAmoled,
-                showDivider: ext != WindowsIntegrationService.supportedExtensions.keys.last,
+                showDivider: ext !=
+                    WindowsIntegrationService.supportedExtensions.keys.last,
               );
             }),
             Padding(
@@ -3353,16 +3379,18 @@ class _SettingsViewState extends State<SettingsView>
                                   SnackBar(
                                     content: Text(
                                         'Registered $successCount of ${results.length} file types'),
-                                    backgroundColor: successCount == results.length
-                                        ? Colors.green
-                                        : Colors.orange,
+                                    backgroundColor:
+                                        successCount == results.length
+                                            ? Colors.green
+                                            : Colors.orange,
                                   ),
                                 );
                                 setState(() {});
                               }
                             }
                           : null,
-                      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                      icon: const Icon(Icons.check_circle_outline_rounded,
+                          size: 18),
                       label: const Text('Register All'),
                     ),
                   ),
@@ -3380,16 +3408,18 @@ class _SettingsViewState extends State<SettingsView>
                                   SnackBar(
                                     content: Text(
                                         'Unregistered $successCount of ${results.length} file types'),
-                                    backgroundColor: successCount == results.length
-                                        ? Colors.green
-                                        : Colors.orange,
+                                    backgroundColor:
+                                        successCount == results.length
+                                            ? Colors.green
+                                            : Colors.orange,
                                   ),
                                 );
                                 setState(() {});
                               }
                             }
                           : null,
-                      icon: const Icon(Icons.remove_circle_outline_rounded, size: 18),
+                      icon: const Icon(Icons.remove_circle_outline_rounded,
+                          size: 18),
                       label: const Text('Unregister All'),
                     ),
                   ),
@@ -3538,7 +3568,7 @@ class _SettingsViewState extends State<SettingsView>
   Widget _buildAboutSettings(BuildContext context, bool isDark, bool isAmoled) {
     final settings = context.read<SettingsBloc>().state.appSettings;
     final theme = Theme.of(context);
-    
+
     return Column(
       children: [
         _buildSettingsCard(
@@ -3804,7 +3834,8 @@ class _SettingsViewState extends State<SettingsView>
             _buildSettingRow(
               context: context,
               label: 'Anonymous Usage Statistics',
-              description: 'Help improve the app by sending anonymous usage data',
+              description:
+                  'Help improve the app by sending anonymous usage data',
               control: Switch(
                 value: settings.enableAnonymousUsageStatistics,
                 onChanged: (value) {
@@ -3819,7 +3850,8 @@ class _SettingsViewState extends State<SettingsView>
             _buildSettingRow(
               context: context,
               label: 'Crash Reporting',
-              description: 'Automatically send crash reports to help fix issues',
+              description:
+                  'Automatically send crash reports to help fix issues',
               control: Switch(
                 value: settings.enableCrashReporting,
                 onChanged: (value) {
@@ -3835,7 +3867,8 @@ class _SettingsViewState extends State<SettingsView>
               context,
               'Privacy Policy',
               Icons.privacy_tip_rounded,
-              () => _launchUrl('https://github.com/KhazP/LocalizerAppMain/blob/main/PRIVACY.md'),
+              () => _launchUrl(
+                  'https://github.com/KhazP/LocalizerAppMain/blob/main/PRIVACY.md'),
               isDark,
               isAmoled,
               showDivider: false,
@@ -3966,7 +3999,7 @@ class _SettingsViewState extends State<SettingsView>
             : result.updateAvailable
                 ? 'Update available: v${result.latestVersion}'
                 : 'You are using the latest version';
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
@@ -3988,7 +4021,7 @@ class _SettingsViewState extends State<SettingsView>
 
   void _showChangelogDialog(BuildContext context, bool isDark) {
     if (_updateCheckResult?.changelog == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -4036,23 +4069,24 @@ class _SettingsViewState extends State<SettingsView>
   Future<void> _exportSettings(BuildContext context) async {
     try {
       final settings = context.read<SettingsBloc>().state.appSettings;
-      final jsonString = const JsonEncoder.withIndent('  ').convert(settings.toJson());
-      
+      final jsonString =
+          const JsonEncoder.withIndent('  ').convert(settings.toJson());
+
       // Generate default filename with timestamp
       final timestamp = DateFormat('yyyy-MM-dd_HHmmss').format(DateTime.now());
       final defaultFileName = 'localizer_settings_$timestamp.json';
-      
+
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Export Settings',
         fileName: defaultFileName,
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
-      
+
       if (result != null) {
         final file = File(result);
         await file.writeAsString(jsonString);
-        
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -4091,20 +4125,21 @@ class _SettingsViewState extends State<SettingsView>
         allowedExtensions: ['json'],
         allowMultiple: false,
       );
-      
+
       if (result != null && result.files.isNotEmpty) {
         final filePath = result.files.first.path;
         if (filePath == null) return;
-        
+
         final file = File(filePath);
         final jsonString = await file.readAsString();
         final jsonMap = json.decode(jsonString) as Map<String, dynamic>;
-        
+
         // Validate the JSON has expected structure
-        if (!jsonMap.containsKey('appThemeMode') || !jsonMap.containsKey('defaultSourceFormat')) {
+        if (!jsonMap.containsKey('appThemeMode') ||
+            !jsonMap.containsKey('defaultSourceFormat')) {
           throw const FormatException('Invalid settings file format');
         }
-        
+
         // Show confirmation dialog
         if (context.mounted) {
           final confirmed = await showDialog<bool>(
@@ -4133,16 +4168,18 @@ class _SettingsViewState extends State<SettingsView>
               ],
             ),
           );
-          
+
           if (confirmed != true) return;
-          
+
           // Parse and apply the settings
           final importedSettings = AppSettings.fromJson(jsonMap);
-          
+
           // Apply all settings through the bloc
           // Apply all settings through the bloc - use the new atomic event
-          context.read<SettingsBloc>().add(ReplaceAllSettings(importedSettings));
-          
+          context
+              .read<SettingsBloc>()
+              .add(ReplaceAllSettings(importedSettings));
+
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

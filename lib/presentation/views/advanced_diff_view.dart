@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/core/services/diff_calculator.dart';
+import 'package:localizer_app_main/core/services/language_detector.dart';
 import 'package:localizer_app_main/core/services/fuzzy_fill_rules.dart';
 import '../../core/services/localization_file_service.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
@@ -61,28 +62,6 @@ class AdvancedDiffView extends StatefulWidget {
 }
 
 class _AdvancedDiffViewState extends State<AdvancedDiffView> {
-  static const Map<String, String> _languageNameMap = {
-    'english': 'en',
-    'turkish': 'tr',
-    'german': 'de',
-    'french': 'fr',
-    'spanish': 'es',
-    'italian': 'it',
-    'portuguese': 'pt',
-    'brazilian': 'pt-br',
-    'russian': 'ru',
-    'japanese': 'ja',
-    'korean': 'ko',
-    'chinese': 'zh',
-    'arabic': 'ar',
-    'polish': 'pl',
-    'dutch': 'nl',
-    'swedish': 'sv',
-    'norwegian': 'no',
-    'danish': 'da',
-    'finnish': 'fi',
-  };
-
   // Filter & Sort
   Set<AdvancedDiffFilter> _selectedFilters = {AdvancedDiffFilter.all};
   AdvancedDiffSimilarityFilter _similarityFilter =
@@ -116,6 +95,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
   final Map<String, List<TranslationMemoryMatch>> _fuzzyMatchCache = {};
   final Set<String> _fuzzyMatchLoading = {};
+  final Set<String> _dismissedFuzzySuggestions = {};
   bool _showFuzzyPreviews = false;
   bool _fuzzyMinScoreDirty = false;
   double _fuzzyMinScoreDraft = 0.6;
@@ -137,7 +117,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   double _newValueWidth = 0.31;
   static const double _selectionColumnWidth = 32;
   static const double _rowNumberColumnWidth = 40;
-  static const double _actionColumnWidth = 132;
+  static const double _actionColumnWidth = 152;
 
   // Minimum column widths
   static const double _minColWidth = 0.08;
@@ -157,8 +137,10 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   @override
   void initState() {
     super.initState();
-    _sourceLanguageCode = _detectLanguageFromPath(widget.sourceFile.path);
-    _targetLanguageCode = _detectLanguageFromPath(widget.targetFile.path);
+    _sourceLanguageCode =
+        LanguageDetector.detectFromPath(widget.sourceFile.path);
+    _targetLanguageCode =
+        LanguageDetector.detectFromPath(widget.targetFile.path);
     _processDiffEntries();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybePromptLanguageOverride();
@@ -236,8 +218,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
       // Search filter
       if (_searchQuery.isNotEmpty) {
-        final query = _isRegexEnabled ? _searchQuery : _searchQuery.toLowerCase();
-        
+        final query =
+            _isRegexEnabled ? _searchQuery : _searchQuery.toLowerCase();
+
         final key = entry.key;
         final val1 = widget.comparisonResult.file1Data[key] ?? '';
         final val2 = widget.comparisonResult.file2Data[key] ?? '';
@@ -246,35 +229,38 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
         if (_isRegexEnabled) {
           try {
-             final regex = RegExp(query, caseSensitive: false);
-             if (regex.hasMatch(key) || regex.hasMatch(val1) || regex.hasMatch(val2)) {
-               diffMatches = true;
-             }
+            final regex = RegExp(query, caseSensitive: false);
+            if (regex.hasMatch(key) ||
+                regex.hasMatch(val1) ||
+                regex.hasMatch(val2)) {
+              diffMatches = true;
+            }
           } catch (_) {
-            // Invalid regex, treat as no match or ignore? 
+            // Invalid regex, treat as no match or ignore?
             // Better to ignore to avoid crashing, waiting for valid regex
-            return false; 
+            return false;
           }
         } else if (_isFuzzyEnabled) {
           final qLower = query.toLowerCase();
-          if (key.toLowerCase().contains(qLower) || 
-              val1.toLowerCase().contains(qLower) || 
+          if (key.toLowerCase().contains(qLower) ||
+              val1.toLowerCase().contains(qLower) ||
               val2.toLowerCase().contains(qLower)) {
             diffMatches = true;
           } else {
-             // Similarity check
-             if (val1.similarityTo(query) > 0.4 || val2.similarityTo(query) > 0.4) {
-               diffMatches = true;
-             }
+            // Similarity check
+            if (val1.similarityTo(query) > 0.4 ||
+                val2.similarityTo(query) > 0.4) {
+              diffMatches = true;
+            }
           }
         } else {
-           // Standard contains
-           final qLower = query.toLowerCase();
-           if (key.toLowerCase().contains(qLower) || 
-               val1.toLowerCase().contains(qLower) || 
-               val2.toLowerCase().contains(qLower)) {
-             diffMatches = true;
-           }
+          // Standard contains
+          final qLower = query.toLowerCase();
+          if (key.toLowerCase().contains(qLower) ||
+              val1.toLowerCase().contains(qLower) ||
+              val2.toLowerCase().contains(qLower)) {
+            diffMatches = true;
+          }
         }
 
         if (!diffMatches) return false;
@@ -1009,6 +995,13 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     setState(() {
       _fuzzyMatchCache.clear();
       _fuzzyMatchLoading.clear();
+      _dismissedFuzzySuggestions.clear();
+    });
+  }
+
+  void _dismissFuzzySuggestion(String key) {
+    setState(() {
+      _dismissedFuzzySuggestions.add(key);
     });
   }
 
@@ -1354,49 +1347,6 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     }
   }
 
-  String _detectLanguageFromPath(String filePath) {
-    final normalized = filePath.replaceAll('\\', '/').toLowerCase();
-    final segments = normalized.split('/');
-    final fileName = segments.isNotEmpty ? segments.last : normalized;
-    final baseName =
-        fileName.contains('.') ? fileName.split('.').first : fileName;
-    final direct = _matchLocale(baseName);
-    if (direct != null) {
-      return direct;
-    }
-    final namedDirect = _matchLanguageName(baseName);
-    if (namedDirect != null) {
-      return namedDirect;
-    }
-    final tokensMatch = _matchLocaleInTokens(baseName);
-    if (tokensMatch != null) {
-      return tokensMatch;
-    }
-    final namedTokens = _matchLanguageNameInTokens(baseName);
-    if (namedTokens != null) {
-      return namedTokens;
-    }
-    for (final segment in segments.reversed) {
-      final segmentMatch = _matchLocale(segment);
-      if (segmentMatch != null) {
-        return segmentMatch;
-      }
-      final namedSegment = _matchLanguageName(segment);
-      if (namedSegment != null) {
-        return namedSegment;
-      }
-      final segmentTokens = _matchLocaleInTokens(segment);
-      if (segmentTokens != null) {
-        return segmentTokens;
-      }
-      final namedSegmentTokens = _matchLanguageNameInTokens(segment);
-      if (namedSegmentTokens != null) {
-        return namedSegmentTokens;
-      }
-    }
-    return 'und';
-  }
-
   String _effectiveSourceLanguage() {
     final override = _sourceLanguageOverride?.trim();
     if (override != null && override.isNotEmpty) {
@@ -1414,18 +1364,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   }
 
   String _languageDisplayName(String code) {
-    if (code == 'und') {
-      return 'Unknown';
-    }
-    final match = _languageNameMap.entries.firstWhere(
-      (entry) => entry.value == code,
-      orElse: () => const MapEntry('Unknown', 'und'),
-    );
-    if (match.value == code && match.key != 'Unknown') {
-      final name = match.key;
-      return '${name[0].toUpperCase()}${name.substring(1)} ($code)';
-    }
-    return code;
+    return LanguageDetector.displayName(code);
   }
 
   bool _isListFormat(Map<String, String> data) {
@@ -1527,62 +1466,6 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     });
     sourceController.dispose();
     targetController.dispose();
-  }
-
-  String? _matchLanguageName(String value) {
-    final normalized = value.replaceAll(RegExp(r'[^a-z]'), '');
-    if (normalized.isEmpty) {
-      return null;
-    }
-    return _languageNameMap[normalized];
-  }
-
-  String? _matchLanguageNameInTokens(String value) {
-    final tokens = value
-        .split(RegExp(r'[^a-z]+'))
-        .where((token) => token.isNotEmpty)
-        .toList();
-    for (final token in tokens) {
-      final match = _languageNameMap[token];
-      if (match != null) {
-        return match;
-      }
-    }
-    return null;
-  }
-
-  String? _matchLocale(String value) {
-    final match = RegExp(r'^([a-z]{2})(?:[-_]?([a-z]{2}))?$').firstMatch(value);
-    if (match == null) {
-      return null;
-    }
-    final language = match.group(1);
-    final region = match.group(2);
-    if (language == null || language.isEmpty) {
-      return null;
-    }
-    if (region == null || region.isEmpty) {
-      return language;
-    }
-    return '$language-$region';
-  }
-
-  String? _matchLocaleInTokens(String value) {
-    final tokens = value
-        .split(RegExp(r'[^a-z]+'))
-        .where((token) => token.isNotEmpty)
-        .toList();
-    for (var index = 0; index < tokens.length; index++) {
-      final token = tokens[index];
-      if (token.length != 2) {
-        continue;
-      }
-      if (index + 1 < tokens.length && tokens[index + 1].length == 2) {
-        return '${tokens[index]}-${tokens[index + 1]}';
-      }
-      return token;
-    }
-    return null;
   }
 
   Future<void> _exportResult(BuildContext context) async {
@@ -1861,57 +1744,56 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         return CallbackShortcuts(
           bindings: {
             const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
-               _searchFocusNode.requestFocus();
+              _searchFocusNode.requestFocus();
             }
           },
           child: Focus(
-            autofocus: true, 
+            autofocus: true,
             child: Scaffold(
-            backgroundColor: bgColor,
-            body: Column(
-            children: [
+              backgroundColor: bgColor,
+              body: Column(
+                children: [
+                  // Compact Toolbar
+                  _buildToolbar(context, isDarkMode, isAmoled, headerBg,
+                      textColor, subtleText, borderCol, stats, themeState),
 
-              // Compact Toolbar
-              _buildToolbar(context, isDarkMode, isAmoled, headerBg, textColor,
-                  subtleText, borderCol, stats, themeState),
+                  // Filter Bar removed (merged into toolbar)
 
-              // Filter Bar removed (merged into toolbar)
+                  // Fuzzy Fill Panel
+                  _buildFuzzyFillPanel(
+                    context,
+                    isDarkMode,
+                    textColor,
+                    borderCol,
+                    subtleText,
+                  ),
 
-              // Fuzzy Fill Panel
-              _buildFuzzyFillPanel(
-                context,
-                isDarkMode,
-                textColor,
-                borderCol,
-                subtleText,
+                  if (settingsState.status == SettingsStatus.loaded &&
+                      _showListFormatWarning(settingsState.appSettings))
+                    _buildListFormatWarning(
+                      isDarkMode,
+                      textColor,
+                      borderCol,
+                      subtleText,
+                    ),
+
+                  // Divider
+                  Container(height: 1, color: borderCol),
+
+                  // Table
+                  Expanded(
+                    child: _buildTable(context, isDarkMode, isAmoled, headerBg,
+                        rowAltBg, textColor, subtleText, borderCol, themeState),
+                  ),
+
+                  // Footer with pagination
+                  _buildFooter(context, isDarkMode, isAmoled, headerBg,
+                      textColor, subtleText, borderCol),
+                ],
               ),
-
-              if (settingsState.status == SettingsStatus.loaded &&
-                  _showListFormatWarning(settingsState.appSettings))
-                _buildListFormatWarning(
-                  isDarkMode,
-                  textColor,
-                  borderCol,
-                  subtleText,
-                ),
-
-              // Divider
-              Container(height: 1, color: borderCol),
-
-              // Table
-              Expanded(
-                child: _buildTable(context, isDarkMode, isAmoled, headerBg,
-                    rowAltBg, textColor, subtleText, borderCol, themeState),
-              ),
-
-              // Footer with pagination
-              _buildFooter(context, isDarkMode, isAmoled, headerBg, textColor,
-                  subtleText, borderCol),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        );
       },
     );
   }
@@ -1926,7 +1808,6 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       Color borderCol,
       Map<String, int> stats,
       AppThemeState themeState) {
-    
     // Helper to handle filter toggling (logic moved from old _buildFilterBar)
     void toggleFilter(AdvancedDiffFilter filter) {
       setState(() {
@@ -1952,7 +1833,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
     // Helper to get selection state
     bool isFilterSelected(AdvancedDiffFilter filter) {
-       return _selectedFilters.contains(filter);
+      return _selectedFilters.contains(filter);
     }
 
     return Container(
@@ -1980,50 +1861,46 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           const SizedBox(width: 16),
 
           // Stats badges (Clickable Filters)
-          
+
           // Total -> All
           _buildStatBadge(
-            '${stats['total']}', 
-            'total', 
-            subtleText, 
-            isDark, 
-            isFilterSelected(AdvancedDiffFilter.all),
-            () => toggleFilter(AdvancedDiffFilter.all)
-          ),
+              '${stats['total']}',
+              'total',
+              subtleText,
+              isDark,
+              isFilterSelected(AdvancedDiffFilter.all),
+              () => toggleFilter(AdvancedDiffFilter.all)),
           const SizedBox(width: 8),
-          
+
           // Extra -> Added
           _buildStatBadge(
-            '${stats['added']}', 
-            'extra', 
-            themeState.diffAddedColor, 
-            isDark,
-            isFilterSelected(AdvancedDiffFilter.added),
-             () => toggleFilter(AdvancedDiffFilter.added)
-          ),
+              '${stats['added']}',
+              'extra',
+              themeState.diffAddedColor,
+              isDark,
+              isFilterSelected(AdvancedDiffFilter.added),
+              () => toggleFilter(AdvancedDiffFilter.added)),
           const SizedBox(width: 8),
-          
+
           // Missing -> Removed
           _buildStatBadge(
-            '${stats['removed']}', 
-            'missing',
-            themeState.diffRemovedColor, 
-            isDark,
-            isFilterSelected(AdvancedDiffFilter.removed),
-            () => toggleFilter(AdvancedDiffFilter.removed)
-          ),
+              '${stats['removed']}',
+              'missing',
+              themeState.diffRemovedColor,
+              isDark,
+              isFilterSelected(AdvancedDiffFilter.removed),
+              () => toggleFilter(AdvancedDiffFilter.removed)),
           const SizedBox(width: 8),
-          
+
           // Changed -> Modified
           _buildStatBadge(
-            '${stats['modified']}', 
-            'changed',
-            themeState.diffModifiedColor, 
-            isDark,
-            isFilterSelected(AdvancedDiffFilter.modified),
-            () => toggleFilter(AdvancedDiffFilter.modified)
-          ),
-         
+              '${stats['modified']}',
+              'changed',
+              themeState.diffModifiedColor,
+              isDark,
+              isFilterSelected(AdvancedDiffFilter.modified),
+              () => toggleFilter(AdvancedDiffFilter.modified)),
+
           const SizedBox(width: 16),
           Container(width: 1, height: 20, color: borderCol),
           const SizedBox(width: 16),
@@ -2114,37 +1991,35 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             ),
           ),
           const SizedBox(width: 8),
-          
+
           // Regex Toggle
           _buildSearchToggle(
-            'Regex', 
-            '.*', 
-            _isRegexEnabled, 
-            (val) => setState(() {
-               _isRegexEnabled = val;
-                // If fuzzy is on, turn it off
-               if (val) _isFuzzyEnabled = false;
-               _processDiffEntries();
-            }),
-            Theme.of(ctx),
-             isDark
-          ),
+              'Regex',
+              '.*',
+              _isRegexEnabled,
+              (val) => setState(() {
+                    _isRegexEnabled = val;
+                    // If fuzzy is on, turn it off
+                    if (val) _isFuzzyEnabled = false;
+                    _processDiffEntries();
+                  }),
+              Theme.of(ctx),
+              isDark),
           const SizedBox(width: 4),
-          
+
           // Fuzzy Toggle
           _buildSearchToggle(
-            'Fuzzy', 
-            '~', 
-            _isFuzzyEnabled, 
-            (val) => setState(() {
-               _isFuzzyEnabled = val;
-               // If regex is on, turn it off
-               if (val) _isRegexEnabled = false;
-               _processDiffEntries();
-            }),
-             Theme.of(ctx),
-             isDark
-          ),
+              'Fuzzy',
+              '~',
+              _isFuzzyEnabled,
+              (val) => setState(() {
+                    _isFuzzyEnabled = val;
+                    // If regex is on, turn it off
+                    if (val) _isRegexEnabled = false;
+                    _processDiffEntries();
+                  }),
+              Theme.of(ctx),
+              isDark),
           const SizedBox(width: 12),
 
           // Sort toggle
@@ -2162,12 +2037,14 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           const SizedBox(width: 8),
           // AI button
           IconButton(
-            icon: Icon(Icons.psychology_outlined, color: Theme.of(ctx).colorScheme.secondary, size: 20),
+            icon: Icon(Icons.psychology_outlined,
+                color: Theme.of(ctx).colorScheme.secondary, size: 20),
             onPressed: () {
               Navigator.of(ctx).pop();
               ScaffoldMessenger.of(ctx).showSnackBar(
                 const SnackBar(
-                  content: Text('Go to Settings → AI to configure AI translations'),
+                  content:
+                      Text('Go to Settings → AI to configure AI translations'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -2182,10 +2059,10 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   }
 
   Widget _buildStatBadge(
-    String count, 
-    String label, 
-    Color color, 
-    bool isDark, 
+    String count,
+    String label,
+    Color color,
+    bool isDark,
     bool isSelected,
     VoidCallback onTap,
   ) {
@@ -2195,40 +2072,35 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          // Visual indication of selection: darker bg (or inverted in light mode?) 
+          // Visual indication of selection: darker bg (or inverted in light mode?)
           // or just opacity change. Let's make it fully opaque if selected.
-          color: isSelected 
-             ? color.withValues(alpha: isDark ? 0.25 : 0.2)
-             : color.withValues(alpha: 0.05), // Faint when not selected
+          color: isSelected
+              ? color.withValues(alpha: isDark ? 0.25 : 0.2)
+              : color.withValues(alpha: 0.05), // Faint when not selected
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: isSelected 
-              ? color.withValues(alpha: 0.8) 
-              : color.withValues(alpha: 0.1), // Very faint border when not selected
-              width: 1
-          ),
+              color: isSelected
+                  ? color.withValues(alpha: 0.8)
+                  : color.withValues(
+                      alpha: 0.1), // Very faint border when not selected
+              width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(count,
                 style: TextStyle(
-                    color: color, 
-                    fontSize: 12, 
-                    fontWeight: FontWeight.w600)),
+                    color: color, fontSize: 12, fontWeight: FontWeight.w600)),
             const SizedBox(width: 4),
             Text(label,
-                style:
-                    TextStyle(
-                      color: isSelected ? color : color.withValues(alpha: 0.7), 
-                      fontSize: 11
-                    )),
+                style: TextStyle(
+                    color: isSelected ? color : color.withValues(alpha: 0.7),
+                    fontSize: 11)),
           ],
         ),
       ),
     );
   }
-
 
   Widget _buildFuzzyFillPanel(
     BuildContext context,
@@ -2295,7 +2167,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
           if (controlsEnabled) ...[
             const SizedBox(height: 16),
-            
+
             // Section 1: Match Settings
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -2419,7 +2291,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
             Divider(color: borderCol.withValues(alpha: 0.4), height: 1),
             const SizedBox(height: 12),
@@ -2517,7 +2389,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     ),
                   ),
                 ),
-                
+
                 // Language Display
                 Container(
                   padding:
@@ -2543,21 +2415,19 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                         borderRadius: BorderRadius.circular(4),
                         child: Padding(
                           padding: const EdgeInsets.all(2),
-                          child: Icon(Icons.edit,
-                              size: 14, color: subtleText),
+                          child: Icon(Icons.edit, size: 14, color: subtleText),
                         ),
                       ),
                     ],
                   ),
                 ),
-                
+
                 const Spacer(),
 
                 // Action Buttons
                 TextButton.icon(
-                  onPressed: !_exportingFuzzyReport
-                      ? _exportFuzzyMatchReport
-                      : null,
+                  onPressed:
+                      !_exportingFuzzyReport ? _exportFuzzyMatchReport : null,
                   icon: const Icon(Icons.download_outlined, size: 16),
                   label: const Text('Export matches'),
                   style: TextButton.styleFrom(
@@ -3038,6 +2908,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     final matches = _fuzzyMatchCache[key];
     final bestMatch =
         matches != null && matches.isNotEmpty ? matches.first : null;
+    final isSuggestionDismissed = _dismissedFuzzySuggestions.contains(key);
     final canShowSuggestion = canUseFuzzy &&
         bestMatch != null &&
         rules != null &&
@@ -3046,7 +2917,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           currentTarget: targetText,
           score: bestMatch.score,
         ) &&
-        targetText.trim() != bestMatch.targetText.trim();
+        targetText.trim() != bestMatch.targetText.trim() &&
+        !isSuggestionDismissed;
     final showNoMatchInfo = _showFuzzyPreviews &&
         canUseFuzzy &&
         bestMatch == null &&
@@ -3266,6 +3138,19 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     statusColor: statusColor,
                     onApply: () => _applyMatchForKey(key),
                   ),
+                if (canShowSuggestion)
+                  IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      color: subtleText,
+                      size: 16,
+                    ),
+                    tooltip: 'Dismiss suggestion',
+                    onPressed: () => _dismissFuzzySuggestion(key),
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 24, minHeight: 24),
+                  ),
                 if (showNoMatchInfo)
                   Tooltip(
                     message: 'No match for the current languages.',
@@ -3318,7 +3203,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         ],
       ),
     );
-    if (!_showFuzzyPreviews || bestMatch == null) {
+    if (!_showFuzzyPreviews || bestMatch == null || isSuggestionDismissed) {
       return row;
     }
     return Column(
@@ -3541,7 +3426,6 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
   Widget _buildSearchToggle(String tooltip, String label, bool isEnabled,
       Function(bool) onChanged, ThemeData theme, bool isDark) {
-    
     final colorScheme = theme.colorScheme;
     final activeColor = colorScheme.primary;
     final inactiveColor = isDark ? Colors.white70 : Colors.black87;
@@ -3562,7 +3446,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               color: isEnabled ? activeBg : inactiveBg,
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: isEnabled ? activeColor.withValues(alpha: 0.5) : (isDark ? Colors.white12 : Colors.black12),
+                color: isEnabled
+                    ? activeColor.withValues(alpha: 0.5)
+                    : (isDark ? Colors.white12 : Colors.black12),
               ),
             ),
             alignment: Alignment.center,

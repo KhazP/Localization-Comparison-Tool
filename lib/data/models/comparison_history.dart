@@ -28,6 +28,18 @@ class ComparisonSession extends HiveObject {
   @HiveField(7)
   final int stringsIdentical;
 
+  @HiveField(8)
+  final int? sourceKeyCount;
+
+  @HiveField(9)
+  final int? translatedKeyCount;
+
+  @HiveField(10)
+  final int? sourceWordCount;
+
+  @HiveField(11)
+  final int? translatedWordCount;
+
   ComparisonSession({
     required this.id,
     required this.timestamp,
@@ -37,7 +49,11 @@ class ComparisonSession extends HiveObject {
     required this.stringsRemoved,
     required this.stringsModified,
     required this.stringsIdentical,
+    this.sourceKeyCount,
+    this.translatedKeyCount,
+    this.sourceWordCount,
+    this.translatedWordCount,
   });
 
   // TODO: Add methods for serialization/deserialization if using Hive directly without an adapter
-} 
+}

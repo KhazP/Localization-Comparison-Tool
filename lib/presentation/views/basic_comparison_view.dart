@@ -24,6 +24,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
 import 'package:localizer_app_main/core/services/problem_detector.dart';
+import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/services.dart';
 
@@ -47,11 +48,12 @@ class BasicComparisonView extends StatefulWidget {
 
 class _BasicComparisonViewState extends State<BasicComparisonView> {
   // ... existing fields ...
+  final QualityMetricsService _qualityMetricsService = QualityMetricsService();
 
   void _navigateToAiSettings() {
-    // Navigate to Settings tab (index 4)
+    // Navigate to Settings tab (index 5)
     if (widget.onNavigateToTab != null) {
-      widget.onNavigateToTab!(4);
+      widget.onNavigateToTab!(5);
     } else {
       // Fallback if callback not provided
       ScaffoldMessenger.of(context).showSnackBar(
@@ -141,8 +143,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   bool _detectProblem(String source, String? target) {
-    if (ProblemDetector.hasEmptyTarget(target)) return true;
-    if (ProblemDetector.hasPlaceholderMismatch(source, target)) return true;
+    if (ProblemDetector.hasEmptyTarget(target)) {
+      return true;
+    }
+    if (ProblemDetector.hasPlaceholderMismatch(source, target)) {
+      return true;
+    }
+    if (ProblemDetector.hasSuspiciousLength(source, target)) {
+      return true;
+    }
     return false;
   }
 
@@ -356,595 +365,639 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       child: Focus(
         autofocus: true,
         child: MultiBlocListener(
-      listeners: [
-        // Auto-load last project on startup if setting is enabled
-        BlocListener<HistoryBloc, HistoryState>(
-          listenWhen: (previous, current) =>
-              !_hasAutoLoadedLastProject && current is HistoryLoaded,
-          listener: (context, historyState) {
-            _tryAutoLoadLastProject();
-          },
-        ),
-        // Also try auto-load when settings first load (in case history loaded first)
-        BlocListener<SettingsBloc, SettingsState>(
-          listenWhen: (previous, current) =>
-              !_hasAutoLoadedLastProject &&
-              previous.status != SettingsStatus.loaded &&
-              current.status == SettingsStatus.loaded,
-          listener: (context, state) {
-            _tryAutoLoadLastProject();
-          },
-        ),
-        BlocListener<SettingsBloc, SettingsState>(
-          listenWhen: (previous, current) =>
-              previous.status == SettingsStatus.loaded &&
-              current.status == SettingsStatus.loaded &&
-              previous.appSettings.autoReloadOnChange !=
-                  current.appSettings.autoReloadOnChange,
-          listener: (context, state) {
-            _updateFileWatcher();
-          },
-        ),
-        BlocListener<FileWatcherBloc, FileWatcherState>(
-          listener: (context, state) {
-            if (state is FileChangedDetected) {
-              // Show a snackbar notification about file change
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                      'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-
-              // Trigger automatic recomparison
-              final settingsStateForReload = context.read<SettingsBloc>().state;
-              if (settingsStateForReload.status == SettingsStatus.loaded) {
-                if (_isBilingualMode) {
-                  context.read<ComparisonBloc>().add(
-                        CompareBilingualFileRequested(
-                          file: File(state.file1Path),
-                          settings: settingsStateForReload.appSettings,
-                        ),
-                      );
-                } else {
-                  context.read<ComparisonBloc>().add(
-                        CompareFilesRequested(
-                          file1: File(state.file1Path),
-                          file2: File(state.file2Path),
-                          settings: settingsStateForReload.appSettings,
-                        ),
-                      );
-                }
-              }
-            }
-          },
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            // File Selection Section
-            Card(
-              color: isAmoled ? Colors.black : Theme.of(context).cardColor,
-              elevation: isAmoled ? 0.3 : 1.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                side: BorderSide(
-                  color: isAmoled
-                      ? Colors.grey[850]!
-                      : Theme.of(context).dividerColor.withValues(alpha: 0.5),
-                ),
-              ),
-              margin: const EdgeInsets.only(bottom: 12.0),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  children: [
-                    if (_isBilingualMode)
-                      Row(
-                        children: [
-                          _buildFilePicker(
-                            context: context,
-                            title: 'Bilingual File',
-                            file: _bilingualFile,
-                            fileNumber: 3,
-                            onPressed: () => _pickFile(3),
-                            isDraggingOver: _isDraggingOverBilingualFile,
-                            isAmoled: isAmoled,
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          _buildFilePicker(
-                            context: context,
-                            title: 'Source File',
-                            file: _file1,
-                            fileNumber: 1,
-                            onPressed: () => _pickFile(1),
-                            isDraggingOver: _isDraggingOverFile1,
-                            isAmoled: isAmoled,
-                          ),
-                          const SizedBox(width: 12),
-                          _buildFilePicker(
-                            context: context,
-                            title: 'Target File',
-                            file: _file2,
-                            fileNumber: 2,
-                            onPressed: () => _pickFile(2),
-                            isDraggingOver: _isDraggingOverFile2,
-                            isAmoled: isAmoled,
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 40,
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.compare_arrows, size: 18),
-                              label: Text(_isBilingualMode
-                                  ? 'Compare File'
-                                  : 'Compare Files'),
-                              onPressed: _isBilingualMode
-                                  ? (_bilingualFile != null
-                                      ? _startComparison
-                                      : null)
-                                  : (_file1 != null && _file2 != null
-                                      ? _startComparison
-                                      : null),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          height: 40,
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.translate_rounded, size: 18),
-                            label: Text(_isBilingualMode
-                                ? 'Two Files'
-                                : 'Bilingual Mode'),
-                            onPressed: _toggleComparisonMode,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Analytics and Actions Bar - Modified Layout
-            _buildAnalyticsAndActionsBar(),
-            const SizedBox(height: 16.0), // Reduced bottom margin
-            BlocBuilder<ProgressBloc, ProgressState>(
-              builder: (context, state) {
-                if (state is ProgressLoading) {
-                  double progress =
-                      state.total > 0 ? state.current / state.total : 0.0;
-                  return Column(
-                    children: [
-                      LinearProgressIndicator(value: progress),
-                      const SizedBox(height: 8),
-                      Text(state.message ?? 'Processing...'),
-                      const SizedBox(height: 8), // Space before diff list
-                    ],
-                  );
-                }
-                if (state is ProgressFailure) {
-                  return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Text('Error during processing: ${state.error}',
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error)));
-                }
-                return const SizedBox.shrink();
+          listeners: [
+            // Auto-load last project on startup if setting is enabled
+            BlocListener<HistoryBloc, HistoryState>(
+              listenWhen: (previous, current) =>
+                  !_hasAutoLoadedLastProject && current is HistoryLoaded,
+              listener: (context, historyState) {
+                _tryAutoLoadLastProject();
               },
             ),
-            Expanded(
-              child: BlocConsumer<ComparisonBloc, ComparisonState>(
-                listener: (context, state) {
-                  // When comparison state changes, we are definitely no longer checking auto load
-                  if (state is ComparisonLoading ||
-                      state is ComparisonSuccess ||
-                      state is ComparisonFailure) {
-                    if (_isCheckingAutoLoad) {
-                      setState(() => _isCheckingAutoLoad = false);
+            // Also try auto-load when settings first load (in case history loaded first)
+            BlocListener<SettingsBloc, SettingsState>(
+              listenWhen: (previous, current) =>
+                  !_hasAutoLoadedLastProject &&
+                  previous.status != SettingsStatus.loaded &&
+                  current.status == SettingsStatus.loaded,
+              listener: (context, state) {
+                _tryAutoLoadLastProject();
+              },
+            ),
+            BlocListener<SettingsBloc, SettingsState>(
+              listenWhen: (previous, current) =>
+                  previous.status == SettingsStatus.loaded &&
+                  current.status == SettingsStatus.loaded &&
+                  previous.appSettings.autoReloadOnChange !=
+                      current.appSettings.autoReloadOnChange,
+              listener: (context, state) {
+                _updateFileWatcher();
+              },
+            ),
+            BlocListener<FileWatcherBloc, FileWatcherState>(
+              listener: (context, state) {
+                if (state is FileChangedDetected) {
+                  // Show a snackbar notification about file change
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+
+                  // Trigger automatic recomparison
+                  final settingsStateForReload =
+                      context.read<SettingsBloc>().state;
+                  if (settingsStateForReload.status == SettingsStatus.loaded) {
+                    if (_isBilingualMode) {
+                      context.read<ComparisonBloc>().add(
+                            CompareBilingualFileRequested(
+                              file: File(state.file1Path),
+                              settings: settingsStateForReload.appSettings,
+                            ),
+                          );
+                    } else {
+                      context.read<ComparisonBloc>().add(
+                            CompareFilesRequested(
+                              file1: File(state.file1Path),
+                              file2: File(state.file2Path),
+                              settings: settingsStateForReload.appSettings,
+                            ),
+                          );
                     }
                   }
-
-                  if (state is ComparisonSuccess) {
-                    // Update file references in the UI
-                    final isBilingualResult =
-                        state.file1.path == state.file2.path;
-                    setState(() {
-                      _isBilingualMode = isBilingualResult;
-                      _file1 = state.file1;
-                      _file2 = state.file2;
-                      if (isBilingualResult) {
-                        _bilingualFile = state.file1;
-                      }
-                      _latestComparisonResult = state.result;
-                    });
-                    _updateFileWatcher();
-
-                    // Only add to history if it wasn't loaded from history
-                    if (!state.wasLoadedFromHistory) {
-                      final result = state.result;
-                      int added = 0, removed = 0, modified = 0, identical = 0;
-                      result.diff.forEach((key, statusDetail) {
-                        switch (statusDetail.status) {
-                          case StringComparisonStatus.added:
-                            added++;
-                            break;
-                          case StringComparisonStatus.removed:
-                            removed++;
-                            break;
-                          case StringComparisonStatus.modified:
-                            modified++;
-                            break;
-                          case StringComparisonStatus.identical:
-                            identical++;
-                            break;
-                        }
-                      });
-                      // Ensure file paths from the state are used for history
-                      final session = ComparisonSession(
-                        id: const Uuid().v4(),
-                        timestamp: DateTime.now(),
-                        file1Path: state.file1.path, // Use path from state
-                        file2Path: state.file2.path, // Use path from state
-                        stringsAdded: added,
-                        stringsRemoved: removed,
-                        stringsModified: modified,
-                        stringsIdentical: identical,
-                      );
-                      context.read<HistoryBloc>().add(AddToHistory(session));
-                    }
-                  } else if (state is ComparisonFailure) {
-                    // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
-                    // Or just show the error via ProgressBloc/Snackbar
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('Comparison failed: ${state.error}')),
-                    );
-                  }
-                },
-                builder: (context, state) {
-                  final theme = Theme.of(context);
-
-                  Widget content;
-                  if (_isCheckingAutoLoad) {
-                    content = const Center(
-                        key: ValueKey('checking'),
-                        child: CircularProgressIndicator());
-                  } else if (state is ComparisonLoading) {
-                    content = const Center(
-                        key: ValueKey('loading'),
-                        child: Text('Comparison in progress...'));
-                  } else if (state is ComparisonSuccess) {
-                    var diffEntries = state.result.diff.entries.toList();
-
-                    // Apply filter
-
-                    if (_currentFilter != BasicDiffFilter.all) {
-                      diffEntries = diffEntries.where((entry) {
-                        switch (_currentFilter) {
-                          case BasicDiffFilter.added:
-                            return entry.value.status ==
-                                StringComparisonStatus.added;
-                          case BasicDiffFilter.removed:
-                            return entry.value.status ==
-                                StringComparisonStatus.removed;
-                          case BasicDiffFilter.modified:
-                            return entry.value.status ==
-                                StringComparisonStatus.modified;
-                          case BasicDiffFilter.problems:
-                            final key = entry.key;
-                            final value1 = state.result.file1Data[key] ?? '';
-                            final value2 = state.result.file2Data[key];
-                            return _detectProblem(value1, value2);
-                          default:
-                            return true;
-                        }
-                      }).toList();
-                    }
-
-                    // Hide identical entries if setting is disabled and we are in 'All' filter
-                    final showIdentical =
-                        settingsState.appSettings.showIdenticalEntries;
-                    int hiddenIdenticalCount = 0;
-                    if (!showIdentical &&
-                        _currentFilter == BasicDiffFilter.all) {
-                      final identicals = diffEntries
-                          .where((entry) =>
-                              entry.value.status ==
-                              StringComparisonStatus.identical)
-                          .toList();
-                      hiddenIdenticalCount = identicals.length;
-                      if (hiddenIdenticalCount > 0) {
-                        diffEntries = diffEntries
-                            .where((entry) =>
-                                entry.value.status !=
-                                StringComparisonStatus.identical)
-                            .toList();
-                      }
-                    }
-
-                    // Apply text search filter
-                    final int totalBeforeSearch = diffEntries.length;
-                    if (_searchQuery.isNotEmpty) {
-                      final query = _isRegexEnabled ? _searchQuery : _searchQuery.toLowerCase();
-                      diffEntries = diffEntries.where((entry) {
-                        final key = entry.key; // Keys are case-sensitive usually, but let's be generous
-                        final value1 = (state.result.file1Data[entry.key] ?? '');
-                        final value2 = (state.result.file2Data[entry.key] ?? '');
-                        
-                        // Regex Search
-                        if (_isRegexEnabled) {
-                          try {
-                            final regex = RegExp(query, caseSensitive: false);
-                            return regex.hasMatch(key) || 
-                                   regex.hasMatch(value1) || 
-                                   regex.hasMatch(value2);
-                          } catch (e) {
-                            return false; // Invalid regex
-                          }
-                        }
-
-                        // Fuzzy Search
-                        if (_isFuzzyEnabled) {
-                           // Check key normally
-                           if (key.toLowerCase().contains(query)) return true;
-                           
-                           if (value1.toLowerCase().contains(query) || value2.toLowerCase().contains(query)) return true;
-                           
-                           // If not found by contains, try similarity
-                           if (value1.similarityTo(query) > 0.4 || value2.similarityTo(query) > 0.4) return true;
-                           
-                           return false;
-                        }
-
-                        // Standard Search
-                        return key.toLowerCase().contains(query) ||
-                            value1.toLowerCase().contains(query) ||
-                            value2.toLowerCase().contains(query);
-                      }).toList();
-                    }
-
-                    if (diffEntries.isEmpty) {
-                      if (_searchQuery.isNotEmpty) {
-                        content = Center(
-                          key: const ValueKey('empty_search'),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
+                }
+              },
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                // File Selection Section
+                Card(
+                  color: isAmoled ? Colors.black : Theme.of(context).cardColor,
+                  elevation: isAmoled ? 0.3 : 1.0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    side: BorderSide(
+                      color: isAmoled
+                          ? Colors.grey[850]!
+                          : Theme.of(context)
+                              .dividerColor
+                              .withValues(alpha: 0.5),
+                    ),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 12.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      children: [
+                        if (_isBilingualMode)
+                          Row(
                             children: [
-                              Icon(Icons.search_off,
-                                  size: 48,
-                                  color: theme.colorScheme.onSurface
-                                      .withAlpha(100)),
-                              const SizedBox(height: 12),
-                              Text(
-                                'No matches found for "$_searchQuery"',
-                                style: TextStyle(
-                                    color: theme.colorScheme.onSurface
-                                        .withAlpha(150)),
+                              _buildFilePicker(
+                                context: context,
+                                title: 'Bilingual File',
+                                file: _bilingualFile,
+                                fileNumber: 3,
+                                onPressed: () => _pickFile(3),
+                                isDraggingOver: _isDraggingOverBilingualFile,
+                                isAmoled: isAmoled,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Showing 0 of $totalBeforeSearch entries',
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: theme.colorScheme.onSurface
-                                        .withAlpha(100)),
+                            ],
+                          )
+                        else
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              _buildFilePicker(
+                                context: context,
+                                title: 'Source File',
+                                file: _file1,
+                                fileNumber: 1,
+                                onPressed: () => _pickFile(1),
+                                isDraggingOver: _isDraggingOverFile1,
+                                isAmoled: isAmoled,
+                              ),
+                              const SizedBox(width: 12),
+                              _buildFilePicker(
+                                context: context,
+                                title: 'Target File',
+                                file: _file2,
+                                fileNumber: 2,
+                                onPressed: () => _pickFile(2),
+                                isDraggingOver: _isDraggingOverFile2,
+                                isAmoled: isAmoled,
                               ),
                             ],
                           ),
-                        );
-                      } else if (_searchQuery.isEmpty &&
-                          !state.result.diff.values.any((e) =>
-                              e.status != StringComparisonStatus.identical)) {
-                        content = const Center(
-                            key: ValueKey('identical'),
-                            child: Text('Files are identical.'));
-                      } else if (diffEntries.isEmpty &&
-                          hiddenIdenticalCount > 0) {
-                        // If we hid everything (e.g. only identicals existed and we hid them)
-                        content = Column(
-                          key: const ValueKey('hidden_identical'),
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        const SizedBox(height: 12),
+                        Row(
                           children: [
-                            Text(
-                                '$hiddenIdenticalCount identical entries hidden',
-                                style: TextStyle(
-                                    color: theme.colorScheme.onSurface
-                                        .withAlpha(150))),
-                            const SizedBox(height: 8),
-                            TextButton(
-                              onPressed: () {
-                                context.read<SettingsBloc>().add(
-                                    const UpdateShowIdenticalEntries(true));
-                              },
-                              child: const Text('Show Identical Entries'),
-                            )
-                          ],
-                        );
-                      } else {
-                        content = const Center(
-                            key: ValueKey('no_diff'),
-                            child: Text('No differences found based on keys.'));
-                      }
-                    } else {
-                      content = Column(
-                        key: const ValueKey('results'),
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Hidden entries summary
-                          if (hiddenIdenticalCount > 0)
-                            Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerHighest
-                                    .withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: theme.dividerColor
-                                        .withValues(alpha: 0.2)),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.visibility_off_outlined,
-                                      size: 16,
-                                      color:
-                                          theme.colorScheme.onSurfaceVariant),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '$hiddenIdenticalCount identical entries hidden',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontStyle: FontStyle.italic,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  TextButton(
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: const Size(60, 24),
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    onPressed: () {
-                                      context.read<SettingsBloc>().add(
-                                          const UpdateShowIdenticalEntries(
-                                              true));
-                                    },
-                                    child: const Text('Show'),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                          // Result count header when search is active
-                          if (_searchQuery.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 8),
-                              child: Text(
-                                'Showing ${diffEntries.length} of $totalBeforeSearch entries',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: theme.colorScheme.onSurface
-                                      .withAlpha(150),
+                            Expanded(
+                              child: SizedBox(
+                                height: 40,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.compare_arrows,
+                                      size: 18),
+                                  label: Text(_isBilingualMode
+                                      ? 'Compare File'
+                                      : 'Compare Files'),
+                                  onPressed: _isBilingualMode
+                                      ? (_bilingualFile != null
+                                          ? _startComparison
+                                          : null)
+                                      : (_file1 != null && _file2 != null
+                                          ? _startComparison
+                                          : null),
                                 ),
                               ),
                             ),
-                          Expanded(
-                            child: Scrollbar(
-                              controller: _scrollController,
-                              thumbVisibility: true,
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
-                                itemCount: diffEntries.length,
-                                itemBuilder: (context, index) {
-                                  final entry = diffEntries[index];
-                                  final key = entry.key;
-                                  final statusDetail = entry.value;
-                                  final status = statusDetail.status;
-                                  final value1 = state.result.file1Data[key];
-                                  final value2 = state.result.file2Data[key];
-
-                                  final lineNumber =
-                                      (index + 1).toString().padLeft(3, '0');
-
-                                  // Get font family from settings
-                                  final lineSettingsState =
-                                      context.watch<SettingsBloc>().state;
-                                  String lineFontFamily =
-                                      'Consolas, Monaco, monospace';
-                                  double lineFontSize = 12.0;
-                                  if (lineSettingsState.status ==
-                                      SettingsStatus.loaded) {
-                                    try {
-                                      final ff = lineSettingsState
-                                          .appSettings.diffFontFamily;
-                                      if (ff.isNotEmpty &&
-                                          ff != 'System Default')
-                                        lineFontFamily = ff;
-                                      lineFontSize = lineSettingsState
-                                          .appSettings.diffFontSize;
-                                    } catch (_) {}
-                                  }
-
-                                  return Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        padding: const EdgeInsets.fromLTRB(
-                                            8, 4, 8, 4),
-                                        child: Text(
-                                          lineNumber,
-                                          style: TextStyle(
-                                            color: theme.colorScheme.outline,
-                                            fontFamily: lineFontFamily,
-                                            fontSize: lineFontSize,
-                                          ),
-                                          textAlign: TextAlign.end,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _buildDiffListItem(
-                                          key: key,
-                                          status: status,
-                                          value1: value1,
-                                          value2: value2,
-                                          isAmoled: isAmoled,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
+                            const SizedBox(width: 12),
+                            SizedBox(
+                              height: 40,
+                              child: OutlinedButton.icon(
+                                icon: const Icon(Icons.translate_rounded,
+                                    size: 18),
+                                label: Text(_isBilingualMode
+                                    ? 'Two Files'
+                                    : 'Bilingual Mode'),
+                                onPressed: _toggleComparisonMode,
                               ),
                             ),
-                          ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Analytics and Actions Bar - Modified Layout
+                _buildAnalyticsAndActionsBar(),
+                const SizedBox(height: 16.0), // Reduced bottom margin
+                BlocBuilder<ProgressBloc, ProgressState>(
+                  builder: (context, state) {
+                    if (state is ProgressLoading) {
+                      double progress =
+                          state.total > 0 ? state.current / state.total : 0.0;
+                      return Column(
+                        children: [
+                          LinearProgressIndicator(value: progress),
+                          const SizedBox(height: 8),
+                          Text(state.message ?? 'Processing...'),
+                          const SizedBox(height: 8), // Space before diff list
                         ],
                       );
                     }
-                  } else if (state is ComparisonFailure) {
-                    content = Center(
-                        key: const ValueKey('failure'),
-                        child: Text('Comparison Failed: ${state.error}',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.error)));
-                  } else {
-                    content = _buildEmptyState(context, isAmoled);
-                  }
+                    if (state is ProgressFailure) {
+                      return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Text('Error during processing: ${state.error}',
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error)));
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                Expanded(
+                  child: BlocConsumer<ComparisonBloc, ComparisonState>(
+                    listener: (context, state) {
+                      // When comparison state changes, we are definitely no longer checking auto load
+                      if (state is ComparisonLoading ||
+                          state is ComparisonSuccess ||
+                          state is ComparisonFailure) {
+                        if (_isCheckingAutoLoad) {
+                          setState(() => _isCheckingAutoLoad = false);
+                        }
+                      }
 
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    child: content,
-                  );
-                },
-              ),
+                      if (state is ComparisonSuccess) {
+                        // Update file references in the UI
+                        final isBilingualResult =
+                            state.file1.path == state.file2.path;
+                        setState(() {
+                          _isBilingualMode = isBilingualResult;
+                          _file1 = state.file1;
+                          _file2 = state.file2;
+                          if (isBilingualResult) {
+                            _bilingualFile = state.file1;
+                          }
+                          _latestComparisonResult = state.result;
+                        });
+                        _updateFileWatcher();
+
+                        // Only add to history if it wasn't loaded from history
+                        if (!state.wasLoadedFromHistory) {
+                          final result = state.result;
+                          int added = 0,
+                              removed = 0,
+                              modified = 0,
+                              identical = 0;
+                          result.diff.forEach((key, statusDetail) {
+                            switch (statusDetail.status) {
+                              case StringComparisonStatus.added:
+                                added++;
+                                break;
+                              case StringComparisonStatus.removed:
+                                removed++;
+                                break;
+                              case StringComparisonStatus.modified:
+                                modified++;
+                                break;
+                              case StringComparisonStatus.identical:
+                                identical++;
+                                break;
+                            }
+                          });
+                          // Ensure file paths from the state are used for history
+                          final coverageMetrics =
+                              _qualityMetricsService.calculateCoverageFromMaps(
+                            sourceData: result.file1Data,
+                            targetData: result.file2Data,
+                            settings: settingsState.appSettings,
+                          );
+                          final session = ComparisonSession(
+                            id: const Uuid().v4(),
+                            timestamp: DateTime.now(),
+                            file1Path: state.file1.path, // Use path from state
+                            file2Path: state.file2.path, // Use path from state
+                            stringsAdded: added,
+                            stringsRemoved: removed,
+                            stringsModified: modified,
+                            stringsIdentical: identical,
+                            sourceKeyCount: coverageMetrics.sourceKeyCount,
+                            translatedKeyCount:
+                                coverageMetrics.translatedKeyCount,
+                            sourceWordCount: coverageMetrics.sourceWordCount,
+                            translatedWordCount:
+                                coverageMetrics.translatedWordCount,
+                          );
+                          context
+                              .read<HistoryBloc>()
+                              .add(AddToHistory(session));
+                        }
+                      } else if (state is ComparisonFailure) {
+                        // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
+                        // Or just show the error via ProgressBloc/Snackbar
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content:
+                                  Text('Comparison failed: ${state.error}')),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      final theme = Theme.of(context);
+
+                      Widget content;
+                      if (_isCheckingAutoLoad) {
+                        content = const Center(
+                            key: ValueKey('checking'),
+                            child: CircularProgressIndicator());
+                      } else if (state is ComparisonLoading) {
+                        content = const Center(
+                            key: ValueKey('loading'),
+                            child: Text('Comparison in progress...'));
+                      } else if (state is ComparisonSuccess) {
+                        var diffEntries = state.result.diff.entries.toList();
+
+                        // Apply filter
+
+                        if (_currentFilter != BasicDiffFilter.all) {
+                          diffEntries = diffEntries.where((entry) {
+                            switch (_currentFilter) {
+                              case BasicDiffFilter.added:
+                                return entry.value.status ==
+                                    StringComparisonStatus.added;
+                              case BasicDiffFilter.removed:
+                                return entry.value.status ==
+                                    StringComparisonStatus.removed;
+                              case BasicDiffFilter.modified:
+                                return entry.value.status ==
+                                    StringComparisonStatus.modified;
+                              case BasicDiffFilter.problems:
+                                final key = entry.key;
+                                final value1 =
+                                    state.result.file1Data[key] ?? '';
+                                final value2 = state.result.file2Data[key];
+                                return _detectProblem(value1, value2);
+                              default:
+                                return true;
+                            }
+                          }).toList();
+                        }
+
+                        // Hide identical entries if setting is disabled and we are in 'All' filter
+                        final showIdentical =
+                            settingsState.appSettings.showIdenticalEntries;
+                        int hiddenIdenticalCount = 0;
+                        if (!showIdentical &&
+                            _currentFilter == BasicDiffFilter.all) {
+                          final identicals = diffEntries
+                              .where((entry) =>
+                                  entry.value.status ==
+                                  StringComparisonStatus.identical)
+                              .toList();
+                          hiddenIdenticalCount = identicals.length;
+                          if (hiddenIdenticalCount > 0) {
+                            diffEntries = diffEntries
+                                .where((entry) =>
+                                    entry.value.status !=
+                                    StringComparisonStatus.identical)
+                                .toList();
+                          }
+                        }
+
+                        // Apply text search filter
+                        final int totalBeforeSearch = diffEntries.length;
+                        if (_searchQuery.isNotEmpty) {
+                          final query = _isRegexEnabled
+                              ? _searchQuery
+                              : _searchQuery.toLowerCase();
+                          diffEntries = diffEntries.where((entry) {
+                            final key = entry
+                                .key; // Keys are case-sensitive usually, but let's be generous
+                            final value1 =
+                                (state.result.file1Data[entry.key] ?? '');
+                            final value2 =
+                                (state.result.file2Data[entry.key] ?? '');
+
+                            // Regex Search
+                            if (_isRegexEnabled) {
+                              try {
+                                final regex =
+                                    RegExp(query, caseSensitive: false);
+                                return regex.hasMatch(key) ||
+                                    regex.hasMatch(value1) ||
+                                    regex.hasMatch(value2);
+                              } catch (e) {
+                                return false; // Invalid regex
+                              }
+                            }
+
+                            // Fuzzy Search
+                            if (_isFuzzyEnabled) {
+                              // Check key normally
+                              if (key.toLowerCase().contains(query))
+                                return true;
+
+                              if (value1.toLowerCase().contains(query) ||
+                                  value2.toLowerCase().contains(query))
+                                return true;
+
+                              // If not found by contains, try similarity
+                              if (value1.similarityTo(query) > 0.4 ||
+                                  value2.similarityTo(query) > 0.4) return true;
+
+                              return false;
+                            }
+
+                            // Standard Search
+                            return key.toLowerCase().contains(query) ||
+                                value1.toLowerCase().contains(query) ||
+                                value2.toLowerCase().contains(query);
+                          }).toList();
+                        }
+
+                        if (diffEntries.isEmpty) {
+                          if (_searchQuery.isNotEmpty) {
+                            content = Center(
+                              key: const ValueKey('empty_search'),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.search_off,
+                                      size: 48,
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha(100)),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No matches found for "$_searchQuery"',
+                                    style: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withAlpha(150)),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Showing 0 of $totalBeforeSearch entries',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: theme.colorScheme.onSurface
+                                            .withAlpha(100)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else if (_searchQuery.isEmpty &&
+                              !state.result.diff.values.any((e) =>
+                                  e.status !=
+                                  StringComparisonStatus.identical)) {
+                            content = const Center(
+                                key: ValueKey('identical'),
+                                child: Text('Files are identical.'));
+                          } else if (diffEntries.isEmpty &&
+                              hiddenIdenticalCount > 0) {
+                            // If we hid everything (e.g. only identicals existed and we hid them)
+                            content = Column(
+                              key: const ValueKey('hidden_identical'),
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                    '$hiddenIdenticalCount identical entries hidden',
+                                    style: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withAlpha(150))),
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: () {
+                                    context.read<SettingsBloc>().add(
+                                        const UpdateShowIdenticalEntries(true));
+                                  },
+                                  child: const Text('Show Identical Entries'),
+                                )
+                              ],
+                            );
+                          } else {
+                            content = const Center(
+                                key: ValueKey('no_diff'),
+                                child: Text(
+                                    'No differences found based on keys.'));
+                          }
+                        } else {
+                          content = Column(
+                            key: const ValueKey('results'),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Hidden entries summary
+                              if (hiddenIdenticalCount > 0)
+                                Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    color: theme
+                                        .colorScheme.surfaceContainerHighest
+                                        .withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: theme.dividerColor
+                                            .withValues(alpha: 0.2)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.visibility_off_outlined,
+                                          size: 16,
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '$hiddenIdenticalCount identical entries hidden',
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          fontStyle: FontStyle.italic,
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          minimumSize: const Size(60, 24),
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        onPressed: () {
+                                          context.read<SettingsBloc>().add(
+                                              const UpdateShowIdenticalEntries(
+                                                  true));
+                                        },
+                                        child: const Text('Show'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                              // Result count header when search is active
+                              if (_searchQuery.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 8),
+                                  child: Text(
+                                    'Showing ${diffEntries.length} of $totalBeforeSearch entries',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha(150),
+                                    ),
+                                  ),
+                                ),
+                              Expanded(
+                                child: Scrollbar(
+                                  controller: _scrollController,
+                                  thumbVisibility: true,
+                                  child: ListView.builder(
+                                    controller: _scrollController,
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 8),
+                                    itemCount: diffEntries.length,
+                                    itemBuilder: (context, index) {
+                                      final entry = diffEntries[index];
+                                      final key = entry.key;
+                                      final statusDetail = entry.value;
+                                      final status = statusDetail.status;
+                                      final value1 =
+                                          state.result.file1Data[key];
+                                      final value2 =
+                                          state.result.file2Data[key];
+
+                                      final lineNumber = (index + 1)
+                                          .toString()
+                                          .padLeft(3, '0');
+
+                                      // Get font family from settings
+                                      final lineSettingsState =
+                                          context.watch<SettingsBloc>().state;
+                                      String lineFontFamily =
+                                          'Consolas, Monaco, monospace';
+                                      double lineFontSize = 12.0;
+                                      if (lineSettingsState.status ==
+                                          SettingsStatus.loaded) {
+                                        try {
+                                          final ff = lineSettingsState
+                                              .appSettings.diffFontFamily;
+                                          if (ff.isNotEmpty &&
+                                              ff != 'System Default')
+                                            lineFontFamily = ff;
+                                          lineFontSize = lineSettingsState
+                                              .appSettings.diffFontSize;
+                                        } catch (_) {}
+                                      }
+
+                                      return Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            padding: const EdgeInsets.fromLTRB(
+                                                8, 4, 8, 4),
+                                            child: Text(
+                                              lineNumber,
+                                              style: TextStyle(
+                                                color:
+                                                    theme.colorScheme.outline,
+                                                fontFamily: lineFontFamily,
+                                                fontSize: lineFontSize,
+                                              ),
+                                              textAlign: TextAlign.end,
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: _buildDiffListItem(
+                                              key: key,
+                                              status: status,
+                                              value1: value1,
+                                              value2: value2,
+                                              isAmoled: isAmoled,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      } else if (state is ComparisonFailure) {
+                        content = Center(
+                            key: const ValueKey('failure'),
+                            child: Text('Comparison Failed: ${state.error}',
+                                style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.error)));
+                      } else {
+                        content = _buildEmptyState(context, isAmoled);
+                      }
+
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: content,
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
         ),
       ),
     );
@@ -1439,7 +1492,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 const SizedBox(width: 12),
                 _buildCompactStat(
                     '~${modifiedCount}', null, themeState.diffModifiedColor),
-              // File watcher removed (moved to settings)
+                // File watcher removed (moved to settings)
               ],
             ),
           ),
@@ -1505,29 +1558,27 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
-          
+
           // Search Toggles
           _buildSearchToggle(
-            'Regex', 
-            '.*', 
-            _isRegexEnabled, 
-            (val) => setState(() {
-              _isRegexEnabled = val;
-              if (val) _isFuzzyEnabled = false;
-            }),
-            theme
-          ),
+              'Regex',
+              '.*',
+              _isRegexEnabled,
+              (val) => setState(() {
+                    _isRegexEnabled = val;
+                    if (val) _isFuzzyEnabled = false;
+                  }),
+              theme),
           const SizedBox(width: 4),
           _buildSearchToggle(
-            'Fuzzy', 
-            '~', 
-            _isFuzzyEnabled, 
-            (val) => setState(() {
-              _isFuzzyEnabled = val;
-              if (val) _isRegexEnabled = false;
-            }),
-            theme
-          ),
+              'Fuzzy',
+              '~',
+              _isFuzzyEnabled,
+              (val) => setState(() {
+                    _isFuzzyEnabled = val;
+                    if (val) _isRegexEnabled = false;
+                  }),
+              theme),
           const SizedBox(width: 8),
 
           // Filter Toggle Buttons (icon-only to prevent overflow)
@@ -1623,7 +1674,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     );
   }
 
-  Widget _buildSearchToggle(String tooltip, String label, bool value, Function(bool) onChanged, ThemeData theme) {
+  Widget _buildSearchToggle(String tooltip, String label, bool value,
+      Function(bool) onChanged, ThemeData theme) {
     // Determine active color
     final isActive = value;
     final activeColor = theme.colorScheme.primary;
@@ -1637,12 +1689,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
           decoration: BoxDecoration(
-            color: isActive ? activeColor.withValues(alpha: 0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: isActive ? activeColor : Colors.transparent,
-            )
-          ),
+              color: isActive
+                  ? activeColor.withValues(alpha: 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: isActive ? activeColor : Colors.transparent,
+              )),
           child: Text(
             label,
             style: TextStyle(

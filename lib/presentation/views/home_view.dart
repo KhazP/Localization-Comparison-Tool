@@ -7,6 +7,7 @@ import 'package:localizer_app_main/presentation/views/files_view.dart';
 import 'package:localizer_app_main/presentation/views/history_view.dart';
 import 'package:localizer_app_main/presentation/views/settings_view.dart';
 import 'package:localizer_app_main/presentation/views/git_view.dart';
+import 'package:localizer_app_main/presentation/views/quality_dashboard_view.dart';
 
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 
@@ -19,7 +20,8 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _fabAnimationController;
 
@@ -27,7 +29,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     final settingsBloc = context.read<SettingsBloc>();
-    _selectedIndex = _getInitialTabIndex(settingsBloc.state.appSettings.defaultViewOnStartup);
+    _selectedIndex = _getInitialTabIndex(
+        settingsBloc.state.appSettings.defaultViewOnStartup);
     _fabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -47,10 +50,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         return 0;
       case 'History View':
         return 1;
-      case 'Files':
+      case 'Quality Dashboard':
         return 2;
-      case 'Settings':
+      case 'Files':
         return 3;
+      case 'Settings':
+        return 5;
       case 'Last Used View':
         return 0;
       default:
@@ -59,15 +64,17 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   List<Widget> get _widgetOptions => <Widget>[
-    BasicComparisonView(
-      onNavigateToTab: _onDestinationSelected,
-      initialSession: widget.initialSession,
-    ),
-    HistoryView(onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
-    const FilesView(),
-    const GitView(),
-    const SettingsView(),
-  ];
+        BasicComparisonView(
+          onNavigateToTab: _onDestinationSelected,
+          initialSession: widget.initialSession,
+        ),
+        HistoryView(
+            onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
+        const QualityDashboardView(),
+        const FilesView(),
+        const GitView(),
+        const SettingsView(),
+      ];
 
   void _onDestinationSelected(int index) {
     if (index != _selectedIndex) {
@@ -80,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   void _toggleTheme() {
     final settingsBloc = context.read<SettingsBloc>();
     final currentMode = settingsBloc.state.appSettings.appThemeMode;
-    
+
     // Cycle through: light -> dark -> amoled -> system -> light
     String nextMode;
     switch (currentMode.toLowerCase()) {
@@ -98,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         nextMode = 'Light';
         break;
     }
-    
+
     settingsBloc.add(UpdateAppThemeMode(nextMode));
   }
 
@@ -107,7 +114,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     final colorScheme = Theme.of(context).colorScheme;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final settingsState = context.watch<SettingsBloc>().state;
-    final isAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+    final isAmoled =
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
     return Scaffold(
       body: Row(
@@ -118,10 +126,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               color: Theme.of(context).navigationRailTheme.backgroundColor ??
                   (isAmoled
                       ? AppThemeV2.amoledSurface
-                      : (isDarkMode ? AppThemeV2.darkCard : AppThemeV2.lightCard)),
+                      : (isDarkMode
+                          ? AppThemeV2.darkCard
+                          : AppThemeV2.lightCard)),
               border: Border(
                 right: BorderSide(
-                  color: isAmoled ? AppThemeV2.amoledBorder : Theme.of(context).dividerColor,
+                  color: isAmoled
+                      ? AppThemeV2.amoledBorder
+                      : Theme.of(context).dividerColor,
                 ),
               ),
             ),
@@ -142,6 +154,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   icon: Icon(Icons.history_outlined),
                   selectedIcon: Icon(Icons.history),
                   label: Text('History'),
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.insights_outlined),
+                  selectedIcon: Icon(Icons.insights),
+                  label: Text('Dashboard'),
                   padding: EdgeInsets.symmetric(vertical: 4),
                 ),
                 NavigationRailDestination(
@@ -173,7 +191,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       children: [
                         // Theme toggle button
                         Tooltip(
-                          message: 'Toggle Theme (Light → Dark → AMOLED → System)',
+                          message:
+                              'Toggle Theme (Light → Dark → AMOLED → System)',
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -192,12 +211,16 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                   duration: const Duration(milliseconds: 200),
                                   transitionBuilder: (child, animation) {
                                     return RotationTransition(
-                                      turns: Tween(begin: 0.5, end: 1.0).animate(animation),
-                                      child: FadeTransition(opacity: animation, child: child),
+                                      turns: Tween(begin: 0.5, end: 1.0)
+                                          .animate(animation),
+                                      child: FadeTransition(
+                                          opacity: animation, child: child),
                                     );
                                   },
                                   child: Icon(
-                                    isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                                    isDarkMode
+                                        ? Icons.light_mode_rounded
+                                        : Icons.dark_mode_rounded,
                                     key: ValueKey(isDarkMode),
                                     size: 20,
                                     color: colorScheme.primary,

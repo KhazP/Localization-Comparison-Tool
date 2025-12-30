@@ -103,6 +103,7 @@ class AppThemeV2 {
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
       iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
+      filledButtonTheme: _buildFilledButtonTheme(primary),
       inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: darkBorder,
@@ -172,6 +173,7 @@ class AppThemeV2 {
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
       iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
+      filledButtonTheme: _buildFilledButtonTheme(primary),
       inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
       dividerTheme: DividerThemeData(
         color: darkBorder.withAlpha(150),
@@ -241,6 +243,7 @@ class AppThemeV2 {
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
       iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
+      filledButtonTheme: _buildFilledButtonTheme(primary),
       inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: true, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: amoledBorder,
@@ -291,6 +294,7 @@ class AppThemeV2 {
       outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: false, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
       iconButtonTheme: _buildIconButtonTheme(isDark: false, primaryColor: primary),
+      filledButtonTheme: _buildFilledButtonTheme(primary),
       inputDecorationTheme: _buildInputTheme(isDark: false, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: lightBorder,
@@ -590,6 +594,54 @@ class AppThemeV2 {
       ),
     );
   }
+
+  static FilledButtonThemeData _buildFilledButtonTheme(Color primaryColor) {
+    return FilledButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return primaryColor.withAlpha(100);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return HSLColor.fromColor(primaryColor).withLightness(
+              (HSLColor.fromColor(primaryColor).lightness * 1.1).clamp(0.0, 1.0),
+            ).toColor();
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return HSLColor.fromColor(primaryColor).withLightness(
+              (HSLColor.fromColor(primaryColor).lightness * 0.9).clamp(0.0, 1.0),
+            ).toColor();
+          }
+          return primaryColor;
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return Colors.white.withAlpha(150);
+          }
+          return Colors.white;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.focused)) {
+            return Colors.white.withAlpha(30);
+          }
+          return Colors.white.withAlpha(20);
+        }),
+        elevation: WidgetStateProperty.all(0),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        ),
+        minimumSize: WidgetStateProperty.all(const Size(64, 44)),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        textStyle: WidgetStateProperty.all(
+          GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        animationDuration: const Duration(milliseconds: 200),
+      ),
+    );
+  }
+
   static InputDecorationTheme _buildInputTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
     final borderColor = isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder);
     final fillColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);

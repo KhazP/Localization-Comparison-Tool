@@ -7,6 +7,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/presentation/widgets/common/skeleton_loader.dart';
 import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -314,12 +315,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                   },
                   builder: (context, state) {
                     if (state is HistoryLoading && _allHistory.isEmpty) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          color: colorScheme.primary,
-                        ),
-                      );
+                      // Show skeleton loaders while history is loading
+                      return const HistorySkeletonList(itemCount: 4);
                     }
 
                     if (_allHistory.isEmpty) {

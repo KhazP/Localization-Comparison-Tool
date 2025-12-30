@@ -27,6 +27,7 @@ import 'package:localizer_app_main/core/services/problem_detector.dart';
 import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/services.dart';
+import 'package:windows_taskbar/windows_taskbar.dart';
 
 // Enum for filter status in Basic View
 
@@ -89,6 +90,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   bool _hasAutoLoadedLastProject = false;
   // Flag to show loading state while we determine if we should auto-load
   bool _isCheckingAutoLoad = true;
+  
+  // Time tracking for progress estimation
+  DateTime? _comparisonStartTime;
 
   @override
   void initState() {
@@ -192,6 +196,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     if (_file1 != null && _file2 != null) {
       setState(() {
         _currentFilter = BasicDiffFilter.all; // Reset filter on new comparison
+        _comparisonStartTime = DateTime.now(); // Track start time for progress estimation
       });
       final settingsState = context.read<SettingsBloc>().state;
       if (settingsState.status == SettingsStatus.loaded) {
@@ -213,6 +218,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     if (_bilingualFile != null) {
       setState(() {
         _currentFilter = BasicDiffFilter.all; // Reset filter on new comparison
+        _comparisonStartTime = DateTime.now(); // Track start time for progress estimation
       });
       final settingsState = context.read<SettingsBloc>().state;
       if (settingsState.status == SettingsStatus.loaded) {
@@ -536,11 +542,39 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     if (state is ProgressLoading) {
                       double progress =
                           state.total > 0 ? state.current / state.total : 0.0;
+                      
+                      // Calculate estimated time remaining
+                      String timeEstimate = '';
+                      if (_comparisonStartTime != null && progress > 0.1) {
+                        final elapsed = DateTime.now().difference(_comparisonStartTime!);
+                        final estimatedTotal = elapsed.inMilliseconds / progress;
+                        final remaining = estimatedTotal - elapsed.inMilliseconds;
+                        if (remaining > 0) {
+                          final remainingSeconds = (remaining / 1000).round();
+                          if (remainingSeconds < 60) {
+                            timeEstimate = ' • ~$remainingSeconds seconds remaining';
+                          } else {
+                            final minutes = (remainingSeconds / 60).round();
+                            timeEstimate = ' • ~$minutes minute${minutes > 1 ? 's' : ''} remaining';
+                          }
+                        }
+                      }
+                      
                       return Column(
                         children: [
-                          LinearProgressIndicator(value: progress),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 6,
+                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          Text(state.message ?? 'Processing...'),
+                          Text(
+                            '${state.message ?? "Processing..."}$timeEstimate',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           const SizedBox(height: 8), // Space before diff list
                         ],
                       );
@@ -1060,6 +1094,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     if (outputPath != null) {
       try {
+        // Show taskbar progress during export (Windows only)
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
+        }
+        
         final settings = context.read<SettingsBloc>().state.appSettings;
         await BackupService().createBackupIfNeeded(
           targetPath: outputPath,
@@ -1083,7 +1122,22 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             );
           }
         }
+        
+        // Clear taskbar progress on success
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+        }
       } catch (e) {
+        // Set taskbar to error state on failure
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.error);
+          WindowsTaskbar.setProgress(100, 100);
+          // Clear after 2 seconds
+          Future.delayed(const Duration(seconds: 2), () {
+            WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+          });
+        }
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1129,6 +1183,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     if (outputPath != null) {
       try {
+        // Show taskbar progress during export (Windows only)
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
+        }
+        
         final settings = context.read<SettingsBloc>().state.appSettings;
         await BackupService().createBackupIfNeeded(
           targetPath: outputPath,
@@ -1145,7 +1204,21 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 behavior: SnackBarBehavior.floating),
           );
         }
+        
+        // Clear taskbar progress on success
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+        }
       } catch (e) {
+        // Set taskbar to error state on failure
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.error);
+          WindowsTaskbar.setProgress(100, 100);
+          Future.delayed(const Duration(seconds: 2), () {
+            WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+          });
+        }
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1207,6 +1280,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     if (outputPath != null) {
       try {
+        // Show taskbar progress during export (Windows only)
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
+        }
+        
         await BackupService().createBackupIfNeeded(
           targetPath: outputPath,
           settings: settings,
@@ -1222,7 +1300,21 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 behavior: SnackBarBehavior.floating),
           );
         }
+        
+        // Clear taskbar progress on success
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+        }
       } catch (e) {
+        // Set taskbar to error state on failure
+        if (Platform.isWindows) {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.error);
+          WindowsTaskbar.setProgress(100, 100);
+          Future.delayed(const Duration(seconds: 2), () {
+            WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+          });
+        }
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1470,24 +1562,27 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           // Stats Section
           Expanded(
             flex: 3,
-            child: Row(
-              children: [
-                _buildStatsChart(
-                    addedCount, removedCount, modifiedCount, themeState),
-                const SizedBox(width: 16),
-                _buildCompactStat('Total', totalKeys,
-                    theme.colorScheme.onSurface.withAlpha(180)),
-                const SizedBox(width: 16),
-                _buildCompactStat(
-                    '+${addedCount}', null, themeState.diffAddedColor),
-                const SizedBox(width: 12),
-                _buildCompactStat(
-                    '-${removedCount}', null, themeState.diffRemovedColor),
-                const SizedBox(width: 12),
-                _buildCompactStat(
-                    '~${modifiedCount}', null, themeState.diffModifiedColor),
-                // File watcher removed (moved to settings)
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildStatsChart(
+                      addedCount, removedCount, modifiedCount, themeState),
+                  const SizedBox(width: 16),
+                  _buildCompactStat('Total', totalKeys,
+                      theme.colorScheme.onSurface.withAlpha(180)),
+                  const SizedBox(width: 16),
+                  _buildCompactStat(
+                      '+${addedCount}', null, themeState.diffAddedColor),
+                  const SizedBox(width: 12),
+                  _buildCompactStat(
+                      '-${removedCount}', null, themeState.diffRemovedColor),
+                  const SizedBox(width: 12),
+                  _buildCompactStat(
+                      '~${modifiedCount}', null, themeState.diffModifiedColor),
+                  // File watcher removed (moved to settings)
+                ],
+              ),
             ),
           ),
 

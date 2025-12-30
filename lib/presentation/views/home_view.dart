@@ -25,6 +25,9 @@ class _MyHomePageState extends State<MyHomePage>
   int _selectedIndex = 0;
   late AnimationController _fabAnimationController;
   
+  // Cached pages to prevent recreation on tab switch (performance optimization)
+  late final List<Widget> _pages;
+  
   // Hover states for navigation items
   final List<bool> _hoverStates = List.filled(6, false);
 
@@ -39,6 +42,20 @@ class _MyHomePageState extends State<MyHomePage>
       duration: const Duration(milliseconds: 300),
     );
     _fabAnimationController.forward();
+    
+    // Initialize pages once to avoid recreation on every tab switch
+    _pages = <Widget>[
+      BasicComparisonView(
+        onNavigateToTab: _onDestinationSelected,
+        initialSession: widget.initialSession,
+      ),
+      HistoryView(
+          onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
+      const QualityDashboardView(),
+      const FilesView(),
+      const GitView(),
+      const SettingsView(),
+    ];
   }
 
   @override
@@ -66,18 +83,7 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 
-  List<Widget> get _widgetOptions => <Widget>[
-        BasicComparisonView(
-          onNavigateToTab: _onDestinationSelected,
-          initialSession: widget.initialSession,
-        ),
-        HistoryView(
-            onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
-        const QualityDashboardView(),
-        const FilesView(),
-        const GitView(),
-        const SettingsView(),
-      ];
+  // _widgetOptions getter removed - using cached _pages list instead
 
   void _onDestinationSelected(int index) {
     if (index != _selectedIndex) {
@@ -246,28 +252,12 @@ class _MyHomePageState extends State<MyHomePage>
               ),
             ),
           ),
-          // Main content with animated transitions
+          // Main content - using IndexedStack to preserve widget state across tab switches
+          // This prevents heavy views from being recreated when navigating tabs
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.02, 0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: KeyedSubtree(
-                key: ValueKey(_selectedIndex),
-                child: _widgetOptions[_selectedIndex],
-              ),
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: _pages,
             ),
           ),
         ],

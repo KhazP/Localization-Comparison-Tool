@@ -90,17 +90,36 @@ class ComparisonEngine {
     final file1Data = results[0];
     final file2Data = results[1];
 
-    final diff = DiffCalculator.calculateDiff(
-      data1: file1Data,
-      data2: file2Data,
-      ignoreCase: settings.ignoreCase,
-      ignorePatterns: settings.ignorePatterns,
-      ignoreWhitespace: settings.ignoreWhitespace,
-      comparisonMode: settings.comparisonMode,
-      similarityThreshold: settings.similarityThreshold,
+    // Run diff calculation in background isolate to prevent UI freeze
+    final diff = await compute(
+      _performDiffCalculation,
+      _ComputeDiffParams(
+        data1: file1Data,
+        data2: file2Data,
+        ignoreCase: settings.ignoreCase,
+        ignorePatterns: settings.ignorePatterns,
+        ignoreWhitespace: settings.ignoreWhitespace,
+        comparisonMode: settings.comparisonMode,
+        similarityThreshold: settings.similarityThreshold,
+      ),
     );
     developer.log('Comparison finished', name: 'ComparisonEngine');
     return ComparisonResult(file1Data, file2Data, diff);
+  }
+
+  // Static method for compute isolate
+  static Map<String, ComparisonStatusDetail> _performDiffCalculation(
+    _ComputeDiffParams params,
+  ) {
+    return DiffCalculator.calculateDiff(
+      data1: params.data1,
+      data2: params.data2,
+      ignoreCase: params.ignoreCase,
+      ignorePatterns: params.ignorePatterns,
+      ignoreWhitespace: params.ignoreWhitespace,
+      comparisonMode: params.comparisonMode,
+      similarityThreshold: params.similarityThreshold,
+    );
   }
 
   /// Compares source and target text extracted from a single bilingual file.
@@ -131,21 +150,25 @@ class ComparisonEngine {
     final sourceData = results[0];
     final targetData = results[1];
 
-    final diff = DiffCalculator.calculateDiff(
-      data1: sourceData,
-      data2: targetData,
-      ignoreCase: settings.ignoreCase,
-      ignorePatterns: settings.ignorePatterns,
-      ignoreWhitespace: settings.ignoreWhitespace,
-      comparisonMode: settings.comparisonMode,
-      similarityThreshold: settings.similarityThreshold,
+    // Run diff calculation in background isolate to prevent UI freeze
+    final diff = await compute(
+      _performDiffCalculation,
+      _ComputeDiffParams(
+        data1: sourceData,
+        data2: targetData,
+        ignoreCase: settings.ignoreCase,
+        ignorePatterns: settings.ignorePatterns,
+        ignoreWhitespace: settings.ignoreWhitespace,
+        comparisonMode: settings.comparisonMode,
+        similarityThreshold: settings.similarityThreshold,
+      ),
     );
     developer.log('Bilingual comparison finished', name: 'ComparisonEngine');
     return ComparisonResult(sourceData, targetData, diff);
   }
 }
 
-// Helper class for parameters to compute function
+// Helper class for parameters to compute function (parsing)
 class _ComputeParseParams {
   final String filePath;
   final LocalizationParser parser;
@@ -159,4 +182,25 @@ class _ComputeParseParams {
     this.extractionMode,
     this.requireBilingual,
   );
+}
+
+// Helper class for parameters to compute function (diff calculation)
+class _ComputeDiffParams {
+  final Map<String, String> data1;
+  final Map<String, String> data2;
+  final bool ignoreCase;
+  final List<String> ignorePatterns;
+  final bool ignoreWhitespace;
+  final String comparisonMode;
+  final double similarityThreshold;
+
+  _ComputeDiffParams({
+    required this.data1,
+    required this.data2,
+    required this.ignoreCase,
+    required this.ignorePatterns,
+    required this.ignoreWhitespace,
+    required this.comparisonMode,
+    required this.similarityThreshold,
+  });
 }

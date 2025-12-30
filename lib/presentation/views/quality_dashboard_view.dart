@@ -606,7 +606,7 @@ class _WordTrendSection extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Container(
-              height: 240,
+              height: 280,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.5),
@@ -840,6 +840,7 @@ class _WordTrendChart extends StatelessWidget {
         maxX: (points.length - 1).toDouble(),
         minY: 0,
         maxY: adjustedMaxY,
+        clipData: const FlClipData.all(), // Ensure lines don't bleed out of grid area
         gridData: FlGridData(
           show: true,
           drawVerticalLine: true,
@@ -868,11 +869,16 @@ class _WordTrendChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: interval,
-              reservedSize: 28,
+              // Only show first and last labels to avoid repetition when many points are on same day
+              interval: points.length > 1 ? (points.length - 1).toDouble() : 1.0,
+              reservedSize: 40, // Increased to prevent label cutoff
               getTitlesWidget: (value, meta) {
                 final index = value.round();
                 if (index < 0 || index >= points.length) {
+                  return const SizedBox.shrink();
+                }
+                // Only show first and last point labels
+                if (index != 0 && index != points.length - 1) {
                   return const SizedBox.shrink();
                 }
                 return SideTitleWidget(
@@ -891,7 +897,7 @@ class _WordTrendChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 44,
+              reservedSize: 54, // Increased from 44 to fit large numbers like 2.3M
               interval: adjustedMaxY / 4,
               getTitlesWidget: (value, meta) {
                 return SideTitleWidget(
@@ -964,7 +970,6 @@ class _WordTrendChart extends StatelessWidget {
             }).toList();
           },
         ),
-        clipData: const FlClipData.all(),
         lineBarsData: [
           LineChartBarData(
             spots: spots,

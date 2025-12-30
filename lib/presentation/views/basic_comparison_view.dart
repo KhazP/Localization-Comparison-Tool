@@ -956,6 +956,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                                     theme.colorScheme.outline,
                                                 fontFamily: lineFontFamily,
                                                 fontSize: lineFontSize,
+                                                height: 1.4,
                                               ),
                                               textAlign: TextAlign.end,
                                             ),
@@ -1550,7 +1551,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 color: theme.colorScheme.onSurface,
               ),
               decoration: InputDecoration(
-                hintText: 'Search keys or values...',
+                hintText: 'Search keys or values... (Ctrl+F)',
                 hintStyle: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.onSurface.withAlpha(100),
@@ -1627,27 +1628,30 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildFilterIconButton(
+                _buildFilterChip(
                   BasicDiffFilter.added,
-                  Icons.add_circle_outline,
+                  'Extra',
                   context.watch<ThemeBloc>().state.diffAddedColor,
                   'Show Extra',
                 ),
-                _buildFilterIconButton(
+                const SizedBox(width: 4),
+                _buildFilterChip(
                   BasicDiffFilter.removed,
-                  Icons.remove_circle_outline,
+                  'Missing',
                   context.watch<ThemeBloc>().state.diffRemovedColor,
                   'Show Missing',
                 ),
-                _buildFilterIconButton(
+                const SizedBox(width: 4),
+                _buildFilterChip(
                   BasicDiffFilter.modified,
-                  Icons.edit_outlined,
+                  'Changed',
                   context.watch<ThemeBloc>().state.diffModifiedColor,
                   'Show Changed',
                 ),
-                _buildFilterIconButton(
+                const SizedBox(width: 4),
+                _buildFilterChip(
                   BasicDiffFilter.problems,
-                  Icons.warning_amber_rounded,
+                  'Problems',
                   Colors.orange,
                   'Show Problems',
                 ),
@@ -1671,11 +1675,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         !settingsState.appSettings.showIdenticalEntries));
                   },
                 ),
-                _buildFilterIconButton(
-                  BasicDiffFilter.all,
-                  Icons.filter_list_off,
-                  theme.colorScheme.onSurface.withAlpha(150),
-                  'Show All',
+                 // Show All reset
+                IconButton(
+                  icon: const Icon(Icons.filter_list_off, size: 20),
+                  tooltip: 'Show All',
+                  onPressed: _currentFilter != BasicDiffFilter.all
+                      ? () => setState(() => _currentFilter = BasicDiffFilter.all)
+                      : null,
                 ),
               ],
             ),
@@ -1754,34 +1760,54 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     final total = added + removed + modified;
     if (total == 0) return const SizedBox.shrink();
 
-    return SizedBox(
-      width: 40,
-      height: 40,
-      child: PieChart(
-        PieChartData(
-          sections: [
-            PieChartSectionData(
-              value: added.toDouble(),
-              color: themeState.diffAddedColor,
-              radius: 6,
-              showTitle: false,
-            ),
-            PieChartSectionData(
-              value: removed.toDouble(),
-              color: themeState.diffRemovedColor,
-              radius: 6,
-              showTitle: false,
-            ),
-            PieChartSectionData(
-              value: modified.toDouble(),
-              color: themeState.diffModifiedColor,
-              radius: 6,
-              showTitle: false,
-            ),
-          ],
-          sectionsSpace: 2,
-          centerSpaceRadius: 10,
-          startDegreeOffset: 270,
+    return Tooltip(
+      message: 'Added: $added\nRemoved: $removed\nModified: $modified',
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).dividerColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      textStyle: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 12,
+      ),
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: PieChart(
+          PieChartData(
+            sections: [
+              PieChartSectionData(
+                value: added.toDouble(),
+                color: themeState.diffAddedColor,
+                radius: 6,
+                showTitle: false,
+              ),
+              PieChartSectionData(
+                value: removed.toDouble(),
+                color: themeState.diffRemovedColor,
+                radius: 6,
+                showTitle: false,
+              ),
+              PieChartSectionData(
+                value: modified.toDouble(),
+                color: themeState.diffModifiedColor,
+                radius: 6,
+                showTitle: false,
+              ),
+            ],
+            sectionsSpace: 2,
+            centerSpaceRadius: 10,
+            startDegreeOffset: 270,
+          ),
         ),
       ),
     );
@@ -1803,40 +1829,39 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     );
   }
 
-  Widget _buildFilterIconButton(
+  Widget _buildFilterChip(
     BasicDiffFilter filter,
-    IconData icon,
+    String label,
     Color color,
     String tooltip,
   ) {
     final bool isActive = _currentFilter == filter;
     final theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
-
+    
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: () => setState(() => _currentFilter = filter),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          decoration: BoxDecoration(
-            color: isActive
-                ? color.withAlpha(isDark ? 50 : 30)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            border: isActive
-                ? Border.all(
-                    color: color.withAlpha(isDark ? 150 : 100), width: 1.5)
-                : null,
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: isActive ? color : color.withAlpha(isDark ? 120 : 150),
-          ),
+      child: FilterChip(
+        label: Text(label),
+        selected: isActive,
+        onSelected: (bool value) {
+            if (value) {
+                setState(() => _currentFilter = filter);
+            } else {
+                 setState(() => _currentFilter = BasicDiffFilter.all);
+            }
+        },
+        side: BorderSide.none,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        labelStyle: TextStyle(
+            fontSize: 12,
+            color: isActive ? color : theme.colorScheme.onSurface.withAlpha(180),
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
         ),
+        backgroundColor: Colors.transparent,
+        selectedColor: color.withOpacity(0.15),
+        showCheckmark: false,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
       ),
     );
   }
@@ -1980,14 +2005,18 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       height: 1.4,
     );
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor.withAlpha(isDark ? 60 : 80)),
-      ),
-      child: IntrinsicHeight(
+    return InkWell(
+      onTap: () {}, // Enable hover effect
+      hoverColor: theme.colorScheme.onSurface.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor.withAlpha(isDark ? 60 : 80)),
+        ),
+        child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -2238,6 +2267,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

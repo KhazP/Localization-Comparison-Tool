@@ -93,7 +93,8 @@ class DiffHighlighter {
     return spans;
   }
 
-  /// Convenience widget that wraps highlightDiff in a SelectableText.richText
+  /// Convenience widget that wraps highlightDiff in a Text widget.
+  /// Set [selectable] to true to allow text selection, false to allow parent tap handling.
   static Widget buildDiffText(
     String oldText,
     String newText, {
@@ -102,6 +103,7 @@ class DiffHighlighter {
     int? maxLines,
     Color? deletionColor,
     Color? insertionColor,
+    bool selectable = false,
   }) {
     final spans = highlightDiff(
       oldText,
@@ -112,9 +114,17 @@ class DiffHighlighter {
       insertionColor: insertionColor,
     );
 
-    return SelectableText.rich(
-      TextSpan(children: spans),
-      maxLines: maxLines,
-    );
+    if (selectable) {
+      return SelectableText.rich(
+        TextSpan(children: spans),
+        maxLines: maxLines,
+      );
+    } else {
+      return Text.rich(
+        TextSpan(children: spans),
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
   }
 }

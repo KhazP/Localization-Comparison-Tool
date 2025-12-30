@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/data/models/quality_metrics.dart';
 
 /// Shows detailed quality issues in a dialog.
@@ -91,20 +92,17 @@ class IssueDetailsDialog extends StatelessWidget {
 
   void _copyIssue(BuildContext context, QualityIssue issue) {
     Clipboard.setData(ClipboardData(text: _formatIssue(issue)));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Copied to clipboard'),
-        duration: Duration(seconds: 1),
-      ),
+    ToastService.showSuccess(
+      context, 
+      'Copied to clipboard',
+      duration: const Duration(seconds: 1),
     );
   }
 
   void _copyAll(BuildContext context) {
     final text = items.map(_formatIssue).join('\n\n');
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('All items copied')),
-    );
+    ToastService.showSuccess(context, 'All items copied');
   }
 
   String _formatIssue(QualityIssue issue) {

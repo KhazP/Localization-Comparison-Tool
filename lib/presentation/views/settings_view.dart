@@ -16,6 +16,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:localizer_app_main/core/services/windows_integration_service.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/system_info_service.dart';
 import 'package:intl/intl.dart';
@@ -287,14 +288,7 @@ class _SettingsViewState extends State<SettingsView>
     return '${mb.toStringAsFixed(1)} MB';
   }
 
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+
 
   Future<void> _runTranslationMemoryAction(
     Future<void> Function() action,
@@ -334,7 +328,7 @@ class _SettingsViewState extends State<SettingsView>
       final message = imported > 0
           ? 'Imported $imported items into memory.'
           : 'No items were added.';
-      _showSnackBar(context, message);
+      ToastService.showInfo(context, message);
     });
   }
 
@@ -347,7 +341,7 @@ class _SettingsViewState extends State<SettingsView>
       final stats = await service.getStats();
       if (stats.entryCount == 0) {
         if (mounted) {
-          _showSnackBar(context, 'Nothing to export yet.');
+          ToastService.showWarning(context, 'Nothing to export yet.');
         }
         return;
       }
@@ -362,7 +356,7 @@ class _SettingsViewState extends State<SettingsView>
       }
       await service.exportToTmx(File(outputPath));
       if (mounted) {
-        _showSnackBar(context, 'TMX saved.');
+        ToastService.showSuccess(context, 'TMX saved.');
       }
     });
   }
@@ -376,7 +370,7 @@ class _SettingsViewState extends State<SettingsView>
       final stats = await service.getStats();
       if (stats.entryCount == 0) {
         if (mounted) {
-          _showSnackBar(context, 'Nothing to export yet.');
+          ToastService.showWarning(context, 'Nothing to export yet.');
         }
         return;
       }
@@ -391,7 +385,7 @@ class _SettingsViewState extends State<SettingsView>
       }
       await service.exportToCsv(File(outputPath));
       if (mounted) {
-        _showSnackBar(context, 'CSV saved.');
+        ToastService.showSuccess(context, 'CSV saved.');
       }
     });
   }
@@ -433,7 +427,7 @@ class _SettingsViewState extends State<SettingsView>
         await service.clearMemory();
         await _refreshTranslationMemoryStats();
         if (mounted) {
-          _showSnackBar(context, 'Translation memory cleared.');
+          ToastService.showSuccess(context, 'Translation memory cleared.');
         }
       } catch (e, s) {
         developer.log(
@@ -443,7 +437,7 @@ class _SettingsViewState extends State<SettingsView>
           stackTrace: s,
         );
         if (mounted) {
-          _showSnackBar(context, 'Could not clear memory.');
+          ToastService.showError(context, 'Could not clear memory.');
         }
       }
     });
@@ -3081,36 +3075,16 @@ class _SettingsViewState extends State<SettingsView>
                                     await Clipboard.setData(
                                         ClipboardData(text: content.trim()));
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              'Public key copied to clipboard!'),
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      );
+                                      ToastService.showSuccess(context, 'Public key copied to clipboard!');
                                     }
                                   } else {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'Public key not found: $pubKeyPath'),
-                                          backgroundColor: AppThemeV2.error,
-                                        ),
-                                      );
+                                      ToastService.showError(context, 'Public key not found: $pubKeyPath');
                                     }
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Error reading public key: $e'),
-                                        backgroundColor: AppThemeV2.error,
-                                      ),
-                                    );
+                                    ToastService.showError(context, 'Error reading public key: $e');
                                   }
                                 }
                               },
@@ -3224,16 +3198,11 @@ class _SettingsViewState extends State<SettingsView>
                                       await WindowsIntegrationService
                                           .addToContextMenu();
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success
-                                            ? 'Context menu added!'
-                                            : 'Failed to add context menu'),
-                                        backgroundColor: success
-                                            ? Colors.green
-                                            : AppThemeV2.error,
-                                      ),
-                                    );
+                                    if (success) {
+                                      ToastService.showSuccess(context, 'Context menu added!');
+                                    } else {
+                                      ToastService.showError(context, 'Failed to add context menu');
+                                    }
                                   }
                                 }
                               : null,
@@ -3250,16 +3219,11 @@ class _SettingsViewState extends State<SettingsView>
                                       await WindowsIntegrationService
                                           .removeFromContextMenu();
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success
-                                            ? 'Context menu removed!'
-                                            : 'Failed to remove context menu'),
-                                        backgroundColor: success
-                                            ? Colors.green
-                                            : AppThemeV2.error,
-                                      ),
-                                    );
+                                    if (success) {
+                                      ToastService.showSuccess(context, 'Context menu removed!');
+                                    } else {
+                                      ToastService.showError(context, 'Failed to remove context menu');
+                                    }
                                   }
                                 }
                               : null,
@@ -3335,18 +3299,11 @@ class _SettingsViewState extends State<SettingsView>
                                   : await WindowsIntegrationService
                                       .unregisterFileExtension(ext);
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(success
-                                        ? (val
-                                            ? '$ext registered!'
-                                            : '$ext unregistered!')
-                                        : 'Failed to ${val ? 'register' : 'unregister'} $ext'),
-                                    backgroundColor: success
-                                        ? Colors.green
-                                        : AppThemeV2.error,
-                                  ),
-                                );
+                                if (success) {
+                                  ToastService.showSuccess(context, val ? '$ext registered!' : '$ext unregistered!');
+                                } else {
+                                  ToastService.showError(context, 'Failed to ${val ? 'register' : 'unregister'} $ext');
+                                }
                                 // Trigger rebuild to update status
                                 setState(() {});
                               }
@@ -3375,16 +3332,12 @@ class _SettingsViewState extends State<SettingsView>
                               final successCount =
                                   results.values.where((v) => v).length;
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'Registered $successCount of ${results.length} file types'),
-                                    backgroundColor:
-                                        successCount == results.length
-                                            ? Colors.green
-                                            : Colors.orange,
-                                  ),
-                                );
+                                final message = 'Registered $successCount of ${results.length} file types';
+                                if (successCount == results.length) {
+                                  ToastService.showSuccess(context, message);
+                                } else {
+                                  ToastService.showWarning(context, message);
+                                }
                                 setState(() {});
                               }
                             }
@@ -3404,16 +3357,12 @@ class _SettingsViewState extends State<SettingsView>
                               final successCount =
                                   results.values.where((v) => v).length;
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'Unregistered $successCount of ${results.length} file types'),
-                                    backgroundColor:
-                                        successCount == results.length
-                                            ? Colors.green
-                                            : Colors.orange,
-                                  ),
-                                );
+                                final message = 'Unregistered $successCount of ${results.length} file types';
+                                if (successCount == results.length) {
+                                  ToastService.showSuccess(context, message);
+                                } else {
+                                  ToastService.showWarning(context, message);
+                                }
                                 setState(() {});
                               }
                             }
@@ -3458,16 +3407,11 @@ class _SettingsViewState extends State<SettingsView>
                                       await WindowsIntegrationService
                                           .registerProtocolHandler();
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success
-                                            ? 'Protocol handler registered!'
-                                            : 'Failed to register'),
-                                        backgroundColor: success
-                                            ? Colors.green
-                                            : AppThemeV2.error,
-                                      ),
-                                    );
+                                    if (success) {
+                                      ToastService.showSuccess(context, 'Protocol handler registered!');
+                                    } else {
+                                      ToastService.showError(context, 'Failed to register');
+                                    }
                                   }
                                 }
                               : null,
@@ -3484,16 +3428,11 @@ class _SettingsViewState extends State<SettingsView>
                                       await WindowsIntegrationService
                                           .unregisterProtocolHandler();
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(success
-                                            ? 'Protocol handler removed!'
-                                            : 'Failed to remove'),
-                                        backgroundColor: success
-                                            ? Colors.green
-                                            : AppThemeV2.error,
-                                      ),
-                                    );
+                                    if (success) {
+                                      ToastService.showSuccess(context, 'Protocol handler removed!');
+                                    } else {
+                                      ToastService.showError(context, 'Failed to remove');
+                                    }
                                   }
                                 }
                               : null,
@@ -4000,15 +3939,13 @@ class _SettingsViewState extends State<SettingsView>
                 ? 'Update available: v${result.latestVersion}'
                 : 'You are using the latest version';
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
+        if (result.error != null) {
+          ToastService.showError(context, 'Could not check for updates');
+        } else if (result.updateAvailable) {
+          ToastService.showSuccess(context, message);
+        } else {
+          ToastService.showInfo(context, message);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -4088,31 +4025,13 @@ class _SettingsViewState extends State<SettingsView>
         await file.writeAsString(jsonString);
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Settings exported successfully!'),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              backgroundColor: AppThemeV2.success,
-            ),
-          );
+          ToastService.showSuccess(context, 'Settings exported successfully!');
         }
       }
     } catch (e) {
       developer.log('Error exporting settings: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to export settings: ${e.toString()}'),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            backgroundColor: AppThemeV2.error,
-          ),
-        );
+        ToastService.showError(context, 'Failed to export settings: ${e.toString()}');
       }
     }
   }
@@ -4181,32 +4100,14 @@ class _SettingsViewState extends State<SettingsView>
               .add(ReplaceAllSettings(importedSettings));
 
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Settings imported successfully!'),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                backgroundColor: AppThemeV2.success,
-              ),
-            );
+            ToastService.showSuccess(context, 'Settings imported successfully!');
           }
         }
       }
     } catch (e) {
       developer.log('Error importing settings: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to import settings: ${e.toString()}'),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            backgroundColor: AppThemeV2.error,
-          ),
-        );
+        ToastService.showError(context, 'Failed to import settings: ${e.toString()}');
       }
     }
   }
@@ -4465,15 +4366,7 @@ class _SettingsViewState extends State<SettingsView>
                 case SettingsCategory.about:
                   break; // No reset for About
               }
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content:
-                      Text('${_getCategoryTitle(category)} reset to defaults'),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-              );
+              ToastService.showSuccess(context, '${_getCategoryTitle(category)} reset to defaults');
             },
             style: FilledButton.styleFrom(backgroundColor: AppThemeV2.warning),
             child: const Text('Reset'),

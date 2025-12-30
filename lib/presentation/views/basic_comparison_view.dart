@@ -23,6 +23,8 @@ import 'package:localizer_app_main/presentation/views/advanced_diff_view.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:localizer_app_main/core/services/problem_detector.dart';
 import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:string_similarity/string_similarity.dart';
@@ -57,10 +59,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       widget.onNavigateToTab!(5);
     } else {
       // Fallback if callback not provided
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Navigation to AI Settings not available')),
-      );
+      ToastService.showInfo(context, 'Navigation to AI Settings not available');
     }
   }
 
@@ -208,9 +207,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       }
       _updateFileWatcher();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select two files to compare.')),
-      );
+      ToastService.showWarning(context, 'Please select two files to compare.');
     }
   }
 
@@ -231,10 +228,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       }
       _updateFileWatcher();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please select a bilingual file to compare.')),
-      );
+      ToastService.showWarning(context, 'Please select a bilingual file to compare.');
     }
   }
 
@@ -293,21 +287,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             : fileNumber == 2
                 ? 'Target file'
                 : 'Bilingual file';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$selectionLabel selected: $fileName'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        ToastService.showSuccess(context, '$selectionLabel selected: $fileName');
       } else {
         // Show error for invalid file type
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Invalid file type. Please select a supported localization file.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 3),
-          ),
+        ToastService.showError(
+          context,
+          'Invalid file type.',
+          recoverySuggestion: 'Please select a supported localization file.',
         );
       }
     }
@@ -346,11 +332,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Please perform a comparison first to see advanced details.')),
-      );
+      ToastService.showInfo(context, 'Please perform a comparison first to see advanced details.');
     }
   }
 
@@ -403,13 +385,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             BlocListener<FileWatcherBloc, FileWatcherState>(
               listener: (context, state) {
                 if (state is FileChangedDetected) {
-                  // Show a snackbar notification about file change
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...'),
-                      duration: const Duration(seconds: 2),
-                    ),
+                  // Show a toast notification about file change
+                  ToastService.showInfo(
+                    context, 
+                    'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...'
                   );
 
                   // Trigger automatic recomparison
@@ -669,11 +648,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       } else if (state is ComparisonFailure) {
                         // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
                         // Or just show the error via ProgressBloc/Snackbar
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content:
-                                  Text('Comparison failed: ${state.error}')),
-                        );
+                        ToastService.showError(context, 'Comparison failed: ${state.error}');
                       }
                     },
                     builder: (context, state) {
@@ -1115,11 +1090,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               Process.run('explorer.exe', [File(outputPath).parent.path]);
             }
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text('Excel saved to: $outputPath'),
-                  behavior: SnackBarBehavior.floating),
-            );
+            ToastService.showSuccess(context, 'Excel saved to: $outputPath');
           }
         }
         
@@ -1139,11 +1110,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         }
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to save Excel: $e'),
-                backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, 'Failed to save Excel: $e');
         }
       }
     }
@@ -1198,11 +1165,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           if (settings.openFolderAfterExport && Platform.isWindows) {
             Process.run('explorer.exe', [File(outputPath).parent.path]);
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('JSON saved to: $outputPath'),
-                behavior: SnackBarBehavior.floating),
-          );
+          ToastService.showSuccess(context, 'JSON saved to: $outputPath');
         }
         
         // Clear taskbar progress on success
@@ -1220,11 +1183,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         }
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to save JSON: $e'),
-                backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, 'Failed to save JSON: $e');
         }
       }
     }
@@ -1294,11 +1253,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           if (settings.openFolderAfterExport && Platform.isWindows) {
             Process.run('explorer.exe', [File(outputPath).parent.path]);
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('CSV saved to: $outputPath'),
-                behavior: SnackBarBehavior.floating),
-          );
+          ToastService.showSuccess(context, 'CSV saved to: $outputPath');
         }
         
         // Clear taskbar progress on success
@@ -1316,11 +1271,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         }
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to save CSV: $e'),
-                backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, 'Failed to save CSV: $e');
         }
       }
     }
@@ -2424,11 +2375,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     final shouldCheckBoth = !isBilingualSession;
     if (!file1.existsSync() || (shouldCheckBoth && !file2.existsSync())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content:
-                Text('One or both files from this session no longer exist.')),
-      );
+      ToastService.showError(context, 'One or both files from this session no longer exist.');
       return;
     }
 

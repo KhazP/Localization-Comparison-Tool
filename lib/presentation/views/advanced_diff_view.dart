@@ -22,6 +22,7 @@ import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
 import 'package:string_similarity/string_similarity.dart'; // Import string_similarity
 import 'package:flutter/services.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 
 // Filter options
 enum AdvancedDiffFilter { all, added, removed, modified }
@@ -467,13 +468,21 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : null,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (isError) {
+      ToastService.showError(context, message);
+    } else {
+      // Heuristic for success vs info
+      final lower = message.toLowerCase();
+      if (lower.contains('saved') ||
+          lower.contains('applied') ||
+          lower.contains('deleted') ||
+          lower.contains('added') ||
+          lower.contains('registered')) {
+        ToastService.showSuccess(context, message);
+      } else {
+        ToastService.showInfo(context, message);
+      }
+    }
   }
 
   Future<void> _saveAllEdits() async {
@@ -851,12 +860,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Translation memory is unavailable.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ToastService.showError(context, 'Translation memory is unavailable.');
       return;
     }
     try {
@@ -869,12 +873,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Saved to memory.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ToastService.showSuccess(context, 'Saved to memory.');
     } catch (e, s) {
       developer.log(
         'Failed to save translation memory entry.',
@@ -885,12 +884,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save to memory.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      ToastService.showError(context, 'Could not save to memory.');
     }
   }
 
@@ -1551,20 +1545,12 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               }
             }
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text('Excel saved to: $outputPath'),
-                  behavior: SnackBarBehavior.floating),
-            );
+            ToastService.showSuccess(context, 'Excel saved to: $outputPath');
           }
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to save Excel: $e'),
-                backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, 'Failed to save Excel: $e');
         }
       }
     }
@@ -1614,19 +1600,11 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           if (settings.openFolderAfterExport && Platform.isWindows) {
             Process.run('explorer.exe', [File(outputPath).parent.path]);
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('JSON saved to: $outputPath'),
-                behavior: SnackBarBehavior.floating),
-          );
+          ToastService.showSuccess(context, 'JSON saved to: $outputPath');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to save JSON: $e'),
-                backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, 'Failed to save JSON: $e');
         }
       }
     }
@@ -1691,19 +1669,11 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           if (settings.openFolderAfterExport && Platform.isWindows) {
             Process.run('explorer.exe', [File(outputPath).parent.path]);
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('CSV saved to: $outputPath'),
-                behavior: SnackBarBehavior.floating),
-          );
+          ToastService.showSuccess(context, 'CSV saved to: $outputPath');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Failed to save CSV: $e'),
-                backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, 'Failed to save CSV: $e');
         }
       }
     }

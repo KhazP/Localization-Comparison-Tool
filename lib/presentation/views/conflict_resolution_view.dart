@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 
 class ConflictResolutionView extends StatefulWidget {
   final String repoPath;
@@ -76,11 +77,10 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
     if (_selectedFile == null) return;
     debugPrint('Marking file as resolved: ${widget.repoPath}, $_selectedFile');
     context.read<GitBloc>().add(MarkFileResolved(widget.repoPath, _selectedFile!));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Staging $_selectedFile for commit...'),
-        duration: const Duration(seconds: 2),
-      ),
+    ToastService.showInfo(
+      context, 
+      'Staging $_selectedFile for commit...',
+      duration: const Duration(seconds: 2),
     );
   }
 

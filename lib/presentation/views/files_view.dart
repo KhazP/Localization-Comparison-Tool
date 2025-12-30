@@ -13,6 +13,7 @@ import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/data/models/file_pair.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/comparison_result_dialog.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:path/path.dart' as p;
 
 class FilesView extends StatefulWidget {
@@ -75,13 +76,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             CompareDirectoriesRequested(_sourceDirectory!, _targetDirectory!),
           );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please select both a source and target directory.'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
+      ToastService.showWarning(context, 'Please select both a source and target directory.');
     }
   }
 
@@ -228,13 +223,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                                   context.read<DirectoryComparisonBloc>().add(
                                     ComparePairedFilesRequested(settingsState.appSettings),
                                   );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text('Comparison started...'),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    ),
-                                  );
+                                  ToastService.showInfo(context, 'Comparison started...');
                                 }
                               }
                             : null,
@@ -897,13 +886,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
 
     if (pairsWithResults.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('No comparison results to export. Run "Compare All" first.'),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+        ToastService.showWarning(context, 'No comparison results to export. Run "Compare All" first.');
       }
       return;
     }
@@ -923,13 +906,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
       await exportDir.create(recursive: true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create export folder: $e'),
-            backgroundColor: AppThemeV2.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ToastService.showError(context, 'Failed to create export folder: $e');
       }
       return;
     }
@@ -1006,13 +983,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop(); // Close progress dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Export failed: $e'),
-            backgroundColor: AppThemeV2.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ToastService.showError(context, 'Export failed: $e');
       }
     } finally {
       setState(() {

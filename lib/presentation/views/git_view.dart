@@ -8,6 +8,7 @@ import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 
 import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
 
@@ -35,22 +36,11 @@ class GitView extends StatelessWidget {
             child: BlocListener<GitBloc, GitState>(
               listener: (context, state) {
                 if (state is GitOperationSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message), backgroundColor: Colors.green),
-                  );
-                  // Optionally reload branches to clear "Success" state if needed, 
-                  // but simpler is to let the BlocBuilder re-render the underlying Loaded state 
-                  // or have the bloc emit Loaded immediately after Success.
-                  // Actually, "GitOperationSuccess" replaces the state, so the UI would disappear 
-                  // if we don't switch back.
-                  // BETTER PATTERN: The bloc should emit Success then immediately emit Loaded/Previous.
-                  // OR: Use a "ActionStatus" stream distinct from main state.
-                  // SIMPLEST FIX for now: Auto-reload after success.
+                  ToastService.showSuccess(context, state.message);
+                  // Auto-reload after success.
                   context.read<GitBloc>().add(LoadBranches());
                 } else if (state is GitError) {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message), backgroundColor: Theme.of(context).colorScheme.error),
-                  );
+                   ToastService.showError(context, state.message);
                   // Attempt to recover state if possible, or stay in Error if it's fatal.
                   // If it was a transient error (like Pull failed), we might want to go back to Loaded?
                   // For now, let's try to reload branches to see if we can recover the view.

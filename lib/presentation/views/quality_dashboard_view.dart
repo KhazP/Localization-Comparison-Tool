@@ -13,6 +13,7 @@ import 'package:localizer_app_main/presentation/widgets/dialogs/issue_details_di
 import 'package:localizer_app_main/core/services/quality_report_exporter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 
 enum DashboardChartMode { words, coverage, burnUp }
 
@@ -78,9 +79,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
     final data = await _dashboardFuture;
     if (data == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No data to export')),
-        );
+        ToastService.showInfo(context, 'No data to export');
       }
       return;
     }
@@ -88,9 +87,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
     final bytes = _exporter.toExcelBytes(data);
     if (bytes.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Export failed')),
-        );
+        ToastService.showError(context, 'Export failed');
       }
       return;
     }
@@ -113,9 +110,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
       final file = File(path);
       await file.writeAsBytes(bytes, flush: true);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Report saved to ${file.path}')),
-        );
+        ToastService.showSuccess(context, 'Report saved to ${file.path}');
       }
     }
   }

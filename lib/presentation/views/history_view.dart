@@ -8,6 +8,7 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/skeleton_loader.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -124,18 +125,12 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
 
   void _deleteSession(ComparisonSession session) {
     context.read<HistoryBloc>().add(DeleteHistoryItem(session.id));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('History item deleted'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            context.read<HistoryBloc>().add(UndoDeleteHistoryItem());
-          },
-        ),
-      ),
+    ToastService.showSuccess(
+      context,
+      'History item deleted',
+      onUndo: () {
+        context.read<HistoryBloc>().add(UndoDeleteHistoryItem());
+      },
     );
   }
 
@@ -305,12 +300,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         _applySort();
                       });
                     } else if (state is HistoryError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: ${state.message}'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+                      ToastService.showError(context, state.message);
                     }
                   },
                   builder: (context, state) {

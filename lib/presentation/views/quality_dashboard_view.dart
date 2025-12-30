@@ -14,6 +14,8 @@ import 'package:localizer_app_main/core/services/quality_report_exporter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
+enum DashboardChartMode { words, coverage, burnUp }
+
 class QualityDashboardView extends StatefulWidget {
   const QualityDashboardView({super.key});
 
@@ -29,7 +31,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
 
   Future<QualityDashboardData>? _dashboardFuture;
   List<ComparisonSession> _history = [];
-  bool _showCoverageChart = false;
+  DashboardChartMode _chartMode = DashboardChartMode.words;
   final _exporter = QualityReportExporter();
 
   @override
@@ -239,14 +241,22 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
                 borderColor: borderColor,
               ),
               const SizedBox(height: 20),
-              _WordTrendSection(
+              _MainChartSection(
+                data: data,
+                mode: _chartMode,
+                cardColor: cardColor,
+                borderColor: borderColor,
+                onModeChanged: (newMode) {
+                  setState(() {
+                    _chartMode = newMode;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              _ActivityTrendSection(
                 data: data,
                 cardColor: cardColor,
                 borderColor: borderColor,
-                showCoverage: _showCoverageChart,
-                onToggleMetric: () => setState(() {
-                  _showCoverageChart = !_showCoverageChart;
-                }),
               ),
               const SizedBox(height: 20),
               _IssuesSection(
@@ -525,25 +535,45 @@ class _CoverageSection extends StatelessWidget {
   }
 }
 
-class _WordTrendSection extends StatelessWidget {
-  const _WordTrendSection({
+class _MainChartSection extends StatelessWidget {
+  const _MainChartSection({
     required this.data,
+    required this.mode,
     required this.cardColor,
     required this.borderColor,
-    required this.showCoverage,
-    required this.onToggleMetric,
+    required this.onModeChanged,
   });
 
   final QualityDashboardData data;
+  final DashboardChartMode mode;
   final Color cardColor;
   final Color borderColor;
-  final bool showCoverage;
-  final VoidCallback onToggleMetric;
+  final ValueChanged<DashboardChartMode> onModeChanged;
 
   @override
   Widget build(BuildContext context) {
+    // If we are in burnUp mode, we don't use WordTrend points for the chart, 
+    // but the summary row logic is currently tied to WordTrend points.
+    // For simplicity, we hide the summary row for BurnUp for now, 
+    // or we could show a summary of Total Keys? 
+    // Let's hide it for BurnUp to prevent confusion until we build a specific summary.
+    // UPDATE: We now show summary for all modes.
+    const showSummary = true;
     final theme = Theme.of(context);
-    final points = data.wordTrend;
+
+    // Calculate title based on mode
+    String title;
+    switch (mode) {
+      case DashboardChartMode.words:
+        title = 'Words added over time';
+        break;
+      case DashboardChartMode.coverage:
+        title = 'Translation Coverage';
+        break;
+      case DashboardChartMode.burnUp:
+        title = 'Completion vs Scope';
+        break;
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -556,71 +586,77 @@ class _WordTrendSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Words added over time',
+            title,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 12),
-          if (points.isEmpty)
-            Text(
-              'Run new comparisons to start this chart.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            )
-          else ...[
-            Row(
-              children: [
-                Text(
-                  showCoverage ? 'Coverage %' : 'Words Added',
+          Row(
+            children: [
+              if (mode == DashboardChartMode.burnUp)
+                 Text(
+                  'Scope vs Progress',
+                  style: theme.textTheme.bodySmall,
+                )
+              else
+                 Text(
+                  mode == DashboardChartMode.coverage ? 'Coverage %' : 'Words Added',
                   style: theme.textTheme.bodySmall,
                 ),
-                const Spacer(),
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(
-                      value: false,
-                      label: Text('Words'),
-                      icon: Icon(Icons.text_fields),
-                    ),
-                    ButtonSegment(
-                      value: true,
-                      label: Text('Coverage'),
-                      icon: Icon(Icons.percent),
-                    ),
-                  ],
-                  selected: {showCoverage},
-                  onSelectionChanged: (_) => onToggleMetric(),
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              const Spacer(),
+              SegmentedButton<DashboardChartMode>(
+                segments: const [
+                  ButtonSegment(
+                    value: DashboardChartMode.words,
+                    label: Text('Words'),
+                    icon: Icon(Icons.text_fields),
                   ),
+                  ButtonSegment(
+                    value: DashboardChartMode.coverage,
+                    label: Text('Coverage'),
+                    icon: Icon(Icons.percent),
+                  ),
+                  ButtonSegment(
+                    value: DashboardChartMode.burnUp,
+                    label: Text('Scope'),
+                    icon: Icon(Icons.show_chart),
+                  ),
+                ],
+                selected: {mode},
+                onSelectionChanged: (newSelection) => onModeChanged(newSelection.first),
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (showSummary)
             _TrendSummaryRow(
-              points: points,
-              showCoverage: showCoverage,
+              mode: mode,
+              wordPoints: data.wordTrend,
+              burnUpPoints: data.burnUpTrend,
             ),
-            const SizedBox(height: 16),
-            Container(
-              height: 280,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: theme.dividerColor.withValues(alpha: 0.4),
-                ),
-              ),
-              child: _WordTrendChart(
-                points: points,
-                showCoverage: showCoverage,
+          if (showSummary) const SizedBox(height: 16),
+          Container(
+            height: 280,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: 0.4),
               ),
             ),
-          ],
+            child: mode == DashboardChartMode.burnUp
+                ? _BurnUpChart(points: data.burnUpTrend)
+                : _WordTrendChart(
+                    points: data.wordTrend,
+                    showCoverage: mode == DashboardChartMode.coverage,
+                  ),
+          ),
         ],
       ),
     );
@@ -629,57 +665,126 @@ class _WordTrendSection extends StatelessWidget {
 
 class _TrendSummaryRow extends StatelessWidget {
   const _TrendSummaryRow({
-    required this.points,
-    required this.showCoverage,
+    required this.mode,
+    this.wordPoints,
+    this.burnUpPoints,
   });
 
-  final List<WordTrendPoint> points;
-  final bool showCoverage;
+  final DashboardChartMode mode;
+  final List<WordTrendPoint>? wordPoints;
+  final List<BurnUpPoint>? burnUpPoints;
 
   @override
   Widget build(BuildContext context) {
-    if (points.isEmpty) {
-      return const SizedBox.shrink();
+    if (mode == DashboardChartMode.burnUp) {
+      if (burnUpPoints == null || burnUpPoints!.isEmpty) {
+        return const SizedBox.shrink();
+      }
+    } else {
+      if (wordPoints == null || wordPoints!.isEmpty) {
+        return const SizedBox.shrink();
+      }
     }
 
     final theme = Theme.of(context);
-    final latest = points.last;
-    final earliest = points.first;
-    final latestValue = showCoverage
-        ? latest.coveragePercent
-        : latest.words.toDouble();
-    final earliestValue = showCoverage
-        ? earliest.coveragePercent
-        : earliest.words.toDouble();
+    
+    // Extract values based on mode
+    double latestValue = 0;
+    double earliestValue = 0;
+    DateTime earliestDate = DateTime.now();
+    DateTime latestDate = DateTime.now();
+    int count = 0;
+
+    if (mode == DashboardChartMode.burnUp) {
+      final points = burnUpPoints!;
+      latestValue = points.last.totalKeys.toDouble();
+      earliestValue = points.first.totalKeys.toDouble();
+      earliestDate = points.first.timestamp;
+      latestDate = points.last.timestamp;
+      count = points.length;
+    } else {
+      final points = wordPoints!;
+      final isCoverage = mode == DashboardChartMode.coverage;
+      latestValue = isCoverage 
+          ? points.last.coveragePercent 
+          : points.last.words.toDouble();
+      earliestValue = isCoverage
+          ? points.first.coveragePercent
+          : points.first.words.toDouble();
+      earliestDate = points.first.timestamp;
+      latestDate = points.last.timestamp;
+      count = points.length;
+    }
+
     final delta = latestValue - earliestValue;
-    final deltaLabel = showCoverage
-        ? _formatSignedPercent(delta)
-        : _formatSignedCount(delta);
-    final latestLabel = showCoverage
-        ? '${latestValue.toStringAsFixed(1)}%'
-        : _formatCompactNumber(latestValue);
-    final dateRange = points.length > 1
-        ? '${DateFormat('MMM d').format(earliest.timestamp)}'
-            ' – ${DateFormat('MMM d').format(latest.timestamp)}'
-        : DateFormat('MMM d').format(latest.timestamp);
+    
+    // Format labels
+    String latestLabel;
+    String deltaLabel;
+    IconData icon;
+    
+    switch (mode) {
+      case DashboardChartMode.coverage:
+        latestLabel = '${latestValue.toStringAsFixed(1)}%';
+        deltaLabel = _formatSignedPercent(delta);
+        icon = Icons.percent_rounded;
+        break;
+      case DashboardChartMode.words:
+        latestLabel = _formatCompactNumber(latestValue);
+        deltaLabel = _formatSignedCount(delta);
+        icon = Icons.text_fields_rounded;
+        break;
+      case DashboardChartMode.burnUp:
+        latestLabel = _formatCompactNumber(latestValue);
+        deltaLabel = _formatSignedCount(delta);
+        icon = Icons.all_inclusive_rounded; // or distinct icon for Scope
+        break;
+    }
+
+    final dateRange = count > 1
+        ? '${DateFormat('MMM d').format(earliestDate)}'
+            ' – ${DateFormat('MMM d').format(latestDate)}'
+        : DateFormat('MMM d').format(latestDate);
 
     final deltaColor = delta >= 0
         ? theme.colorScheme.primary
         : theme.colorScheme.error;
+
+    // For Coverage, negative delta is bad (red).
+    // For Word/Scope, positive delta (growth) might be neutral or green, 
+    // but usually "change" is colored by direction. 
+    // Let's keep logic simple: Up = Primary (Greenish), Down = Error (Red).
+    
+    // Special labels
+    String mainLabel;
+    String changeLabel;
+    
+    switch (mode) {
+      case DashboardChartMode.words:
+        mainLabel = 'Latest';
+        changeLabel = 'Added';
+        break;
+      case DashboardChartMode.coverage:
+        mainLabel = 'Latest';
+        changeLabel = 'Change';
+        break;
+      case DashboardChartMode.burnUp:
+        mainLabel = 'Total Scope';
+        changeLabel = 'Scope Growth';
+        break;
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 520;
         final chips = [
           _TrendStatChip(
-            label: 'Latest',
+            label: mainLabel,
             value: latestLabel,
-            icon: showCoverage
-                ? Icons.percent_rounded
-                : Icons.text_fields_rounded,
+            icon: icon,
           ),
           _TrendStatChip(
-            label: 'Change',
+            label: changeLabel,
             value: deltaLabel,
             valueColor: deltaColor,
             icon: delta >= 0
@@ -1328,10 +1433,14 @@ class _WarningsBanner extends StatelessWidget {
 String _formatCompactNumber(num value) {
   final absValue = value.abs();
   if (absValue >= 1000000) {
-    return '${(absValue / 1000000).toStringAsFixed(1)}M';
+    String s = (absValue / 1000000).toStringAsFixed(1);
+    if (s.endsWith('.0')) s = s.substring(0, s.length - 2);
+    return '${s}M';
   }
   if (absValue >= 1000) {
-    return '${(absValue / 1000).toStringAsFixed(1)}k';
+    String s = (absValue / 1000).toStringAsFixed(1);
+    if (s.endsWith('.0')) s = s.substring(0, s.length - 2);
+    return '${s}k';
   }
   return absValue.toStringAsFixed(0);
 }
@@ -1344,4 +1453,429 @@ String _formatSignedCount(double value) {
 String _formatSignedPercent(double value) {
   final sign = value >= 0 ? '+' : '-';
   return '$sign${value.abs().toStringAsFixed(1)}%';
+}
+
+class _ActivityTrendSection extends StatelessWidget {
+  const _ActivityTrendSection({
+    required this.data,
+    required this.cardColor,
+    required this.borderColor,
+  });
+
+  final QualityDashboardData data;
+  final Color cardColor;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.activityTrend.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Translation Activity',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Keys added, modified, and removed over time',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 320,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _TrendLegendItem(
+                    color: const Color(0xFF4ADE80), // Accent green
+                    label: 'Added',
+                  ),
+                  const SizedBox(width: 16),
+                  _TrendLegendItem(
+                    color: Colors.amber,
+                    label: 'Modified',
+                  ),
+                  const SizedBox(width: 16),
+                  _TrendLegendItem(
+                    color: Colors.redAccent,
+                    label: 'Removed',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: _ActivityTrendChart(points: data.activityTrend),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrendLegendItem extends StatelessWidget {
+  const _TrendLegendItem({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActivityTrendChart extends StatelessWidget {
+  const _ActivityTrendChart({required this.points});
+
+  final List<ActivityTrendPoint> points;
+
+  @override
+  Widget build(BuildContext context) {
+    if (points.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final dateFormat = DateFormat('MMM d');
+    
+    // Calculate max Y for scaling
+    double maxY = 0;
+    for (final point in points) {
+      // For stacked chart, max Y is the sum of positive bars (added + modified) 
+      // Removed is typically shown below or just stacked. 
+      // Let's stack them all positively for "Total Activity Volume" 
+      // OR stack Added/Modified up and Removed down? 
+      // A simple positive stack is usually easier to read for "Activity Volume".
+      final total = point.added + point.modified + point.removed;
+      if (total > maxY) maxY = total.toDouble();
+    }
+    
+    final adjustedMaxY = maxY == 0 ? 10.0 : maxY * 1.2;
+    final interval = adjustedMaxY / 4;
+
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: adjustedMaxY,
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            tooltipRoundedRadius: 8,
+            tooltipPadding: const EdgeInsets.all(8),
+            getTooltipColor: (_) => theme.cardColor,
+            tooltipBorder: BorderSide(color: theme.dividerColor),
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final point = points[group.x.toInt()];
+              String label;
+              String value;
+              switch (rodIndex) {
+                case 0:
+                  label = 'Added';
+                  value = point.added.toString();
+                  break;
+                case 1:
+                  label = 'Modified';
+                  value = point.modified.toString();
+                  break;
+                case 2:
+                  label = 'Removed';
+                  value = point.removed.toString();
+                  break;
+                default:
+                  return null;
+              }
+              return BarTooltipItem(
+                '$label: $value',
+                theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.bold),
+              );
+            },
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= points.length) {
+                  return const SizedBox.shrink();
+                }
+                // Only show first and last labels for clean look
+                if (points.length > 5 && index != 0 && index != points.length - 1) {
+                   return const SizedBox.shrink();
+                }
+                
+                return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  child: Text(
+                    dateFormat.format(points[index].timestamp),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: interval, // Match grid interval to prevent overcrowding
+              reservedSize: 42, // Slightly increased for 6-char strings like "100.5k"
+              getTitlesWidget: (value, meta) {
+                 if (value == 0) return const SizedBox.shrink();
+                 return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  child: Text(
+                    _formatCompactNumber(value),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: interval,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: theme.dividerColor.withValues(alpha: 0.1),
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        barGroups: points.asMap().entries.map((entry) {
+          final index = entry.key;
+          final point = entry.value;
+          
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              // We want a stacked bar. fl_chart BarRodStackItem doesn't exist directly in simple API?
+              // Actually BarChartGroupData has 'groupVertically' but usually we just use fromY/toY in BarRodStackItem?
+              // Or just BarChartGroupData with multiple rods if we want grouped. 
+              // Stacked is supported by BarChartGroupData(barRods: [BarChartRodData(rodStackItems: ...)])
+              
+              BarChartRodData(
+                toY: (point.added + point.modified + point.removed).toDouble(),
+                width: 16,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                color: Colors.transparent, // Only stack items have color
+                rodStackItems: [
+                  BarChartRodStackItem(
+                    0, 
+                    point.added.toDouble(), 
+                    const Color(0xFF4ADE80),
+                  ),
+                  BarChartRodStackItem(
+                    point.added.toDouble(), 
+                    (point.added + point.modified).toDouble(), 
+                    Colors.amber,
+                  ),
+                  BarChartRodStackItem(
+                    (point.added + point.modified).toDouble(), 
+                    (point.added + point.modified + point.removed).toDouble(), 
+                    Colors.redAccent,
+                  ),
+                ],
+              ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+
+
+class _BurnUpChart extends StatelessWidget {
+  const _BurnUpChart({required this.points});
+
+  final List<BurnUpPoint> points;
+
+  @override
+  Widget build(BuildContext context) {
+    if (points.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final dateFormat = DateFormat('MMM d');
+    
+    // Calculate max Y
+    double maxY = 0;
+    for (final point in points) {
+      if (point.totalKeys > maxY) maxY = point.totalKeys.toDouble();
+    }
+    
+    final adjustedMaxY = maxY == 0 ? 10.0 : maxY * 1.2;
+    final interval = adjustedMaxY / 4;
+
+    return LineChart(
+      LineChartData(
+        minX: 0,
+        maxX: (points.length - 1).toDouble(),
+        minY: 0,
+        maxY: adjustedMaxY,
+        clipData: const FlClipData.all(),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: interval,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: theme.dividerColor.withValues(alpha: 0.1),
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= points.length) {
+                  return const SizedBox.shrink();
+                }
+                if (points.length > 5 && index != 0 && index != points.length - 1) {
+                   return const SizedBox.shrink();
+                }
+                
+                return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  child: Text(
+                    dateFormat.format(points[index].timestamp),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: interval,
+              reservedSize: 42,
+              getTitlesWidget: (value, meta) {
+                 if (value == 0) return const SizedBox.shrink();
+                 return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  child: Text(
+                    _formatCompactNumber(value),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(
+          handleBuiltInTouches: true,
+          touchTooltipData: LineTouchTooltipData(
+            tooltipRoundedRadius: 8,
+            tooltipPadding: const EdgeInsets.all(8),
+            getTooltipColor: (_) => theme.cardColor,
+            tooltipBorder: BorderSide(color: theme.dividerColor),
+             getTooltipItems: (touchedSpots) {
+              return touchedSpots.map((spot) {
+                 final index = spot.x.round();
+                 if (index < 0 || index >= points.length) return null;
+                 final point = points[index];
+                 
+                 final isTarget = spot.barIndex == 0;
+                 final label = isTarget ? 'Total' : 'Translated';
+                 final color = isTarget ? Colors.blueAccent : const Color(0xFF4ADE80);
+                 
+                 return LineTooltipItem(
+                   '$label: ${isTarget ? point.totalKeys : point.translatedKeys}',
+                   theme.textTheme.bodySmall!.copyWith(
+                     color: color, 
+                     fontWeight: FontWeight.bold
+                   ),
+                 );
+              }).toList();
+             }
+          ),
+        ),
+        lineBarsData: [
+          // Total Keys (Scope)
+          LineChartBarData(
+            spots: points.asMap().entries.map((e) {
+              return FlSpot(e.key.toDouble(), e.value.totalKeys.toDouble());
+            }).toList(),
+            isCurved: true,
+            color: Colors.blueAccent,
+            barWidth: 3,
+            dotData: const FlDotData(show: false),
+          ),
+          // Translated Keys (Progress)
+          LineChartBarData(
+            spots: points.asMap().entries.map((e) {
+              return FlSpot(e.key.toDouble(), e.value.translatedKeys.toDouble());
+            }).toList(),
+            isCurved: true,
+            color: const Color(0xFF4ADE80),
+            barWidth: 3,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: const Color(0xFF4ADE80).withValues(alpha: 0.1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

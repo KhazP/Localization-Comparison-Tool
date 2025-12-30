@@ -165,6 +165,51 @@ class WordTrendPoint {
   final double coveragePercent;
 }
 
+/// Represents a point in the activity trend chart (churn).
+@immutable
+class ActivityTrendPoint {
+  /// Creates an activity trend point.
+  const ActivityTrendPoint({
+    required this.timestamp,
+    required this.added,
+    required this.modified,
+    required this.removed,
+  });
+
+  /// Time of the comparison.
+  final DateTime timestamp;
+
+  /// Number of added keys.
+  final int added;
+
+  /// Number of modified keys.
+  final int modified;
+
+  /// Number of removed keys.
+  final int removed;
+}
+
+/// Represents a point in the burn-up chart (completion vs scope).
+@immutable
+class BurnUpPoint {
+  /// Creates a burn-up point.
+  const BurnUpPoint({
+    required this.timestamp,
+    required this.totalKeys,
+    required this.translatedKeys,
+  });
+
+  /// Time of the comparison.
+  final DateTime timestamp;
+
+  /// Total number of keys (Scope).
+  final int totalKeys;
+
+  /// Number of translated keys (Progress).
+  final int translatedKeys;
+}
+
+
 /// Aggregated data used by the quality dashboard.
 @immutable
 class QualityDashboardData {
@@ -172,15 +217,25 @@ class QualityDashboardData {
   const QualityDashboardData({
     required this.languages,
     required this.wordTrend,
+    required this.activityTrend,
+    required this.burnUpTrend,
     required this.warnings,
     required this.generatedAt,
   });
+
+
 
   /// Per-language quality reports.
   final List<LanguageQualityReport> languages;
 
   /// Trend points for translated words and coverage over time.
   final List<WordTrendPoint> wordTrend;
+
+  /// Trend points for activity (added/modified/removed) over time.
+  final List<ActivityTrendPoint> activityTrend;
+
+  /// Trend points for completion versus scope over time.
+  final List<BurnUpPoint> burnUpTrend;
 
   /// User-facing warnings about skipped files.
   final List<String> warnings;

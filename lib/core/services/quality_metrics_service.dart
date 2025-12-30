@@ -44,10 +44,14 @@ class QualityMetricsService {
     );
 
     final wordTrend = _buildWordTrend(history);
+    final activityTrend = _buildActivityTrend(history);
+    final burnUpTrend = _buildBurnUpTrend(history);
 
     return QualityDashboardData(
       languages: languageReports,
       wordTrend: wordTrend,
+      activityTrend: activityTrend,
+      burnUpTrend: burnUpTrend,
       warnings: warnings.toList()..sort(),
       generatedAt: DateTime.now(),
     );
@@ -282,6 +286,37 @@ class QualityMetricsService {
         })
         .toList();
 
+    points.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return points;
+  }
+
+  List<ActivityTrendPoint> _buildActivityTrend(List<ComparisonSession> history) {
+    final points = history.map((session) {
+      return ActivityTrendPoint(
+        timestamp: session.timestamp,
+        added: session.stringsAdded,
+        modified: session.stringsModified,
+        removed: session.stringsRemoved,
+      );
+    }).toList();
+
+    points.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return points;
+  }
+
+  List<BurnUpPoint> _buildBurnUpTrend(List<ComparisonSession> history) {
+    final points = <BurnUpPoint>[];
+    for (final session in history) {
+      if (session.sourceKeyCount != null && session.translatedKeyCount != null) {
+        points.add(
+          BurnUpPoint(
+            timestamp: session.timestamp,
+            totalKeys: session.sourceKeyCount!,
+            translatedKeys: session.translatedKeyCount!,
+          ),
+        );
+      }
+    }
     points.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return points;
   }

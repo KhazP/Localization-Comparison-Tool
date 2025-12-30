@@ -9,6 +9,7 @@ import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/skeleton_loader.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -663,27 +664,13 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
   }
 
   Future<void> _showClearConfirmation(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await DialogService.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear All History?'),
-        content: const Text(
-          'This will permanently delete all comparison history. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppThemeV2.error,
-            ),
-            child: const Text('Clear All'),
-          ),
-        ],
-      ),
+      title: 'Clear All History?',
+      content: 'This will permanently delete all comparison history. This action cannot be undone.',
+      confirmText: 'Clear All',
+      isDestructive: true,
+      icon: Icons.delete_forever_rounded,
     );
 
     if (confirmed == true && context.mounted) {

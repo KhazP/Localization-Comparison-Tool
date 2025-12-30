@@ -17,6 +17,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:localizer_app_main/core/services/windows_integration_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/system_info_service.dart';
 import 'package:intl/intl.dart';
@@ -395,27 +396,13 @@ class _SettingsViewState extends State<SettingsView>
     if (service == null) {
       return;
     }
-    final confirm = await showDialog<bool>(
+    final confirm = await DialogService.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear translation memory?'),
-        content: const Text(
-          'This removes all saved translation pairs on this device.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
+      title: 'Clear translation memory?',
+      content: 'This removes all saved translation pairs on this device. This action cannot be undone.',
+      confirmText: 'Clear Memory',
+      isDestructive: true,
+      icon: Icons.delete_forever_rounded,
     );
 
     if (confirm != true) {
@@ -1273,39 +1260,7 @@ class _SettingsViewState extends State<SettingsView>
             ),
           ],
         ),
-        _buildSettingsCard(
-          context: context,
-          title: 'Danger Zone',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  FilledButton.icon(
-                    onPressed: () => _showResetAllSettingsDialog(context),
-                    icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                    label: const Text('Reset All Settings'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppThemeV2.error,
-                      minimumSize: const Size(double.infinity, 44),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'This will reset all settings to their default values',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDark
-                              ? AppThemeV2.darkTextMuted
-                              : AppThemeV2.lightTextMuted,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+
       ],
     );
   }
@@ -3838,16 +3793,28 @@ class _SettingsViewState extends State<SettingsView>
                       Expanded(
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.upload_rounded, size: 18),
-                          label: const Text('Export Settings'),
+                          label: const Text('Export'),
                           onPressed: () => _exportSettings(context),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.download_rounded, size: 18),
-                          label: const Text('Import Settings'),
+                          label: const Text('Import'),
                           onPressed: () => _importSettings(context),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text('Reset'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppThemeV2.error,
+                            side: BorderSide(color: AppThemeV2.error.withAlpha(100)),
+                          ),
+                          onPressed: () => _showResetAllSettingsDialog(context),
                         ),
                       ),
                     ],
@@ -4326,79 +4293,62 @@ class _SettingsViewState extends State<SettingsView>
   }
 
   void _showResetCategoryDialog(
-      BuildContext context, SettingsCategory category) {
-    showDialog(
+      BuildContext context, SettingsCategory category) async {
+    final confirmed = await DialogService.showConfirmation(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('Reset ${_getCategoryTitle(category)}?'),
-        content: const Text(
-            'This will reset all settings in this category to their default values.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              final bloc = context.read<SettingsBloc>();
-              switch (category) {
-                case SettingsCategory.general:
-                  bloc.add(ResetGeneralSettings());
-                  break;
-                case SettingsCategory.comparisonEngine:
-                  bloc.add(ResetComparisonSettings());
-                  break;
-                case SettingsCategory.appearance:
-                  bloc.add(ResetAppearanceSettings());
-                  break;
-                case SettingsCategory.fileHandling:
-                  bloc.add(ResetFileHandlingSettings());
-                  break;
-                case SettingsCategory.aiServices:
-                  bloc.add(ResetAiServicesSettings());
-                  break;
-                case SettingsCategory.versionControl:
-                  bloc.add(ResetVersionControlSettings());
-                  break;
-                case SettingsCategory.windowsIntegrations:
-                  break; // No reset event for Windows Integrations
-                case SettingsCategory.about:
-                  break; // No reset for About
-              }
-              ToastService.showSuccess(context, '${_getCategoryTitle(category)} reset to defaults');
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppThemeV2.warning),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
+      title: 'Reset ${_getCategoryTitle(category)}?',
+      content:
+          'This will reset all settings in this category to their default values.',
+      confirmText: 'Reset',
+      isDestructive: true,
+      icon: Icons.restore_rounded,
     );
+
+    if (confirmed == true && context.mounted) {
+      final bloc = context.read<SettingsBloc>();
+      switch (category) {
+        case SettingsCategory.general:
+          bloc.add(ResetGeneralSettings());
+          break;
+        case SettingsCategory.comparisonEngine:
+          bloc.add(ResetComparisonSettings());
+          break;
+        case SettingsCategory.appearance:
+          bloc.add(ResetAppearanceSettings());
+          break;
+        case SettingsCategory.fileHandling:
+          bloc.add(ResetFileHandlingSettings());
+          break;
+        case SettingsCategory.aiServices:
+          bloc.add(ResetAiServicesSettings());
+          break;
+        case SettingsCategory.versionControl:
+          bloc.add(ResetVersionControlSettings());
+          break;
+        case SettingsCategory.windowsIntegrations:
+          break;
+        case SettingsCategory.about:
+          break;
+      }
+      ToastService.showSuccess(
+          context, '${_getCategoryTitle(category)} reset to defaults');
+    }
   }
 
-  void _showResetAllSettingsDialog(BuildContext context) {
-    showDialog(
+  void _showResetAllSettingsDialog(BuildContext context) async {
+    final confirmed = await DialogService.showConfirmation(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Reset All Settings?'),
-        content: const Text(
-            'This will permanently reset all settings to their factory defaults. This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              context.read<SettingsBloc>().add(ResetAllSettings());
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppThemeV2.error),
-            child: const Text('Reset All'),
-          ),
-        ],
-      ),
+      title: 'Reset All Settings?',
+      content:
+          'This will permanently reset all settings to their factory defaults. This action cannot be undone.',
+      confirmText: 'Reset All',
+      isDestructive: true,
+      icon: Icons.delete_forever_rounded,
     );
+
+    if (confirmed == true && context.mounted) {
+      context.read<SettingsBloc>().add(ResetAllSettings());
+    }
   }
 
   void _showLicensesDialog(BuildContext context, bool isDark) {

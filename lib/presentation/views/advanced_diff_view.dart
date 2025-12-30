@@ -110,6 +110,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   int _currentPage = 0;
   int _itemsPerPage = 100;
   final List<int> _itemsPerPageOptions = [50, 100, 200, 500];
+  final ScrollController _scrollController = ScrollController();
+  int _focusedDiffIndex = -1;
+
 
   // Resizable columns - relative widths (sum = 1.0)
   double _statusWidth = 0.10;
@@ -159,6 +162,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     _cellFocusNodes.clear();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -206,6 +210,68 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     setState(() {
       _itemsPerPage = newItemsPerPage;
       _currentPage = 0;
+      _focusedDiffIndex = -1;
+    });
+  }
+
+  void _jumpToNextChange() {
+    if (_processedDiffEntries.isEmpty) return;
+    
+    int nextIndex = _focusedDiffIndex + 1;
+    if (nextIndex >= _processedDiffEntries.length) {
+      nextIndex = 0; // Wrap around
+    }
+    _jumpToChange(nextIndex);
+  }
+
+  void _jumpToPreviousChange() {
+    if (_processedDiffEntries.isEmpty) return;
+
+    int prevIndex = _focusedDiffIndex - 1;
+    if (prevIndex < 0) {
+      prevIndex = _processedDiffEntries.length - 1; // Wrap around
+    }
+    _jumpToChange(prevIndex);
+  }
+
+  void _jumpToChange(int index) {
+    setState(() {
+      _focusedDiffIndex = index;
+      
+      // Calculate page
+      final newPage = index ~/ _itemsPerPage;
+      if (newPage != _currentPage) {
+        _currentPage = newPage;
+      }
+      
+      // Select the row
+      final key = _processedDiffEntries[index].key;
+      _selectedRowKeys.clear();
+      _selectedRowKeys.add(key);
+    });
+
+    // Scroll to item
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        final indexOnPage = index % _itemsPerPage;
+        // Estimate row height (header 36 + rows * 44)
+        // A smarter way is using Scrollable.ensureVisible if we had keys,
+        // but simple offset usually works for fixed height rows
+        const rowHeight = 44.0; 
+        final offset = indexOnPage * rowHeight;
+        
+        // Clamp offset to min/max scroll extent
+        final target = offset.clamp(
+          _scrollController.position.minScrollExtent,
+          _scrollController.position.maxScrollExtent
+        );
+        
+        _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
     });
   }
 
@@ -326,6 +392,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         filteredEntries.map((entry) => entry.key),
       );
       _currentPage = nextPage.clamp(0, maxPage);
+      _focusedDiffIndex = -1; 
     });
   }
 
@@ -1824,6 +1891,25 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           ),
           const SizedBox(width: 8),
 
+          // Navigation
+          IconButton(
+            icon: Icon(Icons.keyboard_arrow_up, color: textColor, size: 20),
+            onPressed: _processedDiffEntries.isNotEmpty ? _jumpToPreviousChange : null,
+            tooltip: 'Previous Change',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          ),
+          IconButton(
+            icon: Icon(Icons.keyboard_arrow_down, color: textColor, size: 20),
+            onPressed: _processedDiffEntries.isNotEmpty ? _jumpToNextChange : null,
+            tooltip: 'Next Change',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          ),
+          const SizedBox(width: 8),
+          Container(width: 1, height: 20, color: borderCol),
+          const SizedBox(width: 8),
+
           // Title
           Text('Diff View',
               style: TextStyle(
@@ -2605,6 +2691,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             // Data rows
             Expanded(
               child: ListView.builder(
+                controller: _scrollController,
                 itemCount: _paginatedEntries.length,
                 itemBuilder: (context, index) {
                   final entry = _paginatedEntries[index];
@@ -2734,11 +2821,23 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
 
           // New Value
           Expanded(
-            child: Text('New Value (Target)',
-                style: TextStyle(
-                    color: textColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
+            child: Row(
+              children: [
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Columns are scrolling together',
+                  child: Icon(Icons.link, color: textColor.withValues(alpha: 0.5), size: 14),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text('New Value (Target)',
+                      style: TextStyle(
+                          color: textColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
           ),
           Container(width: 1, height: 36, color: borderCol),
           SizedBox(
@@ -2793,7 +2892,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           });
         },
         child: Container(
-          width: 6,
+          width: 12,
           height: 36,
           color: Colors.transparent,
           child: Center(

@@ -67,7 +67,7 @@ class DiffHighlighter {
           // Show deletions only in the source (old) column
           // Softer styling: subtle background, no strikethrough
           style = (baseStyle ?? const TextStyle()).copyWith(
-            backgroundColor: effectiveDeletionColor.withValues(alpha: 0.18),
+            backgroundColor: effectiveDeletionColor.withValues(alpha: 0.25),
             fontWeight: FontWeight.w500,
           );
           spans.add(TextSpan(text: diff.text, style: style));
@@ -78,7 +78,7 @@ class DiffHighlighter {
           // Show insertions only in the target (new) column
           // Softer styling: subtle background
           style = (baseStyle ?? const TextStyle()).copyWith(
-            backgroundColor: effectiveInsertionColor.withValues(alpha: 0.18),
+            backgroundColor: effectiveInsertionColor.withValues(alpha: 0.25),
             fontWeight: FontWeight.w500,
           );
           spans.add(TextSpan(text: diff.text, style: style));

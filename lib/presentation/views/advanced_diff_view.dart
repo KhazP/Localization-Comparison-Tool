@@ -68,6 +68,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   AdvancedDiffSimilarityFilter _similarityFilter =
       AdvancedDiffSimilarityFilter.any;
   DiffViewSortOrder _currentSortOrder = DiffViewSortOrder.fileOrder;
+  static String _lastSearchQuery = '';
   List<MapEntry<String, ComparisonStatusDetail>> _processedDiffEntries = [];
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -146,9 +147,12 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     _targetLanguageCode =
         LanguageDetector.detectFromPath(widget.targetFile.path);
     _processDiffEntries();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybePromptLanguageOverride();
-    });
+
+    // Restore last search
+    if (_lastSearchQuery.isNotEmpty) {
+      _searchQuery = _lastSearchQuery;
+      _searchController.text = _lastSearchQuery;
+    }
   }
 
   @override
@@ -382,9 +386,21 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       });
     }
 
+
+
+    // Reset page and focus on search
     final totalPages = (filteredEntries.length / _itemsPerPage).ceil();
     final maxPage = totalPages > 0 ? totalPages - 1 : 0;
+    // Attempt to keep page if valid? No, usually search resets to top.
     final nextPage = resetPage ? 0 : _currentPage;
+    
+    // Auto-select first result if searching
+    int nextFocus = _focusedDiffIndex;
+    if (_searchQuery.isNotEmpty && filteredEntries.isNotEmpty && resetPage) {
+        nextFocus = 0;
+    } else if (_focusedDiffIndex >= filteredEntries.length) {
+        nextFocus = -1;
+    }
 
     setState(() {
       _processedDiffEntries = filteredEntries;
@@ -392,7 +408,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         filteredEntries.map((entry) => entry.key),
       );
       _currentPage = nextPage.clamp(0, maxPage);
-      _focusedDiffIndex = -1; 
+      _focusedDiffIndex = nextFocus;
     });
   }
 
@@ -2042,10 +2058,46 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
               ),
               onChanged: (value) {
                 _searchQuery = value;
+                _lastSearchQuery = value;
                 _processDiffEntries();
               },
             ),
           ),
+          // Search Navigation & Count
+          if (_searchQuery.isNotEmpty && _processedDiffEntries.isNotEmpty) ...[
+             const SizedBox(width: 4),
+             Text(
+               '${_focusedDiffIndex + 1}/${_processedDiffEntries.length}',
+               style: TextStyle(color: subtleText, fontSize: 12),
+             ),
+             const SizedBox(width: 4),
+             IconButton(
+               icon: Icon(Icons.keyboard_arrow_up, color: textColor, size: 20),
+               tooltip: 'Previous Result',
+               splashRadius: 20,
+               padding: EdgeInsets.zero,
+               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+               onPressed: () {
+                 if (_processedDiffEntries.isEmpty) return;
+                 int prev = _focusedDiffIndex - 1;
+                 if (prev < 0) prev = _processedDiffEntries.length - 1;
+                 _jumpToChange(prev);
+               },
+             ),
+             IconButton(
+               icon: Icon(Icons.keyboard_arrow_down, color: textColor, size: 20),
+               tooltip: 'Next Result',
+               splashRadius: 20,
+               padding: EdgeInsets.zero,
+               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+               onPressed: () {
+                 if (_processedDiffEntries.isEmpty) return;
+                 int next = _focusedDiffIndex + 1;
+                 if (next >= _processedDiffEntries.length) next = 0;
+                 _jumpToChange(next);
+               },
+             ),
+          ],
           const SizedBox(width: 8),
 
           // Regex Toggle
@@ -3015,11 +3067,16 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         statusText = '---';
     }
 
-    // Row background with subtle status tint
     final rowBg = isAlt
         ? rowAltBg
         : (isDark ? (isAmoled ? Colors.black : _bgPrimary) : Colors.white);
-    final tintedBg = Color.lerp(rowBg, statusColor, 0.03)!;
+    
+    // Highlight focused row
+    final isFocused = globalIndex == _focusedDiffIndex;
+    final effectiveRowBg = isFocused 
+        ? themeState.accentColor.withValues(alpha: isDark ? 0.15 : 0.1) 
+        : rowBg;
+    final tintedBg = Color.lerp(effectiveRowBg, statusColor, 0.03)!;
 
     // Build value widgets
     Widget oldValueWidget;
@@ -3098,8 +3155,12 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       height: 44,
       decoration: BoxDecoration(
         color: tintedBg,
-        border:
-            Border(bottom: BorderSide(color: borderCol.withValues(alpha: 0.5))),
+        border: Border(
+           bottom: BorderSide(color: borderCol.withValues(alpha: 0.5)),
+           left: isFocused 
+             ? BorderSide(color: themeState.accentColor, width: 3)
+             : BorderSide.none,
+        ),
       ),
       child: Row(
         children: [

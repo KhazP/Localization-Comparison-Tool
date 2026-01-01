@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
-// For utf8
 import 'package:csv/csv.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
@@ -19,7 +17,7 @@ class CsvParser extends LocalizationParser {
     final Map<String, String> translations = {};
     try {
       // Respect the encoding setting from AppSettings
-      final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
+      final encoding = resolveEncoding(settings, extractionMode);
 
       // Read file content with the specified encoding
       // Note: BOM handling is often automatic with Dart's File.readAsString,

@@ -432,94 +432,250 @@ class AppSettings extends HiveObject {
 
   // From JSON
   factory AppSettings.fromJson(Map<String, dynamic> json) {
+    final defaults = AppSettings.defaultSettings();
+
+    String _readString(String key, String fallback) {
+      final value = json[key];
+      if (value is String) {
+        return value;
+      }
+      return fallback;
+    }
+
+    String? _readNullableString(String key, String? fallback) {
+      final value = json[key];
+      if (value is String) {
+        return value;
+      }
+      return fallback;
+    }
+
+    bool _readBool(String key, bool fallback) {
+      final value = json[key];
+      if (value is bool) {
+        return value;
+      }
+      return fallback;
+    }
+
+    int _readInt(String key, int fallback) {
+      final value = json[key];
+      if (value is int) {
+        return value;
+      }
+      if (value is num) {
+        return value.toInt();
+      }
+      return fallback;
+    }
+
+    double _readDouble(String key, double fallback) {
+      final value = json[key];
+      if (value is num) {
+        return value.toDouble();
+      }
+      return fallback;
+    }
+
+    double? _readOptionalDouble(String key) {
+      final value = json[key];
+      if (value is num) {
+        return value.toDouble();
+      }
+      return null;
+    }
+
+    List<String> _readStringList(String key, List<String> fallback) {
+      final value = json[key];
+      if (value is List) {
+        return value.map((item) => item.toString()).toList();
+      }
+      return fallback;
+    }
+
     return AppSettings(
-      defaultSourceFormat: json['defaultSourceFormat'] as String,
-      defaultTargetFormat: json['defaultTargetFormat'] as String,
-      ignorePatterns: List<String>.from(json['ignorePatterns']),
-      ignoreCase: json['ignoreCase'] as bool,
-      ignoreWhitespace: json['ignoreWhitespace'] as bool,
-      appLanguage: json['appLanguage'] as String,
-      defaultViewOnStartup: json['defaultViewOnStartup'] as String,
-      autoCheckForUpdates: json['autoCheckForUpdates'] as bool,
-      appThemeMode: json['appThemeMode'] as String,
-      accentColorValue: json['accentColorValue'] as int,
-      diffAddedColor: json['diffAddedColor'] as int,
-      diffRemovedColor: json['diffRemovedColor'] as int,
-      diffModifiedColor: json['diffModifiedColor'] as int,
-      diffFontSize: (json['diffFontSize'] as num?)?.toDouble() ?? 14.0,
-      defaultSourceEncoding: json['defaultSourceEncoding'] as String,
-      defaultTargetEncoding: json['defaultTargetEncoding'] as String,
-      autoDetectEncoding: json['autoDetectEncoding'] as bool,
-      csvDelimiter: json['csvDelimiter'] as String,
-      handleByteOrderMark: json['handleByteOrderMark'] as bool,
-      autoReloadOnChange: json['autoReloadOnChange'] as bool,
-      defaultExportDirectory: json['defaultExportDirectory'] as String,
-      aiTranslationService: json['aiTranslationService'] as String,
-      googleTranslateApiKey: json['googleTranslateApiKey'] as String,
-      deeplApiKey: json['deeplApiKey'] as String,
-      enableAiTranslation: json['enableAiTranslation'] as bool,
-      translationConfidenceThreshold:
-          json['translationConfidenceThreshold'] as double,
-      geminiApiKey: json['geminiApiKey'] as String? ?? '',
-      openaiApiKey: json['openaiApiKey'] as String? ?? '',
-      defaultAiModel: json['defaultAiModel'] as String? ?? '',
-      systemTranslationContext:
-          json['systemTranslationContext'] as String? ?? '',
-      contextStringsCount: json['contextStringsCount'] as int? ?? 2,
-      includeContextStrings: json['includeContextStrings'] as bool? ?? false,
-      enableTranslationMemory: json['enableTranslationMemory'] as bool? ?? true,
-      enableFuzzyFill: json['enableFuzzyFill'] as bool? ?? true,
-      fuzzyFillMinScore: (json['fuzzyFillMinScore'] as num?)?.toDouble() ?? 0.6,
-      fuzzyFillAutoApply: json['fuzzyFillAutoApply'] as bool? ?? false,
-      fuzzyFillOnlyEmptyTargets:
-          json['fuzzyFillOnlyEmptyTargets'] as bool? ?? true,
-      fuzzyFillMatchLimit: json['fuzzyFillMatchLimit'] as int? ?? 3,
-      fuzzyFillExactMatchesOnly:
-          json['fuzzyFillExactMatchesOnly'] as bool? ?? false,
-      defaultGitRepositoryPath: json['defaultGitRepositoryPath'] as String,
-      autoCommitOnSave: json['autoCommitOnSave'] as bool,
-      gitUserName: json['gitUserName'] as String,
-      gitUserEmail: json['gitUserEmail'] as String,
-      enableGitIntegration: json['enableGitIntegration'] as bool,
-      defaultBranch: json['defaultBranch'] as String? ?? 'main',
-      defaultRemote: json['defaultRemote'] as String? ?? 'origin',
-      commitMessageTemplate: json['commitMessageTemplate'] as String? ?? 'Update localization: {files}',
-      sshKeyPath: json['sshKeyPath'] as String? ?? '',
-      showIdenticalEntries: json['showIdenticalEntries'] as bool? ?? true,
-      startMinimizedToTray: json['startMinimizedToTray'] as bool? ?? false,
-      openLastProjectOnStartup:
-          json['openLastProjectOnStartup'] as bool? ?? false,
-      rememberWindowPosition: json['rememberWindowPosition'] as bool? ?? false,
-      lastWindowX: (json['lastWindowX'] as num?)?.toDouble(),
-      lastWindowY: (json['lastWindowY'] as num?)?.toDouble(),
-      lastWindowWidth: (json['lastWindowWidth'] as num?)?.toDouble(),
-      lastWindowHeight: (json['lastWindowHeight'] as num?)?.toDouble(),
-      similarityThreshold:
-          (json['similarityThreshold'] as num?)?.toDouble() ?? 0.85,
-      aiTemperature: (json['aiTemperature'] as num?)?.toDouble() ?? 0.7,
-      maxTokens: json['maxTokens'] as int? ?? 2048,
-      comparisonMode: json['comparisonMode'] as String? ?? 'Key-based',
-      useMicaEffect: json['useMicaEffect'] as bool? ?? false,
-      diffFontFamily: json['diffFontFamily'] as String? ?? 'System Default',
-      diffIdenticalColor: json['diffIdenticalColor'] as int? ?? 0xFF9E9E9E,
-      defaultExportFormat: json['defaultExportFormat'] as String? ?? 'CSV',
-      includeUtf8Bom: json['includeUtf8Bom'] as bool? ?? true,
-      openFolderAfterExport: json['openFolderAfterExport'] as bool? ?? true,
-      autoBackup: json['autoBackup'] as bool? ?? true,
-      backupDirectory: json['backupDirectory'] as String? ?? '',
-      backupsToKeep: json['backupsToKeep'] as int? ?? 5,
-      autoDownloadUpdate: json['autoDownloadUpdate'] as bool? ?? false,
-      lastUpdateCheckTime: json['lastUpdateCheckTime'] as String?,
-      skipVersion: json['skipVersion'] as String? ?? '',
-      enableAnonymousUsageStatistics: json['enableAnonymousUsageStatistics'] as bool? ?? false,
-      enableCrashReporting: json['enableCrashReporting'] as bool? ?? true,
-      showDeveloperOptions: json['showDeveloperOptions'] as bool? ?? false,
-      showDockBadge: json['showDockBadge'] as bool? ?? false,
-      macosWindowMaterial: json['macosWindowMaterial'] as String? ?? 'sidebar',
-      translationStrategy: json['translationStrategy'] as String? ?? 'llm',
-      recentProjects: json['recentProjects'] != null
-          ? List<String>.from(json['recentProjects'])
-          : [],
+      defaultSourceFormat: _readString(
+        'defaultSourceFormat',
+        defaults.defaultSourceFormat,
+      ),
+      defaultTargetFormat: _readString(
+        'defaultTargetFormat',
+        defaults.defaultTargetFormat,
+      ),
+      ignorePatterns:
+          _readStringList('ignorePatterns', defaults.ignorePatterns),
+      ignoreCase: _readBool('ignoreCase', defaults.ignoreCase),
+      ignoreWhitespace: _readBool('ignoreWhitespace', defaults.ignoreWhitespace),
+      appLanguage: _readString('appLanguage', defaults.appLanguage),
+      defaultViewOnStartup: _readString(
+        'defaultViewOnStartup',
+        defaults.defaultViewOnStartup,
+      ),
+      autoCheckForUpdates:
+          _readBool('autoCheckForUpdates', defaults.autoCheckForUpdates),
+      appThemeMode: _readString('appThemeMode', defaults.appThemeMode),
+      accentColorValue:
+          _readInt('accentColorValue', defaults.accentColorValue),
+      diffAddedColor: _readInt('diffAddedColor', defaults.diffAddedColor),
+      diffRemovedColor:
+          _readInt('diffRemovedColor', defaults.diffRemovedColor),
+      diffModifiedColor:
+          _readInt('diffModifiedColor', defaults.diffModifiedColor),
+      diffFontSize: _readDouble('diffFontSize', defaults.diffFontSize),
+      defaultSourceEncoding: _readString(
+        'defaultSourceEncoding',
+        defaults.defaultSourceEncoding,
+      ),
+      defaultTargetEncoding: _readString(
+        'defaultTargetEncoding',
+        defaults.defaultTargetEncoding,
+      ),
+      autoDetectEncoding:
+          _readBool('autoDetectEncoding', defaults.autoDetectEncoding),
+      csvDelimiter: _readString('csvDelimiter', defaults.csvDelimiter),
+      handleByteOrderMark:
+          _readBool('handleByteOrderMark', defaults.handleByteOrderMark),
+      autoReloadOnChange:
+          _readBool('autoReloadOnChange', defaults.autoReloadOnChange),
+      defaultExportDirectory: _readString(
+        'defaultExportDirectory',
+        defaults.defaultExportDirectory,
+      ),
+      aiTranslationService:
+          _readString('aiTranslationService', defaults.aiTranslationService),
+      googleTranslateApiKey: _readString(
+        'googleTranslateApiKey',
+        defaults.googleTranslateApiKey,
+      ),
+      deeplApiKey: _readString('deeplApiKey', defaults.deeplApiKey),
+      enableAiTranslation:
+          _readBool('enableAiTranslation', defaults.enableAiTranslation),
+      translationConfidenceThreshold: _readDouble(
+        'translationConfidenceThreshold',
+        defaults.translationConfidenceThreshold,
+      ),
+      geminiApiKey: _readString('geminiApiKey', defaults.geminiApiKey),
+      openaiApiKey: _readString('openaiApiKey', defaults.openaiApiKey),
+      defaultAiModel: _readString('defaultAiModel', defaults.defaultAiModel),
+      systemTranslationContext: _readString(
+        'systemTranslationContext',
+        defaults.systemTranslationContext,
+      ),
+      contextStringsCount:
+          _readInt('contextStringsCount', defaults.contextStringsCount),
+      includeContextStrings: _readBool(
+        'includeContextStrings',
+        defaults.includeContextStrings,
+      ),
+      enableTranslationMemory: _readBool(
+        'enableTranslationMemory',
+        defaults.enableTranslationMemory,
+      ),
+      enableFuzzyFill:
+          _readBool('enableFuzzyFill', defaults.enableFuzzyFill),
+      fuzzyFillMinScore:
+          _readDouble('fuzzyFillMinScore', defaults.fuzzyFillMinScore),
+      fuzzyFillAutoApply: _readBool(
+        'fuzzyFillAutoApply',
+        defaults.fuzzyFillAutoApply,
+      ),
+      fuzzyFillOnlyEmptyTargets: _readBool(
+        'fuzzyFillOnlyEmptyTargets',
+        defaults.fuzzyFillOnlyEmptyTargets,
+      ),
+      fuzzyFillMatchLimit:
+          _readInt('fuzzyFillMatchLimit', defaults.fuzzyFillMatchLimit),
+      fuzzyFillExactMatchesOnly: _readBool(
+        'fuzzyFillExactMatchesOnly',
+        defaults.fuzzyFillExactMatchesOnly,
+      ),
+      defaultGitRepositoryPath: _readString(
+        'defaultGitRepositoryPath',
+        defaults.defaultGitRepositoryPath,
+      ),
+      autoCommitOnSave:
+          _readBool('autoCommitOnSave', defaults.autoCommitOnSave),
+      gitUserName: _readString('gitUserName', defaults.gitUserName),
+      gitUserEmail: _readString('gitUserEmail', defaults.gitUserEmail),
+      enableGitIntegration:
+          _readBool('enableGitIntegration', defaults.enableGitIntegration),
+      defaultBranch:
+          _readString('defaultBranch', defaults.defaultBranch),
+      defaultRemote:
+          _readString('defaultRemote', defaults.defaultRemote),
+      commitMessageTemplate: _readString(
+        'commitMessageTemplate',
+        defaults.commitMessageTemplate,
+      ),
+      sshKeyPath: _readString('sshKeyPath', defaults.sshKeyPath),
+      showIdenticalEntries:
+          _readBool('showIdenticalEntries', defaults.showIdenticalEntries),
+      startMinimizedToTray:
+          _readBool('startMinimizedToTray', defaults.startMinimizedToTray),
+      openLastProjectOnStartup: _readBool(
+        'openLastProjectOnStartup',
+        defaults.openLastProjectOnStartup,
+      ),
+      rememberWindowPosition: _readBool(
+        'rememberWindowPosition',
+        defaults.rememberWindowPosition,
+      ),
+      lastWindowX: _readOptionalDouble('lastWindowX') ??
+          defaults.lastWindowX,
+      lastWindowY: _readOptionalDouble('lastWindowY') ??
+          defaults.lastWindowY,
+      lastWindowWidth: _readOptionalDouble('lastWindowWidth') ??
+          defaults.lastWindowWidth,
+      lastWindowHeight: _readOptionalDouble('lastWindowHeight') ??
+          defaults.lastWindowHeight,
+      similarityThreshold: _readDouble(
+        'similarityThreshold',
+        defaults.similarityThreshold,
+      ),
+      aiTemperature: _readDouble('aiTemperature', defaults.aiTemperature),
+      maxTokens: _readInt('maxTokens', defaults.maxTokens),
+      comparisonMode:
+          _readString('comparisonMode', defaults.comparisonMode),
+      useMicaEffect: _readBool('useMicaEffect', defaults.useMicaEffect),
+      diffFontFamily: _readString('diffFontFamily', defaults.diffFontFamily),
+      diffIdenticalColor:
+          _readInt('diffIdenticalColor', defaults.diffIdenticalColor),
+      defaultExportFormat:
+          _readString('defaultExportFormat', defaults.defaultExportFormat),
+      includeUtf8Bom:
+          _readBool('includeUtf8Bom', defaults.includeUtf8Bom),
+      openFolderAfterExport: _readBool(
+        'openFolderAfterExport',
+        defaults.openFolderAfterExport,
+      ),
+      autoBackup: _readBool('autoBackup', defaults.autoBackup),
+      backupDirectory:
+          _readString('backupDirectory', defaults.backupDirectory),
+      backupsToKeep: _readInt('backupsToKeep', defaults.backupsToKeep),
+      autoDownloadUpdate:
+          _readBool('autoDownloadUpdate', defaults.autoDownloadUpdate),
+      lastUpdateCheckTime: _readNullableString(
+        'lastUpdateCheckTime',
+        defaults.lastUpdateCheckTime,
+      ),
+      skipVersion: _readString('skipVersion', defaults.skipVersion),
+      enableAnonymousUsageStatistics: _readBool(
+        'enableAnonymousUsageStatistics',
+        defaults.enableAnonymousUsageStatistics,
+      ),
+      enableCrashReporting:
+          _readBool('enableCrashReporting', defaults.enableCrashReporting),
+      showDeveloperOptions:
+          _readBool('showDeveloperOptions', defaults.showDeveloperOptions),
+      showDockBadge: _readBool('showDockBadge', defaults.showDockBadge),
+      macosWindowMaterial: _readString(
+        'macosWindowMaterial',
+        defaults.macosWindowMaterial,
+      ),
+      translationStrategy:
+          _readString('translationStrategy', defaults.translationStrategy),
+      recentProjects:
+          _readStringList('recentProjects', defaults.recentProjects),
     );
   }
 

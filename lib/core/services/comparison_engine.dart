@@ -100,11 +100,13 @@ class ComparisonEngine {
       file1,
       settings,
       format: settings.defaultSourceFormat,
+      extractionMode: ExtractionMode.source,
     );
     final file2DataFuture = _parseFile(
       file2,
       settings,
       format: settings.defaultTargetFormat,
+      extractionMode: ExtractionMode.target,
     );
 
     final results = await Future.wait([file1DataFuture, file2DataFuture]);

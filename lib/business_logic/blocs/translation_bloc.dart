@@ -80,6 +80,7 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
     TranslateText event,
     Emitter<TranslationState> emit,
   ) async {
+    final previousValue = _currentTranslations[event.textKey];
     // Indicate loading for this specific key.
     _currentTranslations[event.textKey] = null;
     emit(TranslationInProgress(Map.from(_currentTranslations)));
@@ -92,6 +93,10 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
         event.sourceLanguage ?? 'auto',
         event.targetLanguage,
       );
+
+      if (translatedText != null && _isPreviewTranslation(translatedText)) {
+        translatedText = null;
+      }
       
       if (translatedText == null) {
         final settings = await settingsRepository.loadSettings();
@@ -120,23 +125,38 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
           event.targetLanguage,
           sourceLanguage: event.sourceLanguage,
         );
-        // Cache the new translation
-        await translationCache.cacheTranslation(
-          event.text,
-          event.sourceLanguage ?? 'auto',
-          event.targetLanguage,
-          translatedText,
-        );
+        if (!_isPreviewTranslation(translatedText)) {
+          // Cache the new translation
+          await translationCache.cacheTranslation(
+            event.text,
+            event.sourceLanguage ?? 'auto',
+            event.targetLanguage,
+            translatedText,
+          );
+        }
       }
 
       _currentTranslations[event.textKey] = translatedText;
       emit(TranslationSuccess(Map.from(_currentTranslations)));
-    } catch (e) {
-      _currentTranslations[event.textKey] = "Error";
+    } catch (e, s) {
+      developer.log(
+        'Translation failed.',
+        name: 'translation',
+        error: e,
+        stackTrace: s,
+      );
+      if (previousValue != null) {
+        _currentTranslations[event.textKey] = previousValue;
+      } else {
+        _currentTranslations.remove(event.textKey);
+      }
+      final errorMessage = e is MissingApiKeyException
+          ? e.message
+          : 'We could not translate that text. Try again.';
       emit(
         TranslationFailure(
           Map.from(_currentTranslations),
-          'Failed to translate ${event.textKey}: ${e.toString()}',
+          errorMessage,
           event.textKey,
         ),
       );
@@ -155,4 +175,8 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
         emit(TranslationSuccess(Map.from(_currentTranslations)));
     }
   }
-} 
+
+  bool _isPreviewTranslation(String text) {
+    return text.contains('(Preview - API Key Needed)');
+  }
+}

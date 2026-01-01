@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
@@ -15,7 +14,7 @@ class ResxParser extends LocalizationParser {
   }) async {
     final Map<String, String> translations = {};
     try {
-      final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
+      final encoding = resolveEncoding(settings, extractionMode);
       final String content = await file.readAsString(encoding: encoding);
       if (content.trim().isEmpty) {
         debugPrint('Info: RESX file ${file.path} is empty.');

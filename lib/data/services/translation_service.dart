@@ -8,6 +8,16 @@ abstract class TranslationService {
   Future<String> translate(String text, String targetLanguage, {String? sourceLanguage});
 }
 
+/// Thrown when a translation request is missing a required key.
+class MissingApiKeyException implements Exception {
+  MissingApiKeyException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class GoogleTranslationService implements TranslationService {
   final String _baseUrl = "translation.googleapis.com";
   final SecureStorageService _secureStorage;
@@ -20,8 +30,9 @@ class GoogleTranslationService implements TranslationService {
     final apiKey = await _secureStorage.getGoogleApiKey();
 
     if (apiKey == null || apiKey.isEmpty || apiKey == "YOUR_GOOGLE_TRANSLATE_API_KEY") {
-      debugPrint("Warning: API key is missing or invalid. Real translations will fail.");
-      return "Translated: $text (Preview - API Key Needed)";
+      throw MissingApiKeyException(
+        'Add your key in Settings to turn on translations.',
+      );
     }
 
     final queryParameters = {

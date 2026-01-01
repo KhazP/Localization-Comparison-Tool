@@ -1078,8 +1078,9 @@ class _SettingsViewState extends State<SettingsView>
         final jsonMap = json.decode(jsonString) as Map<String, dynamic>;
 
         // Validate the JSON has expected structure
-        if (!jsonMap.containsKey('appThemeMode') ||
-            !jsonMap.containsKey('defaultSourceFormat')) {
+        final knownKeys = AppSettings.defaultSettings().toJson().keys.toSet();
+        final hasKnownKey = jsonMap.keys.any(knownKeys.contains);
+        if (!hasKnownKey) {
           throw const FormatException('Invalid settings file format');
         }
 

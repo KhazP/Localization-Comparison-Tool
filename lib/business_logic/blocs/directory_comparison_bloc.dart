@@ -1,6 +1,8 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
+import 'dart:developer' as developer;
 import 'dart:io';
+
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/core/services/file_discovery_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
@@ -59,16 +61,24 @@ class DirectoryComparisonSuccess extends DirectoryComparisonState {
   final List<File> unmatchedSourceFiles;
   final List<File> unmatchedTargetFiles;
   final Map<FilePair, ComparisonResult> comparisonResults;
+  final Map<FilePair, String> comparisonErrors;
 
   const DirectoryComparisonSuccess({
     this.pairedFiles = const [],
     this.unmatchedSourceFiles = const [],
     this.unmatchedTargetFiles = const [],
     this.comparisonResults = const {},
+    this.comparisonErrors = const {},
   });
 
   @override
-  List<Object> get props => [pairedFiles, unmatchedSourceFiles, unmatchedTargetFiles, comparisonResults];
+  List<Object> get props => [
+        pairedFiles,
+        unmatchedSourceFiles,
+        unmatchedTargetFiles,
+        comparisonResults,
+        comparisonErrors,
+      ];
 }
 
 class DirectoryComparisonFailure extends DirectoryComparisonState {
@@ -141,6 +151,7 @@ class DirectoryComparisonBloc extends Bloc<DirectoryComparisonEvent, DirectoryCo
         unmatchedSourceFiles: newUnmatchedSource,
         unmatchedTargetFiles: newUnmatchedTarget,
         comparisonResults: currentState.comparisonResults,
+        comparisonErrors: currentState.comparisonErrors,
       ));
     }
   }
@@ -156,11 +167,26 @@ class DirectoryComparisonBloc extends Bloc<DirectoryComparisonEvent, DirectoryCo
 
     emit(DirectoryComparisonLoading());
     
-    final newResults = Map<FilePair, ComparisonResult>.from(currentState.comparisonResults);
+    final newResults = <FilePair, ComparisonResult>{};
+    final newErrors = <FilePair, String>{};
 
     for (final pair in currentState.pairedFiles) {
-      final result = await _comparisonEngine.compareFiles(pair.sourceFile, pair.targetFile, event.settings);
-      newResults[pair] = result;
+      try {
+        final result = await _comparisonEngine.compareFiles(
+          pair.sourceFile,
+          pair.targetFile,
+          event.settings,
+        );
+        newResults[pair] = result;
+      } catch (e, s) {
+        developer.log(
+          'Failed to compare directory pair.',
+          name: 'DirectoryComparisonBloc',
+          error: e,
+          stackTrace: s,
+        );
+        newErrors[pair] = _formatComparisonError(e);
+      }
     }
 
     emit(DirectoryComparisonSuccess(
@@ -168,6 +194,15 @@ class DirectoryComparisonBloc extends Bloc<DirectoryComparisonEvent, DirectoryCo
       unmatchedSourceFiles: currentState.unmatchedSourceFiles,
       unmatchedTargetFiles: currentState.unmatchedTargetFiles,
       comparisonResults: newResults,
+      comparisonErrors: newErrors,
     ));
   }
-} 
+
+  String _formatComparisonError(Object error) {
+    final message = error.toString().toLowerCase();
+    if (message.contains('unsupported file type')) {
+      return 'This file type is not supported yet.';
+    }
+    return 'Could not compare this file. Check it and try again.';
+  }
+}

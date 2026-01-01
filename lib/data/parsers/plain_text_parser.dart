@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:localizer_app_main/data/models/app_settings.dart';
@@ -20,7 +19,7 @@ class PlainTextParser extends LocalizationParser {
   }) async {
     final Map<String, String> translations = {};
     try {
-      final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
+      final encoding = resolveEncoding(settings, extractionMode);
       final String content = await file.readAsString(encoding: encoding);
       
       // Check if this is an XML-style .lang file

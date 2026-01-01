@@ -596,7 +596,12 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             padding: const EdgeInsets.only(bottom: 16),
             child: _buildSummaryBar(context, state.pairedFiles, state.comparisonResults),
           ),
-        _buildPairedFilesSection(context, state.pairedFiles, state.comparisonResults),
+        _buildPairedFilesSection(
+          context,
+          state.pairedFiles,
+          state.comparisonResults,
+          state.comparisonErrors,
+        ),
         if (state.unmatchedSourceFiles.isNotEmpty)
           _buildUnmatchedFilesSection(
             context,
@@ -679,6 +684,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     BuildContext context,
     List<FilePair> pairs,
     Map<FilePair, ComparisonResult> results,
+    Map<FilePair, String> errors,
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -703,11 +709,18 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         ),
         ...pairs.map((pair) {
           final result = results[pair];
+          final errorMessage = errors[pair];
+          final hasResult = result != null;
           final added = result?.diff.values.where((d) => d.status == StringComparisonStatus.added).length ?? 0;
           final removed = result?.diff.values.where((d) => d.status == StringComparisonStatus.removed).length ?? 0;
           final modified = result?.diff.values.where((d) => d.status == StringComparisonStatus.modified).length ?? 0;
           
           final themeState = context.watch<ThemeBloc>().state;
+          final statusColor = errorMessage != null
+              ? AppThemeV2.error
+              : hasResult
+                  ? AppThemeV2.success
+                  : AppThemeV2.warning;
 
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
@@ -725,7 +738,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                   width: 4,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: result != null ? AppThemeV2.success : AppThemeV2.warning,
+                    color: statusColor,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -767,6 +780,28 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     label: const Text('View'),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                ] else if (errorMessage != null) ...[
+                  Tooltip(
+                    message: errorMessage,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          size: 18,
+                          color: AppThemeV2.error,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Failed',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppThemeV2.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ] else

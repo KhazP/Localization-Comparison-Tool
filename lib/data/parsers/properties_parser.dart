@@ -1,6 +1,6 @@
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
-import 'dart:convert'; // For utf8 and potentially latin1
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
@@ -15,11 +15,16 @@ class PropertiesParser extends LocalizationParser {
     final Map<String, String> translations = {};
     List<String> lines;
     try {
-      // Use encoding from settings, default to utf8 if not found
-      final encoding = Encoding.getByName(settings.defaultSourceEncoding) ?? utf8;
+      final encoding = resolveEncoding(settings, extractionMode);
       lines = await file.readAsLines(encoding: encoding);
     } catch (e) {
-      debugPrint('Error reading properties file ${file.path} with specified encoding (${settings.defaultSourceEncoding}): $e');
+      final encodingName = extractionMode == ExtractionMode.source
+          ? settings.defaultSourceEncoding
+          : settings.defaultTargetEncoding;
+      debugPrint(
+        'Error reading properties file ${file.path} with encoding '
+        '($encodingName): $e',
+      );
       return {};
     }
     

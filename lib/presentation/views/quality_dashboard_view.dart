@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -90,7 +92,24 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
   }
 
   Future<void> _exportReport() async {
-    final data = await _dashboardFuture;
+    QualityDashboardData? data;
+    try {
+      data = await _dashboardFuture;
+    } catch (e, s) {
+      developer.log(
+        'Failed to build dashboard data for export.',
+        name: 'QualityDashboardView',
+        error: e,
+        stackTrace: s,
+      );
+      if (mounted) {
+        ToastService.showError(
+          context,
+          'Could not build the report. Please try again.',
+        );
+      }
+      return;
+    }
     if (data == null) {
       if (mounted) {
         ToastService.showInfo(context, 'No data to export');

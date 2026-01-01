@@ -4,7 +4,8 @@ import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/data/models/quality_metrics.dart';
 
 /// Shows detailed quality issues in a dialog.
-class IssueDetailsDialog extends StatelessWidget {
+/// Shows detailed quality issues in a dialog.
+class IssueDetailsDialog extends StatefulWidget {
   const IssueDetailsDialog({
     super.key,
     required this.title,
@@ -17,10 +18,58 @@ class IssueDetailsDialog extends StatelessWidget {
   final List<QualityIssue> items;
 
   @override
+  State<IssueDetailsDialog> createState() => _IssueDetailsDialogState();
+}
+
+class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  List<QualityIssue> _filteredItems = [];
+  int _displayLimit = 20;
+  
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredItems = widget.items;
+      } else {
+        final lowerQuery = query.toLowerCase();
+        _filteredItems = widget.items.where((issue) {
+          return issue.key.toLowerCase().contains(lowerQuery) ||
+                 (issue.sourceValue?.toLowerCase().contains(lowerQuery) ?? false) ||
+                 (issue.targetValue?.toLowerCase().contains(lowerQuery) ?? false) ||
+                 issue.description.toLowerCase().contains(lowerQuery);
+        }).toList();
+      }
+      _displayLimit = 20; // Reset limit on search
+    });
+  }
+
+  void _showMore() {
+    setState(() {
+      _displayLimit += 20;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final visibleItems = _filteredItems.take(_displayLimit).toList();
+    final hasMore = _displayLimit < _filteredItems.length;
+
     return Dialog(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 720),
+        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 800),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -30,9 +79,21 @@ class IssueDetailsDialog extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Showing ${visibleItems.length} of ${_filteredItems.length} issues',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(
@@ -41,26 +102,55 @@ class IssueDetailsDialog extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(
-                    alpha: 0.7,
+              const SizedBox(height: 16),
+              TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search by key, text, or error...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
-              const SizedBox(height: 24),
-              if (items.isEmpty)
-                const Center(child: Text('No details available.'))
+              const SizedBox(height: 16),
+              if (visibleItems.isEmpty)
+                Expanded(
+                  child: Center(
+                     child: Text(
+                       _searchController.text.isEmpty 
+                           ? 'No details available.' 
+                           : 'No matches found.',
+                       style: theme.textTheme.bodyMedium?.copyWith(
+                         color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                       ),
+                     ),
+                  ),
+                )
               else
-                Flexible(
+                Expanded(
                   child: ListView.separated(
-                    itemCount: items.length,
+                    itemCount: visibleItems.length + (hasMore ? 1 : 0),
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      final item = items[index];
+                      if (index == visibleItems.length) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: OutlinedButton(
+                              onPressed: _showMore,
+                              child: const Text('Show More'),
+                            ),
+                          ),
+                        );
+                      }
+                      final item = visibleItems[index];
                       return _IssueCard(
                         issue: item,
                         onCopy: () => _copyIssue(context, item),
@@ -68,13 +158,14 @@ class IssueDetailsDialog extends StatelessWidget {
                     },
                   ),
                 ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
+                  TextButton.icon(
                     onPressed: () => _copyAll(context),
-                    child: const Text('Copy All'),
+                    icon: const Icon(Icons.copy_all),
+                    label: Text('Copy ${_filteredItems.length} Items'),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -100,9 +191,10 @@ class IssueDetailsDialog extends StatelessWidget {
   }
 
   void _copyAll(BuildContext context) {
-    final text = items.map(_formatIssue).join('\n\n');
+    if (_filteredItems.isEmpty) return;
+    final text = _filteredItems.map(_formatIssue).join('\n\n');
     Clipboard.setData(ClipboardData(text: text));
-    ToastService.showSuccess(context, 'All items copied');
+    ToastService.showSuccess(context, 'Copied ${_filteredItems.length} items');
   }
 
   String _formatIssue(QualityIssue issue) {

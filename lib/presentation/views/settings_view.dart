@@ -28,6 +28,7 @@ import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_glossary_card.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_memory_card.dart';
+import 'package:localizer_app_main/presentation/widgets/project/project_conflict_banner.dart';
 
 // Re-export SettingsCategory for external use
 export 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart' show SettingsCategory;
@@ -627,8 +628,10 @@ class _SettingsViewState extends State<SettingsView>
           const SizedBox(height: 20),
 
           // Scope selector (only for AI Services category which has overridable settings)
-          if (_selectedCategory == SettingsCategory.aiServices)
+          if (_selectedCategory == SettingsCategory.aiServices) ...[
+            const ProjectConflictBanner(),
             const SettingsScopeSelector(),
+          ],
 
           // Content
           Expanded(

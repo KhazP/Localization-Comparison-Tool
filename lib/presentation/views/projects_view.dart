@@ -12,6 +12,7 @@ import 'package:localizer_app_main/presentation/widgets/dialogs/import_review_di
 import 'package:localizer_app_main/presentation/widgets/common/empty_state_icon.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_indicator.dart';
 import 'package:localizer_app_main/core/services/project_sharing_service.dart';
+import 'package:localizer_app_main/core/services/project_stats_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 
@@ -280,6 +281,25 @@ class _ProjectListTile extends StatefulWidget {
 
 class _ProjectListTileState extends State<_ProjectListTile> {
   bool _isHovered = false;
+  ProjectStats? _stats;
+  bool _loadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final service = ProjectStatsService();
+    final stats = await service.getStats(widget.path);
+    if (mounted) {
+      setState(() {
+        _stats = stats;
+        _loadingStats = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -352,11 +372,44 @@ class _ProjectListTileState extends State<_ProjectListTile> {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    // Stats row
+                    if (_loadingStats)
+                      SizedBox(
+                        height: 14,
+                        width: 100,
+                        child: LinearProgressIndicator(
+                          backgroundColor: theme.colorScheme.primary.withAlpha(20),
+                          minHeight: 2,
+                        ),
+                      )
+                    else if (_stats != null)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.description_outlined,
+                            size: 12,
+                            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              _stats!.displayString,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 2),
                     Text(
                       widget.path,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                         fontFamily: 'Consolas', 
+                        fontSize: 10,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -378,3 +431,4 @@ class _ProjectListTileState extends State<_ProjectListTile> {
     );
   }
 }
+

@@ -198,7 +198,7 @@ class ComparisonSettingsCard extends StatelessWidget {
           IconButton(
             key: Key('ignorePattern_delete_$pattern'),
             icon: Icon(Icons.delete_outline_rounded,
-                size: 18, color: AppThemeV2.error),
+                size: 18, color: AppThemeV2.error, semanticLabel: 'Delete $pattern'),
             onPressed: () =>
                 context.read<SettingsBloc>().add(RemoveIgnorePattern(pattern)),
             tooltip: 'Remove pattern',
@@ -215,7 +215,7 @@ class ComparisonSettingsCard extends StatelessWidget {
       children: SettingsConstants.patternPresets.entries
           .map(
             (entry) => OutlinedButton.icon(
-              icon: const Icon(Icons.add, size: 16),
+              icon: const Icon(Icons.add, size: 16, semanticLabel: 'Add ignore pattern'),
               label: Text(entry.key),
               onPressed: () {
                 for (final pattern in entry.value) {

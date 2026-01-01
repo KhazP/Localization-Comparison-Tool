@@ -131,7 +131,9 @@ class SettingsDropdown extends StatelessWidget {
           isExpanded: true,
           dropdownColor: dropdownBg,
           style: TextStyle(fontSize: 14, color: dropdownTextColor),
-          icon: Icon(Icons.arrow_drop_down, color: dropdownTextColor.withValues(alpha: 0.7)),
+          icon: Icon(Icons.arrow_drop_down,
+              color: dropdownTextColor.withValues(alpha: 0.7),
+              semanticLabel: 'Dropdown arrow'),
         ),
       ),
     );

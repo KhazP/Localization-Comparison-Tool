@@ -8,6 +8,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
+import 'package:flutter/rendering.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/progress_bloc.dart';
@@ -644,6 +645,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           _currentPage = 0; // Reset pagination
                         });
                         _updateFileWatcher();
+                        
+                        // Announce result for screen readers
+                        final changeCount = state.result.diff.values
+                            .where((d) => d.status != StringComparisonStatus.identical)
+                            .length;
+                        SemanticsService.announce(
+                          'Comparison complete. Found $changeCount changes.',
+                          TextDirection.ltr,
+                        );
 
                         // Only add to history if it wasn't loaded from history
                         if (!state.wasLoadedFromHistory) {
@@ -1520,6 +1530,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           ? theme.colorScheme.primary
                           : theme.colorScheme.primary.withValues(alpha: 0.5)),
                   size: hasFile ? 20 : 24,
+                  semanticLabel: hasFile ? 'File selected' : 'Upload file',
                 ),
                 const SizedBox(width: 12),
                 // Text content
@@ -1588,6 +1599,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     Icons.swap_horiz_rounded,
                     size: 18,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    semanticLabel: 'Change file',
                   ),
                 ],
               ],
@@ -1868,25 +1880,30 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     return Tooltip(
       message: tooltip,
-      child: InkWell(
-        onTap: () => onChanged(!value),
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          decoration: BoxDecoration(
-              color: isActive
-                  ? activeColor.withValues(alpha: 0.1)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: isActive ? activeColor : Colors.transparent,
-              )),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isActive ? activeColor : inactiveColor,
+      child: Semantics(
+        button: true,
+        checked: value,
+        label: label,
+        child: InkWell(
+          onTap: () => onChanged(!value),
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+                color: isActive
+                    ? activeColor.withValues(alpha: 0.1)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: isActive ? activeColor : Colors.transparent,
+                )),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isActive ? activeColor : inactiveColor,
+              ),
             ),
           ),
         ),

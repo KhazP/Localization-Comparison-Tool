@@ -68,6 +68,7 @@ class ErrorDisplay extends StatelessWidget {
               icon,
               size: 48,
               color: theme.colorScheme.error,
+              semanticLabel: 'Error icon',
             ),
             const SizedBox(height: 16),
             Text(

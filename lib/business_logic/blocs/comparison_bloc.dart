@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
 // Events
@@ -170,8 +171,8 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       onProgress?.call(2, 2, 'Comparison complete');
       _handleComparisonResult(emit, result, event.file1, event.file2, false);
     } catch (e) {
-      final errorMessage = 'Failed to compare files: ${e.toString()}';
-      emit(ComparisonFailure(errorMessage));
+      final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
+      emit(ComparisonFailure(friendlyError.toString()));
     }
   }
 
@@ -203,8 +204,8 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       onProgress?.call(2, 2, 'Comparison complete');
       _handleComparisonResult(emit, result, file1, file2, event.isFromHistory);
     } catch (e) {
-      final errorMessage = 'Failed to compare files from history: ${e.toString()}';
-      emit(ComparisonFailure(errorMessage));
+      final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
+      emit(ComparisonFailure(friendlyError.toString()));
     }
   }
 
@@ -228,8 +229,8 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     } on InvalidBilingualFileException catch (e) {
       emit(ComparisonFailure(e.message));
     } catch (e) {
-      final errorMessage = 'Failed to compare file: ${e.toString()}';
-      emit(ComparisonFailure(errorMessage));
+      final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
+      emit(ComparisonFailure(friendlyError.toString()));
     }
   }
 }

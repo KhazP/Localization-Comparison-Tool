@@ -23,6 +23,7 @@ import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/system_info_service.dart';
+import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:intl/intl.dart';
 
 // Re-export SettingsCategory for external use
@@ -4166,19 +4167,13 @@ class _SettingsViewState extends State<SettingsView>
               UpdateLastUpdateCheckTime(DateTime.now().toIso8601String()),
             );
 
-        // Show a snackbar with the result
-        final message = result.error != null
-            ? 'Could not check for updates'
-            : result.updateAvailable
-                ? 'Update available: v${result.latestVersion}'
-                : 'You are using the latest version';
-
         if (result.error != null) {
-          ToastService.showError(context, 'Could not check for updates');
+          final friendlyError = FriendlyErrorService.getFriendlyMessage(result.error);
+          ToastService.showError(context, friendlyError.toString());
         } else if (result.updateAvailable) {
-          ToastService.showSuccess(context, message);
+          ToastService.showSuccess(context, 'Update available: v${result.latestVersion}');
         } else {
-          ToastService.showInfo(context, message);
+          ToastService.showInfo(context, 'You are using the latest version');
         }
       }
     } catch (e) {
@@ -4186,6 +4181,8 @@ class _SettingsViewState extends State<SettingsView>
         setState(() {
           _isCheckingForUpdates = false;
         });
+        final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
+        ToastService.showError(context, friendlyError.toString());
       }
     }
   }

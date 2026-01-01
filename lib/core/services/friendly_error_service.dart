@@ -34,6 +34,17 @@ class FriendlyErrorService {
       );
     }
 
+    // Unsupported format errors
+    if (error is UnsupportedError ||
+        errorString.contains('unsupportederror') ||
+        errorString.contains('not supported') ||
+        errorString.contains('unsupported file type')) {
+      return FriendlyError(
+        message: 'This file format or operation is not supported.',
+        suggestion: 'Check the file extension or try a different format.',
+      );
+    }
+
     // Network errors
     if (errorString.contains('socket') || errorString.contains('network') || errorString.contains('connection')) {
       return FriendlyError(

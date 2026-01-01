@@ -55,8 +55,8 @@ class UpdateCheckerService {
       // Get current app version
       final currentVersion = await _getCurrentVersion();
 
-      // Fetch latest release from GitHub
-      final response = await _client.get(
+      // Fetch latest release from GitHub with retry
+      final response = await _fetchWithRetry(
         Uri.parse('$_apiBaseUrl/repos/$_owner/$_repo/releases/latest'),
         headers: {
           'Accept': 'application/vnd.github.v3+json',
@@ -192,11 +192,41 @@ class UpdateCheckerService {
         .toList();
   }
 
+  /// Fetches a URL with retry logic for network errors.
+  Future<http.Response> _fetchWithRetry(
+    Uri url, {
+    Map<String, String>? headers,
+    int retries = 3,
+    Duration initialDelay = const Duration(seconds: 1),
+  }) async {
+    var delay = initialDelay;
+    for (var i = 0; i < retries; i++) {
+      try {
+        return await _client.get(url, headers: headers);
+      } catch (e) {
+        if (i == retries - 1) rethrow; // Rethrow on last attempt
+        
+        // Only retry on network errors (SocketException, etc.)
+        // In Dart http, these are usually covered by ClientException or SocketException
+        // We'll log and wait
+        developer.log(
+          'Update check failed (attempt ${i + 1}/$retries). Retrying in ${delay.inSeconds}s...',
+          name: 'UpdateCheckerService',
+          error: e,
+        );
+        
+        await Future.delayed(delay);
+        delay *= 2; // Exponential backoff
+      }
+    }
+    throw Exception('Failed to fetch after $retries attempts');
+  }
+
   /// Fetches all releases for the changelog history.
   Future<List<Map<String, String>>> getRecentReleases({int limit = 5}) async {
     try {
       final currentVersion = await _getCurrentVersion();
-      final response = await _client.get(
+      final response = await _fetchWithRetry(
         Uri.parse('$_apiBaseUrl/repos/$_owner/$_repo/releases?per_page=$limit'),
         headers: {
           'Accept': 'application/vnd.github.v3+json',

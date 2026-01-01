@@ -31,6 +31,7 @@ import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/services.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
+import 'package:localizer_app_main/core/input/app_intents.dart';
 
 // Enum for filter status in Basic View
 
@@ -359,8 +360,43 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       },
       child: Focus(
         autofocus: true,
-        child: MultiBlocListener(
-          listeners: [
+        child: Actions(
+          actions: {
+            FocusSearchIntent: CallbackAction<FocusSearchIntent>(
+              onInvoke: (intent) {
+                _searchFocusNode.requestFocus();
+                return null;
+              },
+            ),
+            SaveIntent: CallbackAction<SaveIntent>(
+              onInvoke: (intent) {
+                if (_latestComparisonResult != null) {
+                  _exportResult();
+                } else {
+                  ToastService.showInfo(context, 'Perform a comparison first to save/export results.');
+                }
+                return null;
+              },
+            ),
+            ExportIntent: CallbackAction<ExportIntent>(
+              onInvoke: (intent) {
+                if (_latestComparisonResult != null) {
+                  _exportResult();
+                } else {
+                  ToastService.showInfo(context, 'Perform a comparison first to export results.');
+                }
+                return null;
+              },
+            ),
+            OpenFileIntent: CallbackAction<OpenFileIntent>(
+              onInvoke: (intent) {
+                _pickFile(1); // Default to source file
+                return null;
+              },
+            ),
+          },
+          child: MultiBlocListener(
+            listeners: [
             // Auto-load last project on startup if setting is enabled
             BlocListener<HistoryBloc, HistoryState>(
               listenWhen: (previous, current) =>
@@ -458,6 +494,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                 onPressed: () => _pickFile(3),
                                 isDraggingOver: _isDraggingOverBilingualFile,
                                 isAmoled: isAmoled,
+                                shortcutHint: 'Ctrl+O',
                               ),
                             ],
                           )
@@ -465,7 +502,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              _buildFilePicker(
+                                _buildFilePicker(
                                 context: context,
                                 title: 'Source File',
                                 file: _file1,
@@ -473,6 +510,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                 onPressed: () => _pickFile(1),
                                 isDraggingOver: _isDraggingOverFile1,
                                 isAmoled: isAmoled,
+                                shortcutHint: 'Ctrl+O',
                               ),
                               const SizedBox(width: 12),
                               _buildFilePicker(
@@ -1093,7 +1131,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Future<void> _exportResult() async {
@@ -1367,6 +1406,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }
   }
 
+
   Widget _buildFilePicker({
     required BuildContext context,
     required String title,
@@ -1375,6 +1415,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     required VoidCallback onPressed,
     required bool isDraggingOver,
     required bool isAmoled,
+    String? shortcutHint,
   }) {
     final theme = Theme.of(context);
     // isDarkMode is implicit in theme.brightness
@@ -1447,21 +1488,26 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             }
           });
         },
-        child: GestureDetector(
-          onTap: onPressed,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding, vertical: verticalPadding),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(10.0),
-              border: Border.all(
-                color: borderColor,
-                width: isDraggingOver ? 2.0 : 1.0,
-              ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(10.0),
+            border: Border.all(
+              color: borderColor,
+              width: isDraggingOver ? 2.0 : 1.0,
             ),
-            child: Row(
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+             borderRadius: BorderRadius.circular(10.0),
+             child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(10.0),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding, vertical: verticalPadding),
+                child: Row(
               children: [
                 // Icon
                 Icon(
@@ -1495,7 +1541,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       const SizedBox(height: 2),
                       // Filename or placeholder
                       Tooltip(
-                        message: hasFile ? tooltipPath : '',
+                        message: hasFile ? tooltipPath : (shortcutHint ?? ''),
                         waitDuration: const Duration(milliseconds: 400),
                         child: Text(
                           displayText,
@@ -1549,7 +1595,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildAnalyticsAndActionsBar() {
@@ -1793,6 +1841,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 label: 'Export',
                 onPressed: _exportResult,
                 color: theme.colorScheme.onSurface,
+                tooltip: 'Export Results (Ctrl+S)',
               ),
               const SizedBox(width: 8),
               _buildCompactActionButton(
@@ -1800,6 +1849,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 label: 'Advanced',
                 onPressed: _navigateToAdvancedView,
                 color: theme.colorScheme.primary,
+                tooltip: 'Open Advanced View',
               ),
               // AI button moved to Advanced view
             ],
@@ -1960,8 +2010,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     required String label,
     required VoidCallback onPressed,
     required Color color,
+    String? tooltip,
   }) {
-    return TextButton.icon(
+    final button = TextButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 13)),
@@ -1972,6 +2023,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip, child: button);
+    }
+    return button;
   }
 
   Widget _buildFileWatcherStatus(

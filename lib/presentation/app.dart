@@ -30,6 +30,8 @@ import 'package:localizer_app_main/data/services/'
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:localizer_app_main/core/input/app_shortcuts.dart';
+import 'package:localizer_app_main/core/input/app_actions.dart';
 
 class MyApp extends StatelessWidget {
   final AppSettings initialAppSettings;
@@ -205,13 +207,22 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
               darkTheme = AppThemeV2.createDarkTheme(themeState.accentColor);
             }
 
-            final app = MaterialApp(
-              debugShowCheckedModeBanner: kDebugMode,
-              title: 'Localization Comparison Tool',
-              theme: AppThemeV2.createLightTheme(themeState.accentColor),
-              darkTheme: darkTheme,
-              themeMode: themeState.themeMode,
-              home: MyHomePage(initialSession: _initialSession),
+            final app = Shortcuts(
+              shortcuts: AppShortcuts.defaults,
+              child: MaterialApp(
+                debugShowCheckedModeBanner: kDebugMode,
+                title: 'Localization Comparison Tool',
+                theme: AppThemeV2.createLightTheme(themeState.accentColor),
+                darkTheme: darkTheme,
+                themeMode: themeState.themeMode,
+                builder: (context, child) {
+                  return Actions(
+                    actions: GlobalActions.getActions(context),
+                    child: child!,
+                  );
+                },
+                home: MyHomePage(initialSession: _initialSession),
+              ),
             );
 
             // PlatformMenuBar is only supported on macOS

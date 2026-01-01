@@ -17,6 +17,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:localizer_app_main/core/services/windows_integration_service.dart';
+import 'package:localizer_app_main/core/services/macos_integration_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
@@ -31,6 +32,7 @@ enum SettingsCategory {
   aiServices,
   versionControl,
   windowsIntegrations,
+  macOSIntegrations,
   about,
 }
 
@@ -585,6 +587,12 @@ class _SettingsViewState extends State<SettingsView>
       'File Associations',
       'Mica Effect',
     ],
+    SettingsCategory.macOSIntegrations: [
+      'Vibrancy',
+      'Window Material',
+      'Dock Badge',
+      'Untranslated Count',
+    ],
     SettingsCategory.about: [
       'Version',
       'Check Updates',
@@ -594,6 +602,7 @@ class _SettingsViewState extends State<SettingsView>
       'Privacy Policy',
       'Telemetry',
       'Crash Reporting',
+      'Developer Options',
     ],
   };
 
@@ -616,16 +625,38 @@ class _SettingsViewState extends State<SettingsView>
     return results;
   }
 
-  /// Get filtered categories based on search query
+  /// Get filtered categories based on search query and platform
   List<SettingsCategory> _getFilteredCategories() {
+    // Get the settings to check developer options
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    final showDeveloperOptions = settings.showDeveloperOptions;
+
+    // Start with all categories
+    var categories = SettingsCategory.values.toList();
+
+    // Filter out platform-specific categories unless developer options enabled
+    if (!showDeveloperOptions) {
+      if (!Platform.isWindows) {
+        categories = categories
+            .where((c) => c != SettingsCategory.windowsIntegrations)
+            .toList();
+      }
+      if (!Platform.isMacOS) {
+        categories = categories
+            .where((c) => c != SettingsCategory.macOSIntegrations)
+            .toList();
+      }
+    }
+
+    // Apply search filtering
     if (_searchQuery.isEmpty) {
-      return SettingsCategory.values.toList();
+      return categories;
     }
     final results = _getSearchResults();
     if (results.isEmpty) {
-      return SettingsCategory.values.toList();
+      return categories;
     }
-    return results.keys.toList();
+    return categories.where((c) => results.containsKey(c)).toList();
   }
 
   Widget _buildNavigationPanel(BuildContext context, bool isDark, bool isAmoled,
@@ -894,6 +925,8 @@ class _SettingsViewState extends State<SettingsView>
         return Icons.history_rounded;
       case SettingsCategory.windowsIntegrations:
         return Icons.window_rounded;
+      case SettingsCategory.macOSIntegrations:
+        return Icons.apple_rounded;
       case SettingsCategory.about:
         return Icons.info_rounded;
     }
@@ -915,6 +948,8 @@ class _SettingsViewState extends State<SettingsView>
         return 'Version Control';
       case SettingsCategory.windowsIntegrations:
         return 'Windows';
+      case SettingsCategory.macOSIntegrations:
+        return 'macOS';
       case SettingsCategory.about:
         return 'About';
     }
@@ -936,6 +971,8 @@ class _SettingsViewState extends State<SettingsView>
         return 'Version Control (Git)';
       case SettingsCategory.windowsIntegrations:
         return 'Windows Integrations';
+      case SettingsCategory.macOSIntegrations:
+        return 'macOS Integrations';
       case SettingsCategory.about:
         return 'About';
     }
@@ -1042,6 +1079,9 @@ class _SettingsViewState extends State<SettingsView>
             context, settings, isDark, isAmoled);
       case SettingsCategory.windowsIntegrations:
         return _buildWindowsIntegrationsSettings(
+            context, settings, isDark, isAmoled);
+      case SettingsCategory.macOSIntegrations:
+        return _buildMacOSIntegrationsSettings(
             context, settings, isDark, isAmoled);
       case SettingsCategory.about:
         return _buildAboutSettings(context, isDark, isAmoled);
@@ -3474,6 +3514,117 @@ class _SettingsViewState extends State<SettingsView>
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MACOS INTEGRATIONS SETTINGS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildMacOSIntegrationsSettings(
+      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
+    final isMacOS = Platform.isMacOS;
+    
+    // Available window materials
+    const materials = [
+      ('sidebar', 'Sidebar'),
+      ('menu', 'Menu'),
+      ('popover', 'Popover'),
+      ('titlebar', 'Titlebar'),
+      ('underPageBackground', 'Page Background'),
+      ('contentBackground', 'Content'),
+    ];
+
+    return Column(
+      children: [
+        if (!isMacOS)
+          _buildSettingsCard(
+            context: context,
+            title: 'Platform Notice',
+            isDark: isDark,
+            isAmoled: isAmoled,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'macOS integrations are only available when running on macOS.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Visual Effects',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Window Material',
+              description: 'Select the macOS vibrancy material style',
+              control: DropdownButton<String>(
+                value: settings.macosWindowMaterial,
+                underline: const SizedBox(),
+                borderRadius: BorderRadius.circular(8),
+                onChanged: isMacOS
+                    ? (val) {
+                        if (val != null) {
+                          context
+                              .read<SettingsBloc>()
+                              .add(UpdateMacosWindowMaterial(val));
+                          // Apply the material change - need to map string to enum
+                          // For now just save the setting, actual application would require NSVisualEffectViewMaterial enum mapping
+                        }
+                      }
+                    : null,
+                items: materials.map((m) {
+                  return DropdownMenuItem(
+                    value: m.$1,
+                    child: Text(m.$2),
+                  );
+                }).toList(),
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+              showDivider: false,
+            ),
+          ],
+        ),
+        _buildSettingsCard(
+          context: context,
+          title: 'Dock Integration',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Show Untranslated Count',
+              description: 'Display untranslated string count on the dock icon badge',
+              control: Switch(
+                value: settings.showDockBadge,
+                onChanged: isMacOS
+                    ? (val) => context
+                        .read<SettingsBloc>()
+                        .add(UpdateShowDockBadge(val))
+                    : null,
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+              showDivider: false,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildTextFieldRow(
     BuildContext context,
     String label,
@@ -3889,6 +4040,32 @@ class _SettingsViewState extends State<SettingsView>
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+        // Developer Options Card
+        _buildSettingsCard(
+          context: context,
+          title: 'Developer Options',
+          isDark: isDark,
+          isAmoled: isAmoled,
+          children: [
+            _buildSettingRow(
+              context: context,
+              label: 'Show All Platform Settings',
+              description:
+                  'Show Windows and macOS settings sections on all platforms',
+              control: Switch(
+                value: settings.showDeveloperOptions,
+                onChanged: (value) {
+                  context
+                      .read<SettingsBloc>()
+                      .add(UpdateShowDeveloperOptions(value));
+                },
+              ),
+              isDark: isDark,
+              isAmoled: isAmoled,
+              showDivider: false,
             ),
           ],
         ),
@@ -4497,6 +4674,8 @@ class _SettingsViewState extends State<SettingsView>
           bloc.add(ResetVersionControlSettings());
           break;
         case SettingsCategory.windowsIntegrations:
+          break;
+        case SettingsCategory.macOSIntegrations:
           break;
         case SettingsCategory.about:
           break;

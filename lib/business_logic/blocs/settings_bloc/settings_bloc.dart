@@ -118,6 +118,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateEnableCrashReporting>(_onUpdateEnableCrashReporting);
     // Import/Export Events
     on<ReplaceAllSettings>(_onReplaceAllSettings);
+    // Developer Options
+    on<UpdateShowDeveloperOptions>(_onUpdateShowDeveloperOptions);
+    // macOS Integration Events
+    on<UpdateShowDockBadge>(_onUpdateShowDockBadge);
+    on<UpdateMacosWindowMaterial>(_onUpdateMacosWindowMaterial);
   }
 
   Future<void> _onLoadSettings(
@@ -1052,6 +1057,32 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     }
     
     emit(state.copyWith(appSettings: event.settings));
+  }
+
+  // Developer Options Event Handlers
+  Future<void> _onUpdateShowDeveloperOptions(
+      UpdateShowDeveloperOptions event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(showDeveloperOptions: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  // macOS Integration Event Handlers
+  Future<void> _onUpdateShowDockBadge(
+      UpdateShowDockBadge event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(showDockBadge: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateMacosWindowMaterial(
+      UpdateMacosWindowMaterial event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(macosWindowMaterial: event.material);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
   }
 }
 

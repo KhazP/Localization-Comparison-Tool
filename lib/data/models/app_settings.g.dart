@@ -103,13 +103,17 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       enableAnonymousUsageStatistics:
           fields[72] == null ? false : fields[72] as bool,
       enableCrashReporting: fields[73] == null ? true : fields[73] as bool,
+      showDeveloperOptions: fields[74] == null ? false : fields[74] as bool,
+      showDockBadge: fields[75] == null ? false : fields[75] as bool,
+      macosWindowMaterial:
+          fields[76] == null ? 'sidebar' : fields[76] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(74)
+      ..writeByte(77)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -257,7 +261,13 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(72)
       ..write(obj.enableAnonymousUsageStatistics)
       ..writeByte(73)
-      ..write(obj.enableCrashReporting);
+      ..write(obj.enableCrashReporting)
+      ..writeByte(74)
+      ..write(obj.showDeveloperOptions)
+      ..writeByte(75)
+      ..write(obj.showDockBadge)
+      ..writeByte(76)
+      ..write(obj.macosWindowMaterial);
   }
 
   @override

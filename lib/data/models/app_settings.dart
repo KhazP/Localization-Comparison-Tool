@@ -245,6 +245,17 @@ class AppSettings extends HiveObject {
   @HiveField(73, defaultValue: true)
   bool enableCrashReporting;
 
+  // Developer Options
+  @HiveField(74, defaultValue: false)
+  bool showDeveloperOptions;
+
+  // macOS Integration Settings
+  @HiveField(75, defaultValue: false)
+  bool showDockBadge;
+
+  @HiveField(76, defaultValue: 'sidebar')
+  String macosWindowMaterial;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -320,6 +331,9 @@ class AppSettings extends HiveObject {
     required this.skipVersion,
     required this.enableAnonymousUsageStatistics,
     required this.enableCrashReporting,
+    required this.showDeveloperOptions,
+    required this.showDockBadge,
+    required this.macosWindowMaterial,
   });
 
   // Default settings
@@ -400,6 +414,9 @@ class AppSettings extends HiveObject {
       skipVersion: '',
       enableAnonymousUsageStatistics: false,
       enableCrashReporting: true,
+      showDeveloperOptions: false,
+      showDockBadge: false,
+      macosWindowMaterial: 'sidebar',
     );
   }
 
@@ -486,6 +503,9 @@ class AppSettings extends HiveObject {
       skipVersion: json['skipVersion'] as String? ?? '',
       enableAnonymousUsageStatistics: json['enableAnonymousUsageStatistics'] as bool? ?? false,
       enableCrashReporting: json['enableCrashReporting'] as bool? ?? true,
+      showDeveloperOptions: json['showDeveloperOptions'] as bool? ?? false,
+      showDockBadge: json['showDockBadge'] as bool? ?? false,
+      macosWindowMaterial: json['macosWindowMaterial'] as String? ?? 'sidebar',
     );
   }
 
@@ -566,6 +586,9 @@ class AppSettings extends HiveObject {
       'skipVersion': skipVersion,
       'enableAnonymousUsageStatistics': enableAnonymousUsageStatistics,
       'enableCrashReporting': enableCrashReporting,
+      'showDeveloperOptions': showDeveloperOptions,
+      'showDockBadge': showDockBadge,
+      'macosWindowMaterial': macosWindowMaterial,
     };
   }
 
@@ -644,6 +667,9 @@ class AppSettings extends HiveObject {
     String? skipVersion,
     bool? enableAnonymousUsageStatistics,
     bool? enableCrashReporting,
+    bool? showDeveloperOptions,
+    bool? showDockBadge,
+    String? macosWindowMaterial,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -734,6 +760,9 @@ class AppSettings extends HiveObject {
       skipVersion: skipVersion ?? this.skipVersion,
       enableAnonymousUsageStatistics: enableAnonymousUsageStatistics ?? this.enableAnonymousUsageStatistics,
       enableCrashReporting: enableCrashReporting ?? this.enableCrashReporting,
+      showDeveloperOptions: showDeveloperOptions ?? this.showDeveloperOptions,
+      showDockBadge: showDockBadge ?? this.showDockBadge,
+      macosWindowMaterial: macosWindowMaterial ?? this.macosWindowMaterial,
     );
   }
 }

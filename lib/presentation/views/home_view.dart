@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -127,8 +128,11 @@ class _MyHomePageState extends State<MyHomePage>
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
     return Scaffold(
-      body: Row(
-        children: [
+      body: Padding(
+        // Add top padding on macOS to prevent window buttons from overlapping with nav rail
+        padding: EdgeInsets.only(top: Platform.isMacOS ? 28.0 : 0.0),
+        child: Row(
+          children: [
           // Navigation Rail
           Container(
             decoration: BoxDecoration(
@@ -261,6 +265,7 @@ class _MyHomePageState extends State<MyHomePage>
             ),
           ),
         ],
+        ),
       ),
     );
   }

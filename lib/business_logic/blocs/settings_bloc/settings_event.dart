@@ -581,3 +581,26 @@ class ReplaceAllSettings extends SettingsEvent {
   @override
   List<Object> get props => [settings];
 }
+
+// Developer Options Events
+class UpdateShowDeveloperOptions extends SettingsEvent {
+  final bool enabled;
+  const UpdateShowDeveloperOptions(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+// macOS Integration Events
+class UpdateShowDockBadge extends SettingsEvent {
+  final bool enabled;
+  const UpdateShowDockBadge(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateMacosWindowMaterial extends SettingsEvent {
+  final String material;
+  const UpdateMacosWindowMaterial(this.material);
+  @override
+  List<Object> get props => [material];
+}

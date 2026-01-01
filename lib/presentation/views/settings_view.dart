@@ -2184,64 +2184,86 @@ class _SettingsViewState extends State<SettingsView>
     return Column(
       children: [
         // -----------------------------------------------------------
-        // LLM TRANSLATION (Modern)
+        // STRATEGY SELECTOR
         // -----------------------------------------------------------
-        _buildSettingsCard(
-          context: context,
-          title: 'AI Translation (LLM)',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            _buildSettingRow(
-              context: context,
-              label: 'Enable AI Translation',
-              control: Switch(
-                value: settings.enableAiTranslation,
-                onChanged: (val) => context
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          child: SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'llm',
+                  label: Text('Generative AI'),
+                  icon: Icon(Icons.auto_awesome_rounded),
+                ),
+                ButtonSegment(
+                  value: 'cloud',
+                  label: Text('Cloud Translation'),
+                  icon: Icon(Icons.cloud_outlined),
+                ),
+              ],
+              selected: {settings.translationStrategy},
+              onSelectionChanged: (Set<String> newSelection) {
+                context
                     .read<SettingsBloc>()
-                    .add(UpdateEnableAiTranslation(val)),
-                activeColor: Theme.of(context).colorScheme.primary,
+                    .add(UpdateTranslationStrategy(newSelection.first));
+              },
+              style: ButtonStyle(
+                visualDensity: VisualDensity.comfortable,
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                  (states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return Theme.of(context).colorScheme.primaryContainer;
+                    }
+                    return null;
+                  },
+                ),
               ),
-              isDark: isDark,
-              isAmoled: isAmoled,
             ),
-            _buildSettingRow(
-              context: context,
-              label: 'Service Provider',
-              control: _buildDropdown(
-                context,
-                settings.aiTranslationService,
-                ['Gemini', 'OpenAI'],
-                (val) {
-                  if (val != null) {
-                    context
-                        .read<SettingsBloc>()
-                        .add(UpdateAiTranslationService(val));
-                  }
-                },
-                isDark,
-                isAmoled,
-              ),
-              isDark: isDark,
-              isAmoled: isAmoled,
-            ),
-            if (settings.aiTranslationService == 'Gemini' ||
-                settings.aiTranslationService == 'OpenAI')
+          ),
+        ),
+
+        // -----------------------------------------------------------
+        // GENERATIVE AI (LLM) VIEW
+        // -----------------------------------------------------------
+        if (settings.translationStrategy == 'llm') ...[
+          _buildSettingsCard(
+            context: context,
+            title: 'Generative AI (LLM)',
+            isDark: isDark,
+            isAmoled: isAmoled,
+            children: [
               _buildSettingRow(
                 context: context,
-                label: 'Default Model',
-                description: 'Required for fast translate',
+                label: 'Enable AI Translation',
+                control: Switch(
+                  value: settings.enableAiTranslation,
+                  onChanged: (val) => context
+                      .read<SettingsBloc>()
+                      .add(UpdateEnableAiTranslation(val)),
+                  activeColor: Theme.of(context).colorScheme.primary,
+                ),
+                isDark: isDark,
+                isAmoled: isAmoled,
+              ),
+              _buildSettingRow(
+                context: context,
+                label: 'Service Provider',
                 control: _buildDropdown(
                   context,
-                  dropdownItems.contains(settings.defaultAiModel)
-                      ? settings.defaultAiModel
-                      : dropdownItems.first,
-                  dropdownItems,
+                  settings.aiTranslationService,
+                  ['Gemini', 'OpenAI'],
                   (val) {
-                    if (val != null && val != 'Select model...') {
+                    if (val != null) {
                       context
                           .read<SettingsBloc>()
-                          .add(UpdateDefaultAiModel(val));
+                          .add(UpdateAiTranslationService(val));
                     }
                   },
                   isDark,
@@ -2250,216 +2272,358 @@ class _SettingsViewState extends State<SettingsView>
                 isDark: isDark,
                 isAmoled: isAmoled,
               ),
-            _buildSettingRow(
-              context: context,
-              label: 'Confidence Threshold',
-              description:
-                  '${(settings.translationConfidenceThreshold * 100).round()}%',
-              control: SizedBox(
-                width: 150,
-                child: Slider(
-                  value: settings.translationConfidenceThreshold,
-                  min: 0.0,
-                  max: 1.0,
-                  divisions: 20,
-                  onChanged: (val) => context
-                      .read<SettingsBloc>()
-                      .add(UpdateTranslationConfidenceThreshold(val)),
-                  activeColor: Theme.of(context).colorScheme.primary,
+              if (settings.aiTranslationService == 'Gemini' ||
+                  settings.aiTranslationService == 'OpenAI')
+                _buildSettingRow(
+                  context: context,
+                  label: 'Default Model',
+                  description: 'Required for fast translate',
+                  control: _buildDropdown(
+                    context,
+                    dropdownItems.contains(settings.defaultAiModel)
+                        ? settings.defaultAiModel
+                        : dropdownItems.first,
+                    dropdownItems,
+                    (val) {
+                      if (val != null && val != 'Select model...') {
+                        context
+                            .read<SettingsBloc>()
+                            .add(UpdateDefaultAiModel(val));
+                      }
+                    },
+                    isDark,
+                    isAmoled,
+                  ),
+                  isDark: isDark,
+                  isAmoled: isAmoled,
                 ),
-              ),
-              isDark: isDark,
-              isAmoled: isAmoled,
-              showDivider: true,
-            ),
-            const SizedBox(height: 8),
-            if (settings.aiTranslationService == 'Gemini')
-              _buildApiKeyRowWithTest(
+              _buildSettingRow(
                 context: context,
-                label: 'Gemini API Key',
-                value: settings.geminiApiKey,
-                onChanged: (val) {
-                  context.read<SettingsBloc>().add(UpdateGeminiApiKey(val));
-                },
-                onTest: () {
-                  context.read<SettingsBloc>().add(TestApiKey(
-                        provider: ApiProvider.gemini,
-                        apiKey: settings.geminiApiKey,
-                      ));
-                },
-                testResult: state.apiKeyTests[ApiProvider.gemini] ??
-                    const ApiKeyTestResult.idle(),
+                label: 'Confidence Threshold',
+                description:
+                    '${(settings.translationConfidenceThreshold * 100).round()}%',
+                control: SizedBox(
+                  width: 150,
+                  child: Slider(
+                    value: settings.translationConfidenceThreshold,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 20,
+                    onChanged: (val) => context
+                        .read<SettingsBloc>()
+                        .add(UpdateTranslationConfidenceThreshold(val)),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 isDark: isDark,
                 isAmoled: isAmoled,
+                showDivider: true,
               ),
-            if (settings.aiTranslationService == 'OpenAI')
-              _buildApiKeyRowWithTest(
-                context: context,
-                label: 'OpenAI API Key',
-                value: settings.openaiApiKey,
-                onChanged: (val) {
-                  context.read<SettingsBloc>().add(UpdateOpenAiApiKey(val));
-                },
-                onTest: () {
-                  context.read<SettingsBloc>().add(TestApiKey(
-                        provider: ApiProvider.openAi,
-                        apiKey: settings.openaiApiKey,
-                      ));
-                },
-                testResult: state.apiKeyTests[ApiProvider.openAi] ??
-                    const ApiKeyTestResult.idle(),
-                isDark: isDark,
-                isAmoled: isAmoled,
-                showDivider: false,
-              ),
-          ],
-        ),
+              const SizedBox(height: 8),
+              if (settings.aiTranslationService == 'Gemini')
+                _buildApiKeyRowWithTest(
+                  context: context,
+                  label: 'Gemini API Key',
+                  value: settings.geminiApiKey,
+                  onChanged: (val) {
+                    context.read<SettingsBloc>().add(UpdateGeminiApiKey(val));
+                  },
+                  onTest: () {
+                    context.read<SettingsBloc>().add(TestApiKey(
+                          provider: ApiProvider.gemini,
+                          apiKey: settings.geminiApiKey,
+                        ));
+                  },
+                  testResult: state.apiKeyTests[ApiProvider.gemini] ??
+                      const ApiKeyTestResult.idle(),
+                  isDark: isDark,
+                  isAmoled: isAmoled,
+                ),
+              if (settings.aiTranslationService == 'OpenAI')
+                _buildApiKeyRowWithTest(
+                  context: context,
+                  label: 'OpenAI API Key',
+                  value: settings.openaiApiKey,
+                  onChanged: (val) {
+                    context.read<SettingsBloc>().add(UpdateOpenAiApiKey(val));
+                  },
+                  onTest: () {
+                    context.read<SettingsBloc>().add(TestApiKey(
+                          provider: ApiProvider.openAi,
+                          apiKey: settings.openaiApiKey,
+                        ));
+                  },
+                  testResult: state.apiKeyTests[ApiProvider.openAi] ??
+                      const ApiKeyTestResult.idle(),
+                  isDark: isDark,
+                  isAmoled: isAmoled,
+                  showDivider: false,
+                ),
+            ],
+          ),
 
-        // -----------------------------------------------------------
-        // MODEL PARAMETERS
-        // -----------------------------------------------------------
-        if (settings.aiTranslationService == 'Gemini' ||
-            settings.aiTranslationService == 'OpenAI')
+          // -----------------------------------------------------------
+          // ADVANCED PARAMETERS (LLM Only)
+          // -----------------------------------------------------------
+          if (settings.aiTranslationService == 'Gemini' ||
+              settings.aiTranslationService == 'OpenAI')
+            Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                title: Text(
+                  'Advanced Parameters',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                ),
+                collapsedIconColor: isDark ? Colors.grey[400] : Colors.grey[600],
+                iconColor: Theme.of(context).colorScheme.primary,
+                tilePadding: EdgeInsets.zero,
+                children: [
+                  _buildSettingsCard(
+                    context: context,
+                    title: 'Model Configuration',
+                    isDark: isDark,
+                    isAmoled: isAmoled,
+                    children: [
+                      _buildSettingRow(
+                        context: context,
+                        label: 'Temperature',
+                        description:
+                            'Creativity vs consistency (${settings.aiTemperature.toStringAsFixed(1)})',
+                        control: SizedBox(
+                          width: 150,
+                          child: Slider(
+                            value: settings.aiTemperature,
+                            min: 0.0,
+                            max: 1.0,
+                            divisions: 10,
+                            onChanged: (val) => context
+                                .read<SettingsBloc>()
+                                .add(UpdateAiTemperature(val)),
+                            activeColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        isDark: isDark,
+                        isAmoled: isAmoled,
+                      ),
+                      _buildSettingRow(
+                        context: context,
+                        label: 'Max Tokens',
+                        description: 'Maximum response length',
+                        control: _buildDropdown(
+                            context,
+                            settings.maxTokens.toString(),
+                            ['256', '512', '1024', '2048', '4096', '8192'],
+                            (val) {
+                          if (val != null)
+                            context
+                                .read<SettingsBloc>()
+                                .add(UpdateMaxTokens(int.parse(val)));
+                        }, isDark, isAmoled),
+                        isDark: isDark,
+                        isAmoled: isAmoled,
+                      ),
+                    ],
+                  ),
+                  _buildSettingsCard(
+                    context: context,
+                    title: 'Translation Context',
+                    isDark: isDark,
+                    isAmoled: isAmoled,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'System Context',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              maxLines: 3,
+                              controller: TextEditingController(
+                                  text: settings.systemTranslationContext),
+                              onChanged: (val) => context
+                                  .read<SettingsBloc>()
+                                  .add(UpdateSystemTranslationContext(val)),
+                              decoration: InputDecoration(
+                                hintText:
+                                    'e.g., This is a fantasy RPG game. Use informal tone and "gamer" terminology.',
+                                hintStyle: TextStyle(
+                                    color: isDark
+                                        ? Colors.grey[600]
+                                        : Colors.grey[400]),
+                                filled: true,
+                                fillColor: isAmoled
+                                    ? AppThemeV2.amoledSurface
+                                    : (isDark
+                                        ? AppThemeV2.darkSurface
+                                        : AppThemeV2.lightBackground),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: _getBorderColor(isDark, isAmoled),
+                                  ),
+                                ),
+                              ),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(
+                        color: _getBorderColor(isDark, isAmoled),
+                        height: 24,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      _buildSettingRow(
+                        context: context,
+                        label: 'Include Neighbor Context',
+                        description: 'Add prev/next strings to prompt',
+                        control: Switch(
+                          value: settings.includeContextStrings,
+                          onChanged: (val) => context
+                              .read<SettingsBloc>()
+                              .add(UpdateIncludeContextStrings(val)),
+                          activeColor: Theme.of(context).colorScheme.primary,
+                        ),
+                        isAmoled: isAmoled,
+                      ),
+                      if (settings.includeContextStrings)
+                        _buildSettingRow(
+                          context: context,
+                          label: 'Context Range',
+                          description:
+                              '±${settings.contextStringsCount} strings',
+                          control: SizedBox(
+                            width: 150,
+                            child: Slider(
+                              value: settings.contextStringsCount.toDouble(),
+                              min: 1,
+                              max: 5,
+                              divisions: 4,
+                              label: settings.contextStringsCount.toString(),
+                              onChanged: (val) => context
+                                  .read<SettingsBloc>()
+                                  .add(UpdateContextStringsCount(
+                                      val.round())),
+                              activeColor:
+                                  Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          isAmoled: isAmoled,
+                          showDivider: false,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ] else ...[
+          // -----------------------------------------------------------
+          // CLOUD TRANSLATION VIEW
+          // -----------------------------------------------------------
           _buildSettingsCard(
             context: context,
-            title: 'Model Parameters',
+            title: 'Cloud Translation',
             isDark: isDark,
             isAmoled: isAmoled,
             children: [
               _buildSettingRow(
                 context: context,
-                label: 'Temperature',
-                description:
-                    'Creativity vs consistency (${settings.aiTemperature.toStringAsFixed(1)})',
-                control: SizedBox(
-                  width: 150,
-                  child: Slider(
-                    value: settings.aiTemperature,
-                    min: 0.0,
-                    max: 1.0,
-                    divisions: 10,
-                    onChanged: (val) => context
-                        .read<SettingsBloc>()
-                        .add(UpdateAiTemperature(val)),
-                    activeColor: Theme.of(context).colorScheme.primary,
-                  ),
+                label: 'Enable AI Translation',
+                control: Switch(
+                  value: settings.enableAiTranslation,
+                  onChanged: (val) => context
+                      .read<SettingsBloc>()
+                      .add(UpdateEnableAiTranslation(val)),
+                  activeColor: Theme.of(context).colorScheme.primary,
                 ),
                 isDark: isDark,
                 isAmoled: isAmoled,
               ),
               _buildSettingRow(
                 context: context,
-                label: 'Max Tokens',
-                description: 'Maximum response length',
-                control: _buildDropdown(context, settings.maxTokens.toString(),
-                    ['256', '512', '1024', '2048', '4096', '8192'], (val) {
-                  if (val != null)
+                label: 'Service Provider',
+                control: _buildDropdown(
+                  context,
+                  settings.aiTranslationService,
+                  ['Google Translate', 'DeepL', 'Azure Translator'],
+                  (val) {
+                    if (val != null) {
+                      context
+                          .read<SettingsBloc>()
+                          .add(UpdateAiTranslationService(val));
+                    }
+                  },
+                  isDark,
+                  isAmoled,
+                ),
+                isDark: isDark,
+                isAmoled: isAmoled,
+              ),
+              if (settings.aiTranslationService == 'Google Translate')
+                _buildApiKeyRowWithTest(
+                  context: context,
+                  label: 'Google Translate API',
+                  value: settings.googleTranslateApiKey,
+                  onChanged: (val) {
                     context
                         .read<SettingsBloc>()
-                        .add(UpdateMaxTokens(int.parse(val)));
-                }, isDark, isAmoled),
-                isDark: isDark,
-                isAmoled: isAmoled,
-              ),
-            ],
-          ),
-
-        // -----------------------------------------------------------
-        // TRANSLATION CONTEXT
-        // -----------------------------------------------------------
-        _buildSettingsCard(
-          context: context,
-          title: 'Translation Context',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'System Context',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    maxLines: 3,
-                    controller: TextEditingController(
-                        text: settings.systemTranslationContext),
-                    onChanged: (val) => context
-                        .read<SettingsBloc>()
-                        .add(UpdateSystemTranslationContext(val)),
-                    decoration: InputDecoration(
-                      hintText:
-                          'e.g., This is a fantasy RPG game. Use informal tone and "gamer" terminology.',
-                      hintStyle: TextStyle(
-                          color: isDark ? Colors.grey[600] : Colors.grey[400]),
-                      filled: true,
-                      fillColor: isAmoled
-                          ? AppThemeV2.amoledSurface
-                          : (isDark
-                              ? AppThemeV2.darkSurface
-                              : AppThemeV2.lightBackground),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: _getBorderColor(isDark, isAmoled),
-                        ),
-                      ),
-                    ),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-            Divider(
-              color: _getBorderColor(isDark, isAmoled),
-              height: 24,
-              indent: 16,
-              endIndent: 16,
-            ),
-            _buildSettingRow(
-              context: context,
-              label: 'Include Neighbor Context',
-              description: 'Add prev/next strings to prompt',
-              control: Switch(
-                value: settings.includeContextStrings,
-                onChanged: (val) => context
-                    .read<SettingsBloc>()
-                    .add(UpdateIncludeContextStrings(val)),
-                activeColor: Theme.of(context).colorScheme.primary,
-              ),
-              isAmoled: isAmoled,
-            ),
-            if (settings.includeContextStrings)
-              _buildSettingRow(
-                context: context,
-                label: 'Context Range',
-                description: '±${settings.contextStringsCount} strings',
-                control: SizedBox(
-                  width: 150,
-                  child: Slider(
-                    value: settings.contextStringsCount.toDouble(),
-                    min: 1,
-                    max: 5,
-                    divisions: 4,
-                    label: settings.contextStringsCount.toString(),
-                    onChanged: (val) => context
-                        .read<SettingsBloc>()
-                        .add(UpdateContextStringsCount(val.round())),
-                    activeColor: Theme.of(context).colorScheme.primary,
+                        .add(UpdateGoogleTranslateApiKey(val));
+                  },
+                  onTest: () {
+                    context.read<SettingsBloc>().add(TestApiKey(
+                          provider: ApiProvider.googleTranslate,
+                          apiKey: settings.googleTranslateApiKey,
+                        ));
+                  },
+                  testResult: state.apiKeyTests[ApiProvider.googleTranslate] ??
+                      const ApiKeyTestResult.idle(),
+                  isDark: isDark,
+                  isAmoled: isAmoled,
+                  showDivider: false,
+                ),
+              if (settings.aiTranslationService == 'DeepL')
+                _buildApiKeyRowWithTest(
+                  context: context,
+                  label: 'DeepL API Key',
+                  value: settings.deeplApiKey,
+                  onChanged: (val) {
+                    context.read<SettingsBloc>().add(UpdateDeeplApiKey(val));
+                  },
+                  onTest: () {
+                    context.read<SettingsBloc>().add(TestApiKey(
+                          provider: ApiProvider.deepl,
+                          apiKey: settings.deeplApiKey,
+                        ));
+                  },
+                  testResult: state.apiKeyTests[ApiProvider.deepl] ??
+                      const ApiKeyTestResult.idle(),
+                  isDark: isDark,
+                  isAmoled: isAmoled,
+                  showDivider: false,
+                ),
+              if (settings.aiTranslationService == 'Azure Translator')
+                 Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Text(
+                    'Azure integration is coming soon.',
+                    style: TextStyle(color: _getTextMutedColor(isDark)),
                   ),
                 ),
-                isAmoled: isAmoled,
-                showDivider: false,
-              ),
-          ],
-        ),
+            ],
+          ),
+        ],
 
         // -----------------------------------------------------------
-        // TRANSLATION MEMORY
+        // TRANSLATION MEMORY (Common)
         // -----------------------------------------------------------
+        const SizedBox(height: 16),
         _buildSettingsCard(
           context: context,
           title: 'Translation Memory',
@@ -2562,88 +2726,9 @@ class _SettingsViewState extends State<SettingsView>
             ],
           ],
         ),
-
-        // -----------------------------------------------------------
-        // CLASSIC APIs (Legacy)
-        // -----------------------------------------------------------
-        Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            title: Text('Classic Translation APIs (Legacy)',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: isDark ? Colors.grey[400] : Colors.grey[600])),
-            tilePadding: EdgeInsets.zero,
-            children: [
-              _buildSettingsCard(
-                context: context,
-                title: 'DeepL & Google',
-                isDark: isDark,
-                isAmoled: isAmoled,
-                children: [
-                  _buildSettingRow(
-                    context: context,
-                    label: 'Legacy Service Provider',
-                    control: _buildDropdown(
-                        context,
-                        settings.aiTranslationService,
-                        ['Google Translate', 'DeepL', 'Azure Translator'],
-                        (val) {
-                      if (val != null)
-                        context
-                            .read<SettingsBloc>()
-                            .add(UpdateAiTranslationService(val));
-                    }, isDark, isAmoled),
-                    isAmoled: isAmoled,
-                  ),
-                  _buildApiKeyRowWithTest(
-                    context: context,
-                    label: 'Google Translate API',
-                    value: settings.googleTranslateApiKey,
-                    onChanged: (val) {
-                      context
-                          .read<SettingsBloc>()
-                          .add(UpdateGoogleTranslateApiKey(val));
-                    },
-                    onTest: () {
-                      context.read<SettingsBloc>().add(TestApiKey(
-                            provider: ApiProvider.googleTranslate,
-                            apiKey: settings.googleTranslateApiKey,
-                          ));
-                    },
-                    testResult:
-                        state.apiKeyTests[ApiProvider.googleTranslate] ??
-                            const ApiKeyTestResult.idle(),
-                    isDark: isDark,
-                    isAmoled: isAmoled,
-                  ),
-                  _buildApiKeyRowWithTest(
-                    context: context,
-                    label: 'DeepL API Key',
-                    value: settings.deeplApiKey,
-                    onChanged: (val) {
-                      context.read<SettingsBloc>().add(UpdateDeeplApiKey(val));
-                    },
-                    onTest: () {
-                      context.read<SettingsBloc>().add(TestApiKey(
-                            provider: ApiProvider.deepl,
-                            apiKey: settings.deeplApiKey,
-                          ));
-                    },
-                    testResult: state.apiKeyTests[ApiProvider.deepl] ??
-                        const ApiKeyTestResult.idle(),
-                    isDark: isDark,
-                    isAmoled: isAmoled,
-                    showDivider: false,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
-
   Widget _buildApiKeyRowWithTest({
     required BuildContext context,
     required String label,

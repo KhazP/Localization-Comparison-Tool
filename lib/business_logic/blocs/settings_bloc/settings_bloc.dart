@@ -125,6 +125,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     // macOS Integration Events
     on<UpdateShowDockBadge>(_onUpdateShowDockBadge);
     on<UpdateMacosWindowMaterial>(_onUpdateMacosWindowMaterial);
+    on<UpdateTranslationStrategy>(_onUpdateTranslationStrategy);
   }
 
   Future<void> _onLoadSettings(
@@ -1108,6 +1109,30 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateMacosWindowMaterial event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(macosWindowMaterial: event.material);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateTranslationStrategy(
+      UpdateTranslationStrategy event, Emitter<SettingsState> emit) async {
+    var newSettings =
+        state.appSettings.copyWith(translationStrategy: event.strategy);
+
+    // Auto-switch service if needed based on strategy
+    if (event.strategy == 'llm') {
+      if (newSettings.aiTranslationService != 'Gemini' &&
+          newSettings.aiTranslationService != 'OpenAI') {
+        newSettings = newSettings.copyWith(aiTranslationService: 'Gemini');
+      }
+    } else if (event.strategy == 'cloud') {
+      if (newSettings.aiTranslationService != 'Google Translate' &&
+          newSettings.aiTranslationService != 'DeepL' &&
+          newSettings.aiTranslationService != 'Azure') {
+        newSettings =
+            newSettings.copyWith(aiTranslationService: 'Google Translate');
+      }
+    }
+
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

@@ -595,6 +595,13 @@ class UpdateShowDeveloperOptions extends SettingsEvent {
 }
 
 // macOS Integration Events
+class UpdateTranslationStrategy extends SettingsEvent {
+  final String strategy;
+  const UpdateTranslationStrategy(this.strategy);
+  @override
+  List<Object> get props => [strategy];
+}
+
 class UpdateShowDockBadge extends SettingsEvent {
   final bool enabled;
   const UpdateShowDockBadge(this.enabled);

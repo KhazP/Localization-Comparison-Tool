@@ -256,6 +256,9 @@ class AppSettings extends HiveObject {
   @HiveField(76, defaultValue: 'sidebar')
   String macosWindowMaterial;
 
+  @HiveField(77, defaultValue: 'llm')
+  String translationStrategy;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -334,6 +337,7 @@ class AppSettings extends HiveObject {
     required this.showDeveloperOptions,
     required this.showDockBadge,
     required this.macosWindowMaterial,
+    required this.translationStrategy,
   });
 
   // Default settings
@@ -417,6 +421,7 @@ class AppSettings extends HiveObject {
       showDeveloperOptions: false,
       showDockBadge: false,
       macosWindowMaterial: 'sidebar',
+      translationStrategy: 'llm',
     );
   }
 
@@ -506,6 +511,7 @@ class AppSettings extends HiveObject {
       showDeveloperOptions: json['showDeveloperOptions'] as bool? ?? false,
       showDockBadge: json['showDockBadge'] as bool? ?? false,
       macosWindowMaterial: json['macosWindowMaterial'] as String? ?? 'sidebar',
+      translationStrategy: json['translationStrategy'] as String? ?? 'llm',
     );
   }
 
@@ -589,6 +595,7 @@ class AppSettings extends HiveObject {
       'showDeveloperOptions': showDeveloperOptions,
       'showDockBadge': showDockBadge,
       'macosWindowMaterial': macosWindowMaterial,
+      'translationStrategy': translationStrategy,
     };
   }
 
@@ -670,6 +677,7 @@ class AppSettings extends HiveObject {
     bool? showDeveloperOptions,
     bool? showDockBadge,
     String? macosWindowMaterial,
+    String? translationStrategy,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -763,6 +771,7 @@ class AppSettings extends HiveObject {
       showDeveloperOptions: showDeveloperOptions ?? this.showDeveloperOptions,
       showDockBadge: showDockBadge ?? this.showDockBadge,
       macosWindowMaterial: macosWindowMaterial ?? this.macosWindowMaterial,
+      translationStrategy: translationStrategy ?? this.translationStrategy,
     );
   }
 }

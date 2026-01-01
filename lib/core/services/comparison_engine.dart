@@ -7,6 +7,7 @@ import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; // Import new model
 import 'package:localizer_app_main/data/models/app_settings.dart'; // Import AppSettings
 import 'package:localizer_app_main/core/services/diff_calculator.dart';
+import 'package:localizer_app_main/core/services/file_cache_service.dart';
 
 // Data structure to hold comparison results
 class ComparisonResult {
@@ -43,9 +44,19 @@ class ComparisonEngine {
         'translation.',
       );
     }
+
+    final suffix = extractionMode.toString();
+
+    // Check cache
+    final cached = await FileCacheService().getCached(file, keySuffix: suffix);
+    if (cached != null) {
+      developer.log('Cache hit for ${file.path} ($suffix)', name: 'ComparisonEngine');
+      return cached;
+    }
+
     // Using compute for simplicity, which manages its own Isolate.
     // For more complex progress reporting or cancellation, direct Isolate management is better.
-    return await compute(
+    final result = await compute(
       _performParse,
       _ComputeParseParams(
         file.path,
@@ -55,6 +66,16 @@ class ComparisonEngine {
         requireBilingual,
       ),
     );
+
+    // Cache result
+    try {
+      final stat = await file.stat();
+      FileCacheService().cache(file, result, stat.modified, keySuffix: suffix);
+    } catch (e) {
+      developer.log('Failed to cache file: $e', name: 'ComparisonEngine');
+    }
+
+    return result;
   }
 
   // We need a top-level function or static method for compute

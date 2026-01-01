@@ -52,6 +52,16 @@ class CompareFilesFromHistoryRequested extends ComparisonEvent {
 // Progress callback type for decoupled progress reporting
 typedef ProgressCallback = void Function(int completed, int total, String message);
 
+/// Event to proceed with comparison after a warning
+class ProceedWithComparison extends ComparisonEvent {
+  final ComparisonResult result;
+  final File file1;
+  final File file2;
+  final bool wasLoadedFromHistory;
+
+  ProceedWithComparison(this.result, this.file1, this.file2, {this.wasLoadedFromHistory = false});
+}
+
 // States
 abstract class ComparisonState {}
 
@@ -69,6 +79,22 @@ class ComparisonSuccess extends ComparisonState {
   final bool wasLoadedFromHistory;
 
   ComparisonSuccess(this.result, this.file1, this.file2, {this.wasLoadedFromHistory = false});
+}
+
+class ComparisonLargeFileWarning extends ComparisonState {
+  final ComparisonResult result;
+  final File file1;
+  final File file2;
+  final bool wasLoadedFromHistory;
+  final int count;
+
+  ComparisonLargeFileWarning(
+    this.result, 
+    this.file1, 
+    this.file2, 
+    this.count, 
+    {this.wasLoadedFromHistory = false}
+  );
 }
 
 class ComparisonFailure extends ComparisonState {
@@ -90,6 +116,39 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     on<CompareFilesRequested>(_onCompareFilesRequested);
     on<CompareBilingualFileRequested>(_onCompareBilingualFileRequested);
     on<CompareFilesFromHistoryRequested>(_onCompareFilesFromHistoryRequested);
+    on<ProceedWithComparison>(_onProceedWithComparison);
+  }
+
+  void _handleComparisonResult(
+    Emitter<ComparisonState> emit,
+    ComparisonResult result,
+    File file1,
+    File file2,
+    bool wasLoadedFromHistory,
+  ) {
+    if (result.diff.length > 50000) {
+      emit(ComparisonLargeFileWarning(
+        result, 
+        file1, 
+        file2, 
+        result.diff.length, 
+        wasLoadedFromHistory: wasLoadedFromHistory
+      ));
+    } else {
+      emit(ComparisonSuccess(result, file1, file2, wasLoadedFromHistory: wasLoadedFromHistory));
+    }
+  }
+
+  void _onProceedWithComparison(
+    ProceedWithComparison event,
+    Emitter<ComparisonState> emit,
+  ) {
+    emit(ComparisonSuccess(
+      event.result, 
+      event.file1, 
+      event.file2, 
+      wasLoadedFromHistory: event.wasLoadedFromHistory
+    ));
   }
 
   Future<void> _onCompareFilesRequested(
@@ -109,7 +168,7 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       );
       
       onProgress?.call(2, 2, 'Comparison complete');
-      emit(ComparisonSuccess(result, event.file1, event.file2, wasLoadedFromHistory: false));
+      _handleComparisonResult(emit, result, event.file1, event.file2, false);
     } catch (e) {
       final errorMessage = 'Failed to compare files: ${e.toString()}';
       emit(ComparisonFailure(errorMessage));
@@ -142,7 +201,7 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       );
       
       onProgress?.call(2, 2, 'Comparison complete');
-      emit(ComparisonSuccess(result, file1, file2, wasLoadedFromHistory: event.isFromHistory));
+      _handleComparisonResult(emit, result, file1, file2, event.isFromHistory);
     } catch (e) {
       final errorMessage = 'Failed to compare files from history: ${e.toString()}';
       emit(ComparisonFailure(errorMessage));
@@ -165,12 +224,7 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       );
 
       onProgress?.call(2, 2, 'Comparison complete');
-      emit(ComparisonSuccess(
-        result,
-        event.file,
-        event.file,
-        wasLoadedFromHistory: event.isFromHistory,
-      ));
+      _handleComparisonResult(emit, result, event.file, event.file, event.isFromHistory);
     } on InvalidBilingualFileException catch (e) {
       emit(ComparisonFailure(e.message));
     } catch (e) {
@@ -179,3 +233,4 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     }
   }
 }
+

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -84,6 +85,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   String _searchQuery = '';
   bool _isRegexEnabled = false;
   bool _isFuzzyEnabled = false;
+
+  // Pagination
+  int _currentPage = 0;
+  int _itemsPerPage = 100;
+  // -1 represents "All"
+  final List<int> _availablePageSizes = [100, 250, 500, 1000, 10000, -1];
 
   // Flag to ensure we only auto-load the last project once
   bool _hasAutoLoadedLastProject = false;
@@ -580,6 +587,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         }
                       }
 
+                      if (state is ComparisonLargeFileWarning) {
+                        _showLargeFileWarningDialog(context, state);
+                      }
+
                       if (state is ComparisonSuccess) {
                         // Update file references in the UI
                         final isBilingualResult =
@@ -592,6 +603,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             _bilingualFile = state.file1;
                           }
                           _latestComparisonResult = state.result;
+                          _currentPage = 0; // Reset pagination
                         });
                         _updateFileWatcher();
 
@@ -900,80 +912,157 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                   ),
                                 ),
                               Expanded(
-                                child: Scrollbar(
-                                  controller: _scrollController,
-                                  thumbVisibility: true,
-                                  child: ListView.builder(
-                                    controller: _scrollController,
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 8),
-                                    itemCount: diffEntries.length,
-                                    itemBuilder: (context, index) {
-                                      final entry = diffEntries[index];
-                                      final key = entry.key;
-                                      final statusDetail = entry.value;
-                                      final status = statusDetail.status;
-                                      final value1 =
-                                          state.result.file1Data[key];
-                                      final value2 =
-                                          state.result.file2Data[key];
+                                child: Builder(
+                                  builder: (context) {
+                                    final filteredCount = diffEntries.length;
+                                    
+                                    // Handle "All" selection (-1)
+                                    final effectiveItemsPerPage = _itemsPerPage == -1 ? math.max(1, filteredCount) : _itemsPerPage;
+                                    
+                                    final startIndex = _currentPage * effectiveItemsPerPage;
+                                    final endIndex = math.min(startIndex + effectiveItemsPerPage, filteredCount);
+                                    final visibleEntries = (startIndex < filteredCount) 
+                                        ? diffEntries.sublist(startIndex, endIndex) 
+                                        : <MapEntry<String, ComparisonStatusDetail>>[];
 
-                                      final lineNumber = (index + 1)
-                                          .toString()
-                                          .padLeft(3, '0');
+                                    return Column(
+                                      children: [
+                                        Expanded(
+                                          child: Scrollbar(
+                                            controller: _scrollController,
+                                            thumbVisibility: true,
+                                            child: ListView.builder(
+                                              controller: _scrollController,
+                                              padding: const EdgeInsets.symmetric(vertical: 8),
+                                              itemCount: visibleEntries.length,
+                                              addAutomaticKeepAlives: false,
+                                              addRepaintBoundaries: false,
+                                              itemBuilder: (context, index) {
+                                                final entry = visibleEntries[index];
+                                                final globalIndex = startIndex + index;
+                                                final key = entry.key;
+                                                final statusDetail = entry.value;
+                                                final status = statusDetail.status;
+                                                final value1 = state.result.file1Data[key];
+                                                final value2 = state.result.file2Data[key];
 
-                                      // Get font family from settings
-                                      final lineSettingsState =
-                                          context.watch<SettingsBloc>().state;
-                                      String lineFontFamily =
-                                          'Consolas, Monaco, monospace';
-                                      double lineFontSize = 12.0;
-                                      if (lineSettingsState.status ==
-                                          SettingsStatus.loaded) {
-                                        try {
-                                          final ff = lineSettingsState
-                                              .appSettings.diffFontFamily;
-                                          if (ff.isNotEmpty &&
-                                              ff != 'System Default')
-                                            lineFontFamily = ff;
-                                          lineFontSize = lineSettingsState
-                                              .appSettings.diffFontSize;
-                                        } catch (_) {}
-                                      }
+                                                final lineNumber = (globalIndex + 1).toString().padLeft(3, '0');
 
-                                      return Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                            width: 48,
-                                            padding: const EdgeInsets.fromLTRB(
-                                                8, 4, 8, 4),
-                                            child: Text(
-                                              lineNumber,
-                                              style: TextStyle(
-                                                color:
-                                                    theme.colorScheme.outline,
-                                                fontFamily: lineFontFamily,
-                                                fontSize: lineFontSize,
-                                                height: 1.4,
-                                              ),
-                                              textAlign: TextAlign.end,
+                                                final lineSettingsState = context.watch<SettingsBloc>().state;
+                                                String lineFontFamily = 'Consolas, Monaco, monospace';
+                                                double lineFontSize = 12.0;
+                                                if (lineSettingsState.status == SettingsStatus.loaded) {
+                                                  try {
+                                                    final ff = lineSettingsState.appSettings.diffFontFamily;
+                                                    if (ff.isNotEmpty && ff != 'System Default') lineFontFamily = ff;
+                                                    lineFontSize = lineSettingsState.appSettings.diffFontSize;
+                                                  } catch (_) {}
+                                                }
+
+                                                return RepaintBoundary(
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Container(
+                                                        width: 48,
+                                                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                                                        child: Text(
+                                                          lineNumber,
+                                                          style: TextStyle(
+                                                            color: theme.colorScheme.outline,
+                                                            fontFamily: lineFontFamily,
+                                                            fontSize: lineFontSize,
+                                                            height: 1.4,
+                                                          ),
+                                                          textAlign: TextAlign.end,
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: _buildDiffListItem(
+                                                          key: key,
+                                                          status: status,
+                                                          value1: value1,
+                                                          value2: value2,
+                                                          isAmoled: isAmoled,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           ),
-                                          Expanded(
-                                            child: _buildDiffListItem(
-                                              key: key,
-                                              status: status,
-                                              value1: value1,
-                                              value2: value2,
-                                              isAmoled: isAmoled,
-                                            ),
+                                        ),
+                                        Container(
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: theme.cardColor,
+                                            border: Border(top: BorderSide(color: theme.dividerColor)),
                                           ),
-                                        ],
-                                      );
-                                    },
-                                  ),
+                                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                                          child: Row(
+                                            children: [
+                                                Text('Show: ', style: theme.textTheme.bodySmall),
+                                                DropdownButton<int>(
+                                                    value: _itemsPerPage,
+                                                    underline: const SizedBox(),
+                                                    style: theme.textTheme.bodySmall,
+                                                    items: _availablePageSizes.map((e) {
+                                                      final text = e == -1 ? 'All' : '$e';
+                                                      return DropdownMenuItem(value: e, child: Text(text));
+                                                    }).toList(),   
+                                                    onChanged: (v) {
+                                                        if(v!=null && v != _itemsPerPage) {
+                                                            setState(() {
+                                                                _itemsPerPage = v;
+                                                                _currentPage = 0;
+                                                            });
+                                                        }
+                                                    },
+                                                ),
+                                                const Spacer(),
+                                                Text('${startIndex + 1}-$endIndex of $filteredCount', style: theme.textTheme.bodySmall),
+                                                const SizedBox(width: 8),
+                                                IconButton(
+                                                    icon: const Icon(Icons.first_page),
+                                                    splashRadius: 20,
+                                                    onPressed: _currentPage > 0 ? () {
+                                                      setState(() => _currentPage = 0);
+                                                      _scrollController.jumpTo(0);
+                                                    } : null,
+                                                ),
+                                                IconButton(
+                                                    icon: const Icon(Icons.chevron_left),
+                                                    splashRadius: 20,
+                                                    onPressed: _currentPage > 0 ? () {
+                                                      setState(() => _currentPage--);
+                                                      _scrollController.jumpTo(0);
+                                                    } : null,
+                                                ),
+                                                Text(' ${_currentPage + 1} / ${(filteredCount / effectiveItemsPerPage).ceil()} ', style: theme.textTheme.bodySmall),
+                                                IconButton(
+                                                    icon: const Icon(Icons.chevron_right),
+                                                    splashRadius: 20,
+                                                    onPressed: endIndex < filteredCount ? () {
+                                                      setState(() => _currentPage++);
+                                                      _scrollController.jumpTo(0);
+                                                    } : null,
+                                                ),
+                                                IconButton(
+                                                    icon: const Icon(Icons.last_page),
+                                                    splashRadius: 20,
+                                                    onPressed: endIndex < filteredCount ? () {
+                                                      final lastPage = (filteredCount / effectiveItemsPerPage).ceil() - 1;
+                                                      setState(() => _currentPage = lastPage);
+                                                      _scrollController.jumpTo(0);
+                                                    } : null,
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  }
                                 ),
                               ),
                             ],
@@ -2600,6 +2689,42 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       );
     }).toList();
   }
+  Future<void> _showLargeFileWarningDialog(BuildContext context, ComparisonLargeFileWarning state) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Large File Detected'),
+          content: Text(
+            'The comparison result contains ${state.count} entries.\n'
+            'Displaying all of them might cause performance issues.\n\n'
+            'Do you want to proceed?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.read<ComparisonBloc>().add(ProceedWithComparison(
+                  state.result, 
+                  state.file1, 
+                  state.file2, 
+                  wasLoadedFromHistory: state.wasLoadedFromHistory
+                ));
+              },
+              child: const Text('Proceed'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _PulsingIndicator extends StatefulWidget {
@@ -2742,4 +2867,7 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon>
       },
     );
   }
+
+
+
 }

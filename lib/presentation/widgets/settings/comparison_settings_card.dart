@@ -5,6 +5,7 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/live_logic_preview_card.dart';
 
 /// Comparison Engine Settings card widget
 class ComparisonSettingsCard extends StatelessWidget {
@@ -150,8 +151,8 @@ class ComparisonSettingsCard extends StatelessWidget {
                 ),
               )
             else
-              ...settings.ignorePatterns
-                  .map((pattern) => _buildPatternItem(context, pattern)),
+              ...settings.ignorePatterns.asMap().entries.map((entry) =>
+                  _buildPatternItem(context, entry.value, entry.key)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildPatternPresets(context),
@@ -169,15 +170,21 @@ class ComparisonSettingsCard extends StatelessWidget {
             ),
           ],
         ),
+
+        LiveLogicPreviewCard(
+          settings: settings,
+          isDark: isDark,
+          isAmoled: isAmoled,
+        ),
       ],
     );
   }
 
-  Widget _buildPatternItem(BuildContext context, String pattern) {
+  Widget _buildPatternItem(BuildContext context, String pattern, int index) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
 
     return Padding(
-      key: Key('ignorePattern_tile_$pattern'),
+      key: Key('ignorePattern_tile_${pattern}_$index'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -196,7 +203,7 @@ class ComparisonSettingsCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            key: Key('ignorePattern_delete_$pattern'),
+            key: Key('ignorePattern_delete_${pattern}_$index'),
             icon: Icon(Icons.delete_outline_rounded,
                 size: 18, color: AppThemeV2.error, semanticLabel: 'Delete $pattern'),
             onPressed: () =>

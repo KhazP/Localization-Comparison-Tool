@@ -220,6 +220,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onAddIgnorePattern(
       AddIgnorePattern event, Emitter<SettingsState> emit) async {
+    if (state.appSettings.ignorePatterns.contains(event.pattern)) {
+      return;
+    }
     final updatedPatterns = List<String>.from(state.appSettings.ignorePatterns)
       ..add(event.pattern);
     final newSettings =

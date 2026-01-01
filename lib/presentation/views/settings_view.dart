@@ -13,6 +13,7 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/translation_memory_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -24,17 +25,9 @@ import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/system_info_service.dart';
 import 'package:intl/intl.dart';
 
-enum SettingsCategory {
-  general,
-  comparisonEngine,
-  appearance,
-  fileHandling,
-  aiServices,
-  versionControl,
-  windowsIntegrations,
-  macOSIntegrations,
-  about,
-}
+// Re-export SettingsCategory for external use
+export 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart' show SettingsCategory;
+
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -1065,9 +1058,18 @@ class _SettingsViewState extends State<SettingsView>
     final settings = state.appSettings;
     switch (_selectedCategory) {
       case SettingsCategory.general:
-        return _buildGeneralSettings(context, settings, isDark, isAmoled);
+        return GeneralSettingsCard(
+          settings: settings,
+          isDark: isDark,
+          isAmoled: isAmoled,
+        );
       case SettingsCategory.comparisonEngine:
-        return _buildComparisonSettings(context, settings, isDark, isAmoled);
+        return ComparisonSettingsCard(
+          settings: settings,
+          isDark: isDark,
+          isAmoled: isAmoled,
+          onShowAddPatternDialog: () => _showAddPatternDialog(context, isDark),
+        );
       case SettingsCategory.appearance:
         return _buildAppearanceSettings(context, settings, isDark, isAmoled);
       case SettingsCategory.fileHandling:

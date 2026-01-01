@@ -229,8 +229,14 @@ class _IssueCard extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final relatedKeys = issue.relatedKeys ?? [issue.key];
-    // Show top 20 keys max to keep UI sane
-    final displayKeys = relatedKeys.take(20).toList();
+    final relatedSources = issue.relatedSources ?? {};
+    
+    // Check if distinct source texts exist
+    final distinctSources = relatedSources.values.toSet();
+    final hasContextMismatch = distinctSources.length > 1;
+
+    // Show top 10 keys
+    final displayKeys = relatedKeys.take(10).toList();
     final remaining = relatedKeys.length - displayKeys.length;
 
     return Column(
@@ -245,52 +251,107 @@ class _IssueCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
-          'USED IN ${relatedKeys.length} KEYS',
-          style: labelStyle,
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            ...displayKeys.map((k) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: theme.dividerColor.withValues(alpha: 0.3),
+        if (hasContextMismatch)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    size: 16, color: Colors.orange),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Different source texts use this same translation. Check context.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.orange.shade800,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  child: Text(
-                    k,
-                    style: monoStyle?.copyWith(fontSize: 11),
-                  ),
-                )),
-            if (remaining > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
                 ),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '+$remaining more',
-                  style: monoStyle?.copyWith(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSecondaryContainer,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              ],
+            ),
+          ),
+        
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+             Text(
+              'AFFECTED KEYS (${relatedKeys.length})',
+              style: labelStyle,
+            ),
+            if (!hasContextMismatch && relatedSources.isNotEmpty)
+               Text(
+                'Identical Sources',
+                style: labelStyle?.copyWith(color: theme.colorScheme.primary),
               ),
           ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              ...displayKeys.map((k) {
+                final source = relatedSources[k];
+                return Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: theme.dividerColor.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        k,
+                        style: monoStyle?.copyWith(fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                      if (source != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '"$source"',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                             fontStyle: FontStyle.italic,
+                             color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
+              if (remaining > 0)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  child: Center(
+                    child: Text(
+                      '+$remaining more keys',
+                      style: monoStyle?.copyWith(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );

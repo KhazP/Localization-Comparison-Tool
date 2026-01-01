@@ -55,6 +55,7 @@ class QualityIssue {
     required this.description,
     required this.type,
     this.relatedKeys,
+    this.relatedSources,
   });
 
   /// The localization key tied to the issue.
@@ -74,6 +75,9 @@ class QualityIssue {
 
   /// For duplicate value issues, this list contains all keys sharing the value.
   final List<String>? relatedKeys;
+
+  /// For duplicate values, maps each key to its source text (if available).
+  final Map<String, String>? relatedSources;
 }
 
 /// Holds issue counts and detailed issue lists.

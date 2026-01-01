@@ -178,6 +178,14 @@ class QualityMetricsService {
     for (final entry in duplicateEntries) {
       final keys = [...entry.value.keys]..sort();
       duplicateCount += keys.length;
+      
+      final relatedSources = <String, String>{};
+      for (final key in keys) {
+        if (sourceData.containsKey(key)) {
+           relatedSources[key] = sourceData[key]!;
+        }
+      }
+
       if (_withinLimit(duplicateIssues, issueLimit)) {
         duplicateIssues.add(
           QualityIssue(
@@ -187,6 +195,7 @@ class QualityMetricsService {
             description: _describeDuplicateKeys(keys),
             type: QualityIssueType.duplicateValue,
             relatedKeys: keys,
+            relatedSources: relatedSources,
           ),
         );
       }

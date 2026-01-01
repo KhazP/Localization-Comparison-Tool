@@ -37,6 +37,7 @@ import 'package:localizer_app_main/presentation/views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:localizer_app_main/core/input/app_shortcuts.dart';
 import 'package:localizer_app_main/core/input/app_actions.dart';
+import 'package:localizer_app_main/core/input/app_intents.dart';
 
 class MyApp extends StatelessWidget {
   final AppSettings initialAppSettings;
@@ -85,6 +86,14 @@ class MyApp extends StatelessWidget {
           BlocProvider<ComparisonBloc>(
             create: (context) => ComparisonBloc(
               comparisonEngine: comparisonEngine,
+              onProgress: (completed, total, message) {
+                final progressBloc = context.read<ProgressBloc>();
+                if (completed <= 0) {
+                  progressBloc.add(ComparisonStarted(total));
+                  return;
+                }
+                progressBloc.add(ProgressUpdated(completed, message));
+              },
             ),
           ),
           BlocProvider<HistoryBloc>(
@@ -336,15 +345,14 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
             label: 'Open Files...',
             shortcut: const SingleActivator(LogicalKeyboardKey.keyO, meta: true),
             onSelected: () {
-              // Trigger file open - this would need to communicate with HomeView
-              debugPrint('Open Files triggered from menu');
+              Actions.invoke(context, const OpenFileIntent());
             },
           ),
           PlatformMenuItem(
             label: 'Open Folder...',
             shortcut: const SingleActivator(LogicalKeyboardKey.keyO, meta: true, shift: true),
             onSelected: () {
-              debugPrint('Open Folder triggered from menu');
+              Actions.invoke(context, const OpenFolderIntent());
             },
           ),
           const PlatformMenuItemGroup(members: []),
@@ -352,7 +360,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
             label: 'Export Results...',
             shortcut: const SingleActivator(LogicalKeyboardKey.keyE, meta: true),
             onSelected: () {
-              debugPrint('Export triggered from menu');
+              Actions.invoke(context, const ExportIntent());
             },
           ),
         ],
@@ -408,21 +416,21 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
             label: 'Zoom In',
             shortcut: const SingleActivator(LogicalKeyboardKey.equal, meta: true),
             onSelected: () {
-              debugPrint('Zoom In triggered');
+              Actions.invoke(context, const ZoomInIntent());
             },
           ),
           PlatformMenuItem(
             label: 'Zoom Out',
             shortcut: const SingleActivator(LogicalKeyboardKey.minus, meta: true),
             onSelected: () {
-              debugPrint('Zoom Out triggered');
+              Actions.invoke(context, const ZoomOutIntent());
             },
           ),
           PlatformMenuItem(
             label: 'Reset Zoom',
             shortcut: const SingleActivator(LogicalKeyboardKey.digit0, meta: true),
             onSelected: () {
-              debugPrint('Reset Zoom triggered');
+              Actions.invoke(context, const ResetZoomIntent());
             },
           ),
         ],

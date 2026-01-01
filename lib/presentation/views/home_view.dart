@@ -11,6 +11,8 @@ import 'package:localizer_app_main/presentation/views/git_view.dart';
 import 'package:localizer_app_main/presentation/views/quality_dashboard_view.dart';
 import 'package:localizer_app_main/presentation/views/projects_view.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_indicator.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/app_tab_service.dart';
 
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 
@@ -27,6 +29,7 @@ class _MyHomePageState extends State<MyHomePage>
     with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _fabAnimationController;
+  late final AppTabService _tabService;
   
   // Cached pages to prevent recreation on tab switch (performance optimization)
   late final List<Widget> _pages;
@@ -40,6 +43,9 @@ class _MyHomePageState extends State<MyHomePage>
     final settingsBloc = context.read<SettingsBloc>();
     _selectedIndex = _getInitialTabIndex(
         settingsBloc.state.appSettings.defaultViewOnStartup);
+    _tabService = sl<AppTabService>();
+    _tabService.selectedIndex.addListener(_handleTabServiceChange);
+    _tabService.select(_selectedIndex);
     _fabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -54,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage>
         initialSession: widget.initialSession,
       ),
       HistoryView(
-          onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
+          onNavigateToTab: _onDestinationSelected),
       const QualityDashboardView(),
       const FilesView(),
       const GitView(),
@@ -64,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void dispose() {
+    _tabService.selectedIndex.removeListener(_handleTabServiceChange);
     _fabAnimationController.dispose();
     super.dispose();
   }
@@ -95,6 +102,17 @@ class _MyHomePageState extends State<MyHomePage>
         _selectedIndex = index;
       });
     }
+    _tabService.select(index);
+  }
+
+  void _handleTabServiceChange() {
+    final index = _tabService.selectedIndex.value;
+    if (!mounted || index == _selectedIndex) {
+      return;
+    }
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   void _toggleTheme() {

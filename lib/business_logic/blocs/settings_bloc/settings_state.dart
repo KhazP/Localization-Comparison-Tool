@@ -68,7 +68,6 @@ class SettingsState extends Equatable {
         ApiProvider.deepl: const ApiKeyTestResult.idle(),
         ApiProvider.gemini: const ApiKeyTestResult.idle(),
         ApiProvider.openAi: const ApiKeyTestResult.idle(),
-        ApiProvider.openAi: const ApiKeyTestResult.idle(),
       },
       availableModels: const {
         ApiProvider.gemini: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'], // Default fallbacks

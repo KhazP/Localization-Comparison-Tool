@@ -3,6 +3,8 @@ import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/core/services/file_discovery_service.dart';
 import 'package:localizer_app_main/core/services/file_watcher_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
+import 'package:localizer_app_main/core/services/app_command_service.dart';
+import 'package:localizer_app_main/core/services/app_tab_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
@@ -25,6 +27,8 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
   sl.registerLazySingleton<FileWatcherService>(() => FileWatcherService());
   sl.registerLazySingleton<FileDiscoveryService>(() => FileDiscoveryService());
+  sl.registerLazySingleton<AppCommandService>(() => AppCommandService());
+  sl.registerLazySingleton<AppTabService>(() => AppTabService());
   
   // Translation services
   sl.registerLazySingleton<LocalTranslationCache>(() => LocalTranslationCache());

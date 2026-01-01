@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -15,6 +16,8 @@ import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/comparison_result_dialog.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:path/path.dart' as p;
+import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/app_command_service.dart';
 
 class FilesView extends StatefulWidget {
   const FilesView({super.key});
@@ -30,6 +33,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
   bool _isDraggingTarget = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  StreamSubscription<AppCommand>? _appCommandSubscription;
+  void Function(VoidCallback)? _exportDialogSetState;
   
   // Export state
   bool _isExporting = false;
@@ -40,6 +45,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    _appCommandSubscription =
+        sl<AppCommandService>().stream.listen(_handleAppCommand);
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -53,6 +60,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
+    _appCommandSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -78,6 +86,36 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     } else {
       ToastService.showWarning(context, 'Please select both a source and target directory.');
     }
+  }
+
+  void _handleAppCommand(AppCommand command) {
+    if (command.type != AppCommandType.openFolder) {
+      return;
+    }
+    _openFoldersFromCommand();
+  }
+
+  Future<void> _openFoldersFromCommand() async {
+    final source = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Source Folder',
+    );
+    if (!mounted || source == null) {
+      return;
+    }
+
+    final target = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Target Folder',
+    );
+    if (!mounted || target == null) {
+      return;
+    }
+
+    setState(() {
+      _sourceDirectory = source;
+      _targetDirectory = target;
+    });
+
+    _startDirectoryComparison();
   }
 
   @override
@@ -918,6 +956,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
       _totalToExport = pairsWithResults.length;
       _currentExportFile = null;
     });
+    _refreshExportDialog();
 
     // Show progress dialog
     if (mounted) {
@@ -937,6 +976,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
           _exportedCount = i;
           _currentExportFile = fileName;
         });
+        _refreshExportDialog();
 
         // Generate CSV content for this pair
         final csvContent = _generateCsvForPair(pair, result);
@@ -974,14 +1014,17 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         _exportedCount = pairsWithResults.length;
         _currentExportFile = null;
       });
+      _refreshExportDialog();
 
       // Close progress dialog and show success
       if (mounted) {
+        _exportDialogSetState = null;
         Navigator.of(context).pop(); // Close progress dialog
         _showExportCompleteDialog(exportDir.path, pairsWithResults.length);
       }
     } catch (e) {
       if (mounted) {
+        _exportDialogSetState = null;
         Navigator.of(context).pop(); // Close progress dialog
         ToastService.showError(context, 'Export failed: $e');
       }
@@ -992,6 +1035,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         _totalToExport = 0;
         _currentExportFile = null;
       });
+      _refreshExportDialog();
     }
   }
 
@@ -1072,6 +1116,10 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     return '\uFEFF$csvString';
   }
 
+  void _refreshExportDialog() {
+    _exportDialogSetState?.call(() {});
+  }
+
   void _showExportProgressDialog() {
     showDialog(
       context: context,
@@ -1079,6 +1127,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            _exportDialogSetState = setDialogState;
             // Update dialog state when parent state changes
             return AlertDialog(
               title: Row(

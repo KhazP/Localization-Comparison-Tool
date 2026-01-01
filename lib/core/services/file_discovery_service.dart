@@ -32,26 +32,31 @@ class FileDiscoveryService {
     final List<FilePair> pairedFiles = [];
     final List<File> unmatchedSourceFiles = [];
     
-    final allSourceFiles = (await sourceDir.list(recursive: true).toList()).whereType<File>();
-    final allTargetFiles = (await targetDir.list(recursive: true).toList()).whereType<File>().toList();
+    final allSourceFiles =
+        (await sourceDir.list(recursive: true).toList()).whereType<File>();
+    final allTargetFiles = (await targetDir.list(recursive: true).toList())
+        .whereType<File>()
+        .toList();
+
+    final targetMap = <String, File>{};
+    for (final targetFile in allTargetFiles) {
+      final relativePath = p.relative(targetFile.path, from: targetDirPath);
+      targetMap[relativePath] = targetFile;
+    }
 
     for (final sourceFile in allSourceFiles) {
       final relativePath = p.relative(sourceFile.path, from: sourceDirPath);
-      
-      try {
-        final matchingTargetFile = allTargetFiles.firstWhere(
-          (targetFile) => p.relative(targetFile.path, from: targetDirPath) == relativePath,
+      final matchingTargetFile = targetMap.remove(relativePath);
+      if (matchingTargetFile != null) {
+        pairedFiles.add(
+          FilePair(sourceFile: sourceFile, targetFile: matchingTargetFile),
         );
-        pairedFiles.add(FilePair(sourceFile: sourceFile, targetFile: matchingTargetFile));
-        allTargetFiles.remove(matchingTargetFile); // Remove from list to mark as matched
-      } catch (e) {
-        // .firstWhere throws if no element is found
+      } else {
         unmatchedSourceFiles.add(sourceFile);
       }
     }
 
-    // Any remaining files in allTargetFiles are unmatched target files
-    final List<File> unmatchedTargetFiles = allTargetFiles;
+    final List<File> unmatchedTargetFiles = targetMap.values.toList();
 
     // Sort all lists alphabetically for consistent UI
     pairedFiles.sort((a, b) => a.sourceFile.path.compareTo(b.sourceFile.path));

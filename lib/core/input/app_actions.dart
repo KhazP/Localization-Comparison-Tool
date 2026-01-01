@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/app_command_service.dart';
+import 'package:localizer_app_main/core/services/app_tab_service.dart';
+import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'app_intents.dart';
 
 // Since some actions rely on specific Bloc events or Navigation which might differ 
@@ -8,55 +13,80 @@ import 'app_intents.dart';
 
 class GlobalActions {
   static Map<Type, Action<Intent>> getActions(BuildContext context) {
+    final appCommandService = sl<AppCommandService>();
+    final appTabService = sl<AppTabService>();
+
     return {
       OpenFileIntent: CallbackAction<OpenFileIntent>(
         onInvoke: (intent) {
-          // Dispatch generic event or show dialog - depends on how we want to handle this globally
-          // For now, print to debug CONSOLE as we need to hook into active view
-          debugPrint('Global: Open File Intent triggered');
+          appTabService.select(1);
+          appCommandService.emit(
+            const AppCommand(AppCommandType.openFiles),
+          );
           return null;
         },
       ),
       OpenFolderIntent: CallbackAction<OpenFolderIntent>(
         onInvoke: (intent) {
-          debugPrint('Global: Open Folder Intent triggered');
+          appTabService.select(4);
+          appCommandService.emit(
+            const AppCommand(AppCommandType.openFolder),
+          );
           return null;
         },
       ),
       ExportIntent: CallbackAction<ExportIntent>(
         onInvoke: (intent) {
-          debugPrint('Global: Export Intent triggered');
+          appTabService.select(1);
+          appCommandService.emit(
+            const AppCommand(AppCommandType.exportResults),
+          );
           return null;
         },
       ),
       OpenSettingsIntent: CallbackAction<OpenSettingsIntent>(
         onInvoke: (intent) {
-          // Settings is usually tab 5 in HomeView, but we can't easily reach it from here
-          // without a global navigation key or context propagation.
-          // However, verify if we can pop deeply or use a global key.
-          debugPrint('Global: Open Settings Intent triggered');
+          appTabService.select(6);
           return null;
         },
       ),
       ZoomInIntent: CallbackAction<ZoomInIntent>(
         onInvoke: (intent) {
-          // Dispatch zoom in to relevant Bloc or View
-          debugPrint('Global: Zoom In Intent triggered');
+          _adjustDiffFontSize(context, 1.0);
           return null;
         },
       ),
       ZoomOutIntent: CallbackAction<ZoomOutIntent>(
         onInvoke: (intent) {
-           debugPrint('Global: Zoom Out Intent triggered');
-           return null;
+          _adjustDiffFontSize(context, -1.0);
+          return null;
         },
       ),
       ResetZoomIntent: CallbackAction<ResetZoomIntent>(
         onInvoke: (intent) {
-           debugPrint('Global: Reset Zoom Intent triggered');
-           return null;
+          _resetDiffFontSize(context);
+          return null;
         },
       ),
     };
+  }
+
+  static void _adjustDiffFontSize(BuildContext context, double delta) {
+    final settingsBloc = context.read<SettingsBloc>();
+    if (settingsBloc.state.status != SettingsStatus.loaded) {
+      return;
+    }
+    final currentSize = settingsBloc.state.appSettings.diffFontSize;
+    final nextSize = (currentSize + delta).clamp(8.0, 32.0);
+    settingsBloc.add(UpdateDiffFontSize(nextSize));
+  }
+
+  static void _resetDiffFontSize(BuildContext context) {
+    final settingsBloc = context.read<SettingsBloc>();
+    if (settingsBloc.state.status != SettingsStatus.loaded) {
+      return;
+    }
+    final defaultSize = AppSettings.defaultSettings().diffFontSize;
+    settingsBloc.add(UpdateDiffFontSize(defaultSize));
   }
 }

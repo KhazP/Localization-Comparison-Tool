@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -35,6 +36,8 @@ import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/services.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/app_command_service.dart';
 
 // Enum for filter status in Basic View
 
@@ -57,6 +60,7 @@ class BasicComparisonView extends StatefulWidget {
 class _BasicComparisonViewState extends State<BasicComparisonView> {
   // ... existing fields ...
   final QualityMetricsService _qualityMetricsService = QualityMetricsService();
+  StreamSubscription<AppCommand>? _appCommandSubscription;
 
   void _navigateToAiSettings() {
     // Navigate to Settings tab (index 5)
@@ -66,6 +70,82 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       // Fallback if callback not provided
       ToastService.showInfo(context, 'Navigation to AI Settings not available');
     }
+  }
+
+  void _handleAppCommand(AppCommand command) {
+    switch (command.type) {
+      case AppCommandType.openFiles:
+        _openFilesFromCommand();
+        break;
+      case AppCommandType.exportResults:
+        _exportFromCommand();
+        break;
+      case AppCommandType.openFolder:
+        break;
+    }
+  }
+
+  Future<void> _openFilesFromCommand() async {
+    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (!mounted || result == null || result.files.isEmpty) {
+      return;
+    }
+
+    final picked = result.files.where((file) => file.path != null).toList();
+    if (picked.isEmpty) {
+      return;
+    }
+
+    final hasUnsupported = picked
+        .map((file) => file.path!)
+        .any((path) => !_isValidFileType(path));
+    if (hasUnsupported) {
+      ToastService.showError(
+        context,
+        'Some files are not supported.',
+        recoverySuggestion: 'Pick supported localization files only.',
+      );
+      return;
+    }
+
+    if (_isBilingualMode) {
+      setState(() {
+        _bilingualFile = File(picked.first.path!);
+        _file1 = null;
+        _file2 = null;
+      });
+    } else {
+      if (picked.length < 2) {
+        ToastService.showWarning(
+          context,
+          'Pick two files to compare.',
+        );
+        return;
+      }
+      setState(() {
+        _file1 = File(picked[0].path!);
+        _file2 = File(picked[1].path!);
+        _bilingualFile = null;
+      });
+    }
+
+    _updateFileWatcher();
+
+    final ready = _isBilingualMode
+        ? _bilingualFile != null
+        : _file1 != null && _file2 != null;
+    if (ready) {
+      _startComparison();
+    }
+  }
+
+  Future<void> _exportFromCommand() async {
+    if (!mounted) return;
+    if (_latestComparisonResult == null) {
+      ToastService.showInfo(context, 'No results to export yet.');
+      return;
+    }
+    await _exportResult();
   }
 
   File? _file1;
@@ -107,6 +187,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   @override
   void initState() {
     super.initState();
+    _appCommandSubscription =
+        sl<AppCommandService>().stream.listen(_handleAppCommand);
     // Check if we should auto-load the last project on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryAutoLoadLastProject();
@@ -150,6 +232,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   @override
   void dispose() {
+    _appCommandSubscription?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     _searchFocusNode.dispose();
@@ -629,10 +712,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                       }
 
                       if (state is ComparisonLargeFileWarning) {
+                        context.read<ProgressBloc>().add(ComparisonCompleted());
                         _showLargeFileWarningDialog(context, state);
                       }
 
                       if (state is ComparisonSuccess) {
+                        context.read<ProgressBloc>().add(ComparisonCompleted());
                         // Update file references in the UI
                         final isBilingualResult =
                             state.file1.path == state.file2.path;
@@ -711,6 +796,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                               .add(AddToHistory(session));
                         }
                       } else if (state is ComparisonFailure) {
+                        context
+                            .read<ProgressBloc>()
+                            .add(ComparisonError(state.error));
                         // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
                         // Or just show the error via ProgressBloc/Snackbar
                         ToastService.showError(context, 'Comparison failed: ${state.error}');

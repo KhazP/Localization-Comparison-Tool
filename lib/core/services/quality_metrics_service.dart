@@ -186,6 +186,7 @@ class QualityMetricsService {
             targetValue: entry.value.displayValue,
             description: _describeDuplicateKeys(keys),
             type: QualityIssueType.duplicateValue,
+            relatedKeys: keys,
           ),
         );
       }
@@ -487,7 +488,14 @@ class QualityMetricsService {
     final targetLength = target.trim().length;
     final sourceLabel = _formatCharCount(sourceLength);
     final targetLabel = _formatCharCount(targetLength);
-    return 'Target $targetLabel vs source $sourceLabel';
+    
+    if (sourceLength == 0) return 'Source is empty';
+
+    final diff = targetLength - sourceLength;
+    final percent = (diff / sourceLength * 100).round();
+    final sign = diff > 0 ? '+' : '';
+    
+    return 'Target is $targetLabel ($sign$percent%) vs source $sourceLabel';
   }
 
   static String _formatCharCount(int count) {

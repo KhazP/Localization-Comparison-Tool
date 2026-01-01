@@ -54,6 +54,7 @@ class QualityIssue {
     required this.targetValue,
     required this.description,
     required this.type,
+    this.relatedKeys,
   });
 
   /// The localization key tied to the issue.

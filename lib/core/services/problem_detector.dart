@@ -47,9 +47,9 @@ class ProblemDetector {
   static bool hasSuspiciousLength(
     String source,
     String? target, {
-    double minRatio = 0.5,
-    double maxRatio = 2.0,
-    int minSourceLength = 4,
+    double minRatio = 0.7, // 30% deviation
+    double maxRatio = 1.3, // 30% deviation
+    int minSourceLength = 3,
   }) {
     if (target == null) {
       return false;
@@ -59,7 +59,17 @@ class ProblemDetector {
     if (sourceTrimmed.length < minSourceLength || targetTrimmed.isEmpty) {
       return false;
     }
+
+    // Microcopy check: if source has 1-2 words, afford simpler 2x rule
+    final wordCount = sourceTrimmed.split(RegExp(r'\s+')).length;
+    final effectiveMax = wordCount <= 2 ? 2.0 : maxRatio;
+    
+    // For very short text (e.g. "Ok"), 30% is just 1 char. 
+    // Let's enforce the ratio strictness only if length > 5 or so?
+    // User credentials -> "minSourceLength" handles extremely short stuff.
+    // Let's stick to the requested ratios.
+
     final ratio = targetTrimmed.length / sourceTrimmed.length;
-    return ratio < minRatio || ratio > maxRatio;
+    return ratio < minRatio || ratio > effectiveMax;
   }
 }

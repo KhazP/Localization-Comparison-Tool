@@ -83,6 +83,9 @@ class GeneralSettingsCard extends StatelessWidget {
           title: 'Startup Options',
           isDark: isDark,
           isAmoled: isAmoled,
+          onReset: () {
+            context.read<SettingsBloc>().add(ResetStartupOptions());
+          },
           children: [
             SettingsRow(
               label: 'Remember Window Position',

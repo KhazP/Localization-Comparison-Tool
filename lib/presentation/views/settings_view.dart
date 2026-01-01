@@ -1735,13 +1735,7 @@ class _SettingsViewState extends State<SettingsView>
           isDark: isDark,
           isAmoled: isAmoled,
           onReset: () {
-            final defaults = AppSettings.defaultSettings();
-            context.read<SettingsBloc>().add(UpdateDiffColors(
-              addedColor: defaults.diffAddedColor,
-              removedColor: defaults.diffRemovedColor,
-              modifiedColor: defaults.diffModifiedColor,
-            ));
-            context.read<SettingsBloc>().add(UpdateDiffIdenticalColor(defaults.diffIdenticalColor));
+            context.read<SettingsBloc>().add(ResetDiffColors());
           },
           children: [
             Padding(
@@ -1843,7 +1837,9 @@ class _SettingsViewState extends State<SettingsView>
         : fontFamily;
     final double fontSize = settings.diffFontSize;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: _getCardColor(isDark, isAmoled),
@@ -1883,52 +1879,52 @@ class _SettingsViewState extends State<SettingsView>
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildPreviewEntry(
+                _buildAnimatedPreviewEntry(
                   context: context,
                   lineNumber: 42,
                   status: 'ADDED',
                   color: Color(settings.diffAddedColor),
-                  key: 'welcome_message',
-                  value: '"Hello, welcome to our app!"',
+                  key: 'onboarding.step3.title',
+                  value: '"Connect Your Account"',
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,
                   fontSize: fontSize,
                 ),
                 const SizedBox(height: 8),
-                _buildPreviewEntry(
+                _buildAnimatedPreviewEntry(
                   context: context,
                   lineNumber: 58,
                   status: 'REMOVED',
                   color: Color(settings.diffRemovedColor),
-                  key: 'old_greeting',
-                  value: '"Greetings, user"',
+                  key: 'deprecated.login_hint_v1',
+                  value: '"Enter credentials"',
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,
                   fontSize: fontSize,
                 ),
                 const SizedBox(height: 8),
-                _buildPreviewEntry(
+                _buildAnimatedPreviewEntry(
                   context: context,
                   lineNumber: 73,
                   status: 'MODIFIED',
                   color: Color(settings.diffModifiedColor),
-                  key: 'button_label',
-                  value: '"Submit" → "Continue"',
+                  key: 'checkout.cta_button',
+                  value: '"Buy Now" → "Complete Purchase"',
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,
                   fontSize: fontSize,
                 ),
                 const SizedBox(height: 8),
-                _buildPreviewEntry(
+                _buildAnimatedPreviewEntry(
                   context: context,
                   lineNumber: 89,
                   status: 'IDENTICAL',
                   color: Color(settings.diffIdenticalColor),
-                  key: 'app_name',
-                  value: '"Localizer Tool"',
+                  key: 'common.app_name',
+                  value: '"Localizer"',
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,
@@ -1942,7 +1938,8 @@ class _SettingsViewState extends State<SettingsView>
     );
   }
 
-  Widget _buildPreviewEntry({
+  /// Animated preview entry with smooth color transitions
+  Widget _buildAnimatedPreviewEntry({
     required BuildContext context,
     required int lineNumber,
     required String status,
@@ -1954,88 +1951,111 @@ class _SettingsViewState extends State<SettingsView>
     required String fontFamily,
     required double fontSize,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          // Line number
-          Container(
-            width: 28,
-            alignment: Alignment.center,
-            child: Text(
-              '$lineNumber',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppThemeV2.darkTextMuted
-                        : AppThemeV2.lightTextMuted,
-                    fontFamily: fontFamily,
-                    fontSize: 11,
-                  ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Status badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              status,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
+    const duration = Duration(milliseconds: 250);
+    const curve = Curves.easeOutCubic;
+
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: color),
+      duration: duration,
+      curve: curve,
+      builder: (context, animatedColor, child) {
+        final effectiveColor = animatedColor ?? color;
+        return TweenAnimationBuilder<double>(
+          tween: Tween<double>(end: fontSize),
+          duration: duration,
+          curve: curve,
+          builder: (context, animatedFontSize, _) {
+            return AnimatedContainer(
+              duration: duration,
+              curve: curve,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: effectiveColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: effectiveColor.withValues(alpha: 0.3)),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Key and value
-          Expanded(
-            child: RichText(
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: fontFamily,
-                      fontSize: fontSize,
-                    ),
+              child: Row(
                 children: [
-                  TextSpan(
-                    text: key,
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.w600,
+                  // Line number
+                  Container(
+                    width: 28,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$lineNumber',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? AppThemeV2.darkTextMuted
+                                : AppThemeV2.lightTextMuted,
+                            fontFamily: fontFamily,
+                            fontSize: 11,
+                          ),
                     ),
                   ),
-                  TextSpan(
-                    text: ': ',
-                    style: TextStyle(
-                      color: isDark
-                          ? AppThemeV2.darkTextMuted
-                          : AppThemeV2.lightTextMuted,
+                  const SizedBox(width: 8),
+                  // Status badge with animated color
+                  AnimatedContainer(
+                    duration: duration,
+                    curve: curve,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: effectiveColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      status,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                  TextSpan(
-                    text: value,
-                    style: TextStyle(
-                      color: isDark
-                          ? AppThemeV2.darkTextSecondary
-                          : AppThemeV2.lightTextSecondary,
+                  const SizedBox(width: 12),
+                  // Key and value with animated styles
+                  Expanded(
+                    child: RichText(
+                      overflow: TextOverflow.ellipsis,
+                      text: TextSpan(
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontFamily: fontFamily,
+                              fontSize: animatedFontSize,
+                            ),
+                        children: [
+                          TextSpan(
+                            text: key,
+                            style: TextStyle(
+                              color: effectiveColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ': ',
+                            style: TextStyle(
+                              color: isDark
+                                  ? AppThemeV2.darkTextMuted
+                                  : AppThemeV2.lightTextMuted,
+                            ),
+                          ),
+                          TextSpan(
+                            text: value,
+                            style: TextStyle(
+                              color: isDark
+                                  ? AppThemeV2.darkTextSecondary
+                                  : AppThemeV2.lightTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 

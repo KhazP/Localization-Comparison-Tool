@@ -58,6 +58,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<ResetComparisonSettings>(_onResetComparisonSettings);
     on<ResetAppearanceSettings>(_onResetAppearanceSettings);
     on<ResetAllSettings>(_onResetAllSettings);
+    on<ResetDiffColors>(_onResetDiffColors);
+    on<ResetStartupOptions>(_onResetStartupOptions);
     // AI Services Events
     on<UpdateAiTranslationService>(_onUpdateAiTranslationService);
     on<UpdateGoogleTranslateApiKey>(_onUpdateGoogleTranslateApiKey);
@@ -528,6 +530,31 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       diffIdenticalColor: defaultSettings.diffIdenticalColor,
       diffFontSize: defaultSettings.diffFontSize,
       diffFontFamily: defaultSettings.diffFontFamily,
+    );
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onResetDiffColors(
+      ResetDiffColors event, Emitter<SettingsState> emit) async {
+    final defaultSettings = AppSettings.defaultSettings();
+    final newSettings = state.appSettings.copyWith(
+      diffAddedColor: defaultSettings.diffAddedColor,
+      diffRemovedColor: defaultSettings.diffRemovedColor,
+      diffModifiedColor: defaultSettings.diffModifiedColor,
+      diffIdenticalColor: defaultSettings.diffIdenticalColor,
+    );
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onResetStartupOptions(
+      ResetStartupOptions event, Emitter<SettingsState> emit) async {
+    final defaultSettings = AppSettings.defaultSettings();
+    final newSettings = state.appSettings.copyWith(
+      rememberWindowPosition: defaultSettings.rememberWindowPosition,
+      openLastProjectOnStartup: defaultSettings.openLastProjectOnStartup,
+      startMinimizedToTray: defaultSettings.startMinimizedToTray,
     );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));

@@ -32,12 +32,7 @@ class ComparisonSettingsCard extends StatelessWidget {
           isDark: isDark,
           isAmoled: isAmoled,
           onReset: () {
-            final defaults = AppSettings.defaultSettings();
-            context.read<SettingsBloc>()
-              ..add(UpdateIgnoreCase(defaults.ignoreCase))
-              ..add(UpdateIgnoreWhitespace(defaults.ignoreWhitespace))
-              ..add(UpdateSimilarityThreshold(defaults.similarityThreshold))
-              ..add(UpdateComparisonMode(defaults.comparisonMode));
+            context.read<SettingsBloc>().add(ResetComparisonSettings());
           },
           children: [
             SettingsRow(

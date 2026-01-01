@@ -479,6 +479,10 @@ class ResetAiServicesSettings extends SettingsEvent {}
 
 class ResetVersionControlSettings extends SettingsEvent {}
 
+class ResetDiffColors extends SettingsEvent {}
+
+class ResetStartupOptions extends SettingsEvent {}
+
 // Startup Options Events
 class UpdateStartMinimizedToTray extends SettingsEvent {
   final bool minimized;

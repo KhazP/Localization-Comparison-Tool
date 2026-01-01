@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:localizer_app_main/core/services/macos_integration_service.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,4 +103,17 @@ Future<void> main(List<String> args) async {
   }
 
   runApp(MyApp(initialAppSettings: initialAppSettings));
+
+  // Initialize bitsdojo_window for custom title bar (desktop only)
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    doWhenWindowReady(() {
+      final win = appWindow;
+      const initialSize = Size(1280, 720);
+      win.minSize = const Size(800, 600);
+      win.size = initialSize;
+      win.alignment = Alignment.center;
+      win.title = 'Localizer';
+      win.show();
+    });
+  }
 }

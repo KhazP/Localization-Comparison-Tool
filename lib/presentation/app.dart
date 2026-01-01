@@ -36,6 +36,7 @@ import 'package:localizer_app_main/data/services/'
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:localizer_app_main/presentation/widgets/window/custom_title_bar.dart';
 import 'package:localizer_app_main/core/input/app_shortcuts.dart';
 import 'package:localizer_app_main/core/input/app_actions.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
@@ -277,9 +278,16 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                     darkTheme: darkTheme,
                     themeMode: themeState.themeMode,
                     builder: (context, child) {
-                      return Actions(
-                        actions: GlobalActions.getActions(context),
-                        child: child!,
+                      return Column(
+                        children: [
+                          const CustomTitleBar(),
+                          Expanded(
+                            child: Actions(
+                              actions: GlobalActions.getActions(context),
+                              child: child!,
+                            ),
+                          ),
+                        ],
                       );
                     },
                     home: MyHomePage(initialSession: _initialSession),

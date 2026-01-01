@@ -42,6 +42,7 @@ dependencies:
   google_fonts: ^6.1.0 # For custom fonts (Inter)
   get_it: ^7.6.7 # Service locator for dependency injection
   window_manager: ^0.4.0 # For window position management
+  bitsdojo_window: ^0.1.6 # For custom title bar UI
   screen_retriever: ^0.2.0 # For screen info (window_manager dependency)
   # Windows-specific integrations
   windows_single_instance: ^1.0.1 # For single instance enforcement

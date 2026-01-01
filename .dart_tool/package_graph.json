@@ -8,6 +8,7 @@
       "version": "2.0.0+1",
       "dependencies": [
         "archive",
+        "bitsdojo_window",
         "cross_file",
         "csv",
         "desktop_drop",
@@ -286,6 +287,17 @@
         "screen_retriever_macos",
         "screen_retriever_platform_interface",
         "screen_retriever_windows"
+      ]
+    },
+    {
+      "name": "bitsdojo_window",
+      "version": "0.1.6",
+      "dependencies": [
+        "bitsdojo_window_linux",
+        "bitsdojo_window_macos",
+        "bitsdojo_window_platform_interface",
+        "bitsdojo_window_windows",
+        "flutter"
       ]
     },
     {
@@ -1172,6 +1184,43 @@
       "dependencies": [
         "flutter",
         "screen_retriever_platform_interface"
+      ]
+    },
+    {
+      "name": "bitsdojo_window_windows",
+      "version": "0.1.6",
+      "dependencies": [
+        "bitsdojo_window_platform_interface",
+        "ffi",
+        "flutter",
+        "win32"
+      ]
+    },
+    {
+      "name": "bitsdojo_window_platform_interface",
+      "version": "0.1.2",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "bitsdojo_window_macos",
+      "version": "0.1.4",
+      "dependencies": [
+        "bitsdojo_window_platform_interface",
+        "ffi",
+        "flutter"
+      ]
+    },
+    {
+      "name": "bitsdojo_window_linux",
+      "version": "0.1.4",
+      "dependencies": [
+        "bitsdojo_window_platform_interface",
+        "ffi",
+        "flutter"
       ]
     },
     {

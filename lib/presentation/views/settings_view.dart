@@ -17,8 +17,7 @@ import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:localizer_app_main/core/services/windows_integration_service.dart';
-import 'package:localizer_app_main/core/services/macos_integration_service.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/system_integrations_card.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
@@ -518,87 +517,6 @@ class _SettingsViewState extends State<SettingsView>
   // SETTINGS SEARCH DATA
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// Data structure for searchable settings
-  static const Map<SettingsCategory, List<String>> _searchableSettings = {
-    SettingsCategory.general: [
-      'Language',
-      'Default View',
-      'Recent Files Count',
-      'Open Last Project',
-      'Confirm Before Exit',
-      'Show Notifications',
-    ],
-    SettingsCategory.comparisonEngine: [
-      'Comparison Mode',
-      'Similarity Threshold',
-      'Case Sensitive',
-      'Ignore Whitespace',
-      'Ignore Empty Lines',
-      'Ignore Comments',
-      'Ignore Patterns',
-    ],
-    SettingsCategory.appearance: [
-      'Theme',
-      'Theme Mode',
-      'Accent Color',
-      'Diff Font Size',
-      'Diff Font Family',
-      'Diff Colors',
-      'Added Color',
-      'Removed Color',
-      'Modified Color',
-      'Identical Color',
-      'Color Presets',
-      'Preview',
-    ],
-    SettingsCategory.fileHandling: [
-      'Source Format',
-      'Target Format',
-      'Default Encoding',
-      'Recent Project Count',
-      'Translation Memory',
-      'Import Memory',
-      'Export Memory',
-      'Clear Memory',
-    ],
-    SettingsCategory.aiServices: [
-      'OpenAI API Key',
-      'Anthropic API Key',
-      'Google AI API Key',
-      'AI Model',
-      'Temperature',
-      'Custom Prompt',
-    ],
-    SettingsCategory.versionControl: [
-      'Default Branch',
-      'Auto Stage',
-      'Commit Template',
-      'SSH Key',
-    ],
-    SettingsCategory.windowsIntegrations: [
-      'System Tray',
-      'Start Minimized',
-      'File Associations',
-      'Mica Effect',
-    ],
-    SettingsCategory.macOSIntegrations: [
-      'Vibrancy',
-      'Window Material',
-      'Dock Badge',
-      'Untranslated Count',
-    ],
-    SettingsCategory.about: [
-      'Version',
-      'Check Updates',
-      'Auto Update',
-      'Changelog',
-      'License',
-      'Privacy Policy',
-      'Telemetry',
-      'Crash Reporting',
-      'Developer Options',
-    ],
-  };
 
   /// Search settings and return matching categories with their matching terms
   Map<SettingsCategory, List<String>> _getSearchResults() {
@@ -608,7 +526,7 @@ class _SettingsViewState extends State<SettingsView>
     final query = _searchQuery.toLowerCase();
     final results = <SettingsCategory, List<String>>{};
 
-    for (final entry in _searchableSettings.entries) {
+    for (final entry in SettingsConstants.searchableSettings.entries) {
       final matches = entry.value
           .where((setting) => setting.toLowerCase().contains(query))
           .toList();
@@ -629,18 +547,7 @@ class _SettingsViewState extends State<SettingsView>
     var categories = SettingsCategory.values.toList();
 
     // Filter out platform-specific categories unless developer options enabled
-    if (!showDeveloperOptions) {
-      if (!Platform.isWindows) {
-        categories = categories
-            .where((c) => c != SettingsCategory.windowsIntegrations)
-            .toList();
-      }
-      if (!Platform.isMacOS) {
-        categories = categories
-            .where((c) => c != SettingsCategory.macOSIntegrations)
-            .toList();
-      }
-    }
+    // System Integrations category handles platform specifics internally
 
     // Apply search filtering
     if (_searchQuery.isEmpty) {
@@ -904,72 +811,15 @@ class _SettingsViewState extends State<SettingsView>
   }
 
   IconData _getCategoryIcon(SettingsCategory category) {
-    switch (category) {
-      case SettingsCategory.general:
-        return Icons.tune_rounded;
-      case SettingsCategory.comparisonEngine:
-        return Icons.compare_arrows_rounded;
-      case SettingsCategory.appearance:
-        return Icons.palette_rounded;
-      case SettingsCategory.fileHandling:
-        return Icons.folder_rounded;
-      case SettingsCategory.aiServices:
-        return Icons.auto_awesome_rounded;
-      case SettingsCategory.versionControl:
-        return Icons.history_rounded;
-      case SettingsCategory.windowsIntegrations:
-        return Icons.window_rounded;
-      case SettingsCategory.macOSIntegrations:
-        return Icons.apple_rounded;
-      case SettingsCategory.about:
-        return Icons.info_rounded;
-    }
+    return SettingsConstants.getCategoryIcon(category);
   }
 
   String _getCategoryLabel(SettingsCategory category) {
-    switch (category) {
-      case SettingsCategory.general:
-        return 'General';
-      case SettingsCategory.comparisonEngine:
-        return 'Comparison';
-      case SettingsCategory.appearance:
-        return 'Appearance';
-      case SettingsCategory.fileHandling:
-        return 'File Handling';
-      case SettingsCategory.aiServices:
-        return 'AI Services';
-      case SettingsCategory.versionControl:
-        return 'Version Control';
-      case SettingsCategory.windowsIntegrations:
-        return 'Windows';
-      case SettingsCategory.macOSIntegrations:
-        return 'macOS';
-      case SettingsCategory.about:
-        return 'About';
-    }
+    return SettingsConstants.getCategoryLabel(category);
   }
 
   String _getCategoryTitle(SettingsCategory category) {
-    switch (category) {
-      case SettingsCategory.general:
-        return 'General Settings';
-      case SettingsCategory.comparisonEngine:
-        return 'Comparison Engine';
-      case SettingsCategory.appearance:
-        return 'Appearance';
-      case SettingsCategory.fileHandling:
-        return 'File Handling';
-      case SettingsCategory.aiServices:
-        return 'AI Services';
-      case SettingsCategory.versionControl:
-        return 'Version Control (Git)';
-      case SettingsCategory.windowsIntegrations:
-        return 'Windows Integrations';
-      case SettingsCategory.macOSIntegrations:
-        return 'macOS Integrations';
-      case SettingsCategory.about:
-        return 'About';
-    }
+    return SettingsConstants.getCategoryTitle(category);
   }
 
   Widget _buildSettingsContent(
@@ -1080,12 +930,12 @@ class _SettingsViewState extends State<SettingsView>
       case SettingsCategory.versionControl:
         return _buildVersionControlSettings(
             context, settings, isDark, isAmoled);
-      case SettingsCategory.windowsIntegrations:
-        return _buildWindowsIntegrationsSettings(
-            context, settings, isDark, isAmoled);
-      case SettingsCategory.macOSIntegrations:
-        return _buildMacOSIntegrationsSettings(
-            context, settings, isDark, isAmoled);
+      case SettingsCategory.systemIntegrations:
+        return SystemIntegrationsCard(
+          settings: settings,
+          isDark: isDark,
+          isAmoled: isAmoled,
+        );
       case SettingsCategory.about:
         return _buildAboutSettings(context, isDark, isAmoled);
     }
@@ -3198,455 +3048,6 @@ class _SettingsViewState extends State<SettingsView>
   // WINDOWS INTEGRATIONS SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildWindowsIntegrationsSettings(
-      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
-    final isWindows = Platform.isWindows;
-
-    return Column(
-      children: [
-        if (!isWindows)
-          _buildSettingsCard(
-            context: context,
-            title: 'Platform Notice',
-            isDark: isDark,
-            isAmoled: isAmoled,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Windows integrations are only available when running on Windows.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        _buildSettingsCard(
-          context: context,
-          title: 'Visual Effects',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            _buildSettingRow(
-              context: context,
-              label: 'Use Mica Effect',
-              description:
-                  'Enable Windows 11 Mica transparency (requires restart)',
-              control: Switch(
-                value: settings.useMicaEffect,
-                onChanged: isWindows
-                    ? (val) => context
-                        .read<SettingsBloc>()
-                        .add(UpdateUseMicaEffect(val))
-                    : null,
-              ),
-              isDark: isDark,
-              isAmoled: isAmoled,
-              showDivider: false,
-            ),
-          ],
-        ),
-        _buildSettingsCard(
-          context: context,
-          title: 'Explorer Integration',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Add "Open with Localizer" to the Windows Explorer right-click menu for folders.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDark
-                              ? AppThemeV2.darkTextMuted
-                              : AppThemeV2.lightTextMuted,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: isWindows
-                              ? () async {
-                                  final success =
-                                      await WindowsIntegrationService
-                                          .addToContextMenu();
-                                  if (context.mounted) {
-                                    if (success) {
-                                      ToastService.showSuccess(context, 'Context menu added!');
-                                    } else {
-                                      ToastService.showError(context, 'Failed to add context menu');
-                                    }
-                                  }
-                                }
-                              : null,
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: const Text('Add to Context Menu'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: isWindows
-                              ? () async {
-                                  final success =
-                                      await WindowsIntegrationService
-                                          .removeFromContextMenu();
-                                  if (context.mounted) {
-                                    if (success) {
-                                      ToastService.showSuccess(context, 'Context menu removed!');
-                                    } else {
-                                      ToastService.showError(context, 'Failed to remove context menu');
-                                    }
-                                  }
-                                }
-                              : null,
-                          icon: const Icon(Icons.remove_rounded, size: 18),
-                          label: const Text('Remove'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        _buildSettingsCard(
-          context: context,
-          title: 'File Associations',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'Register file types to open with Localizer when double-clicked in Explorer.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppThemeV2.darkTextMuted
-                          : AppThemeV2.lightTextMuted,
-                    ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Per-extension toggles
-            ...WindowsIntegrationService.supportedExtensions.entries
-                .map((entry) {
-              final ext = entry.key;
-              final description = entry.value;
-              final isRegistered = isWindows &&
-                  WindowsIntegrationService.isFileExtensionRegistered(ext);
-
-              return _buildSettingRow(
-                context: context,
-                label: ext,
-                description: description,
-                control: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isRegistered ? Colors.green : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isRegistered ? 'Registered' : 'Not Registered',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: isDark
-                                ? AppThemeV2.darkTextMuted
-                                : AppThemeV2.lightTextMuted,
-                          ),
-                    ),
-                    const SizedBox(width: 12),
-                    Switch(
-                      value: isRegistered,
-                      onChanged: isWindows
-                          ? (val) async {
-                              final success = val
-                                  ? await WindowsIntegrationService
-                                      .registerFileExtension(ext)
-                                  : await WindowsIntegrationService
-                                      .unregisterFileExtension(ext);
-                              if (context.mounted) {
-                                if (success) {
-                                  ToastService.showSuccess(context, val ? '$ext registered!' : '$ext unregistered!');
-                                } else {
-                                  ToastService.showError(context, 'Failed to ${val ? 'register' : 'unregister'} $ext');
-                                }
-                                // Trigger rebuild to update status
-                                setState(() {});
-                              }
-                            }
-                          : null,
-                      activeColor: Theme.of(context).colorScheme.primary,
-                    ),
-                  ],
-                ),
-                isDark: isDark,
-                isAmoled: isAmoled,
-                showDivider: ext !=
-                    WindowsIntegrationService.supportedExtensions.keys.last,
-              );
-            }),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: isWindows
-                          ? () async {
-                              final results = await WindowsIntegrationService
-                                  .registerAllExtensions();
-                              final successCount =
-                                  results.values.where((v) => v).length;
-                              if (context.mounted) {
-                                final message = 'Registered $successCount of ${results.length} file types';
-                                if (successCount == results.length) {
-                                  ToastService.showSuccess(context, message);
-                                } else {
-                                  ToastService.showWarning(context, message);
-                                }
-                                setState(() {});
-                              }
-                            }
-                          : null,
-                      icon: const Icon(Icons.check_circle_outline_rounded,
-                          size: 18),
-                      label: const Text('Register All'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: isWindows
-                          ? () async {
-                              final results = await WindowsIntegrationService
-                                  .unregisterAllExtensions();
-                              final successCount =
-                                  results.values.where((v) => v).length;
-                              if (context.mounted) {
-                                final message = 'Unregistered $successCount of ${results.length} file types';
-                                if (successCount == results.length) {
-                                  ToastService.showSuccess(context, message);
-                                } else {
-                                  ToastService.showWarning(context, message);
-                                }
-                                setState(() {});
-                              }
-                            }
-                          : null,
-                      icon: const Icon(Icons.remove_circle_outline_rounded,
-                          size: 18),
-                      label: const Text('Unregister All'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        _buildSettingsCard(
-          context: context,
-          title: 'Protocol Handler',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Register localizer:// URLs to open this application.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isDark
-                              ? AppThemeV2.darkTextMuted
-                              : AppThemeV2.lightTextMuted,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: isWindows
-                              ? () async {
-                                  final success =
-                                      await WindowsIntegrationService
-                                          .registerProtocolHandler();
-                                  if (context.mounted) {
-                                    if (success) {
-                                      ToastService.showSuccess(context, 'Protocol handler registered!');
-                                    } else {
-                                      ToastService.showError(context, 'Failed to register');
-                                    }
-                                  }
-                                }
-                              : null,
-                          icon: const Icon(Icons.public_rounded, size: 18),
-                          label: const Text('Register Protocol'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: isWindows
-                              ? () async {
-                                  final success =
-                                      await WindowsIntegrationService
-                                          .unregisterProtocolHandler();
-                                  if (context.mounted) {
-                                    if (success) {
-                                      ToastService.showSuccess(context, 'Protocol handler removed!');
-                                    } else {
-                                      ToastService.showError(context, 'Failed to remove');
-                                    }
-                                  }
-                                }
-                              : null,
-                          icon: const Icon(Icons.public_off_rounded, size: 18),
-                          label: const Text('Unregister'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MACOS INTEGRATIONS SETTINGS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildMacOSIntegrationsSettings(
-      BuildContext context, AppSettings settings, bool isDark, bool isAmoled) {
-    final isMacOS = Platform.isMacOS;
-    
-    // Available window materials
-    const materials = [
-      ('sidebar', 'Sidebar'),
-      ('menu', 'Menu'),
-      ('popover', 'Popover'),
-      ('titlebar', 'Titlebar'),
-      ('underPageBackground', 'Page Background'),
-      ('contentBackground', 'Content'),
-    ];
-
-    return Column(
-      children: [
-        if (!isMacOS)
-          _buildSettingsCard(
-            context: context,
-            title: 'Platform Notice',
-            isDark: isDark,
-            isAmoled: isAmoled,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'macOS integrations are only available when running on macOS.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        _buildSettingsCard(
-          context: context,
-          title: 'Visual Effects',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            _buildSettingRow(
-              context: context,
-              label: 'Window Material',
-              description: 'Select the macOS vibrancy material style',
-              control: DropdownButton<String>(
-                value: settings.macosWindowMaterial,
-                underline: const SizedBox(),
-                borderRadius: BorderRadius.circular(8),
-                onChanged: isMacOS
-                    ? (val) {
-                        if (val != null) {
-                          context
-                              .read<SettingsBloc>()
-                              .add(UpdateMacosWindowMaterial(val));
-                          // Apply the material change - need to map string to enum
-                          // For now just save the setting, actual application would require NSVisualEffectViewMaterial enum mapping
-                        }
-                      }
-                    : null,
-                items: materials.map((m) {
-                  return DropdownMenuItem(
-                    value: m.$1,
-                    child: Text(m.$2),
-                  );
-                }).toList(),
-              ),
-              isDark: isDark,
-              isAmoled: isAmoled,
-              showDivider: false,
-            ),
-          ],
-        ),
-        _buildSettingsCard(
-          context: context,
-          title: 'Dock Integration',
-          isDark: isDark,
-          isAmoled: isAmoled,
-          children: [
-            _buildSettingRow(
-              context: context,
-              label: 'Show Untranslated Count',
-              description: 'Display untranslated string count on the dock icon badge',
-              control: Switch(
-                value: settings.showDockBadge,
-                onChanged: isMacOS
-                    ? (val) => context
-                        .read<SettingsBloc>()
-                        .add(UpdateShowDockBadge(val))
-                    : null,
-              ),
-              isDark: isDark,
-              isAmoled: isAmoled,
-              showDivider: false,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildTextFieldRow(
     BuildContext context,
@@ -4692,9 +4093,10 @@ class _SettingsViewState extends State<SettingsView>
         case SettingsCategory.versionControl:
           bloc.add(ResetVersionControlSettings());
           break;
-        case SettingsCategory.windowsIntegrations:
-          break;
-        case SettingsCategory.macOSIntegrations:
+        case SettingsCategory.systemIntegrations:
+          // System integrations often toggle immediate settings (like registry keys)
+          // rather than holding state in the bloc, or have their own specific resets.
+          // For now, no specific reset action in the bloc for this whole category.
           break;
         case SettingsCategory.about:
           break;

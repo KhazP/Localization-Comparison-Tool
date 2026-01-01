@@ -8,8 +8,7 @@ enum SettingsCategory {
   fileHandling,
   aiServices,
   versionControl,
-  windowsIntegrations,
-  macOSIntegrations,
+  systemIntegrations,
   about,
 }
 
@@ -190,13 +189,11 @@ class SettingsConstants {
       'Commit Template',
       'SSH Key',
     ],
-    SettingsCategory.windowsIntegrations: [
+    SettingsCategory.systemIntegrations: [
       'System Tray',
       'Start Minimized',
       'File Associations',
       'Mica Effect',
-    ],
-    SettingsCategory.macOSIntegrations: [
       'Vibrancy',
       'Window Material',
       'Dock Badge',
@@ -230,10 +227,8 @@ class SettingsConstants {
         return Icons.auto_awesome_rounded;
       case SettingsCategory.versionControl:
         return Icons.history_rounded;
-      case SettingsCategory.windowsIntegrations:
-        return Icons.window_rounded;
-      case SettingsCategory.macOSIntegrations:
-        return Icons.apple_rounded;
+      case SettingsCategory.systemIntegrations:
+        return Icons.desktop_windows_rounded;
       case SettingsCategory.about:
         return Icons.info_rounded;
     }
@@ -254,10 +249,8 @@ class SettingsConstants {
         return 'AI Services';
       case SettingsCategory.versionControl:
         return 'Version Control';
-      case SettingsCategory.windowsIntegrations:
-        return 'Windows';
-      case SettingsCategory.macOSIntegrations:
-        return 'macOS';
+      case SettingsCategory.systemIntegrations:
+        return 'System Integrations';
       case SettingsCategory.about:
         return 'About';
     }
@@ -266,7 +259,7 @@ class SettingsConstants {
   /// Get the full title for a settings category
   static String getCategoryTitle(SettingsCategory category) {
     switch (category) {
-      case SettingsCategory.general:
+  case SettingsCategory.general:
         return 'General Settings';
       case SettingsCategory.comparisonEngine:
         return 'Comparison Engine';
@@ -278,12 +271,11 @@ class SettingsConstants {
         return 'AI Services';
       case SettingsCategory.versionControl:
         return 'Version Control (Git)';
-      case SettingsCategory.windowsIntegrations:
-        return 'Windows Integrations';
-      case SettingsCategory.macOSIntegrations:
-        return 'macOS Integrations';
+      case SettingsCategory.systemIntegrations:
+        return 'System Integrations';
       case SettingsCategory.about:
         return 'About';
     }
   }
 }
+

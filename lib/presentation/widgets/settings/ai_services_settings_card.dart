@@ -9,6 +9,7 @@ import 'package:localizer_app_main/data/services/api_key_validation_service.dart
 import 'package:localizer_app_main/data/services/translation_memory_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/setting_override_indicator.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:developer' as developer;
@@ -196,21 +197,34 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             title: 'LLM Service Provider',
             isDark: widget.isDark,
             isAmoled: widget.isAmoled,
+            trailing: _buildSectionResetButton(context, bloc),
             children: [
-              SettingsRow(
+              _buildOverridableSettingsRow(
+                context: context,
+                bloc: bloc,
                 label: 'Service',
                 description: 'Provider for Generative AI',
+                settingKey: 'aiTranslationService',
                 control: SettingsDropdown<String>(
-                  value: widget.settings.aiTranslationService,
+                  value: widget.state.isProjectScope
+                      ? widget.state.getEffectiveAiTranslationService()
+                      : widget.settings.aiTranslationService,
                   items: const ['Google Gemini', 'OpenAI'],
                   onChanged: (val) {
-                    if (val != null) bloc.add(UpdateAiTranslationService(val));
+                    if (val != null) {
+                      if (widget.state.isProjectScope) {
+                        bloc.add(UpdateProjectOverridableSetting(
+                          settingKey: 'aiTranslationService',
+                          value: val,
+                        ));
+                      } else {
+                        bloc.add(UpdateAiTranslationService(val));
+                      }
+                    }
                   },
                   isDark: widget.isDark,
                   isAmoled: widget.isAmoled,
                 ),
-                isDark: widget.isDark,
-                isAmoled: widget.isAmoled,
               ),
               if (widget.settings.aiTranslationService == 'Google Gemini')
                 _buildApiKeyField(
@@ -228,25 +242,37 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   ApiProvider.openAi,
                   (val) => bloc.add(UpdateOpenAiApiKey(val)),
                 ),
-              SettingsRow(
+              _buildOverridableSettingsRow(
+                context: context,
+                bloc: bloc,
                 label: 'Model',
                 description: 'Select which model to use',
+                settingKey: 'defaultAiModel',
+                showDivider: false,
                 control: SettingsDropdown<String>(
-                  value: widget.settings.defaultAiModel,
+                  value: widget.state.isProjectScope
+                      ? widget.state.getEffectiveDefaultAiModel()
+                      : widget.settings.defaultAiModel,
                   items: widget.state.availableModels[widget.settings.aiTranslationService == 'Google Gemini' 
                       ? ApiProvider.gemini 
                       : ApiProvider.openAi] ?? (widget.settings.aiTranslationService == 'Google Gemini'
                           ? const ['gemini-1.5-flash', 'gemini-1.5-pro']
                           : const ['gpt-4o', 'gpt-4o-mini']),
                   onChanged: (val) {
-                    if (val != null) bloc.add(UpdateDefaultAiModel(val));
+                    if (val != null) {
+                      if (widget.state.isProjectScope) {
+                        bloc.add(UpdateProjectOverridableSetting(
+                          settingKey: 'defaultAiModel',
+                          value: val,
+                        ));
+                      } else {
+                        bloc.add(UpdateDefaultAiModel(val));
+                      }
+                    }
                   },
                   isDark: widget.isDark,
                   isAmoled: widget.isAmoled,
                 ),
-                isDark: widget.isDark,
-                isAmoled: widget.isAmoled,
-                showDivider: false,
               ),
             ],
           ),
@@ -302,12 +328,48 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Label with override indicator for System Context
+                      if (widget.state.isProjectScope)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Text(
+                                'System Context / Instructions',
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SettingOverrideIndicator(
+                                isOverridden: widget.state.isOverridden('systemTranslationContext'),
+                                onReset: widget.state.isOverridden('systemTranslationContext')
+                                    ? () => bloc.add(const ResetSettingToGlobal('systemTranslationContext'))
+                                    : null,
+                                compact: true,
+                              ),
+                            ],
+                          ),
+                        ),
                       TextField(
                         maxLines: 4,
-                        controller: TextEditingController(text: widget.settings.systemTranslationContext),
-                        onChanged: (val) => bloc.add(UpdateSystemTranslationContext(val)),
+                        controller: TextEditingController(
+                          text: widget.state.isProjectScope
+                              ? widget.state.getEffectiveSystemTranslationContext()
+                              : widget.settings.systemTranslationContext,
+                        ),
+                        onChanged: (val) {
+                          if (widget.state.isProjectScope) {
+                            bloc.add(UpdateProjectOverridableSetting(
+                              settingKey: 'systemTranslationContext',
+                              value: val,
+                            ));
+                          } else {
+                            bloc.add(UpdateSystemTranslationContext(val));
+                          }
+                        },
                         decoration: InputDecoration(
-                          labelText: 'System Context / Instructions',
+                          labelText: widget.state.isProjectScope ? null : 'System Context / Instructions',
                           hintText: 'You are a professional localizer. Maintain the tone and intent of the source string...',
                           helperText: 'Provide specific instructions to the AI about your project\'s style and terminology.',
                           helperMaxLines: 2,
@@ -442,7 +504,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                             onPressed: _translationMemoryBusy ? null : () => _confirmClearTranslationMemory(context),
                             icon: Icon(Icons.delete_forever_rounded, size: 18, color: AppThemeV2.error),
                             label: Text('Clear Memory', style: TextStyle(color: AppThemeV2.error)),
-                            style: OutlinedButton.styleFrom(side: BorderSide(color: AppThemeV2.error.withOpacity(0.5))),
+                            style: OutlinedButton.styleFrom(side: BorderSide(color: AppThemeV2.error.withValues(alpha: 0.5))),
                           ),
                         ],
                       ),
@@ -561,6 +623,61 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
         const SizedBox(height: 4),
         Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
       ],
+    );
+  }
+
+  /// Builds a settings row that shows an override indicator when in project scope.
+  Widget _buildOverridableSettingsRow({
+    required BuildContext context,
+    required SettingsBloc bloc,
+    required String label,
+    required String description,
+    required String settingKey,
+    required Widget control,
+    bool showDivider = true,
+  }) {
+    final isProjectScope = widget.state.isProjectScope;
+    final isOverridden = widget.state.isOverridden(settingKey);
+
+    return SettingsRow(
+      label: label,
+      description: description,
+      control: control,
+      isDark: widget.isDark,
+      isAmoled: widget.isAmoled,
+      showDivider: showDivider,
+      trailing: isProjectScope
+          ? SettingOverrideIndicator(
+              isOverridden: isOverridden,
+              onReset: isOverridden
+                  ? () => bloc.add(ResetSettingToGlobal(settingKey))
+                  : null,
+              compact: true,
+            )
+          : null,
+    );
+  }
+
+  /// Builds a reset button for the section that appears when in project scope
+  /// and there are any overrides in the AI Services category.
+  Widget? _buildSectionResetButton(BuildContext context, SettingsBloc bloc) {
+    if (!widget.state.isProjectScope) return null;
+    
+    final hasAnyOverrides = widget.state.projectSettings?.hasOverrides ?? false;
+    if (!hasAnyOverrides) return null;
+
+    return Tooltip(
+      message: 'Reset all AI settings to global defaults',
+      child: IconButton(
+        icon: Icon(
+          Icons.refresh_rounded,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
+        onPressed: () {
+          bloc.add(const ResetCategoryToGlobal('aiServices'));
+        },
+      ),
     );
   }
 }

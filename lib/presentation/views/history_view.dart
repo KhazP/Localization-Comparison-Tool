@@ -3,15 +3,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/skeleton_loader.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:get_it/get_it.dart';
 
 class HistoryView extends StatefulWidget {
   final Function(int) onNavigateToTab;
@@ -30,6 +34,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
   String _sortBy = 'timestamp';
   bool _sortAscending = false;
   bool _groupByFolder = false;
+  bool _showOnlyCurrentProject = true;
+  Map<String, String> _projectNames = {}; // projectId -> projectName
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -47,6 +53,23 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
       curve: Curves.easeOut,
     );
     _animationController.forward();
+    _loadProjectNames();
+  }
+
+  Future<void> _loadProjectNames() async {
+    try {
+      final repository = GetIt.I<ProjectRepository>();
+      final projects = await repository.getRecentProjects();
+      if (mounted) {
+        setState(() {
+          _projectNames = {
+            for (final p in projects) p.id: p.name,
+          };
+        });
+      }
+    } catch (e) {
+      // Ignore errors loading project names - we'll fall back to showing IDs
+    }
   }
 
   @override
@@ -59,10 +82,25 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
 
   void _filterHistory() {
     final filter = _filterController.text.toLowerCase();
+    final projectState = context.read<ProjectBloc>().state;
+    String? currentProjectId;
+    if (projectState.status == ProjectStatus.loaded) {
+      currentProjectId = projectState.currentProject?.id;
+    }
+
     setState(() {
       _filteredHistory = _allHistory.where((session) {
-        return session.file1Path.toLowerCase().contains(filter) ||
-               session.file2Path.toLowerCase().contains(filter);
+        final matchesText = session.file1Path.toLowerCase().contains(filter) ||
+            session.file2Path.toLowerCase().contains(filter);
+
+        if (!matchesText) return false;
+
+        // Project filter
+        if (_showOnlyCurrentProject && currentProjectId != null) {
+          return session.projectId == currentProjectId;
+        }
+
+        return true;
       }).toList();
       _applySort();
     });
@@ -140,6 +178,9 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
+    
+    final projectState = context.watch<ProjectBloc>().state;
+    final isProjectLoaded = projectState.status == ProjectStatus.loaded;
     
     // AMOLED detection
     final settingsState = context.watch<SettingsBloc>().state;
@@ -273,6 +314,33 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // Project Filter Toggle
+                  if (isProjectLoaded) ...[
+                    Tooltip(
+                      message: _showOnlyCurrentProject
+                          ? 'Showing: Current Project'
+                          : 'Showing: All History',
+                      child: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _showOnlyCurrentProject = !_showOnlyCurrentProject;
+                            _filterHistory();
+                          });
+                        },
+                        icon: Icon(
+                          _showOnlyCurrentProject
+                              ? Icons.filter_alt_rounded
+                              : Icons.filter_alt_off_outlined,
+                          color: _showOnlyCurrentProject
+                              ? colorScheme.primary
+                              : (isDark
+                                  ? AppThemeV2.darkTextMuted
+                                  : AppThemeV2.lightTextMuted),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   // Group by folder toggle
                   Tooltip(
                     message: _groupByFolder ? 'Disable folder grouping' : 'Group by folder',
@@ -320,6 +388,11 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
 
                     if (_groupByFolder) {
                       return _buildGroupedList(context);
+                    }
+
+                    // Show project-grouped view when showing all history (not filtered to current project)
+                    if (!_showOnlyCurrentProject) {
+                      return _buildProjectGroupedList(context);
                     }
 
                     return ListView.builder(
@@ -561,6 +634,215 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
               ),
             ),
             // Sessions in this folder
+            if (isExpanded)
+              ...sessions.map((session) => _HistoryCard(
+                session: session,
+                isExpanded: _expandedStates[session.id] ?? false,
+                onTap: () {
+                  setState(() {
+                    _expandedStates[session.id] = !(_expandedStates[session.id] ?? false);
+                  });
+                },
+                onView: () => _onViewDetails(session),
+                onDelete: () => _deleteSession(session),
+              )),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Builds a list grouped by project when showing all history.
+  /// Shows project name headers with aggregate stats.
+  Widget _buildProjectGroupedList(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final themeState = context.watch<ThemeBloc>().state;
+    
+    // AMOLED detection
+    final settingsState = context.watch<SettingsBloc>().state;
+    final bool isAmoled = isDark && 
+        settingsState.status == SettingsStatus.loaded &&
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+    
+    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    
+    // Group sessions by projectId
+    final Map<String?, List<ComparisonSession>> grouped = {};
+    
+    for (final session in _filteredHistory) {
+      grouped.putIfAbsent(session.projectId, () => []).add(session);
+    }
+    
+    // Sort: current project first (if applicable), then by name, with "Unassigned" last
+    final projectState = context.watch<ProjectBloc>().state;
+    final currentProjectId = projectState.currentProject?.id;
+    
+    final sortedKeys = grouped.keys.toList()..sort((a, b) {
+      // Current project first
+      if (a == currentProjectId) return -1;
+      if (b == currentProjectId) return 1;
+      // Unassigned (null) last
+      if (a == null) return 1;
+      if (b == null) return -1;
+      // Sort by name alphabetically
+      final nameA = _projectNames[a] ?? a;
+      final nameB = _projectNames[b] ?? b;
+      return nameA.compareTo(nameB);
+    });
+    
+    return ListView.builder(
+      itemCount: sortedKeys.length,
+      itemBuilder: (context, projectIndex) {
+        final projectId = sortedKeys[projectIndex];
+        final sessions = grouped[projectId]!;
+        final isExpanded = _expandedStates['project_$projectId'] ?? true;
+        
+        // Get project name
+        String projectName;
+        IconData projectIcon;
+        if (projectId == null) {
+          projectName = 'Unassigned';
+          projectIcon = Icons.folder_off_outlined;
+        } else if (projectId == currentProjectId) {
+          projectName = _projectNames[projectId] ?? projectState.currentProject?.name ?? 'Current Project';
+          projectIcon = Icons.star_rounded;
+        } else {
+          projectName = _projectNames[projectId] ?? 'Project ${projectId.substring(0, 8)}...';
+          projectIcon = Icons.folder_special_rounded;
+        }
+        
+        // Aggregate stats for this project
+        int totalAdded = 0, totalRemoved = 0, totalModified = 0;
+        final Set<String> fileTypes = {};
+        
+        for (final session in sessions) {
+          totalAdded += session.stringsAdded;
+          totalRemoved += session.stringsRemoved;
+          totalModified += session.stringsModified;
+          
+          // Extract file type
+          final ext = session.file1Path.split('.').last.toUpperCase();
+          if (ext.isNotEmpty && ext.length <= 5) fileTypes.add(ext);
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Project header
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _expandedStates['project_$projectId'] = !isExpanded;
+                });
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                margin: EdgeInsets.only(bottom: 8, top: projectIndex > 0 ? 16 : 0),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // First row: project name, count, expand icon
+                    Row(
+                      children: [
+                        Icon(
+                          isExpanded ? Icons.folder_open_rounded : projectIcon,
+                          size: 18,
+                          color: projectId == currentProjectId
+                              ? theme.colorScheme.primary
+                              : (projectId == null
+                                  ? (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted)
+                                  : theme.colorScheme.secondary),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            projectName,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: projectId == null
+                                  ? (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted)
+                                  : null,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Count badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withAlpha(30),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${sessions.length}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          isExpanded ? Icons.expand_less : Icons.expand_more,
+                          size: 20,
+                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Second row: stats, density bar, file types
+                    Row(
+                      children: [
+                        // Aggregate stats
+                        if (totalAdded > 0)
+                          _MiniStatBadge(label: '+$totalAdded', color: themeState.diffAddedColor),
+                        if (totalRemoved > 0)
+                          _MiniStatBadge(label: '-$totalRemoved', color: themeState.diffRemovedColor),
+                        if (totalModified > 0)
+                          _MiniStatBadge(label: '~$totalModified', color: themeState.diffModifiedColor),
+                        const SizedBox(width: 8),
+                        // Mini density bar
+                        Expanded(
+                          child: _ChangeDensityBar(
+                            added: totalAdded,
+                            removed: totalRemoved,
+                            modified: totalModified,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // File types
+                        ...fileTypes.take(3).map((type) => Container(
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.secondary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.secondary,
+                            ),
+                          ),
+                        )),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Sessions in this project
             if (isExpanded)
               ...sessions.map((session) => _HistoryCard(
                 session: session,

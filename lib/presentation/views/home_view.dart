@@ -9,6 +9,8 @@ import 'package:localizer_app_main/presentation/views/history_view.dart';
 import 'package:localizer_app_main/presentation/views/settings_view.dart';
 import 'package:localizer_app_main/presentation/views/git_view.dart';
 import 'package:localizer_app_main/presentation/views/quality_dashboard_view.dart';
+import 'package:localizer_app_main/presentation/views/projects_view.dart';
+import 'package:localizer_app_main/presentation/widgets/project/project_indicator.dart';
 
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 
@@ -30,7 +32,7 @@ class _MyHomePageState extends State<MyHomePage>
   late final List<Widget> _pages;
   
   // Hover states for navigation items
-  final List<bool> _hoverStates = List.filled(6, false);
+  final List<bool> _hoverStates = List.filled(7, false);
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _MyHomePageState extends State<MyHomePage>
     
     // Initialize pages once to avoid recreation on every tab switch
     _pages = <Widget>[
+      const ProjectsView(),
       BasicComparisonView(
         onNavigateToTab: _onDestinationSelected,
         initialSession: widget.initialSession,
@@ -68,19 +71,19 @@ class _MyHomePageState extends State<MyHomePage>
   int _getInitialTabIndex(String defaultView) {
     switch (defaultView) {
       case 'Basic Comparison':
-        return 0;
-      case 'History View':
         return 1;
-      case 'Quality Dashboard':
+      case 'History View':
         return 2;
-      case 'Files':
+      case 'Quality Dashboard':
         return 3;
+      case 'Files':
+        return 4;
       case 'Settings':
-        return 5;
+        return 6;
       case 'Last Used View':
-        return 0;
+        return 1;
       default:
-        return 0;
+        return 1;
     }
   }
 
@@ -159,41 +162,48 @@ class _MyHomePageState extends State<MyHomePage>
               destinations: [
                 _buildNavDestination(
                   index: 0,
+                  icon: Icons.folder_special_outlined,
+                  selectedIcon: Icons.folder_special,
+                  label: 'Projects',
+                  colorScheme: colorScheme,
+                ),
+                _buildNavDestination(
+                  index: 1,
                   icon: Icons.compare_arrows_outlined,
                   selectedIcon: Icons.compare_arrows,
                   label: 'Compare',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
-                  index: 1,
+                  index: 2,
                   icon: Icons.history_outlined,
                   selectedIcon: Icons.history,
                   label: 'History',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
-                  index: 2,
+                  index: 3,
                   icon: Icons.insights_outlined,
                   selectedIcon: Icons.insights,
                   label: 'Dashboard',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
-                  index: 3,
+                  index: 4,
                   icon: Icons.folder_outlined,
                   selectedIcon: Icons.folder,
                   label: 'Files',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
-                  index: 4,
+                  index: 5,
                   icon: Icons.source_outlined,
                   selectedIcon: Icons.source,
                   label: 'Git',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
-                  index: 5,
+                  index: 6,
                   icon: Icons.settings_outlined,
                   selectedIcon: Icons.settings,
                   label: 'Settings',
@@ -208,6 +218,9 @@ class _MyHomePageState extends State<MyHomePage>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Project indicator/create button
+                        const ProjectIndicator(),
+                        const SizedBox(height: 12),
                         // Theme toggle button
                         Tooltip(
                           message:

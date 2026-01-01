@@ -6,6 +6,8 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_scope.dart';
+import 'package:localizer_app_main/data/models/project_settings.dart';
 
 // Mock classes using mocktail
 class MockSettingsRepository extends Mock implements SettingsRepository {}
@@ -164,5 +166,170 @@ void main() {
         isA<SettingsState>().having((s) => s.appSettings.googleTranslateApiKey, 'googleKey', 'new_google_key'),
       ],
     );
+
+    group('Project Overrides (Phase 2)', () {
+      final projectSettings = const ProjectSettings(
+        systemTranslationContext: 'Project Context',
+        aiTranslationService: 'Gemini',
+      );
+
+      test('initial state has global scope', () {
+        expect(settingsBloc.state.scope, SettingsScope.global);
+        expect(settingsBloc.state.hasProject, isFalse);
+      });
+
+      blocTest<SettingsBloc, SettingsState>(
+        'LoadProjectSettings loads settings and defaults to global scope',
+        build: () => SettingsBloc(
+          settingsRepository: mockSettingsRepository,
+          secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
+        ),
+        act: (bloc) => bloc.add(LoadProjectSettings(
+          projectId: 'p1',
+          projectName: 'Test Project',
+          settings: projectSettings,
+        )),
+        expect: () => [
+          isA<SettingsState>()
+              .having((s) => s.projectSettings, 'projectSettings', projectSettings)
+              .having((s) => s.currentProjectId, 'id', 'p1')
+              .having((s) => s.scope, 'scope', SettingsScope.global),
+        ],
+      );
+
+      blocTest<SettingsBloc, SettingsState>(
+        'SwitchSettingsScope switches scope if project loaded',
+        build: () => SettingsBloc(
+          settingsRepository: mockSettingsRepository,
+          secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
+        ),
+        seed: () => SettingsState.initial().copyWith(
+          projectSettings: projectSettings,
+          currentProjectId: 'p1',
+        ),
+        act: (bloc) => bloc.add(const SwitchSettingsScope(SettingsScope.project)),
+        expect: () => [
+          isA<SettingsState>().having((s) => s.scope, 'scope', SettingsScope.project),
+        ],
+      );
+
+      blocTest<SettingsBloc, SettingsState>(
+        'SwitchSettingsScope ignores switch if no project loaded',
+        build: () => SettingsBloc(
+          settingsRepository: mockSettingsRepository,
+          secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
+        ),
+        act: (bloc) => bloc.add(const SwitchSettingsScope(SettingsScope.project)),
+        expect: () => [],
+      );
+
+      blocTest<SettingsBloc, SettingsState>(
+        'UpdateProjectOverridableSetting creates override in project scope',
+        build: () => SettingsBloc(
+          settingsRepository: mockSettingsRepository,
+          secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
+        ),
+        seed: () => SettingsState.initial().copyWith(
+          projectSettings: const ProjectSettings.empty(),
+          scope: SettingsScope.project,
+          currentProjectId: 'p1',
+        ),
+        act: (bloc) => bloc.add(const UpdateProjectOverridableSetting(
+          settingKey: 'systemTranslationContext',
+          value: 'New Override',
+        )),
+        expect: () => [
+          isA<SettingsState>().having(
+            (s) => s.projectSettings?.systemTranslationContext,
+            'override',
+            'New Override',
+          ),
+        ],
+      );
+
+      blocTest<SettingsBloc, SettingsState>(
+        'UpdateProjectOverridableSetting updates global setting in global scope',
+        build: () {
+          when(() => mockSettingsRepository.saveSettings(any()))
+              .thenAnswer((_) async {});
+          return SettingsBloc(
+            settingsRepository: mockSettingsRepository,
+            secureStorageService: mockSecureStorageService,
+            apiKeyValidationService: mockApiKeyValidationService,
+          );
+        },
+        seed: () => SettingsState.initial().copyWith(
+          projectSettings: const ProjectSettings.empty(),
+          scope: SettingsScope.global,
+        ),
+        act: (bloc) => bloc.add(const UpdateProjectOverridableSetting(
+          settingKey: 'systemTranslationContext',
+          value: 'Global Context',
+        )),
+        verify: (_) {
+          verify(() => mockSettingsRepository.saveSettings(
+                any(that: isA<AppSettings>().having(
+                    (s) => s.systemTranslationContext, 'ctx', 'Global Context')),
+              )).called(1);
+        },
+        expect: () => [
+          isA<SettingsState>().having(
+            (s) => s.appSettings.systemTranslationContext,
+            'global',
+            'Global Context',
+          ),
+        ],
+      );
+
+      blocTest<SettingsBloc, SettingsState>(
+        'ResetSettingToGlobal clears specific override',
+        build: () => SettingsBloc(
+          settingsRepository: mockSettingsRepository,
+          secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
+        ),
+        seed: () => SettingsState.initial().copyWith(
+          projectSettings: projectSettings,
+          scope: SettingsScope.project,
+        ),
+        act: (bloc) => bloc.add(const ResetSettingToGlobal('systemTranslationContext')),
+        expect: () => [
+          isA<SettingsState>().having(
+            (s) => s.projectSettings?.systemTranslationContext,
+            'cleared',
+            isNull,
+          ).having(
+            (s) => s.projectSettings?.aiTranslationService,
+            'kept',
+            'Gemini',
+          ),
+        ],
+      );
+
+      blocTest<SettingsBloc, SettingsState>(
+        'ResetAllProjectSettings clears all overrides',
+        build: () => SettingsBloc(
+          settingsRepository: mockSettingsRepository,
+          secureStorageService: mockSecureStorageService,
+          apiKeyValidationService: mockApiKeyValidationService,
+        ),
+        seed: () => SettingsState.initial().copyWith(
+          projectSettings: projectSettings,
+          scope: SettingsScope.project,
+        ),
+        act: (bloc) => bloc.add(const ResetAllProjectSettings()),
+        expect: () => [
+          isA<SettingsState>().having(
+            (s) => s.projectSettings?.hasOverrides,
+            'hasOverrides',
+            isFalse,
+          ),
+        ],
+      );
+    });
   });
 }

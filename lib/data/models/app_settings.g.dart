@@ -108,13 +108,15 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       macosWindowMaterial:
           fields[76] == null ? 'sidebar' : fields[76] as String,
       translationStrategy: fields[77] == null ? 'llm' : fields[77] as String,
+      recentProjects:
+          fields[78] == null ? [] : (fields[78] as List).cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(78)
+      ..writeByte(79)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -270,7 +272,9 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(76)
       ..write(obj.macosWindowMaterial)
       ..writeByte(77)
-      ..write(obj.translationStrategy);
+      ..write(obj.translationStrategy)
+      ..writeByte(78)
+      ..write(obj.recentProjects);
   }
 
   @override

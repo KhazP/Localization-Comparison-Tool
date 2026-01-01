@@ -5,11 +5,13 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/setting_override_indicator.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/live_logic_preview_card.dart';
 
 /// Comparison Engine Settings card widget
 class ComparisonSettingsCard extends StatelessWidget {
   final AppSettings settings;
+  final SettingsState state; // Added state
   final bool isDark;
   final bool isAmoled;
   final VoidCallback onShowAddPatternDialog;
@@ -17,6 +19,7 @@ class ComparisonSettingsCard extends StatelessWidget {
   const ComparisonSettingsCard({
     super.key,
     required this.settings,
+    required this.state, // Added required state
     required this.isDark,
     required this.isAmoled,
     required this.onShowAddPatternDialog,
@@ -25,6 +28,13 @@ class ComparisonSettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
+    final bloc = context.read<SettingsBloc>();
+
+    // Use effective values
+    final ignoreCase = state.isProjectScope ? state.getEffectiveIgnoreCase() : settings.ignoreCase;
+    final ignoreWhitespace = state.isProjectScope ? state.getEffectiveIgnoreWhitespace() : settings.ignoreWhitespace;
+    final similarityThreshold = state.isProjectScope ? state.getEffectiveSimilarityThreshold() : settings.similarityThreshold;
+    final ignorePatterns = state.isProjectScope ? state.getEffectiveIgnorePatterns() : settings.ignorePatterns;
 
     return Column(
       children: [
@@ -33,55 +43,76 @@ class ComparisonSettingsCard extends StatelessWidget {
           isDark: isDark,
           isAmoled: isAmoled,
           onReset: () {
-            context.read<SettingsBloc>().add(ResetComparisonSettings());
+            if (state.isProjectScope) {
+               bloc.add(const ResetCategoryToGlobal('comparison'));
+            } else {
+               bloc.add(ResetComparisonSettings());
+            }
           },
+          trailing: _buildSectionResetButton(context, bloc),
           children: [
-            SettingsRow(
+            _buildOverridableSettingsRow(
+              context: context,
+              bloc: bloc,
               label: 'Ignore Case',
               description: 'Treat "Key" and "key" as the same',
+              settingKey: 'ignoreCase',
               control: Switch(
                 key: const Key('settings_ignoreCase_switch'),
-                value: settings.ignoreCase,
-                onChanged: (val) =>
-                    context.read<SettingsBloc>().add(UpdateIgnoreCase(val)),
+                value: ignoreCase,
+                onChanged: (val) {
+                  if (state.isProjectScope) {
+                    bloc.add(UpdateProjectOverridableSetting(settingKey: 'ignoreCase', value: val));
+                  } else {
+                    bloc.add(UpdateIgnoreCase(val));
+                  }
+                },
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
-              isDark: isDark,
-              isAmoled: isAmoled,
             ),
-            SettingsRow(
+            _buildOverridableSettingsRow(
+              context: context,
+              bloc: bloc,
               label: 'Ignore Whitespace',
               description: 'Ignore leading/trailing spaces',
+              settingKey: 'ignoreWhitespace',
               control: Switch(
                 key: const Key('settings_ignoreWhitespace_switch'),
-                value: settings.ignoreWhitespace,
-                onChanged: (val) => context
-                    .read<SettingsBloc>()
-                    .add(UpdateIgnoreWhitespace(val)),
+                value: ignoreWhitespace,
+                onChanged: (val) {
+                  if (state.isProjectScope) {
+                    bloc.add(UpdateProjectOverridableSetting(settingKey: 'ignoreWhitespace', value: val));
+                  } else {
+                    bloc.add(UpdateIgnoreWhitespace(val));
+                  }
+                },
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
-              isDark: isDark,
-              isAmoled: isAmoled,
             ),
-            SettingsRow(
+            _buildOverridableSettingsRow(
+              context: context,
+              bloc: bloc,
               label: 'Similarity Threshold',
               description:
-                  'Minimum similarity for "Modified" detection (${(settings.similarityThreshold * 100).round()}%)',
+                  'Minimum similarity for "Modified" detection (${(similarityThreshold * 100).round()}%)',
+              settingKey: 'similarityThreshold',
               control: SizedBox(
                 width: 200,
                 child: Slider(
-                  value: settings.similarityThreshold,
+                  value: similarityThreshold,
                   min: 0.5,
                   max: 1.0,
                   divisions: 10,
-                  label: '${(settings.similarityThreshold * 100).round()}%',
-                  onChanged: (val) => context
-                      .read<SettingsBloc>()
-                      .add(UpdateSimilarityThreshold(val)),
+                  label: '${(similarityThreshold * 100).round()}%',
+                  onChanged: (val) {
+                    if (state.isProjectScope) {
+                       bloc.add(UpdateProjectOverridableSetting(settingKey: 'similarityThreshold', value: val));
+                    } else {
+                       bloc.add(UpdateSimilarityThreshold(val));
+                    }
+                  },
                 ),
               ),
-              isDark: isDark,
-              isAmoled: isAmoled,
             ),
             SettingsRow(
               label: 'Comparison Mode',
@@ -94,9 +125,7 @@ class ComparisonSettingsCard extends StatelessWidget {
                     items: SettingsConstants.comparisonModes,
                     onChanged: (val) {
                       if (val != null) {
-                        context
-                            .read<SettingsBloc>()
-                            .add(UpdateComparisonMode(val));
+                        bloc.add(UpdateComparisonMode(val));
                       }
                     },
                     isDark: isDark,
@@ -138,8 +167,17 @@ class ComparisonSettingsCard extends StatelessWidget {
           title: 'Ignore Patterns',
           isDark: isDark,
           isAmoled: isAmoled,
+          trailing: state.isProjectScope 
+              ? SettingOverrideIndicator(
+                  isOverridden: state.isOverridden('ignorePatterns'),
+                  onReset: state.isOverridden('ignorePatterns')
+                      ? () => bloc.add(const ResetSettingToGlobal('ignorePatterns'))
+                      : null,
+                  compact: true,
+                )
+              : null,
           children: [
-            if (settings.ignorePatterns.isEmpty)
+            if (ignorePatterns.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
@@ -151,11 +189,11 @@ class ComparisonSettingsCard extends StatelessWidget {
                 ),
               )
             else
-              ...settings.ignorePatterns.asMap().entries.map((entry) =>
-                  _buildPatternItem(context, entry.value, entry.key)),
+              ...ignorePatterns.asMap().entries.map((entry) =>
+                  _buildPatternItem(context, entry.value, entry.key, ignorePatterns)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildPatternPresets(context),
+              child: _buildPatternPresets(context, ignorePatterns),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
@@ -180,8 +218,9 @@ class ComparisonSettingsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPatternItem(BuildContext context, String pattern, int index) {
+  Widget _buildPatternItem(BuildContext context, String pattern, int index, List<String> currentPatterns) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
+    final bloc = context.read<SettingsBloc>();
 
     return Padding(
       key: Key('ignorePattern_tile_${pattern}_$index'),
@@ -206,8 +245,14 @@ class ComparisonSettingsCard extends StatelessWidget {
             key: Key('ignorePattern_delete_${pattern}_$index'),
             icon: Icon(Icons.delete_outline_rounded,
                 size: 18, color: AppThemeV2.error, semanticLabel: 'Delete $pattern'),
-            onPressed: () =>
-                context.read<SettingsBloc>().add(RemoveIgnorePattern(pattern)),
+            onPressed: () {
+               if (state.isProjectScope) {
+                 final newPatterns = List<String>.from(currentPatterns)..remove(pattern);
+                 bloc.add(UpdateProjectOverridableSetting(settingKey: 'ignorePatterns', value: newPatterns));
+               } else {
+                 bloc.add(RemoveIgnorePattern(pattern));
+               }
+            },
             tooltip: 'Remove pattern',
           ),
         ],
@@ -215,7 +260,8 @@ class ComparisonSettingsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPatternPresets(BuildContext context) {
+  Widget _buildPatternPresets(BuildContext context, List<String> currentPatterns) {
+   final bloc = context.read<SettingsBloc>();
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -225,13 +271,82 @@ class ComparisonSettingsCard extends StatelessWidget {
               icon: const Icon(Icons.add, size: 16, semanticLabel: 'Add ignore pattern'),
               label: Text(entry.key),
               onPressed: () {
-                for (final pattern in entry.value) {
-                  context.read<SettingsBloc>().add(AddIgnorePattern(pattern));
+                if (state.isProjectScope) {
+                   final newPatterns = List<String>.from(currentPatterns);
+                   for (final pattern in entry.value) {
+                     if (!newPatterns.contains(pattern)) {
+                       newPatterns.add(pattern);
+                     }
+                   }
+                   bloc.add(UpdateProjectOverridableSetting(settingKey: 'ignorePatterns', value: newPatterns));
+                } else {
+                  for (final pattern in entry.value) {
+                    bloc.add(AddIgnorePattern(pattern));
+                  }
                 }
               },
             ),
           )
           .toList(),
+    );
+  }
+
+  /// Builds a settings row that shows an override indicator when in project scope.
+  Widget _buildOverridableSettingsRow({
+    required BuildContext context,
+    required SettingsBloc bloc,
+    required String label,
+    required String description,
+    required String settingKey,
+    required Widget control,
+    bool showDivider = true,
+  }) {
+    final isProjectScope = state.isProjectScope;
+    final isOverridden = state.isOverridden(settingKey);
+
+    return SettingsRow(
+      label: label,
+      description: description,
+      control: control,
+      isDark: isDark,
+      isAmoled: isAmoled,
+      showDivider: showDivider,
+      trailing: isProjectScope
+          ? SettingOverrideIndicator(
+              isOverridden: isOverridden,
+              onReset: isOverridden
+                  ? () => bloc.add(ResetSettingToGlobal(settingKey))
+                  : null,
+              compact: true,
+            )
+          : null,
+    );
+  }
+
+  /// Builds a reset button for the section that appears when in project scope
+  /// and there are any overrides in the Comparison category.
+  Widget? _buildSectionResetButton(BuildContext context, SettingsBloc bloc) {
+    if (!state.isProjectScope) return null;
+    
+    // Check if any comparison settings are overridden
+    final hasOverrides = state.isOverridden('ignoreCase') || 
+                         state.isOverridden('ignoreWhitespace') ||
+                         state.isOverridden('similarityThreshold');
+                         
+    if (!hasOverrides) return null;
+
+    return Tooltip(
+      message: 'Reset all comparison settings to global defaults',
+      child: IconButton(
+        icon: Icon(
+          Icons.refresh_rounded,
+          size: 18,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
+        onPressed: () {
+          bloc.add(const ResetCategoryToGlobal('comparison'));
+        },
+      ),
     );
   }
 }

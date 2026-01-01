@@ -259,6 +259,9 @@ class AppSettings extends HiveObject {
   @HiveField(77, defaultValue: 'llm')
   String translationStrategy;
 
+  @HiveField(78, defaultValue: [])
+  List<String> recentProjects;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -338,6 +341,7 @@ class AppSettings extends HiveObject {
     required this.showDockBadge,
     required this.macosWindowMaterial,
     required this.translationStrategy,
+    required this.recentProjects,
   });
 
   // Default settings
@@ -422,6 +426,7 @@ class AppSettings extends HiveObject {
       showDockBadge: false,
       macosWindowMaterial: 'sidebar',
       translationStrategy: 'llm',
+      recentProjects: [],
     );
   }
 
@@ -512,6 +517,9 @@ class AppSettings extends HiveObject {
       showDockBadge: json['showDockBadge'] as bool? ?? false,
       macosWindowMaterial: json['macosWindowMaterial'] as String? ?? 'sidebar',
       translationStrategy: json['translationStrategy'] as String? ?? 'llm',
+      recentProjects: json['recentProjects'] != null
+          ? List<String>.from(json['recentProjects'])
+          : [],
     );
   }
 
@@ -596,6 +604,7 @@ class AppSettings extends HiveObject {
       'showDockBadge': showDockBadge,
       'macosWindowMaterial': macosWindowMaterial,
       'translationStrategy': translationStrategy,
+      'recentProjects': recentProjects,
     };
   }
 
@@ -678,6 +687,7 @@ class AppSettings extends HiveObject {
     bool? showDockBadge,
     String? macosWindowMaterial,
     String? translationStrategy,
+    List<String>? recentProjects,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -772,6 +782,7 @@ class AppSettings extends HiveObject {
       showDockBadge: showDockBadge ?? this.showDockBadge,
       macosWindowMaterial: macosWindowMaterial ?? this.macosWindowMaterial,
       translationStrategy: translationStrategy ?? this.translationStrategy,
+      recentProjects: recentProjects ?? this.recentProjects,
     );
   }
 }

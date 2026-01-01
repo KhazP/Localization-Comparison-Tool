@@ -23,7 +23,11 @@ import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/system_info_service.dart';
 import 'package:localizer_app_main/core/services/friendly_error_service.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/settings_scope_selector.dart';
 import 'package:intl/intl.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
+import 'package:localizer_app_main/presentation/widgets/project/project_glossary_card.dart';
+import 'package:localizer_app_main/presentation/widgets/project/project_memory_card.dart';
 
 // Re-export SettingsCategory for external use
 export 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart' show SettingsCategory;
@@ -278,6 +282,11 @@ class _SettingsViewState extends State<SettingsView>
 
     // Filter out platform-specific categories unless developer options enabled
     // System Integrations category handles platform specifics internally
+
+    final projectState = context.read<ProjectBloc>().state;
+    if (!projectState.hasProject) {
+      categories.remove(SettingsCategory.projectResources);
+    }
 
     // Apply search filtering
     if (_searchQuery.isEmpty) {
@@ -617,6 +626,10 @@ class _SettingsViewState extends State<SettingsView>
           ),
           const SizedBox(height: 20),
 
+          // Scope selector (only for AI Services category which has overridable settings)
+          if (_selectedCategory == SettingsCategory.aiServices)
+            const SettingsScopeSelector(),
+
           // Content
           Expanded(
             child: Scrollbar(
@@ -667,6 +680,7 @@ class _SettingsViewState extends State<SettingsView>
       case SettingsCategory.comparisonEngine:
         return ComparisonSettingsCard(
           settings: settings,
+          state: state,
           isDark: isDark,
           isAmoled: isAmoled,
           onShowAddPatternDialog: () => _showAddPatternDialog(context, isDark),
@@ -680,6 +694,7 @@ class _SettingsViewState extends State<SettingsView>
       case SettingsCategory.fileHandling:
         return FileHandlingSettingsCard(
           settings: settings,
+          state: state,
           isDark: isDark,
           isAmoled: isAmoled,
         );
@@ -705,6 +720,14 @@ class _SettingsViewState extends State<SettingsView>
           isDark: isDark,
           isAmoled: isAmoled,
         );
+      case SettingsCategory.projectResources:
+         return Column(
+           children: [
+             ProjectGlossaryCard(),
+             const SizedBox(height: 16),
+             ProjectTranslationMemoryCard(),
+           ],
+         );
       case SettingsCategory.about:
         return AboutSettingsCard(
           settings: settings,
@@ -860,25 +883,30 @@ class _SettingsViewState extends State<SettingsView>
     );
 
     if (confirmed == true && context.mounted) {
-      final bloc = context.read<SettingsBloc>();
       switch (category) {
+      case SettingsCategory.projectResources:
+        context.read<SettingsBloc>().add(ResetCategoryToGlobal('project_resources'));
+        break;
+      case SettingsCategory.about:
+        // No reset for about
+        break;
         case SettingsCategory.general:
-          bloc.add(ResetGeneralSettings());
+          context.read<SettingsBloc>().add(ResetGeneralSettings());
           break;
         case SettingsCategory.comparisonEngine:
-          bloc.add(ResetComparisonSettings());
+          context.read<SettingsBloc>().add(ResetComparisonSettings());
           break;
         case SettingsCategory.appearance:
-          bloc.add(ResetAppearanceSettings());
+          context.read<SettingsBloc>().add(ResetAppearanceSettings());
           break;
         case SettingsCategory.fileHandling:
-          bloc.add(ResetFileHandlingSettings());
+          context.read<SettingsBloc>().add(ResetFileHandlingSettings());
           break;
         case SettingsCategory.aiServices:
-          bloc.add(ResetAiServicesSettings());
+          context.read<SettingsBloc>().add(ResetAiServicesSettings());
           break;
         case SettingsCategory.versionControl:
-          bloc.add(ResetVersionControlSettings());
+          context.read<SettingsBloc>().add(ResetVersionControlSettings());
           break;
         case SettingsCategory.systemIntegrations:
           // System integrations often toggle immediate settings (like registry keys)

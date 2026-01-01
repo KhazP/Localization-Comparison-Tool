@@ -40,6 +40,9 @@ class ComparisonSession extends HiveObject {
   @HiveField(11)
   final int? translatedWordCount;
 
+  @HiveField(12)
+  final String? projectId;
+
   ComparisonSession({
     required this.id,
     required this.timestamp,
@@ -53,6 +56,7 @@ class ComparisonSession extends HiveObject {
     this.translatedKeyCount,
     this.sourceWordCount,
     this.translatedWordCount,
+    this.projectId,
   });
 
   // TODO: Add methods for serialization/deserialization if using Hive directly without an adapter

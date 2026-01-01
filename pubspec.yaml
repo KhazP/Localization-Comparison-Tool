@@ -54,6 +54,8 @@ dependencies:
   macos_ui: ^2.0.9 # For macOS-native widgets (optional, can be used alongside Material)
   macos_dock_progress: ^0.1.0 # For dock progress and badges
   tray_manager: ^0.2.1 # For system tray support
+  archive: ^3.6.1
+  json_annotation: ^4.8.1
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +63,7 @@ dev_dependencies:
   flutter_lints: ^3.0.0 # Or your preferred linter version
   hive_generator: ^2.0.1 # For Hive model generation
   build_runner: ^2.4.14 # For running code generators
+  json_serializable: ^6.7.1
   bloc_test: ^9.1.0   # Or your current/latest compatible version
   mocktail: ^1.0.0    # Or your current/latest compatible version
 

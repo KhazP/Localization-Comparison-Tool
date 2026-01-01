@@ -42,6 +42,7 @@ class SettingsCardContainer extends StatelessWidget {
   final bool isDark;
   final bool isAmoled;
   final VoidCallback? onReset;
+  final Widget? trailing;
 
   const SettingsCardContainer({
     super.key,
@@ -50,6 +51,7 @@ class SettingsCardContainer extends StatelessWidget {
     this.isDark = false,
     this.isAmoled = false,
     this.onReset,
+    this.trailing,
   });
 
   @override
@@ -79,6 +81,7 @@ class SettingsCardContainer extends StatelessWidget {
                         ),
                   ),
                 ),
+                if (trailing != null) trailing!,
                 if (onReset != null)
                   Tooltip(
                     message: 'Reset to defaults',
@@ -115,6 +118,7 @@ class SettingsRow extends StatelessWidget {
   final bool isDark;
   final bool isAmoled;
   final bool showDivider;
+  final Widget? trailing;
 
   const SettingsRow({
     super.key,
@@ -124,6 +128,7 @@ class SettingsRow extends StatelessWidget {
     this.isDark = false,
     this.isAmoled = false,
     this.showDivider = true,
+    this.trailing,
   });
 
   @override
@@ -140,9 +145,17 @@ class SettingsRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      label,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    Row(
+                      children: [
+                        Text(
+                          label,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        if (trailing != null) ...[
+                          const SizedBox(width: 8),
+                          trailing!,
+                        ],
+                      ],
                     ),
                     if (description != null) ...[
                       const SizedBox(height: 2),
@@ -402,6 +415,34 @@ class SettingsLinkRow extends StatelessWidget {
             endIndent: 16,
           ),
       ],
+    );
+  }
+}
+/// A description text for settings
+class SettingsDescription extends StatelessWidget {
+  final String text;
+  final bool isDark;
+  final bool isAmoled;
+
+  const SettingsDescription(
+    this.text, {
+    super.key,
+    this.isDark = false,
+    this.isAmoled = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: theme.textSecondaryColor,
+              height: 1.5,
+            ),
+      ),
     );
   }
 }

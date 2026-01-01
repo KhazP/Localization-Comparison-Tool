@@ -2,8 +2,10 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/data/models/project_settings.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_scope.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
@@ -127,6 +129,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateMacosWindowMaterial>(_onUpdateMacosWindowMaterial);
     on<UpdateTranslationStrategy>(_onUpdateTranslationStrategy);
     on<ApplyThemePreset>(_onApplyThemePreset);
+    // Project Settings Scope Events (Phase 2)
+    on<SwitchSettingsScope>(_onSwitchSettingsScope);
+    on<LoadProjectSettings>(_onLoadProjectSettings);
+    on<ClearProjectSettings>(_onClearProjectSettings);
+    on<ResetSettingToGlobal>(_onResetSettingToGlobal);
+    on<ResetCategoryToGlobal>(_onResetCategoryToGlobal);
+    on<ResetAllProjectSettings>(_onResetAllProjectSettings);
+    on<UpdateProjectOverridableSetting>(_onUpdateProjectOverridableSetting);
+    on<UpdateRecentProjects>(_onUpdateRecentProjects);
   }
 
   Future<void> _onLoadSettings(
@@ -1151,11 +1162,225 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
-}
 
-// Extension to add copyWith to AppSettings if not already present (or ensure it is)
-// This is a common pattern but AppSettings is a HiveObject, so it should handle its own persistence.
-// However, for updating state within the BLoC before saving, a copyWith is useful.
-// Let's assume AppSettings will get its own copyWith or we manage it carefully.
-// For now, the BLoC manually reconstructs where needed or relies on HiveObject's nature.
-// Actually, it's better to add copyWith to AppSettings itself for cleaner BLoC logic.
+  // ============================================================================
+  // Project Settings Scope Event Handlers (Phase 2)
+  // ============================================================================
+
+  /// Switch between editing global defaults and project-specific settings.
+  Future<void> _onSwitchSettingsScope(
+      SwitchSettingsScope event, Emitter<SettingsState> emit) async {
+    // Can only switch to project scope if a project is loaded
+    if (event.scope == SettingsScope.project && !state.hasProject) {
+      return;
+    }
+    emit(state.copyWith(scope: event.scope));
+  }
+
+  /// Load project settings when a project is opened.
+  Future<void> _onLoadProjectSettings(
+      LoadProjectSettings event, Emitter<SettingsState> emit) async {
+    emit(state.copyWith(
+      projectSettings: event.settings,
+      currentProjectId: event.projectId,
+      currentProjectName: event.projectName,
+      // Default to global scope when loading a project
+      scope: SettingsScope.global,
+    ));
+  }
+
+  /// Clear project settings when project is closed.
+  Future<void> _onClearProjectSettings(
+      ClearProjectSettings event, Emitter<SettingsState> emit) async {
+    emit(state.copyWith(
+      clearProjectSettings: true,
+      scope: SettingsScope.global,
+    ));
+  }
+
+  /// Reset a single setting to use global default (clear override).
+  Future<void> _onResetSettingToGlobal(
+      ResetSettingToGlobal event, Emitter<SettingsState> emit) async {
+    if (state.projectSettings == null) return;
+    
+    final newProjectSettings = state.projectSettings!.clearOverride(event.settingKey);
+    emit(state.copyWith(projectSettings: newProjectSettings));
+    
+    // Note: The actual saving to project.json happens through ProjectBloc
+    // when the project is saved. SettingsBloc just manages the state.
+  }
+
+  /// Reset all settings in a category to global defaults.
+  Future<void> _onResetCategoryToGlobal(
+      ResetCategoryToGlobal event, Emitter<SettingsState> emit) async {
+    if (state.projectSettings == null) return;
+    
+    final newProjectSettings = state.projectSettings!.clearCategoryOverrides(event.category);
+    emit(state.copyWith(projectSettings: newProjectSettings));
+  }
+
+  /// Reset all project settings to global defaults.
+  Future<void> _onResetAllProjectSettings(
+      ResetAllProjectSettings event, Emitter<SettingsState> emit) async {
+    if (state.projectSettings == null) return;
+    
+    emit(state.copyWith(projectSettings: const ProjectSettings.empty()));
+  }
+
+  /// Update a project-overridable setting.
+  /// When in project scope, this creates an override.
+  /// When in global scope, this updates the global default.
+  Future<void> _onUpdateProjectOverridableSetting(
+      UpdateProjectOverridableSetting event, Emitter<SettingsState> emit) async {
+    if (state.scope == SettingsScope.project) {
+      // In project scope - create/update an override
+      if (state.projectSettings == null) return;
+      
+      ProjectSettings newProjectSettings;
+      switch (event.settingKey) {
+        case 'systemTranslationContext':
+          newProjectSettings = state.projectSettings!.copyWith(
+            systemTranslationContext: event.value,
+          );
+          break;
+        case 'aiTranslationService':
+          newProjectSettings = state.projectSettings!.copyWith(
+            aiTranslationService: event.value,
+          );
+          break;
+        case 'defaultAiModel':
+          newProjectSettings = state.projectSettings!.copyWith(
+            defaultAiModel: event.value,
+          );
+          break;
+        case 'similarityThreshold':
+          newProjectSettings = state.projectSettings!.copyWith(
+            similarityThreshold: event.value as double,
+          );
+          break;
+        case 'ignorePatterns':
+          newProjectSettings = state.projectSettings!.copyWith(
+            ignorePatterns: List<String>.from(event.value),
+          );
+          break;
+        case 'ignoreCase':
+          newProjectSettings = state.projectSettings!.copyWith(
+            ignoreCase: event.value as bool,
+          );
+          break;
+        case 'ignoreWhitespace':
+          newProjectSettings = state.projectSettings!.copyWith(
+            ignoreWhitespace: event.value as bool,
+          );
+          break;
+        case 'defaultSourceFormat':
+          newProjectSettings = state.projectSettings!.copyWith(
+            defaultSourceFormat: event.value as String,
+          );
+          break;
+        case 'defaultTargetFormat':
+          newProjectSettings = state.projectSettings!.copyWith(
+            defaultTargetFormat: event.value as String,
+          );
+          break;
+        case 'defaultSourceEncoding':
+          newProjectSettings = state.projectSettings!.copyWith(
+            defaultSourceEncoding: event.value as String,
+          );
+          break;
+        case 'defaultTargetEncoding':
+          newProjectSettings = state.projectSettings!.copyWith(
+            defaultTargetEncoding: event.value as String,
+          );
+          break;
+        case 'autoDetectEncoding':
+          newProjectSettings = state.projectSettings!.copyWith(
+            autoDetectEncoding: event.value as bool,
+          );
+          break;
+        default:
+          return; // Unknown setting key
+      }
+      emit(state.copyWith(projectSettings: newProjectSettings));
+    } else {
+      // In global scope - update the global default
+      AppSettings newSettings;
+      switch (event.settingKey) {
+        case 'systemTranslationContext':
+          newSettings = state.appSettings.copyWith(
+            systemTranslationContext: event.value,
+          );
+          break;
+        case 'aiTranslationService':
+          newSettings = state.appSettings.copyWith(
+            aiTranslationService: event.value,
+          );
+          break;
+        case 'defaultAiModel':
+          newSettings = state.appSettings.copyWith(
+            defaultAiModel: event.value,
+          );
+          break;
+        case 'similarityThreshold':
+          newSettings = state.appSettings.copyWith(
+            similarityThreshold: event.value as double,
+          );
+          break;
+        case 'ignorePatterns':
+          newSettings = state.appSettings.copyWith(
+            ignorePatterns: List<String>.from(event.value),
+          );
+          break;
+        case 'ignoreCase':
+          newSettings = state.appSettings.copyWith(
+            ignoreCase: event.value as bool,
+          );
+          break;
+        case 'ignoreWhitespace':
+          newSettings = state.appSettings.copyWith(
+            ignoreWhitespace: event.value as bool,
+          );
+          break;
+        case 'defaultSourceFormat':
+          newSettings = state.appSettings.copyWith(
+            defaultSourceFormat: event.value as String,
+          );
+          break;
+        case 'defaultTargetFormat':
+          newSettings = state.appSettings.copyWith(
+            defaultTargetFormat: event.value as String,
+          );
+          break;
+        case 'defaultSourceEncoding':
+          newSettings = state.appSettings.copyWith(
+            defaultSourceEncoding: event.value as String,
+          );
+          break;
+        case 'defaultTargetEncoding':
+          newSettings = state.appSettings.copyWith(
+            defaultTargetEncoding: event.value as String,
+          );
+          break;
+        case 'autoDetectEncoding':
+          newSettings = state.appSettings.copyWith(
+            autoDetectEncoding: event.value as bool,
+          );
+          break;
+        default:
+          return; // Unknown setting key
+      }
+      await _saveSettingsToRepository(newSettings);
+      emit(state.copyWith(appSettings: newSettings));
+    }
+  }
+
+  /// Get the current project settings (for saving to project file).
+  ProjectSettings? get currentProjectSettings => state.projectSettings;
+  Future<void> _onUpdateRecentProjects(
+      UpdateRecentProjects event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(recentProjects: event.recentProjects);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+}

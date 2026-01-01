@@ -7,6 +7,7 @@
       "name": "localizer_app_main",
       "version": "2.0.0+1",
       "dependencies": [
+        "archive",
         "cross_file",
         "csv",
         "desktop_drop",
@@ -27,6 +28,7 @@
         "hive_flutter",
         "http",
         "intl",
+        "json_annotation",
         "libgit2dart",
         "macos_dock_progress",
         "macos_ui",
@@ -55,6 +57,7 @@
         "flutter_lints",
         "flutter_test",
         "hive_generator",
+        "json_serializable",
         "mocktail"
       ]
     },
@@ -162,6 +165,21 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "json_annotation",
+      "version": "4.9.0",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
+      "name": "archive",
+      "version": "3.6.1",
+      "dependencies": [
+        "crypto",
+        "path"
       ]
     },
     {
@@ -1298,14 +1316,6 @@
       ]
     },
     {
-      "name": "archive",
-      "version": "3.6.1",
-      "dependencies": [
-        "crypto",
-        "path"
-      ]
-    },
-    {
       "name": "synchronized",
       "version": "3.4.0",
       "dependencies": []
@@ -1502,13 +1512,6 @@
       ]
     },
     {
-      "name": "json_annotation",
-      "version": "4.9.0",
-      "dependencies": [
-        "meta"
-      ]
-    },
-    {
       "name": "checked_yaml",
       "version": "2.0.4",
       "dependencies": [
@@ -1646,6 +1649,24 @@
       "dependencies": [
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "json_serializable",
+      "version": "6.9.0",
+      "dependencies": [
+        "analyzer",
+        "async",
+        "build",
+        "build_config",
+        "collection",
+        "json_annotation",
+        "meta",
+        "path",
+        "pub_semver",
+        "pubspec_parse",
+        "source_gen",
+        "source_helper"
       ]
     }
   ],

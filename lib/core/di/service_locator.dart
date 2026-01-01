@@ -5,6 +5,7 @@ import 'package:localizer_app_main/core/services/file_watcher_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
+import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
@@ -48,6 +49,11 @@ Future<void> setupServiceLocator() async {
   final historyRepository = LocalHistoryRepository();
   await historyRepository.init();
   sl.registerSingleton<LocalHistoryRepository>(historyRepository);
+  
+  // Project repository (no async init needed)
+  sl.registerLazySingleton<ProjectRepository>(
+    () => ProjectRepository(secureStorageService: sl<SecureStorageService>()),
+  );
 }
 
 /// Reset service locator - useful for testing

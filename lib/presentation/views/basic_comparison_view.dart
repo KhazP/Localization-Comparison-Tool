@@ -20,6 +20,8 @@ import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; /
 import 'package:uuid/uuid.dart'; // For generating unique IDs for history
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_view.dart';
 // import 'package:localizer_app_main/presentation/views/ai_translation_settings_view.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -700,6 +702,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             sourceWordCount: coverageMetrics.sourceWordCount,
                             translatedWordCount:
                                 coverageMetrics.translatedWordCount,
+                            projectId: context.read<ProjectBloc>().state.status == ProjectStatus.loaded
+                                ? context.read<ProjectBloc>().state.currentProject?.id
+                                : null,
                           );
                           context
                               .read<HistoryBloc>()

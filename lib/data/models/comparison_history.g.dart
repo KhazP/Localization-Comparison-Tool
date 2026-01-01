@@ -29,13 +29,14 @@ class ComparisonSessionAdapter extends TypeAdapter<ComparisonSession> {
       translatedKeyCount: fields[9] as int?,
       sourceWordCount: fields[10] as int?,
       translatedWordCount: fields[11] as int?,
+      projectId: fields[12] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ComparisonSession obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class ComparisonSessionAdapter extends TypeAdapter<ComparisonSession> {
       ..writeByte(10)
       ..write(obj.sourceWordCount)
       ..writeByte(11)
-      ..write(obj.translatedWordCount);
+      ..write(obj.translatedWordCount)
+      ..writeByte(12)
+      ..write(obj.projectId);
   }
 
   @override

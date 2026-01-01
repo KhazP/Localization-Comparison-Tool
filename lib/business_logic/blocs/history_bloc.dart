@@ -21,6 +21,11 @@ class ClearHistory extends HistoryEvent {}
 
 class UndoDeleteHistoryItem extends HistoryEvent {}
 
+class ImportHistory extends HistoryEvent {
+  final List<ComparisonSession> sessions;
+  ImportHistory(this.sessions);
+}
+
 // States
 abstract class HistoryState {}
 
@@ -48,7 +53,9 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     on<AddToHistory>(_onAddToHistory);
     on<DeleteHistoryItem>(_onDeleteHistoryItem);
     on<ClearHistory>(_onClearHistory);
+
     on<UndoDeleteHistoryItem>(_onUndoDeleteHistoryItem);
+    on<ImportHistory>(_onImportHistory);
   }
 
   Future<void> _onLoadHistory(LoadHistory event, Emitter<HistoryState> emit) async {
@@ -106,6 +113,19 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
       emit(HistoryLoaded([])); // Emit empty list after clearing
     } catch (e) {
       emit(HistoryError('Failed to clear history: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onImportHistory(ImportHistory event, Emitter<HistoryState> emit) async {
+    try {
+      // Add all sessions sequentially
+      // Optimization: Could check if ID exists to avoid duplicates, but Hive put overwrites.
+      for (final session in event.sessions) {
+        await historyRepository.addComparisonToHistory(session);
+      }
+      add(LoadHistory());
+    } catch (e) {
+      emit(HistoryError('Failed to import history: ${e.toString()}'));
     }
   }
 } 

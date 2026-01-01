@@ -574,6 +574,13 @@ class UpdateEnableCrashReporting extends SettingsEvent {
   List<Object> get props => [enabled];
 }
 
+class UpdateRecentProjects extends SettingsEvent {
+  final List<String> recentProjects;
+  const UpdateRecentProjects(this.recentProjects);
+  @override
+  List<Object> get props => [recentProjects];
+}
+
 // Settings Import/Export Events
 class ExportSettings extends SettingsEvent {}
 
@@ -626,4 +633,70 @@ class ApplyThemePreset extends SettingsEvent {
   });
   @override
   List<Object?> get props => [added, removed, modified];
+}
+
+// ============================================================================
+// Project Settings Scope Events (Phase 2)
+// ============================================================================
+
+/// Switch between editing global defaults and project-specific settings.
+class SwitchSettingsScope extends SettingsEvent {
+  final SettingsScope scope;
+  const SwitchSettingsScope(this.scope);
+  @override
+  List<Object> get props => [scope];
+}
+
+/// Load project settings when a project is opened.
+class LoadProjectSettings extends SettingsEvent {
+  final String projectId;
+  final String projectName;
+  final ProjectSettings settings;
+  const LoadProjectSettings({
+    required this.projectId,
+    required this.projectName,
+    required this.settings,
+  });
+  @override
+  List<Object> get props => [projectId, projectName, settings];
+}
+
+/// Clear project settings when project is closed.
+class ClearProjectSettings extends SettingsEvent {
+  const ClearProjectSettings();
+}
+
+/// Reset a single setting to use global default (clear override).
+class ResetSettingToGlobal extends SettingsEvent {
+  final String settingKey;
+  const ResetSettingToGlobal(this.settingKey);
+  @override
+  List<Object> get props => [settingKey];
+}
+
+/// Reset all settings in a category to global defaults.
+class ResetCategoryToGlobal extends SettingsEvent {
+  final String category;
+  const ResetCategoryToGlobal(this.category);
+  @override
+  List<Object> get props => [category];
+}
+
+/// Reset all project settings to global defaults.
+class ResetAllProjectSettings extends SettingsEvent {
+  const ResetAllProjectSettings();
+}
+
+/// Update a project-overridable setting.
+/// When in project scope, this creates an override.
+/// When in global scope, this updates the global default.
+class UpdateProjectOverridableSetting extends SettingsEvent {
+  final String settingKey;
+  final dynamic value;
+  const UpdateProjectOverridableSetting({
+    required this.settingKey,
+    required this.value,
+  });
+  @override
+  List<Object?> get props => [settingKey, value];
 }

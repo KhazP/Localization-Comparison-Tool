@@ -9,6 +9,7 @@ enum SettingsCategory {
   aiServices,
   versionControl,
   systemIntegrations,
+  projectResources,
   about,
 }
 
@@ -199,6 +200,11 @@ class SettingsConstants {
       'Dock Badge',
       'Untranslated Count',
     ],
+    SettingsCategory.projectResources: [
+      'Glossary',
+      'Translation Memory',
+      'Terminology',
+    ],
     SettingsCategory.about: [
       'Version',
       'Check Updates',
@@ -229,6 +235,8 @@ class SettingsConstants {
         return Icons.history_rounded;
       case SettingsCategory.systemIntegrations:
         return Icons.desktop_windows_rounded;
+      case SettingsCategory.projectResources:
+        return Icons.library_books_rounded;
       case SettingsCategory.about:
         return Icons.info_rounded;
     }
@@ -251,6 +259,8 @@ class SettingsConstants {
         return 'Version History';
       case SettingsCategory.systemIntegrations:
         return 'System Integrations';
+      case SettingsCategory.projectResources:
+        return 'Project Resources';
       case SettingsCategory.about:
         return 'About';
     }
@@ -259,7 +269,7 @@ class SettingsConstants {
   /// Get the full title for a settings category
   static String getCategoryTitle(SettingsCategory category) {
     switch (category) {
-  case SettingsCategory.general:
+      case SettingsCategory.general:
         return 'General Settings';
       case SettingsCategory.comparisonEngine:
         return 'Comparison Engine';
@@ -273,6 +283,8 @@ class SettingsConstants {
         return 'Version History (Git)';
       case SettingsCategory.systemIntegrations:
         return 'System Integrations';
+      case SettingsCategory.projectResources:
+        return 'Project Resources (Glossary & TM)';
       case SettingsCategory.about:
         return 'About';
     }

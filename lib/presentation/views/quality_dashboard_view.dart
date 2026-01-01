@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
@@ -33,6 +35,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
   Future<QualityDashboardData>? _dashboardFuture;
   List<ComparisonSession> _history = [];
   DashboardChartMode _chartMode = DashboardChartMode.words;
+  bool _showOnlyCurrentProject = true;
   final _exporter = QualityReportExporter();
 
   @override
@@ -67,9 +70,20 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
       return;
     }
 
+    final projectState = context.read<ProjectBloc>().state;
+    String? currentProjectId;
+    if (projectState.status == ProjectStatus.loaded) {
+      currentProjectId = projectState.currentProject?.id;
+    }
+
+    // Filter history based on project toggle
+    final filteredHistory = (_showOnlyCurrentProject && currentProjectId != null)
+        ? _history.where((s) => s.projectId == currentProjectId).toList()
+        : _history;
+
     setState(() {
       _dashboardFuture = _metricsService.buildDashboardData(
-        history: _history,
+        history: filteredHistory,
         settings: settingsState.appSettings,
       );
     });
@@ -149,6 +163,15 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
                 _DashboardHeader(
                   onRefresh: () => _refreshDashboard(reloadHistory: true),
                   onExport: _exportReport,
+                  isProjectLoaded:
+                      context.watch<ProjectBloc>().state.status == ProjectStatus.loaded,
+                  showProjectFilter: _showOnlyCurrentProject,
+                  onToggleProjectFilter: () {
+                    setState(() {
+                      _showOnlyCurrentProject = !_showOnlyCurrentProject;
+                      _refreshDashboard();
+                    });
+                  },
                 ),
                 const SizedBox(height: 20),
                 Expanded(
@@ -279,10 +302,16 @@ class _DashboardHeader extends StatelessWidget {
   const _DashboardHeader({
     required this.onRefresh,
     required this.onExport,
+    required this.isProjectLoaded,
+    required this.showProjectFilter,
+    required this.onToggleProjectFilter,
   });
 
   final VoidCallback onRefresh;
   final VoidCallback onExport;
+  final bool isProjectLoaded;
+  final bool showProjectFilter;
+  final VoidCallback onToggleProjectFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -311,6 +340,25 @@ class _DashboardHeader extends StatelessWidget {
             icon: const Icon(Icons.refresh_rounded),
           ),
         ),
+        if (isProjectLoaded) ...[
+          const SizedBox(width: 8),
+          Tooltip(
+            message: showProjectFilter
+                ? 'Showing: Current Project'
+                : 'Showing: All History',
+            child: IconButton(
+              onPressed: onToggleProjectFilter,
+              icon: Icon(
+                showProjectFilter
+                    ? Icons.filter_alt_rounded
+                    : Icons.filter_alt_off_outlined,
+                color: showProjectFilter
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(width: 8),
         OutlinedButton.icon(
           onPressed: onExport,

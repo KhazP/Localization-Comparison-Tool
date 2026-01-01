@@ -8,6 +8,10 @@ import 'package:localizer_app_main/business_logic/blocs/directory_comparison_blo
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/progress_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_scope.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/translation_bloc.dart';
@@ -21,6 +25,7 @@ import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
@@ -54,6 +59,7 @@ class MyApp extends StatelessWidget {
     final fileWatcherService = sl<FileWatcherService>();
     final settingsRepository = sl<SettingsRepository>();
     final historyRepository = sl<LocalHistoryRepository>();
+    final projectRepository = sl<ProjectRepository>();
     final apiKeyValidationService = sl<ApiKeyValidationService>();
 
     return MultiRepositoryProvider(
@@ -104,6 +110,11 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider<FileWatcherBloc>(
             create: (context) => FileWatcherBloc(fileWatcherService),
+          ),
+          BlocProvider<ProjectBloc>(
+            create: (context) => ProjectBloc(
+              projectRepository: projectRepository,
+            )..add(const LoadLastProject()),
           ),
         ],
         child: _WindowAwareApp(openLastProject: initialAppSettings.openLastProjectOnStartup),
@@ -168,72 +179,112 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<HistoryBloc, HistoryState>(
-      listener: (context, historyState) {
-        // Load initial session once when history first loads
-        if (!_hasLoadedInitialSession && 
-            widget.openLastProject && 
-            historyState is HistoryLoaded && 
-            historyState.history.isNotEmpty) {
-          setState(() {
-            _initialSession = historyState.history.first;
-            _hasLoadedInitialSession = true;
-          });
+    // ProjectBloc → SettingsBloc: Load/clear project settings when project state changes
+    return BlocListener<ProjectBloc, ProjectState>(
+      listenWhen: (previous, current) {
+        // Listen when project is loaded or closed
+        return previous.currentProject != current.currentProject;
+      },
+      listener: (context, projectState) {
+        final settingsBloc = context.read<SettingsBloc>();
+        
+        if (projectState.hasProject) {
+          // Project opened - load its settings into SettingsBloc
+          final project = projectState.currentProject!;
+          settingsBloc.add(LoadProjectSettings(
+            projectId: project.id,
+            projectName: project.name,
+            settings: project.settings,
+          ));
+        } else {
+          // Project closed - clear project settings from SettingsBloc
+          settingsBloc.add(const ClearProjectSettings());
         }
       },
+      // SettingsBloc → ProjectBloc: Save project settings when they change
       child: BlocListener<SettingsBloc, SettingsState>(
+        listenWhen: (previous, current) {
+          // Only listen when in project scope and project settings actually changed
+          return current.scope == SettingsScope.project &&
+                 current.hasProject &&
+                 previous.projectSettings != current.projectSettings;
+        },
         listener: (context, settingsState) {
-          if (settingsState.status == SettingsStatus.loaded) {
-            context.read<ThemeBloc>().add(UpdateThemeSettings(settingsState.appSettings));
+          // Persist project settings changes back to ProjectBloc
+          if (settingsState.projectSettings != null) {
+            context.read<ProjectBloc>().add(
+              UpdateProjectSettings(settingsState.projectSettings!),
+            );
           }
         },
-        child: BlocBuilder<ThemeBloc, AppThemeState>(
-          builder: (context, themeState) {
-            final settingsState = context.watch<SettingsBloc>().state;
-            bool useAmoled = false;
-            bool useMica = false;
-            if (settingsState.status == SettingsStatus.loaded) {
-              useAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-              useMica = Platform.isWindows && settingsState.appSettings.useMicaEffect;
+        child: BlocListener<HistoryBloc, HistoryState>(
+          listener: (context, historyState) {
+            // Load initial session once when history first loads
+            if (!_hasLoadedInitialSession &&
+                widget.openLastProject &&
+                historyState is HistoryLoaded &&
+                historyState.history.isNotEmpty) {
+              setState(() {
+                _initialSession = historyState.history.first;
+                _hasLoadedInitialSession = true;
+              });
             }
-
-            // Determine dark theme: Mica > Amoled > Standard Dark
-            ThemeData darkTheme;
-            if (useMica) {
-              darkTheme = AppThemeV2.createMicaTheme(themeState.accentColor);
-            } else if (useAmoled) {
-              darkTheme = AppThemeV2.createAmoledTheme(themeState.accentColor);
-            } else {
-              darkTheme = AppThemeV2.createDarkTheme(themeState.accentColor);
-            }
-
-            final app = Shortcuts(
-              shortcuts: AppShortcuts.defaults,
-              child: MaterialApp(
-                debugShowCheckedModeBanner: kDebugMode,
-                title: 'Localization Comparison Tool',
-                theme: AppThemeV2.createLightTheme(themeState.accentColor),
-                darkTheme: darkTheme,
-                themeMode: themeState.themeMode,
-                builder: (context, child) {
-                  return Actions(
-                    actions: GlobalActions.getActions(context),
-                    child: child!,
-                  );
-                },
-                home: MyHomePage(initialSession: _initialSession),
-              ),
-            );
-
-            // PlatformMenuBar is only supported on macOS
-            if (Platform.isMacOS) {
-              return PlatformMenuBar(
-                menus: _buildPlatformMenus(context),
-                child: app,
-              );
-            }
-            return app;
           },
+          child: BlocListener<SettingsBloc, SettingsState>(
+            listener: (context, settingsState) {
+              if (settingsState.status == SettingsStatus.loaded) {
+                context.read<ThemeBloc>().add(UpdateThemeSettings(settingsState.appSettings));
+              }
+            },
+            child: BlocBuilder<ThemeBloc, AppThemeState>(
+              builder: (context, themeState) {
+                final settingsState = context.watch<SettingsBloc>().state;
+                bool useAmoled = false;
+                bool useMica = false;
+                if (settingsState.status == SettingsStatus.loaded) {
+                  useAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+                  useMica = Platform.isWindows && settingsState.appSettings.useMicaEffect;
+                }
+
+                // Determine dark theme: Mica > Amoled > Standard Dark
+                ThemeData darkTheme;
+                if (useMica) {
+                  darkTheme = AppThemeV2.createMicaTheme(themeState.accentColor);
+                } else if (useAmoled) {
+                  darkTheme = AppThemeV2.createAmoledTheme(themeState.accentColor);
+                } else {
+                  darkTheme = AppThemeV2.createDarkTheme(themeState.accentColor);
+                }
+
+                final app = Shortcuts(
+                  shortcuts: AppShortcuts.defaults,
+                  child: MaterialApp(
+                    debugShowCheckedModeBanner: kDebugMode,
+                    title: 'Localization Comparison Tool',
+                    theme: AppThemeV2.createLightTheme(themeState.accentColor),
+                    darkTheme: darkTheme,
+                    themeMode: themeState.themeMode,
+                    builder: (context, child) {
+                      return Actions(
+                        actions: GlobalActions.getActions(context),
+                        child: child!,
+                      );
+                    },
+                    home: MyHomePage(initialSession: _initialSession),
+                  ),
+                );
+
+                // PlatformMenuBar is only supported on macOS
+                if (Platform.isMacOS) {
+                  return PlatformMenuBar(
+                    menus: _buildPlatformMenus(context),
+                    child: app,
+                  );
+                }
+                return app;
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -312,35 +363,35 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
       PlatformMenu(
         label: 'Edit',
         menus: [
-          PlatformMenuItem(
+          const PlatformMenuItem(
             label: 'Undo',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, meta: true),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyZ, meta: true),
             onSelected: null, // System handles this
           ),
-          PlatformMenuItem(
+          const PlatformMenuItem(
             label: 'Redo',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true),
             onSelected: null,
           ),
           const PlatformMenuItemGroup(members: []),
-          PlatformMenuItem(
+          const PlatformMenuItem(
             label: 'Cut',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyX, meta: true),
             onSelected: null,
           ),
-          PlatformMenuItem(
+          const PlatformMenuItem(
             label: 'Copy',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyC, meta: true),
             onSelected: null,
           ),
-          PlatformMenuItem(
+          const PlatformMenuItem(
             label: 'Paste',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyV, meta: true),
             onSelected: null,
           ),
-          PlatformMenuItem(
+          const PlatformMenuItem(
             label: 'Select All',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyA, meta: true),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyA, meta: true),
             onSelected: null,
           ),
         ],

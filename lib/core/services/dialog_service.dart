@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:file_picker/file_picker.dart';
 
 class DialogService {
   /// Shows a standardized confirmation dialog.
@@ -132,6 +133,31 @@ class DialogService {
           ),
         ],
       ),
+    );
+  }
+
+  /// Picks a single file using the system file picker.
+  static Future<FilePickerResult?> pickFile({
+    List<String>? allowedExtensions,
+    String? dialogTitle,
+  }) async {
+    return await FilePicker.platform.pickFiles(
+      type: allowedExtensions != null ? FileType.custom : FileType.any,
+      allowedExtensions: allowedExtensions,
+      dialogTitle: dialogTitle,
+      lockParentWindow: true,
+    );
+  }
+
+  /// Picks a directory using the system folder picker.
+  static Future<String?> pickFolder({
+    String? dialogTitle,
+    String? initialDirectory,
+  }) async {
+    return await FilePicker.platform.getDirectoryPath(
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      lockParentWindow: true,
     );
   }
 }

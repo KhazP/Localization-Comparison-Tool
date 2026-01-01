@@ -1,0 +1,256 @@
+Analyzing LocalizerAppMain...                                   
+
+   info - The imported package 'equatable' isn't a dependency of the importing package - lib\business_logic\blocs\directory_comparison_bloc.dart:2:8 - depend_on_referenced_packages
+   info - The imported package 'bloc' isn't a dependency of the importing package - lib\business_logic\blocs\settings_bloc\settings_bloc.dart:1:8 - depend_on_referenced_packages
+   info - The imported package 'equatable' isn't a dependency of the importing package - lib\business_logic\blocs\settings_bloc\settings_bloc.dart:2:8 - depend_on_referenced_packages
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\business_logic\blocs\settings_bloc\settings_state.dart:56:20 - prefer_const_literals_to_create_immutables
+warning - Two keys in a map literal shouldn't be equal - lib\business_logic\blocs\settings_bloc\settings_state.dart:61:9 - equal_keys_in_map
+   info - The imported package 'equatable' isn't a dependency of the importing package - lib\business_logic\blocs\theme_bloc.dart:3:8 - depend_on_referenced_packages
+warning - Unused import: 'package:flutter_bloc/flutter_bloc.dart' - lib\core\input\app_actions.dart:2:8 - unused_import
+warning - Unused import: 'dart:io' - lib\core\input\app_shortcuts.dart:4:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:14:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:20:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:26:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:31:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:42:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:50:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:59:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:65:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:71:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:76:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:84:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:93:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:99:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:104:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:112:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\friendly_error_service.dart:119:12 - prefer_const_constructors
+   info - Unnecessary braces in a string interpolation - lib\core\services\localization_file_service.dart:274:52 - unnecessary_brace_in_string_interps
+   info - Unnecessary constructor invocation - lib\core\services\localization_file_service.dart:570:20 - prefer_collection_literals
+   info - Use 'const' with the constructor to improve performance - lib\core\services\localization_file_service.dart:766:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\windows_integration_service.dart:165:26 - prefer_const_constructors
+   info - The imported package 'equatable' isn't a dependency of the importing package - lib\data\models\file_pair.dart:2:8 - depend_on_referenced_packages
+   info - An uninitialized variable should have an explicit type annotation - lib\data\services\git_service.dart:264:11 - prefer_typing_uninitialized_variables
+   info - The imported package 'path_provider' isn't a dependency of the importing package - lib\data\services\translation_memory_service.dart:7:8 - depend_on_referenced_packages
+   info - The imported package 'path_provider' isn't a dependency of the importing package - lib\main.dart:10:8 - depend_on_referenced_packages
+   info - Use 'const' with the constructor to improve performance - lib\presentation\app.dart:312:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\app.dart:315:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\app.dart:320:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\app.dart:326:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\app.dart:331:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\app.dart:336:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\app.dart:341:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme.dart:73:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme.dart:73:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme.dart:119:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme.dart:175:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme.dart:175:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme.dart:182:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme.dart:221:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\themes\app_theme_v2.dart:190:30 - prefer_const_constructors
+   info - The imported package 'provider' isn't a dependency of the importing package - lib\presentation\views\advanced_diff\advanced_diff_view.dart:5:8 - depend_on_referenced_packages
+   info - The imported package 'provider' isn't a dependency of the importing package - lib\presentation\views\advanced_diff\widgets\sidebar\actions_section.dart:3:8 - depend_on_referenced_packages
+   info - The imported package 'provider' isn't a dependency of the importing package - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:3:8 - depend_on_referenced_packages
+warning - The member 'notifyListeners' can only be used within 'package:flutter/src/foundation/change_notifier.dart' or a test - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:46:61 - invalid_use_of_visible_for_testing_member
+warning - The member 'notifyListeners' can only be used within instance members of subclasses of 'package:flutter/src/foundation/change_notifier.dart' - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:46:61 - invalid_use_of_protected_member
+warning - The member 'notifyListeners' can only be used within 'package:flutter/src/foundation/change_notifier.dart' or a test - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:51:64 - invalid_use_of_visible_for_testing_member
+warning - The member 'notifyListeners' can only be used within instance members of subclasses of 'package:flutter/src/foundation/change_notifier.dart' - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:51:64 - invalid_use_of_protected_member
+warning - The member 'notifyListeners' can only be used within 'package:flutter/src/foundation/change_notifier.dart' or a test - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:56:62 - invalid_use_of_visible_for_testing_member
+warning - The member 'notifyListeners' can only be used within instance members of subclasses of 'package:flutter/src/foundation/change_notifier.dart' - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:56:62 - invalid_use_of_protected_member
+warning - The member 'notifyListeners' can only be used within 'package:flutter/src/foundation/change_notifier.dart' or a test - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:61:63 - invalid_use_of_visible_for_testing_member
+warning - The member 'notifyListeners' can only be used within instance members of subclasses of 'package:flutter/src/foundation/change_notifier.dart' - lib\presentation\views\advanced_diff\widgets\sidebar\filters_section.dart:61:63 - invalid_use_of_protected_member
+   info - The imported package 'provider' isn't a dependency of the importing package - lib\presentation\views\advanced_diff\widgets\sidebar\similarity_section.dart:3:8 - depend_on_referenced_packages
+warning - The member 'notifyListeners' can only be used within 'package:flutter/src/foundation/change_notifier.dart' or a test - lib\presentation\views\advanced_diff\widgets\sidebar\similarity_section.dart:31:30 - invalid_use_of_visible_for_testing_member
+warning - The member 'notifyListeners' can only be used within instance members of subclasses of 'package:flutter/src/foundation/change_notifier.dart' - lib\presentation\views\advanced_diff\widgets\sidebar\similarity_section.dart:31:30 - invalid_use_of_protected_member
+   info - The imported package 'provider' isn't a dependency of the importing package - lib\presentation\views\advanced_diff\widgets\sidebar\status_section.dart:3:8 - depend_on_referenced_packages
+   info - The imported package 'provider' isn't a dependency of the importing package - lib\presentation\views\advanced_diff\widgets\sidebar\translation_memory_section.dart:3:8 - depend_on_referenced_packages
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\advanced_diff\widgets\sidebar\translation_memory_section.dart:101:109 - prefer_const_constructors
+   info - The imported package 'provider' isn't a dependency of the importing package - lib\presentation\views\advanced_diff\widgets\table\diff_data_table.dart:3:8 - depend_on_referenced_packages
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\advanced_diff\widgets\table\diff_data_table.dart:114:19 - prefer_const_constructors
+   info - Unnecessary braces in a string interpolation - lib\presentation\views\advanced_diff\widgets\table\diff_data_table.dart:126:43 - unnecessary_brace_in_string_interps
+warning - Unused import: 'package:localizer_app_main/core/services/friendly_error_service.dart' - lib\presentation\views\basic_comparison_view.dart:29:8 - unused_import
+warning - The declaration '_navigateToAiSettings' isn't referenced - lib\presentation\views\basic_comparison_view.dart:59:8 - unused_element
+   info - Statements in an if should be enclosed in a block - lib\presentation\views\basic_comparison_view.dart:807:33 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\presentation\views\basic_comparison_view.dart:811:33 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\presentation\views\basic_comparison_view.dart:815:69 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\views\basic_comparison_view.dart:1216:26 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\views\basic_comparison_view.dart:1297:26 - use_build_context_synchronously
+   info - Use 'const' for final variables initialized to a constant value - lib\presentation\views\basic_comparison_view.dart:1474:5 - prefer_const_declarations
+   info - Unnecessary braces in a string interpolation - lib\presentation\views\basic_comparison_view.dart:1677:25 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\views\basic_comparison_view.dart:1680:25 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\views\basic_comparison_view.dart:1683:25 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\views\basic_comparison_view.dart:1928:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\views\basic_comparison_view.dart:2017:30 - deprecated_member_use
+warning - The declaration '_buildFileWatcherStatus' isn't referenced - lib\presentation\views\basic_comparison_view.dart:2050:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\views\basic_comparison_view.dart:2172:47 - deprecated_member_use
+   info - 'dialogBackgroundColor' is deprecated and shouldn't be used. Use DialogThemeData.backgroundColor instead. This feature was deprecated after v3.27.0-0.1.pre - lib\presentation\views\basic_comparison_view.dart:2611:58 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\presentation\views\comparison_result_dialog.dart:63:43 - unnecessary_to_list_in_spreads
+warning - The declaration 'getSurfaceColor' isn't referenced - lib\presentation\views\files_view.dart:97:11 - unused_element
+warning - The declaration 'getBorderSubtleColor' isn't referenced - lib\presentation\views\files_view.dart:99:11 - unused_element
+warning - The value of the local variable 'surfaceColor' isn't used - lib\presentation\views\files_view.dart:332:11 - unused_local_variable
+warning - The value of the local variable 'borderSubtleColor' isn't used - lib\presentation\views\files_view.dart:333:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\views\files_view.dart:352:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\views\files_view.dart:359:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\views\files_view.dart:366:40 - deprecated_member_use
+   info - Unnecessary braces in a string interpolation - lib\presentation\views\files_view.dart:484:18 - unnecessary_brace_in_string_interps
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\files_view.dart:528:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\files_view.dart:655:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\files_view.dart:1140:18 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\views\files_view.dart:1141:23 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\files_view.dart:1142:15 - prefer_const_constructors
+   info - Use 'const' for final variables initialized to a constant value - lib\presentation\views\git_view.dart:1165:5 - prefer_const_declarations
+   info - The variable name '_MiniStatBadge' isn't a lowerCamelCase identifier - lib\presentation\views\history_view.dart:583:10 - non_constant_identifier_names
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\history_view.dart:1023:39 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\history_view.dart:1024:40 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\history_view.dart:1024:62 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\quality_dashboard_view.dart:1497:15 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\views\quality_dashboard_view.dart:1499:27 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\quality_dashboard_view.dart:1500:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\quality_dashboard_view.dart:1505:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\quality_dashboard_view.dart:1510:19 - prefer_const_constructors
+  error - Undefined name '_platformInfo' - lib\presentation\views\settings_view.dart:111:11 - undefined_identifier
+  error - Undefined name '_platformInfo' - lib\presentation\views\settings_view.dart:117:11 - undefined_identifier
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\settings_view.dart:218:27 - prefer_const_constructors
+warning - The value of the local variable 'settings' isn't used - lib\presentation\views\settings_view.dart:272:11 - unused_local_variable
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:927:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:933:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:935:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:937:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:946:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\views\settings_view.dart:1089:11 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\common\skeleton_loader.dart:111:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\common\skeleton_loader.dart:113:21 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\common\skeleton_loader.dart:115:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\common\skeleton_loader.dart:117:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\common\skeleton_loader.dart:129:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\common\skeleton_loader.dart:130:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\common\skeleton_loader.dart:175:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\common\skeleton_loader.dart:177:21 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\common\skeleton_loader.dart:182:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\common\skeleton_loader.dart:184:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\common\skeleton_loader.dart:191:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\common\skeleton_loader.dart:193:25 - prefer_const_literals_to_create_immutables
+  error - Undefined name 'Platform' - lib\presentation\widgets\settings\about_settings_card.dart:80:48 - undefined_identifier
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\widgets\settings\ai_services_settings_card.dart:80:29 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\widgets\settings\ai_services_settings_card.dart:90:47 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\widgets\settings\ai_services_settings_card.dart:101:45 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\widgets\settings\ai_services_settings_card.dart:111:47 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\widgets\settings\ai_services_settings_card.dart:122:45 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\widgets\settings\ai_services_settings_card.dart:144:47 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\widgets\settings\ai_services_settings_card.dart:147:45 - use_build_context_synchronously
+  error - The type 'SettingsDropdown' is declared with 0 type parameters, but 1 type arguments were given - lib\presentation\widgets\settings\ai_services_settings_card.dart:167:24 - wrong_number_of_type_arguments
+  error - The type 'SettingsDropdown' is declared with 0 type parameters, but 1 type arguments were given - lib\presentation\widgets\settings\ai_services_settings_card.dart:201:26 - wrong_number_of_type_arguments
+  error - The type 'SettingsDropdown' is declared with 0 type parameters, but 1 type arguments were given - lib\presentation\widgets\settings\ai_services_settings_card.dart:230:26 - wrong_number_of_type_arguments
+  error - The type 'SettingsDropdown' is declared with 0 type parameters, but 1 type arguments were given - lib\presentation\widgets\settings\ai_services_settings_card.dart:283:28 - wrong_number_of_type_arguments
+  error - The argument type 'int' can't be assigned to the parameter type 'String?'.  - lib\presentation\widgets\settings\ai_services_settings_card.dart:284:30 - argument_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:285:37 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:285:42 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:285:48 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:285:54 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:285:60 - list_element_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\presentation\widgets\settings\ai_services_settings_card.dart:287:67 - argument_type_not_assignable
+  error - The named parameter 'padding' isn't defined - lib\presentation\widgets\settings\ai_services_settings_card.dart:322:25 - undefined_named_parameter
+  error - The type 'SettingsDropdown' is declared with 0 type parameters, but 1 type arguments were given - lib\presentation\widgets\settings\ai_services_settings_card.dart:328:36 - wrong_number_of_type_arguments
+  error - The argument type 'int' can't be assigned to the parameter type 'String?'.  - lib\presentation\widgets\settings\ai_services_settings_card.dart:329:36 - argument_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:330:43 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:330:46 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:330:49 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:330:52 - list_element_type_not_assignable
+  error - The element type 'int' can't be assigned to the list type 'String' - lib\presentation\widgets\settings\ai_services_settings_card.dart:330:55 - list_element_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\presentation\widgets\settings\ai_services_settings_card.dart:332:83 - argument_type_not_assignable
+  error - The named parameter 'padding' isn't defined - lib\presentation\widgets\settings\ai_services_settings_card.dart:338:27 - undefined_named_parameter
+  error - The getter 'sizeBytes' isn't defined for the type 'TranslationMemoryStats' - lib\presentation\widgets\settings\ai_services_settings_card.dart:412:90 - undefined_getter
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\settings\ai_services_settings_card.dart:437:35 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\settings\ai_services_settings_card.dart:438:36 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\settings\ai_services_settings_card.dart:438:64 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\settings\ai_services_settings_card.dart:439:102 - deprecated_member_use
+  error - The method 'ApplyThemePreset' isn't defined for the type 'DiffColorsSettingsCard' - lib\presentation\widgets\settings\appearance_settings_card.dart:345:46 - undefined_method
+  error - The constructor being called isn't a const constructor - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - const_with_non_const
+  error - The named parameter 'aiTemperature' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'autoCheckForUpdates' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'autoCommitOnSave' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'autoDetectEncoding' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'autoDownloadUpdate' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'autoReloadOnChange' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'backupsToKeep' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'commitMessageTemplate' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'comparisonMode' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'contextStringsCount' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'csvDelimiter' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'deeplApiKey' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultAiModel' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultBranch' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultExportDirectory' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultExportFormat' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultGitRepositoryPath' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultRemote' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultSourceFormat' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultTargetFormat' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'defaultViewOnStartup' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'enableAiTranslation' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'enableAnonymousUsageStatistics' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'enableCrashReporting' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'enableFuzzyFill' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'enableTranslationMemory' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'fuzzyFillAutoApply' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'fuzzyFillExactMatchesOnly' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'fuzzyFillMatchLimit' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'fuzzyFillMinScore' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'fuzzyFillOnlyEmptyTargets' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'gitUserEmail' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'gitUserName' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'handleByteOrderMark' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'includeContextStrings' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'includeUtf8Bom' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'macosWindowMaterial' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'maxTokens' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'openFolderAfterExport' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'openLastProjectOnStartup' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'openaiApiKey' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'rememberWindowPosition' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'showDockBadge' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'showIdenticalEntries' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'skipVersion' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'sshKeyPath' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'startMinimizedToTray' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'systemTranslationContext' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'translationConfidenceThreshold' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'useMicaEffect' is required, but there's no corresponding argument - lib\presentation\widgets\settings\appearance_settings_card.dart:407:17 - missing_required_argument
+  error - The named parameter 'maxBackupFiles' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:413:11 - undefined_named_parameter
+  error - The named parameter 'gitAutoCommit' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:428:11 - undefined_named_parameter
+  error - The named parameter 'gitCommitTemplate' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:429:11 - undefined_named_parameter
+  error - The named parameter 'aiTranslationEnabled' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:430:11 - undefined_named_parameter
+  error - The named parameter 'aiTranslationModel' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:432:11 - undefined_named_parameter
+  error - The named parameter 'aiTranslationTemperature' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:433:11 - undefined_named_parameter
+  error - The named parameter 'aiTranslationMaxTokens' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:434:11 - undefined_named_parameter
+  error - The named parameter 'aiTranslationSystemContext' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:435:11 - undefined_named_parameter
+  error - The named parameter 'deepLApiKey' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:437:11 - undefined_named_parameter
+  error - The named parameter 'azureTranslateApiKey' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:438:11 - undefined_named_parameter
+  error - The named parameter 'azureTranslateRegion' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:439:11 - undefined_named_parameter
+  error - The named parameter 'openAiApiKey' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:440:11 - undefined_named_parameter
+  error - The named parameter 'anthropicApiKey' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:441:11 - undefined_named_parameter
+  error - The named parameter 'lastUpdateCheck' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:443:11 - undefined_named_parameter
+  error - The named parameter 'showLineNumbers' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:444:11 - undefined_named_parameter
+  error - The named parameter 'wrapLongLines' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:445:11 - undefined_named_parameter
+  error - The named parameter 'highlightTrailingWhitespace' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:446:11 - undefined_named_parameter
+  error - The named parameter 'useSystemTitleBar' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:447:11 - undefined_named_parameter
+  error - The named parameter 'enableAnimations' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:448:11 - undefined_named_parameter
+  error - The named parameter 'defaultView' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:449:11 - undefined_named_parameter
+  error - The named parameter 'compactMode' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:450:11 - undefined_named_parameter
+  error - The named parameter 'autoSaveSession' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:451:11 - undefined_named_parameter
+  error - The named parameter 'showGitStatusToolbar' isn't defined - lib\presentation\widgets\settings\appearance_settings_card.dart:452:11 - undefined_named_parameter
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\settings\file_handling_settings_card.dart:43:24 - prefer_const_literals_to_create_immutables
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\presentation\widgets\settings\file_handling_settings_card.dart:59:24 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:175:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:187:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:211:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:212:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:226:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:238:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:239:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:242:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:244:35 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:257:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:258:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - test\presentation\views\settings_view_test.dart:259:25 - prefer_const_constructors
+
+252 issues found. (ran in 1.9s)

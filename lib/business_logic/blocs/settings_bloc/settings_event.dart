@@ -615,3 +615,15 @@ class UpdateMacosWindowMaterial extends SettingsEvent {
   @override
   List<Object> get props => [material];
 }
+class ApplyThemePreset extends SettingsEvent {
+  final int added;
+  final int removed;
+  final int modified;
+  const ApplyThemePreset({
+    required this.added,
+    required this.removed,
+    required this.modified,
+  });
+  @override
+  List<Object?> get props => [added, removed, modified];
+}

@@ -100,7 +100,7 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
             hintText: 'Enter text...',
             hintStyle: TextStyle(color: theme.textMutedColor),
             filled: true,
-            fillColor: theme.surfaceColor.withOpacity(0.5),
+            fillColor: theme.surfaceColor.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: theme.borderColor),
@@ -126,16 +126,16 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
+        color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.2),
+              color: statusColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(

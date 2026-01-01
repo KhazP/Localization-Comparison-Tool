@@ -1,0 +1,43 @@
+Analyzing settings_view.dart...                                 
+
+warning - The value of the field '_platformInfo' isn't used - lib\presentation\views\settings_view.dart:52:10 - unused_field
+warning - The value of the field '_fileFormats' isn't used - lib\presentation\views\settings_view.dart:70:22 - unused_field
+warning - The value of the field '_appLanguages' isn't used - lib\presentation\views\settings_view.dart:84:22 - unused_field
+warning - The value of the field '_defaultViews' isn't used - lib\presentation\views\settings_view.dart:97:22 - unused_field
+warning - The value of the field '_encodings' isn't used - lib\presentation\views\settings_view.dart:104:22 - unused_field
+warning - The value of the field '_themeModes' isn't used - lib\presentation\views\settings_view.dart:112:22 - unused_field
+warning - The value of the field '_comparisonModes' isn't used - lib\presentation\views\settings_view.dart:113:22 - unused_field
+warning - The value of the field '_fontFamilies' isn't used - lib\presentation\views\settings_view.dart:118:22 - unused_field
+  error - The name '_ThemePreset' isn't a type, so it can't be used as a type argument - lib\presentation\views\settings_view.dart:127:21 - non_type_as_type_argument
+warning - The value of the field '_themePresets' isn't used - lib\presentation\views\settings_view.dart:127:35 - unused_field
+  error - The name '_ThemePreset' isn't a class - lib\presentation\views\settings_view.dart:128:22 - creation_with_non_type
+  error - The name '_ThemePreset' isn't a class - lib\presentation\views\settings_view.dart:133:34 - creation_with_non_type
+  error - The name '_ThemePreset' isn't a class - lib\presentation\views\settings_view.dart:138:28 - creation_with_non_type
+  error - The name '_ThemePreset' isn't a class - lib\presentation\views\settings_view.dart:143:19 - creation_with_non_type
+  error - The name '_ThemePreset' isn't a class - lib\presentation\views\settings_view.dart:148:24 - creation_with_non_type
+  error - The name '_ThemePreset' isn't a class - lib\presentation\views\settings_view.dart:153:22 - creation_with_non_type
+warning - The declaration '_formatMemorySize' isn't referenced - lib\presentation\views\settings_view.dart:253:10 - unused_element
+warning - The declaration '_importTranslationMemory' isn't referenced - lib\presentation\views\settings_view.dart:283:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:305:29 - use_build_context_synchronously
+warning - The declaration '_exportTranslationMemoryTmx' isn't referenced - lib\presentation\views\settings_view.dart:309:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:318:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:333:34 - use_build_context_synchronously
+warning - The declaration '_exportTranslationMemoryCsv' isn't referenced - lib\presentation\views\settings_view.dart:338:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:347:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:362:34 - use_build_context_synchronously
+warning - The declaration '_confirmClearTranslationMemory' isn't referenced - lib\presentation\views\settings_view.dart:367:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:390:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:400:34 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\views\settings_view.dart:461:27 - prefer_const_constructors
+warning - The value of the local variable 'showDeveloperOptions' isn't used - lib\presentation\views\settings_view.dart:516:11 - unused_local_variable
+  error - The method '_getBorderColor' isn't defined for the type '_SettingsViewState' - lib\presentation\views\settings_view.dart:662:20 - undefined_method
+warning - The value of the local variable 'settings' isn't used - lib\presentation\views\settings_view.dart:815:11 - unused_local_variable
+warning - The declaration '_showColorPicker' isn't referenced - lib\presentation\views\settings_view.dart:988:8 - unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:1310:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:1316:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:1318:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:1320:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\views\settings_view.dart:1329:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\views\settings_view.dart:1472:11 - use_build_context_synchronously
+
+39 issues found. (ran in 1.4s)

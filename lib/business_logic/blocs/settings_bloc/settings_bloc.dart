@@ -126,6 +126,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateShowDockBadge>(_onUpdateShowDockBadge);
     on<UpdateMacosWindowMaterial>(_onUpdateMacosWindowMaterial);
     on<UpdateTranslationStrategy>(_onUpdateTranslationStrategy);
+    on<ApplyThemePreset>(_onApplyThemePreset);
   }
 
   Future<void> _onLoadSettings(
@@ -1136,6 +1137,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       }
     }
 
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onApplyThemePreset(
+      ApplyThemePreset event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(
+      diffAddedColor: event.added,
+      diffRemovedColor: event.removed,
+      diffModifiedColor: event.modified,
+    );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/core/services/localization_file_service.dart';
+import 'package:localizer_app_main/core/services/localization_file_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 
 void main() {

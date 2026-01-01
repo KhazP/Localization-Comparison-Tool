@@ -70,6 +70,9 @@ class QualityIssue {
 
   /// The category of issue detected.
   final QualityIssueType type;
+
+  /// For duplicate value issues, this list contains all keys sharing the value.
+  final List<String>? relatedKeys;
 }
 
 /// Holds issue counts and detailed issue lists.

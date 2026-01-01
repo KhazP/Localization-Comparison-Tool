@@ -115,26 +115,26 @@ class HistoryCardSkeleton extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _SkeletonBox(width: 120, height: 14),
-                _SkeletonBox(width: 50, height: 20),
+                const _SkeletonBox(width: 120, height: 14),
+                const _SkeletonBox(width: 50, height: 20),
               ],
             ),
             const SizedBox(height: 12),
             // File path placeholder
-            _SkeletonBox(width: double.infinity, height: 16),
+            const _SkeletonBox(width: double.infinity, height: 16),
             const SizedBox(height: 8),
-            _SkeletonBox(width: 200, height: 16),
+            const _SkeletonBox(width: 200, height: 16),
             const SizedBox(height: 12),
             // Stats row
             Row(
               children: [
-                _SkeletonBox(width: 40, height: 24),
+                const _SkeletonBox(width: 40, height: 24),
                 const SizedBox(width: 8),
-                _SkeletonBox(width: 40, height: 24),
+                const _SkeletonBox(width: 40, height: 24),
                 const SizedBox(width: 8),
-                _SkeletonBox(width: 40, height: 24),
+                const _SkeletonBox(width: 40, height: 24),
                 const Spacer(),
-                _SkeletonBox(width: 80, height: 32),
+                const _SkeletonBox(width: 80, height: 32),
               ],
             ),
           ],
@@ -176,14 +176,14 @@ class SettingsSectionSkeleton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Section header
-            _SkeletonBox(width: 150, height: 18),
+            const _SkeletonBox(width: 150, height: 18),
             const SizedBox(height: 16),
             // Toggle row 1
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _SkeletonBox(width: 180, height: 14),
-                _SkeletonBox(width: 50, height: 30),
+                const _SkeletonBox(width: 180, height: 14),
+                const _SkeletonBox(width: 50, height: 30),
               ],
             ),
             const SizedBox(height: 12),
@@ -191,13 +191,13 @@ class SettingsSectionSkeleton extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _SkeletonBox(width: 220, height: 14),
-                _SkeletonBox(width: 50, height: 30),
+                const _SkeletonBox(width: 220, height: 14),
+                const _SkeletonBox(width: 50, height: 30),
               ],
             ),
             const SizedBox(height: 12),
             // Input field
-            _SkeletonBox(width: double.infinity, height: 44),
+            const _SkeletonBox(width: double.infinity, height: 44),
           ],
         ),
       ),

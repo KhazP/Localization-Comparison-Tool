@@ -248,7 +248,7 @@ class SettingsConstants {
       case SettingsCategory.aiServices:
         return 'AI Services';
       case SettingsCategory.versionControl:
-        return 'Version Control';
+        return 'Version History';
       case SettingsCategory.systemIntegrations:
         return 'System Integrations';
       case SettingsCategory.about:
@@ -270,7 +270,7 @@ class SettingsConstants {
       case SettingsCategory.aiServices:
         return 'AI Services';
       case SettingsCategory.versionControl:
-        return 'Version Control (Git)';
+        return 'Version History (Git)';
       case SettingsCategory.systemIntegrations:
         return 'System Integrations';
       case SettingsCategory.about:

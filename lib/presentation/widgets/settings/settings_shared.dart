@@ -173,10 +173,10 @@ class SettingsRow extends StatelessWidget {
 }
 
 /// A styled dropdown for settings
-class SettingsDropdown extends StatelessWidget {
-  final String? value;
-  final List<String> items;
-  final ValueChanged<String?> onChanged;
+class SettingsDropdown<T> extends StatelessWidget {
+  final T? value;
+  final List<T> items;
+  final ValueChanged<T?> onChanged;
   final bool isDark;
   final bool isAmoled;
 
@@ -201,10 +201,10 @@ class SettingsDropdown extends StatelessWidget {
         border: Border.all(color: theme.borderColor),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
+        child: DropdownButton<T>(
           value: items.contains(value) ? value : items.first,
           items: items
-              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .map((item) => DropdownMenuItem(value: item, child: Text(item.toString())))
               .toList(),
           onChanged: onChanged,
           style: Theme.of(context).textTheme.bodyMedium,

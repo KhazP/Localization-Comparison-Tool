@@ -4,6 +4,7 @@ import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
+import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
 
 // Events
 abstract class ComparisonEvent {}
@@ -63,6 +64,14 @@ class ProceedWithComparison extends ComparisonEvent {
   ProceedWithComparison(this.result, this.file1, this.file2, {this.wasLoadedFromHistory = false});
 }
 
+/// Event to suppress the large file warning for a specific file path.
+/// Used when user checks "Don't show again for this file".
+class SuppressLargeFileWarning extends ComparisonEvent {
+  final String filePath;
+
+  SuppressLargeFileWarning(this.filePath);
+}
+
 // States
 abstract class ComparisonState {}
 
@@ -106,18 +115,21 @@ class ComparisonFailure extends ComparisonState {
 // BLoC - Decoupled from SettingsBloc and ProgressBloc
 class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
   final ComparisonEngine comparisonEngine;
+  final WarningSuppressionsRepository? warningSuppressionsRepository;
   
   /// Optional progress callback for external progress tracking
   final ProgressCallback? onProgress;
 
   ComparisonBloc({
     required this.comparisonEngine,
+    this.warningSuppressionsRepository,
     this.onProgress,
   }) : super(ComparisonInitial()) {
     on<CompareFilesRequested>(_onCompareFilesRequested);
     on<CompareBilingualFileRequested>(_onCompareBilingualFileRequested);
     on<CompareFilesFromHistoryRequested>(_onCompareFilesFromHistoryRequested);
     on<ProceedWithComparison>(_onProceedWithComparison);
+    on<SuppressLargeFileWarning>(_onSuppressLargeFileWarning);
   }
 
   void _handleComparisonResult(
@@ -127,7 +139,12 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     File file2,
     bool wasLoadedFromHistory,
   ) {
-    if (result.diff.length > 50000) {
+    // Check if the warning is suppressed for either file
+    final isSuppressed = warningSuppressionsRepository != null &&
+        (warningSuppressionsRepository!.isLargeFileWarningSuppressed(file1.path) ||
+         warningSuppressionsRepository!.isLargeFileWarningSuppressed(file2.path));
+
+    if (result.diff.length > 50000 && !isSuppressed) {
       emit(ComparisonLargeFileWarning(
         result, 
         file1, 
@@ -150,6 +167,13 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       event.file2, 
       wasLoadedFromHistory: event.wasLoadedFromHistory
     ));
+  }
+
+  Future<void> _onSuppressLargeFileWarning(
+    SuppressLargeFileWarning event,
+    Emitter<ComparisonState> emit,
+  ) async {
+    await warningSuppressionsRepository?.suppressLargeFileWarning(event.filePath);
   }
 
   Future<void> _onCompareFilesRequested(

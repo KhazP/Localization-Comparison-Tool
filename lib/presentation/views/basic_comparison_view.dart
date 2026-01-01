@@ -2856,41 +2856,78 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }).toList();
   }
   Future<void> _showLargeFileWarningDialog(BuildContext context, ComparisonLargeFileWarning state) async {
+    bool dontShowAgain = false;
+    
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Large File Detected'),
-          content: Text(
-            'The comparison result contains ${state.count} entries.\n'
-            'Displaying all of them might cause performance issues.\n\n'
-            'Do you want to proceed?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.read<ComparisonBloc>().add(ProceedWithComparison(
-                  state.result, 
-                  state.file1, 
-                  state.file2, 
-                  wasLoadedFromHistory: state.wasLoadedFromHistory
-                ));
-              },
-              child: const Text('Proceed'),
-            ),
-          ],
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Large File Detected'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'The comparison result contains ${state.count} entries.\n'
+                    'Displaying all of them might cause performance issues.\n\n'
+                    'Do you want to proceed?',
+                  ),
+                  const SizedBox(height: 16),
+                  CheckboxListTile(
+                    value: dontShowAgain,
+                    onChanged: (value) {
+                      setState(() {
+                        dontShowAgain = value ?? false;
+                      });
+                    },
+                    title: const Text(
+                      "Don't show again for this file",
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    
+                    // If "Don't show again" is checked, suppress the warning for this file
+                    if (dontShowAgain) {
+                      context.read<ComparisonBloc>().add(
+                        SuppressLargeFileWarning(state.file1.path),
+                      );
+                    }
+                    
+                    context.read<ComparisonBloc>().add(ProceedWithComparison(
+                      state.result, 
+                      state.file1, 
+                      state.file2, 
+                      wasLoadedFromHistory: state.wasLoadedFromHistory
+                    ));
+                  },
+                  child: const Text('Proceed'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
 }
 
 class _PulsingIndicator extends StatefulWidget {

@@ -27,6 +27,7 @@ import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
+import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
@@ -62,6 +63,7 @@ class MyApp extends StatelessWidget {
     final historyRepository = sl<LocalHistoryRepository>();
     final projectRepository = sl<ProjectRepository>();
     final apiKeyValidationService = sl<ApiKeyValidationService>();
+    final warningSuppressionsRepository = sl<WarningSuppressionsRepository>();
 
     return MultiRepositoryProvider(
       providers: [
@@ -86,6 +88,7 @@ class MyApp extends StatelessWidget {
           BlocProvider<ComparisonBloc>(
             create: (context) => ComparisonBloc(
               comparisonEngine: comparisonEngine,
+              warningSuppressionsRepository: warningSuppressionsRepository,
               onProgress: (completed, total, message) {
                 final progressBloc = context.read<ProgressBloc>();
                 if (completed <= 0) {

@@ -9,6 +9,7 @@ import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
+import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
@@ -58,6 +59,11 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<ProjectRepository>(
     () => ProjectRepository(secureStorageService: sl<SecureStorageService>()),
   );
+
+  // Warning suppressions repository (async init needed)
+  final warningSuppressionsRepository = WarningSuppressionsRepository();
+  await warningSuppressionsRepository.init();
+  sl.registerSingleton<WarningSuppressionsRepository>(warningSuppressionsRepository);
 }
 
 /// Reset service locator - useful for testing

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:convert';
 import 'dart:io';
@@ -63,6 +64,10 @@ class _SettingsViewState extends State<SettingsView>
   // System info state
   SystemInfoService? _systemInfoService;
   SystemInfo? _systemInfo;
+
+  // Save confirmation debounce timer
+  Timer? _saveConfirmationTimer;
+  AppSettings? _previousSettings;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -216,6 +221,7 @@ class _SettingsViewState extends State<SettingsView>
     _contentScrollController.dispose();
     _animationController.dispose();
     _updateCheckerService?.dispose();
+    _saveConfirmationTimer?.cancel();
     super.dispose();
   }
 
@@ -440,7 +446,21 @@ class _SettingsViewState extends State<SettingsView>
       opacity: _fadeAnimation,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: BlocBuilder<SettingsBloc, SettingsState>(
+        body: BlocConsumer<SettingsBloc, SettingsState>(
+          listener: (context, state) {
+            // Debounced save confirmation - only show after user stops changing settings
+            if (state.status == SettingsStatus.loaded && _previousSettings != null) {
+              if (state.appSettings != _previousSettings) {
+                _saveConfirmationTimer?.cancel();
+                _saveConfirmationTimer = Timer(const Duration(milliseconds: 800), () {
+                  if (mounted) {
+                    ToastService.showSuccess(context, 'Settings saved');
+                  }
+                });
+              }
+            }
+            _previousSettings = state.appSettings;
+          },
           builder: (context, state) {
             // Determine if AMOLED mode is active
             final bool isAmoled = isDark &&
@@ -1038,6 +1058,7 @@ class _SettingsViewState extends State<SettingsView>
     required List<Widget> children,
     bool isDark = false,
     bool isAmoled = false,
+    VoidCallback? onReset,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1053,12 +1074,34 @@ class _SettingsViewState extends State<SettingsView>
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: _getTextSecondaryColor(isDark),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: _getTextSecondaryColor(isDark),
+                        ),
                   ),
+                ),
+                if (onReset != null)
+                  Tooltip(
+                    message: 'Reset to defaults',
+                    child: InkWell(
+                      onTap: onReset,
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.refresh_rounded,
+                          size: 16,
+                          color: _getTextMutedColor(isDark),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           Divider(
@@ -1278,6 +1321,14 @@ class _SettingsViewState extends State<SettingsView>
           title: 'Comparison Behavior',
           isDark: isDark,
           isAmoled: isAmoled,
+          onReset: () {
+            final defaults = AppSettings.defaultSettings();
+            context.read<SettingsBloc>()
+              ..add(UpdateIgnoreCase(defaults.ignoreCase))
+              ..add(UpdateIgnoreWhitespace(defaults.ignoreWhitespace))
+              ..add(UpdateSimilarityThreshold(defaults.similarityThreshold))
+              ..add(UpdateComparisonMode(defaults.comparisonMode));
+          },
           children: [
             _buildSettingRow(
               context: context,
@@ -1519,6 +1570,14 @@ class _SettingsViewState extends State<SettingsView>
           title: 'Theme',
           isDark: isDark,
           isAmoled: isAmoled,
+          onReset: () {
+            final defaults = AppSettings.defaultSettings();
+            context.read<SettingsBloc>()
+              ..add(UpdateAppThemeMode(defaults.appThemeMode))
+              ..add(UpdateDiffFontSize(defaults.diffFontSize))
+              ..add(UpdateDiffFontFamily(defaults.diffFontFamily))
+              ..add(UpdateAccentColor(defaults.accentColorValue));
+          },
           children: [
             _buildSettingRow(
               context: context,
@@ -1633,6 +1692,15 @@ class _SettingsViewState extends State<SettingsView>
           title: 'Diff Colors',
           isDark: isDark,
           isAmoled: isAmoled,
+          onReset: () {
+            final defaults = AppSettings.defaultSettings();
+            context.read<SettingsBloc>().add(UpdateDiffColors(
+              addedColor: defaults.diffAddedColor,
+              removedColor: defaults.diffRemovedColor,
+              modifiedColor: defaults.diffModifiedColor,
+            ));
+            context.read<SettingsBloc>().add(UpdateDiffIdenticalColor(defaults.diffIdenticalColor));
+          },
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -4150,30 +4218,133 @@ class _SettingsViewState extends State<SettingsView>
   void _showColorPicker(BuildContext context, Color initialColor,
       ValueChanged<Color> onColorSelected) {
     Color pickerColor = initialColor;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Pick a color'),
-        content: SingleChildScrollView(
-          child: ColorPicker(
-            pickerColor: pickerColor,
-            onColorChanged: (color) => pickerColor = color,
-            pickerAreaHeightPercent: 0.8,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.palette_rounded,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              const Text('Pick a Color'),
+            ],
           ),
+          content: SizedBox(
+            width: 380,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Original vs New preview
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withAlpha(10)
+                        : Colors.black.withAlpha(10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              'Original',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: isDark
+                                    ? AppThemeV2.darkTextMuted
+                                    : AppThemeV2.lightTextMuted,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: initialColor,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppThemeV2.darkBorder
+                                      : AppThemeV2.lightBorder,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              'New',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: pickerColor,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Color picker - use simpler layout to avoid overflow
+                ColorPicker(
+                  pickerColor: pickerColor,
+                  onColorChanged: (color) => setState(() => pickerColor = color),
+                  enableAlpha: false,
+                  displayThumbColor: true,
+                  hexInputBar: true,
+                  labelTypes: const [],
+                  pickerAreaHeightPercent: 0.7,
+                  portraitOnly: true,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                onColorSelected(pickerColor);
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Apply'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              onColorSelected(pickerColor);
-              Navigator.of(context).pop();
-            },
-            child: const Text('Apply'),
-          ),
-        ],
       ),
     );
   }

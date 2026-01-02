@@ -15,6 +15,7 @@
         "diff_match_patch",
         "dio",
         "docx_to_text",
+        "equatable",
         "excel",
         "file_picker",
         "fl_chart",
@@ -636,6 +637,14 @@
       "dependencies": []
     },
     {
+      "name": "equatable",
+      "version": "2.0.7",
+      "dependencies": [
+        "collection",
+        "meta"
+      ]
+    },
+    {
       "name": "flutter_bloc",
       "version": "8.1.6",
       "dependencies": [
@@ -1234,14 +1243,6 @@
       "name": "plugin_platform_interface",
       "version": "2.1.8",
       "dependencies": [
-        "meta"
-      ]
-    },
-    {
-      "name": "equatable",
-      "version": "2.0.7",
-      "dependencies": [
-        "collection",
         "meta"
       ]
     },

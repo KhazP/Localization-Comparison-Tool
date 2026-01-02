@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
@@ -73,13 +74,21 @@ class SuppressLargeFileWarning extends ComparisonEvent {
 }
 
 // States
-abstract class ComparisonState {}
+abstract class ComparisonState extends Equatable {
+  const ComparisonState();
+
+  @override
+  List<Object?> get props => [];
+}
 
 class ComparisonInitial extends ComparisonState {}
 
 class ComparisonLoading extends ComparisonState {
   final String? message;
-  ComparisonLoading({this.message});
+  const ComparisonLoading({this.message});
+
+  @override
+  List<Object?> get props => [message];
 }
 
 class ComparisonSuccess extends ComparisonState {
@@ -88,7 +97,10 @@ class ComparisonSuccess extends ComparisonState {
   final File file2;
   final bool wasLoadedFromHistory;
 
-  ComparisonSuccess(this.result, this.file1, this.file2, {this.wasLoadedFromHistory = false});
+  const ComparisonSuccess(this.result, this.file1, this.file2, {this.wasLoadedFromHistory = false});
+
+  @override
+  List<Object?> get props => [result, file1.path, file2.path, wasLoadedFromHistory];
 }
 
 class ComparisonLargeFileWarning extends ComparisonState {
@@ -98,18 +110,24 @@ class ComparisonLargeFileWarning extends ComparisonState {
   final bool wasLoadedFromHistory;
   final int count;
 
-  ComparisonLargeFileWarning(
+  const ComparisonLargeFileWarning(
     this.result, 
     this.file1, 
     this.file2, 
     this.count, 
     {this.wasLoadedFromHistory = false}
   );
+
+  @override
+  List<Object?> get props => [result, file1.path, file2.path, count, wasLoadedFromHistory];
 }
 
 class ComparisonFailure extends ComparisonState {
   final String error;
-  ComparisonFailure(this.error);
+  const ComparisonFailure(this.error);
+
+  @override
+  List<Object?> get props => [error];
 }
 
 // BLoC - Decoupled from SettingsBloc and ProgressBloc

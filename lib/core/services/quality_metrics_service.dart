@@ -367,11 +367,11 @@ class QualityMetricsService {
     return compute(
       _performParse,
       _ComputeParseParams(
-        file.path,
-        parser,
-        settings.toJson(),
-        extractionMode,
-        requireBilingual,
+        filePath: file.path,
+        forcedFormat: format,
+        settingsAsJson: settings.toJson(),
+        extractionModeName: extractionMode.name,
+        requireBilingual: requireBilingual,
       ),
     );
   }
@@ -380,11 +380,31 @@ class QualityMetricsService {
     _ComputeParseParams params,
   ) async {
     final settings = AppSettings.fromJson(params.settingsAsJson);
-    return params.parser.parse(
+    final parser = FileParserFactory().getParserForFile(
+      File(params.filePath),
+      format: params.forcedFormat,
+    );
+    if (parser == null) {
+      throw Exception('Unsupported file type: ${params.filePath}');
+    }
+    if (params.requireBilingual && !parser.supportsBilingualExtraction) {
+      throw InvalidBilingualFileException(
+        'This file does not include both the original text and the '
+        'translation.',
+      );
+    }
+    return parser.parse(
       File(params.filePath),
       settings,
-      extractionMode: params.extractionMode,
+      extractionMode: _modeFromName(params.extractionModeName),
       requireBilingual: params.requireBilingual,
+    );
+  }
+
+  static ExtractionMode _modeFromName(String name) {
+    return ExtractionMode.values.firstWhere(
+      (value) => value.name == name,
+      orElse: () => ExtractionMode.target,
     );
   }
 
@@ -534,18 +554,18 @@ class QualityMetricsService {
 }
 
 class _ComputeParseParams {
-  _ComputeParseParams(
-    this.filePath,
-    this.parser,
-    this.settingsAsJson,
-    this.extractionMode,
-    this.requireBilingual,
-  );
+  _ComputeParseParams({
+    required this.filePath,
+    required this.forcedFormat,
+    required this.settingsAsJson,
+    required this.extractionModeName,
+    required this.requireBilingual,
+  });
 
   final String filePath;
-  final LocalizationParser parser;
+  final String? forcedFormat;
   final Map<String, dynamic> settingsAsJson;
-  final ExtractionMode extractionMode;
+  final String extractionModeName;
   final bool requireBilingual;
 }
 

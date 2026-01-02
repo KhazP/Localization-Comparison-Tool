@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:localizer_app_main/data/parsers/csv_parser.dart';
+import 'package:localizer_app_main/data/parsers/arb_parser.dart';
 import 'package:localizer_app_main/data/parsers/json_parser.dart';
 import 'package:localizer_app_main/data/parsers/plain_text_parser.dart';
 import 'package:localizer_app_main/data/parsers/properties_parser.dart';
@@ -20,6 +21,7 @@ class FileParserFactory {
     XliffParser(),
     TmxParser(),
     CsvParser(),
+    ArbParser(),
     JsonParser(),
     YamlParser(),
     PropertiesParser(),

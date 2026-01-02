@@ -278,16 +278,21 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                     darkTheme: darkTheme,
                     themeMode: themeState.themeMode,
                     builder: (context, child) {
-                      return Column(
-                        children: [
-                          const CustomTitleBar(),
-                          Expanded(
-                            child: Actions(
-                              actions: GlobalActions.getActions(context),
-                              child: child!,
+                      final backgroundColor =
+                          Theme.of(context).scaffoldBackgroundColor;
+                      return ColoredBox(
+                        color: backgroundColor,
+                        child: Column(
+                          children: [
+                            const CustomTitleBar(),
+                            Expanded(
+                              child: Actions(
+                                actions: GlobalActions.getActions(context),
+                                child: child ?? const SizedBox.shrink(),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                     home: MyHomePage(initialSession: _initialSession),

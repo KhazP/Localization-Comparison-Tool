@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
@@ -7,11 +9,60 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/presentation/app.dart';
+import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:localizer_app_main/core/services/macos_integration_service.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+
+bool _resolveDarkMode(AppSettings settings) {
+  final mode = settings.appThemeMode.toLowerCase();
+  if (mode == 'dark' || mode == 'amoled') {
+    return true;
+  }
+  if (mode == 'light') {
+    return false;
+  }
+  final brightness =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness;
+  return brightness == Brightness.dark;
+}
+
+Future<void> _applyWindowsVisuals(AppSettings settings) async {
+  if (!Platform.isWindows) {
+    return;
+  }
+
+  final isDark = _resolveDarkMode(settings);
+  final fallbackBackground =
+      isDark ? AppThemeV2.darkBackground : AppThemeV2.lightBackground;
+
+  await windowManager.setBackgroundColor(fallbackBackground);
+  if (!settings.useMicaEffect) {
+    return;
+  }
+
+  try {
+    await Window.initialize();
+    await windowManager.setBackgroundColor(Colors.transparent);
+    await Window.setEffect(
+      effect: WindowEffect.mica,
+      dark: isDark,
+    );
+    if (isDark) {
+      await windowManager.setBrightness(Brightness.dark);
+    }
+  } catch (error, stackTrace) {
+    developer.log(
+      'Mica effect failed. Using solid background.',
+      name: 'main',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    await windowManager.setBackgroundColor(fallbackBackground);
+  }
+}
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +81,7 @@ Future<void> main(List<String> args) async {
   }
 
   final appDocumentDir = await getApplicationDocumentsDirectory();
-  
+
   // Initialize Hive with error handling for corrupted boxes
   await Hive.initFlutter(appDocumentDir.path);
 
@@ -48,37 +99,18 @@ Future<void> main(List<String> args) async {
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
 
+    final isDark = _resolveDarkMode(initialAppSettings);
+    final fallbackBackground =
+        isDark ? AppThemeV2.darkBackground : AppThemeV2.lightBackground;
+
+    if (Platform.isWindows) {
+      await windowManager.setBackgroundColor(fallbackBackground);
+    }
+
     // macOS: Initialize specific integrations
     if (Platform.isMacOS) {
       await MacOSIntegrationService.initializeWindowStyling();
       await MacOSIntegrationService.initializeSystemTray();
-    }
-
-    // Windows: Initialize Acrylic/Mica effect
-    if (Platform.isWindows && initialAppSettings.useMicaEffect) {
-      await Window.initialize();
-      final isDark = initialAppSettings.appThemeMode == 'Dark' || 
-                     initialAppSettings.appThemeMode == 'Amoled' ||
-                     initialAppSettings.appThemeMode == 'System'; // Assume dark for system on Windows
-      
-      // Set transparent background to allow Mica effect to show through
-      await windowManager.setBackgroundColor(Colors.transparent);
-      
-      // Apply Mica effect (Windows 11+) with Acrylic fallback (Windows 10)
-      await Window.setEffect(
-        effect: WindowEffect.mica,
-        dark: isDark,
-      );
-      
-      // Make title bar match the window effect
-      await windowManager.setTitleBarStyle(
-        TitleBarStyle.normal,
-        windowButtonVisibility: true,
-      );
-      // Set dark title bar for Windows
-      if (isDark) {
-        await windowManager.setBrightness(Brightness.dark);
-      }
     }
 
     // Restore window position if enabled
@@ -91,14 +123,6 @@ Future<void> main(List<String> args) async {
       if (x != null && y != null && width != null && height != null) {
         await windowManager.setBounds(Rect.fromLTWH(x, y, width, height));
       }
-    }
-
-    // Handle start minimized option
-    if (initialAppSettings.startMinimizedToTray) {
-      await windowManager.minimize();
-    } else {
-      await windowManager.show();
-      await windowManager.focus();
     }
   }
 
@@ -113,7 +137,13 @@ Future<void> main(List<String> args) async {
       win.size = initialSize;
       win.alignment = Alignment.center;
       win.title = 'Localizer';
-      win.show();
+      unawaited(_applyWindowsVisuals(initialAppSettings));
+      if (initialAppSettings.startMinimizedToTray) {
+        unawaited(windowManager.minimize());
+      } else {
+        win.show();
+        unawaited(windowManager.focus());
+      }
     });
   }
 }

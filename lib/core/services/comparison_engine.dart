@@ -59,11 +59,11 @@ class ComparisonEngine {
     final result = await compute(
       _performParse,
       _ComputeParseParams(
-        file.path,
-        parser,
-        settings.toJson(),
-        extractionMode,
-        requireBilingual,
+        filePath: file.path,
+        forcedFormat: format,
+        settingsAsJson: settings.toJson(),
+        extractionModeName: extractionMode.name,
+        requireBilingual: requireBilingual,
       ),
     );
 
@@ -85,10 +85,23 @@ class ComparisonEngine {
     // Reconstruct a plain AppSettings object from the JSON map.
     // This new object is not a HiveObject and is safe to use in the isolate.
     final settings = AppSettings.fromJson(params.settingsAsJson);
-    return await params.parser.parse(
+    final parser = FileParserFactory().getParserForFile(
+      File(params.filePath),
+      format: params.forcedFormat,
+    );
+    if (parser == null) {
+      throw Exception('Unsupported file type: ${params.filePath}');
+    }
+    if (params.requireBilingual && !parser.supportsBilingualExtraction) {
+      throw InvalidBilingualFileException(
+        'This file does not include both the original text and the '
+        'translation.',
+      );
+    }
+    return parser.parse(
       File(params.filePath),
       settings,
-      extractionMode: params.extractionMode,
+      extractionMode: _modeFromName(params.extractionModeName),
       requireBilingual: params.requireBilingual,
     );
   }
@@ -114,7 +127,7 @@ class ComparisonEngine {
     final file2Data = results[1];
 
     // Run diff calculation in background isolate to prevent UI freeze
-    final diff = await compute(
+    final rawDiff = await compute(
       _performDiffCalculation,
       _ComputeDiffParams(
         data1: file1Data,
@@ -127,14 +140,15 @@ class ComparisonEngine {
       ),
     );
     developer.log('Comparison finished', name: 'ComparisonEngine');
+    final diff = _deserializeDiff(rawDiff);
     return ComparisonResult(file1Data, file2Data, diff);
   }
 
   // Static method for compute isolate
-  static Map<String, ComparisonStatusDetail> _performDiffCalculation(
+  static Map<String, Map<String, Object?>> _performDiffCalculation(
     _ComputeDiffParams params,
   ) {
-    return DiffCalculator.calculateDiff(
+    final diff = DiffCalculator.calculateDiff(
       data1: params.data1,
       data2: params.data2,
       ignoreCase: params.ignoreCase,
@@ -142,6 +156,22 @@ class ComparisonEngine {
       ignoreWhitespace: params.ignoreWhitespace,
       comparisonMode: params.comparisonMode,
       similarityThreshold: params.similarityThreshold,
+    );
+    return diff.map((key, value) => MapEntry(key, value.toMap()));
+  }
+
+  static Map<String, ComparisonStatusDetail> _deserializeDiff(
+    Map<String, Map<String, Object?>> rawDiff,
+  ) {
+    return rawDiff.map(
+      (key, value) => MapEntry(key, ComparisonStatusDetail.fromMap(value)),
+    );
+  }
+
+  static ExtractionMode _modeFromName(String name) {
+    return ExtractionMode.values.firstWhere(
+      (value) => value.name == name,
+      orElse: () => ExtractionMode.target,
     );
   }
 
@@ -174,7 +204,7 @@ class ComparisonEngine {
     final targetData = results[1];
 
     // Run diff calculation in background isolate to prevent UI freeze
-    final diff = await compute(
+    final rawDiff = await compute(
       _performDiffCalculation,
       _ComputeDiffParams(
         data1: sourceData,
@@ -187,24 +217,26 @@ class ComparisonEngine {
       ),
     );
     developer.log('Bilingual comparison finished', name: 'ComparisonEngine');
+    final diff = _deserializeDiff(rawDiff);
     return ComparisonResult(sourceData, targetData, diff);
   }
 }
 
 // Helper class for parameters to compute function (parsing)
 class _ComputeParseParams {
+  _ComputeParseParams({
+    required this.filePath,
+    required this.forcedFormat,
+    required this.settingsAsJson,
+    required this.extractionModeName,
+    required this.requireBilingual,
+  });
+
   final String filePath;
-  final LocalizationParser parser;
+  final String? forcedFormat;
   final Map<String, dynamic> settingsAsJson;
-  final ExtractionMode extractionMode;
+  final String extractionModeName;
   final bool requireBilingual;
-  _ComputeParseParams(
-    this.filePath,
-    this.parser,
-    this.settingsAsJson,
-    this.extractionMode,
-    this.requireBilingual,
-  );
 }
 
 // Helper class for parameters to compute function (diff calculation)

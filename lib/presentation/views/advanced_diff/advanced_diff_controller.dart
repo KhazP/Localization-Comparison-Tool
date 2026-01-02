@@ -330,7 +330,7 @@ class AdvancedDiffController extends ChangeNotifier {
             key: key, 
             value: val, 
             settings: settings, 
-            encodingName: 'utf-8' // Should get from settings?
+            encodingName: settings.defaultTargetEncoding,
           );
           successCount++;
        }

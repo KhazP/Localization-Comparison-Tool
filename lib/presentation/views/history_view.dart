@@ -138,7 +138,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
   }
 
   void _onViewDetails(ComparisonSession session) {
-    widget.onNavigateToTab(0);
+    widget.onNavigateToTab(1); // Navigate to Compare tab (index 1)
     final settingsState = context.read<SettingsBloc>().state;
     if (settingsState.status == SettingsStatus.loaded) {
       final isBilingualSession = session.file1Path == session.file2Path;

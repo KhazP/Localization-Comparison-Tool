@@ -242,7 +242,7 @@ class _MyHomePageState extends State<MyHomePage>
                         // Theme toggle button
                         Tooltip(
                           message:
-                              'Toggle Theme (Light → Dark → AMOLED → System)',
+                              'Toggle Theme (Light > Dark > AMOLED > System)',
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -312,42 +312,60 @@ class _MyHomePageState extends State<MyHomePage>
     final isSelected = _selectedIndex == index;
     final isHovered = _hoverStates[index];
     
-    return NavigationRailDestination(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      icon: MouseRegion(
+    // Helper to build icon with consistent hover effects
+    Widget buildIconWidget(IconData iconData, {bool forSelected = false}) {
+      return MouseRegion(
         onEnter: (_) => setState(() => _hoverStates[index] = true),
         onExit: (_) => setState(() => _hoverStates[index] = false),
-        child: AnimatedScale(
-          scale: isHovered && !isSelected ? 1.1 : 1.0,
+        child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOutCubic,
-          child: AnimatedContainer(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: forSelected
+                ? colorScheme.primary.withValues(alpha: 0.15)
+                : (isHovered
+                    ? colorScheme.primary.withValues(alpha: 0.12)
+                    : Colors.transparent),
+          ),
+          child: AnimatedScale(
+            scale: isHovered && !forSelected ? 1.05 : 1.0,
             duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: isHovered && !isSelected 
-                  ? colorScheme.primary.withValues(alpha: 0.08)
-                  : Colors.transparent,
-            ),
+            curve: Curves.easeOutCubic,
             child: Icon(
-              icon,
-              color: isHovered ? colorScheme.primary.withValues(alpha: 0.7) : null,
+              iconData,
+              size: 22,
+              color: forSelected
+                  ? colorScheme.primary
+                  : (isHovered
+                      ? colorScheme.primary.withValues(alpha: 0.85)
+                      : colorScheme.onSurface.withValues(alpha: 0.6)),
             ),
           ),
         ),
-      ),
-      selectedIcon: Icon(selectedIcon),
-      label: AnimatedDefaultTextStyle(
-        duration: const Duration(milliseconds: 150),
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          color: isSelected 
-              ? colorScheme.primary 
-              : (isHovered ? colorScheme.primary.withValues(alpha: 0.7) : null),
+      );
+    }
+
+    return NavigationRailDestination(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      icon: buildIconWidget(icon, forSelected: false),
+      selectedIcon: buildIconWidget(selectedIcon, forSelected: true),
+      label: MouseRegion(
+        onEnter: (_) => setState(() => _hoverStates[index] = true),
+        onExit: (_) => setState(() => _hoverStates[index] = false),
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 150),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected
+                ? colorScheme.primary
+                : (isHovered
+                    ? colorScheme.primary.withValues(alpha: 0.85)
+                    : colorScheme.onSurface.withValues(alpha: 0.7)),
+          ),
+          child: Text(label),
         ),
-        child: Text(label),
       ),
     );
   }

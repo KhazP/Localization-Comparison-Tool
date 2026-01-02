@@ -111,6 +111,7 @@ class PlutoGridAdapter {
         type: PlutoColumnType.text(),
         width: 400,
         minWidth: 200,
+        frozen: PlutoColumnFrozen.end, // Freeze to end so it stays connected to ACTIONS
         readOnly: !useInlineEditing, // Only editable if inline mode
         enableSorting: false,
         enableEditingMode: useInlineEditing, // Enable editing mode only for inline

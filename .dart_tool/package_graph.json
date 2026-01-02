@@ -25,6 +25,7 @@
         "flutter_colorpicker",
         "flutter_highlight",
         "flutter_secure_storage",
+        "fuzzy",
         "get_it",
         "google_fonts",
         "highlight",
@@ -41,6 +42,7 @@
         "path",
         "pluto_grid",
         "protocol_handler",
+        "recase",
         "screen_retriever",
         "shimmer",
         "sqflite",
@@ -192,6 +194,18 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "recase",
+      "version": "4.1.0",
+      "dependencies": []
+    },
+    {
+      "name": "fuzzy",
+      "version": "0.5.1",
+      "dependencies": [
+        "stringr"
       ]
     },
     {
@@ -1942,6 +1956,13 @@
       "dependencies": [
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "stringr",
+      "version": "1.2.1",
+      "dependencies": [
+        "characters"
       ]
     }
   ],

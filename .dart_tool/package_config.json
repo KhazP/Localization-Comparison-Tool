@@ -404,6 +404,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "fuzzy",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/fuzzy-0.5.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "get_it",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/get_it-7.7.0",
       "packageUri": "lib/",
@@ -764,6 +770,12 @@
       "languageVersion": "3.6"
     },
     {
+      "name": "recase",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/recase-4.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "rxdart",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/rxdart-0.28.0",
       "packageUri": "lib/",
@@ -960,6 +972,12 @@
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/string_similarity-2.1.1",
       "packageUri": "lib/",
       "languageVersion": "2.12"
+    },
+    {
+      "name": "stringr",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/stringr-1.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "super_clipboard",

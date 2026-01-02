@@ -525,6 +525,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  fuzzy:
+    dependency: "direct main"
+    description:
+      name: fuzzy
+      sha256: af5fbd36f2f8de0663a5b562ef5ca209aea957e81a2f0e97f97475cfbed044ec
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.1"
   get_it:
     dependency: "direct main"
     description:
@@ -1005,6 +1013,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  recase:
+    dependency: "direct main"
+    description:
+      name: recase
+      sha256: e4eb4ec2dcdee52dcf99cb4ceabaffc631d7424ee55e56f280bc039737f89213
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   rxdart:
     dependency: transitive
     description:
@@ -1266,6 +1282,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  stringr:
+    dependency: transitive
+    description:
+      name: stringr
+      sha256: bcc6e5cef07142673ff454b0fe7ca153e433646c52edf729636980e8a47bd7b7
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
   super_clipboard:
     dependency: transitive
     description:

@@ -123,7 +123,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: SizedBox(
-                        width: 300,
+                        width: 380,
                         child: TextField(
                           focusNode: _searchFocusNode,
                           decoration: InputDecoration(
@@ -131,6 +131,43 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                             prefixIcon: const Icon(LucideIcons.search, size: 18),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Tooltip(
+                                  message: 'Fuzzy Search (typo-tolerant)',
+                                  child: IconButton(
+                                    icon: Text(
+                                      '~',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: controller.isFuzzyEnabled
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Theme.of(context).hintColor,
+                                      ),
+                                    ),
+                                    onPressed: () => controller.toggleFuzzy(!controller.isFuzzyEnabled),
+                                  ),
+                                ),
+                                Tooltip(
+                                  message: 'Regex Search',
+                                  child: IconButton(
+                                    icon: Text(
+                                      '.*',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: controller.isRegexEnabled
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Theme.of(context).hintColor,
+                                      ),
+                                    ),
+                                    onPressed: () => controller.toggleRegex(!controller.isRegexEnabled),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           onChanged: (value) {
                             controller.updateSearch(value);

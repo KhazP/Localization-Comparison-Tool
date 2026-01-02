@@ -9,7 +9,8 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:csv/csv.dart';
-import 'package:file_picker/file_picker.dart'; 
+import 'package:file_picker/file_picker.dart';
+import 'package:fuzzy/fuzzy.dart'; 
 
 // Re-export enums if needed or define new ones here.
 // For now, reusing Enums from the old view to minimize breakage during transition, 
@@ -83,6 +84,13 @@ class AdvancedDiffController extends ChangeNotifier {
   
   void toggleRegex(bool enabled) {
     isRegexEnabled = enabled;
+    if (enabled) isFuzzyEnabled = false; // Mutex: disable fuzzy when regex is on
+    _applyFilters();
+  }
+  
+  void toggleFuzzy(bool enabled) {
+    isFuzzyEnabled = enabled;
+    if (enabled) isRegexEnabled = false; // Mutex: disable regex when fuzzy is on
     _applyFilters();
   }
   
@@ -210,6 +218,20 @@ class AdvancedDiffController extends ChangeNotifier {
           } catch (_) {
             return false;
           }
+        } else if (isFuzzyEnabled) {
+            // Fuzzy typo-tolerant search
+            final searchables = [key, val1, val2];
+            final fuse = Fuzzy(
+              searchables,
+              options: FuzzyOptions(
+                threshold: 0.4, // Lower = stricter matching
+                findAllMatches: true,
+              ),
+            );
+            final results = fuse.search(searchQuery);
+            if (results.isNotEmpty) {
+              diffMatches = true;
+            }
         } else {
              // Standard contains
             final qLower = query.toLowerCase();

@@ -250,6 +250,10 @@ frontend_server_client
 3.0
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/frontend_server_client-4.0.0/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/frontend_server_client-4.0.0/lib/
+fuzzy
+3.0
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/fuzzy-0.5.1/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/fuzzy-0.5.1/lib/
 get_it
 3.0
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/get_it-7.7.0/
@@ -490,6 +494,10 @@ pubspec_parse
 3.6
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pubspec_parse-1.5.0/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pubspec_parse-1.5.0/lib/
+recase
+2.12
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/recase-4.1.0/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/recase-4.1.0/lib/
 rxdart
 2.12
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/rxdart-0.28.0/
@@ -618,6 +626,10 @@ string_similarity
 2.12
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/string_similarity-2.1.1/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/string_similarity-2.1.1/lib/
+stringr
+3.0
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/stringr-1.2.1/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/stringr-1.2.1/lib/
 super_clipboard
 3.0
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/super_clipboard-0.8.24/

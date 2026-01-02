@@ -65,6 +65,8 @@ dependencies:
   talker_flutter: ^4.7.0 # In-app debug console overlay with logs, errors, and HTTP
   talker_dio_logger: ^4.7.0 # Automatic HTTP request/response logging for Dio
   shimmer: ^3.0.0 # Shimmer skeleton loading animations
+  fuzzy: ^0.5.1 # Typo-tolerant fuzzy search
+  recase: ^4.1.0 # Key case transformations (camelCase, snake_case, etc.)
 
 dev_dependencies:
   flutter_test:

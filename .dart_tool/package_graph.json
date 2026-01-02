@@ -36,6 +36,7 @@
         "macos_window_utils",
         "package_info_plus",
         "path",
+        "pluto_grid",
         "protocol_handler",
         "screen_retriever",
         "sqflite",
@@ -184,6 +185,16 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "pluto_grid",
+      "version": "8.1.0",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "intl",
+        "rxdart"
       ]
     },
     {
@@ -460,7 +471,7 @@
     },
     {
       "name": "intl",
-      "version": "0.19.0",
+      "version": "0.20.2",
       "dependencies": [
         "clock",
         "meta",
@@ -1099,6 +1110,11 @@
       ]
     },
     {
+      "name": "rxdart",
+      "version": "0.28.0",
+      "dependencies": []
+    },
+    {
       "name": "shortid",
       "version": "0.1.2",
       "dependencies": []
@@ -1187,6 +1203,24 @@
       ]
     },
     {
+      "name": "bitsdojo_window_linux",
+      "version": "0.1.4",
+      "dependencies": [
+        "bitsdojo_window_platform_interface",
+        "ffi",
+        "flutter"
+      ]
+    },
+    {
+      "name": "bitsdojo_window_macos",
+      "version": "0.1.4",
+      "dependencies": [
+        "bitsdojo_window_platform_interface",
+        "ffi",
+        "flutter"
+      ]
+    },
+    {
       "name": "bitsdojo_window_windows",
       "version": "0.1.6",
       "dependencies": [
@@ -1203,24 +1237,6 @@
         "flutter",
         "meta",
         "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "bitsdojo_window_macos",
-      "version": "0.1.4",
-      "dependencies": [
-        "bitsdojo_window_platform_interface",
-        "ffi",
-        "flutter"
-      ]
-    },
-    {
-      "name": "bitsdojo_window_linux",
-      "version": "0.1.4",
-      "dependencies": [
-        "bitsdojo_window_platform_interface",
-        "ffi",
-        "flutter"
       ]
     },
     {

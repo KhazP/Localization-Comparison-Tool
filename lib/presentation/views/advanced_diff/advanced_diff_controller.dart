@@ -32,7 +32,7 @@ class AdvancedDiffController extends ChangeNotifier {
   Set<String> reviewedKeys = {};
 
   // Editing mode preference
-  bool useInlineEditing = false;
+  bool useInlineEditing = true;
 
   // Pagination
   int currentPage = 0;

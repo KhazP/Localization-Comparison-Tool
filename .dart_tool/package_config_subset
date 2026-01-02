@@ -279,9 +279,9 @@ http_parser
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2/lib/
 intl
-3.0
-file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.19.0/
-file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.19.0/lib/
+3.3
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.20.2/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.20.2/lib/
 io
 3.4
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/io-1.0.5/
@@ -422,6 +422,10 @@ plugin_platform_interface
 3.0
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/plugin_platform_interface-2.1.8/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/plugin_platform_interface-2.1.8/lib/
+pluto_grid
+2.17
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pluto_grid-8.1.0/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pluto_grid-8.1.0/lib/
 pool
 2.12
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pool-1.5.1/
@@ -442,6 +446,10 @@ pubspec_parse
 3.6
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pubspec_parse-1.5.0/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pubspec_parse-1.5.0/lib/
+rxdart
+2.12
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/rxdart-0.28.0/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/rxdart-0.28.0/lib/
 screen_retriever
 3.0
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/screen_retriever-0.2.0/

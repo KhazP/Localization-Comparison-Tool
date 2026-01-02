@@ -7,7 +7,7 @@ import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/advanced_diff_sidebar.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
-import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/table/diff_data_table.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/table/pluto_grid_diff_table.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 
@@ -175,7 +175,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                           const AdvancedDiffSidebar(),
                           VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
                           const Expanded(
-                            child: DiffDataTable(),
+                            child: PlutoGridDiffTable(),
                           ),
                         ],
                       ),

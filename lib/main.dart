@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -15,6 +16,10 @@ import 'package:localizer_app_main/core/services/macos_integration_service.dart'
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localizer_app_main/core/services/talker_bloc_observer.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 bool _resolveDarkMode(AppSettings settings) {
   final mode = settings.appThemeMode.toLowerCase();
@@ -91,6 +96,25 @@ Future<void> main(List<String> args) async {
 
   // Initialize all services via service locator
   await setupServiceLocator();
+
+  // Get Talker instance
+  final talker = sl<TalkerService>().talker;
+
+  // Handle Flutter errors
+  FlutterError.onError = (details) => talker.handle(
+        details.exception,
+        details.stack,
+        'Flutter Error: ${details.context?.toDescription()}',
+      );
+
+  // Handle Platform errors (async errors not caught by Flutter)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    talker.handle(error, stack, 'Platform Error');
+    return true; // Sent to Talker, so handled
+  };
+
+  // Setup Bloc Observer
+  Bloc.observer = TalkerBlocObserver(talker: talker);
 
   // Load initial settings for theme and startup options
   final initialAppSettings = await sl<SettingsRepository>().loadSettings();

@@ -6,6 +6,7 @@ import 'package:localizer_app_main/core/services/file_watcher_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/core/services/app_command_service.dart';
 import 'package:localizer_app_main/core/services/app_tab_service.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
@@ -25,6 +26,9 @@ final GetIt sl = GetIt.instance;
 /// 
 /// Call this once at app startup, before runApp()
 Future<void> setupServiceLocator() async {
+  // Talker - register first so other services can use it for logging
+  sl.registerLazySingleton<TalkerService>(() => TalkerService());
+
   // Core services - singletons
   sl.registerLazySingleton<ComparisonEngine>(() => ComparisonEngine());
   sl.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
@@ -33,8 +37,10 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<AppCommandService>(() => AppCommandService());
   sl.registerLazySingleton<AppTabService>(() => AppTabService());
 
-  // HTTP client - shared across services
-  sl.registerLazySingleton<DioClient>(() => DioClient());
+  // HTTP client - shared across services, with Talker logging
+  sl.registerLazySingleton<DioClient>(
+    () => DioClient(talkerService: sl<TalkerService>()),
+  );
 
   // Translation services
   sl.registerLazySingleton<LocalTranslationCache>(() => LocalTranslationCache());

@@ -36,7 +36,7 @@ dependencies:
   desktop_drop: ^0.4.4 # For drag & drop file support
   cross_file: ^0.3.3+8 # For XFile type used in drag & drop
   url_launcher: ^6.2.5 # For opening URLs and email links
-  package_info_plus: ^6.0.0 # For dynamic app version information
+  package_info_plus: ^9.0.0 # For dynamic app version information
   device_info_plus: ^10.1.0 # For platform detection
   flutter_secure_storage: ^9.0.0 # For secure API key storage (for AI Translation)
   google_fonts: ^6.1.0 # For custom fonts (Inter)
@@ -61,6 +61,8 @@ dependencies:
   code_text_field: ^1.1.0
   highlight: ^0.7.0
   flutter_highlight: ^0.7.0
+  talker_flutter: ^4.7.0 # In-app debug console overlay with logs, errors, and HTTP
+  talker_dio_logger: ^4.7.0 # Automatic HTTP request/response logging for Dio
 
 dev_dependencies:
   flutter_test:

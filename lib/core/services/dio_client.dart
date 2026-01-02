@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
+import 'package:talker_dio_logger/talker_dio_logger.dart';
 
 /// Centralized Dio HTTP client with common configuration.
 ///
@@ -7,7 +9,10 @@ import 'package:flutter/foundation.dart';
 /// logging across all network requests in the app.
 class DioClient {
   /// Creates a DioClient with standard configuration.
-  DioClient({Dio? dio})
+  ///
+  /// If [talkerService] is provided, HTTP requests will be logged to the
+  /// in-app debug console via TalkerDioLogger. If null, no logging occurs.
+  DioClient({Dio? dio, TalkerService? talkerService})
       : _dio = dio ??
             Dio(
               BaseOptions(
@@ -20,13 +25,18 @@ class DioClient {
                 validateStatus: (status) => status != null && status < 500,
               ),
             ) {
-    // Add logging interceptor in debug mode only
-    if (kDebugMode) {
+    // Add Talker logging interceptor in debug mode only
+    if (kDebugMode && talkerService != null) {
       _dio.interceptors.add(
-        LogInterceptor(
-          requestBody: false,
-          responseBody: false,
-          logPrint: (object) => debugPrint(object.toString()),
+        TalkerDioLogger(
+          talker: talkerService.talker,
+          settings: const TalkerDioLoggerSettings(
+            printRequestHeaders: true,
+            printResponseHeaders: false,
+            printResponseMessage: true,
+            printRequestData: true,
+            printResponseData: false, // Can be verbose for large responses
+          ),
         ),
       );
     }

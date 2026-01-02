@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -13,13 +14,16 @@ import 'package:localizer_app_main/presentation/views/projects_view.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_indicator.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/app_tab_service.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 
 class MyHomePage extends StatefulWidget {
   final ComparisonSession? initialSession;
+  final TalkerService? talkerService;
 
-  const MyHomePage({super.key, this.initialSession});
+  const MyHomePage({super.key, this.initialSession, this.talkerService});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -280,6 +284,48 @@ class _MyHomePageState extends State<MyHomePage>
                             ),
                           ),
                         ),
+                        // Debug Console button (only in debug mode)
+                        if (kDebugMode && widget.talkerService != null) ...[
+                          const SizedBox(height: 8),
+                          Tooltip(
+                            message: 'Debug Console',
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => TalkerScreen(
+                                        talker: widget.talkerService!.talker,
+                                        theme: TalkerScreenTheme(
+                                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                                          textColor: colorScheme.onSurface,
+                                          cardColor: Theme.of(context).cardColor,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Theme.of(context).dividerColor,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.terminal_rounded,
+                                    size: 20,
+                                    color: colorScheme.tertiary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

@@ -179,8 +179,24 @@ class _SettingsViewState extends State<SettingsView>
         body: BlocConsumer<SettingsBloc, SettingsState>(
           listener: (context, state) {
             // Debounced save confirmation - only show after user stops changing settings
+            // Exclude window position fields from comparison to avoid toast on resize/move
             if (state.status == SettingsStatus.loaded && _previousSettings != null) {
-              if (state.appSettings != _previousSettings) {
+              final current = state.appSettings;
+              final previous = _previousSettings!;
+              // Check if any non-volatile setting changed (exclude window position)
+              final hasUserSettingChanged = 
+                  current.copyWith(
+                    lastWindowX: null,
+                    lastWindowY: null,
+                    lastWindowWidth: null,
+                    lastWindowHeight: null,
+                  ) != previous.copyWith(
+                    lastWindowX: null,
+                    lastWindowY: null,
+                    lastWindowWidth: null,
+                    lastWindowHeight: null,
+                  );
+              if (hasUserSettingChanged) {
                 _saveConfirmationTimer?.cancel();
                 _saveConfirmationTimer = Timer(const Duration(milliseconds: 800), () {
                   if (mounted) {

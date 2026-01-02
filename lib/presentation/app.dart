@@ -21,6 +21,7 @@ import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/core/services/file_discovery_service.dart';
 import 'package:localizer_app_main/core/services/file_watcher_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/repositories/history_repository.dart';
@@ -31,8 +32,7 @@ import 'package:localizer_app_main/data/repositories/warning_suppressions_reposi
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
-import 'package:localizer_app_main/data/services/'
-    'translation_memory_service.dart';
+import 'package:localizer_app_main/data/services/translation_memory_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/home_view.dart';
 import 'package:window_manager/window_manager.dart';
@@ -40,6 +40,7 @@ import 'package:localizer_app_main/presentation/widgets/window/custom_title_bar.
 import 'package:localizer_app_main/core/input/app_shortcuts.dart';
 import 'package:localizer_app_main/core/input/app_actions.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 class MyApp extends StatelessWidget {
   final AppSettings initialAppSettings;
@@ -65,6 +66,7 @@ class MyApp extends StatelessWidget {
     final projectRepository = sl<ProjectRepository>();
     final apiKeyValidationService = sl<ApiKeyValidationService>();
     final warningSuppressionsRepository = sl<WarningSuppressionsRepository>();
+    final talkerService = sl<TalkerService>();
 
     return MultiRepositoryProvider(
       providers: [
@@ -130,7 +132,10 @@ class MyApp extends StatelessWidget {
             )..add(const LoadLastProject()),
           ),
         ],
-        child: _WindowAwareApp(openLastProject: initialAppSettings.openLastProjectOnStartup),
+        child: _WindowAwareApp(
+          openLastProject: initialAppSettings.openLastProjectOnStartup,
+          talkerService: talkerService,
+        ),
       ),
     );
   }
@@ -139,8 +144,12 @@ class MyApp extends StatelessWidget {
 /// A widget that wraps the app and listens to window events to save position.
 class _WindowAwareApp extends StatefulWidget {
   final bool openLastProject;
+  final TalkerService talkerService;
 
-  const _WindowAwareApp({required this.openLastProject});
+  const _WindowAwareApp({
+    required this.openLastProject,
+    required this.talkerService,
+  });
 
   @override
   State<_WindowAwareApp> createState() => _WindowAwareAppState();
@@ -269,7 +278,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                   darkTheme = AppThemeV2.createDarkTheme(themeState.accentColor);
                 }
 
-                final app = Shortcuts(
+                Widget app = Shortcuts(
                   shortcuts: AppShortcuts.defaults,
                   child: MaterialApp(
                     debugShowCheckedModeBanner: kDebugMode,
@@ -295,9 +304,23 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                         ),
                       );
                     },
-                    home: MyHomePage(initialSession: _initialSession),
+                    home: MyHomePage(
+                      initialSession: _initialSession,
+                      talkerService: widget.talkerService,
+                    ),
                   ),
                 );
+
+                // Wrap with TalkerWrapper for in-app error alerts (debug mode only)
+                if (kDebugMode) {
+                  app = TalkerWrapper(
+                    talker: widget.talkerService.talker,
+                    options: const TalkerWrapperOptions(
+                      enableErrorAlerts: true,
+                    ),
+                    child: app,
+                  );
+                }
 
                 // PlatformMenuBar is only supported on macOS
                 if (Platform.isMacOS) {

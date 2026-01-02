@@ -42,6 +42,7 @@
         "pluto_grid",
         "protocol_handler",
         "screen_retriever",
+        "shimmer",
         "sqflite",
         "sqflite_common_ffi",
         "string_similarity",
@@ -191,6 +192,13 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "shimmer",
+      "version": "3.0.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

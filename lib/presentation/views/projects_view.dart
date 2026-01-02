@@ -18,6 +18,7 @@ import 'package:localizer_app_main/core/services/project_stats_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
+import 'package:localizer_app_main/presentation/widgets/common/shimmer_skeleton.dart';
 
 class ProjectsView extends StatelessWidget {
   const ProjectsView({super.key});
@@ -479,14 +480,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
                     const SizedBox(height: 4),
                     // Stats row
                     if (_loadingStats)
-                      SizedBox(
-                        height: 14,
-                        width: 100,
-                        child: LinearProgressIndicator(
-                          backgroundColor: theme.colorScheme.primary.withAlpha(20),
-                          minHeight: 2,
-                        ),
-                      )
+                      const ProjectStatsSkeleton()
                     else if (_stats != null)
                       Row(
                         children: [

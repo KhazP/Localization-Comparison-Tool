@@ -836,6 +836,12 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "shimmer",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/shimmer-3.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
       "name": "shortid",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/shortid-0.1.2",
       "packageUri": "lib/",

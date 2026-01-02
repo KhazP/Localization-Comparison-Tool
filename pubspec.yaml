@@ -64,6 +64,7 @@ dependencies:
   flutter_highlight: ^0.7.0
   talker_flutter: ^4.7.0 # In-app debug console overlay with logs, errors, and HTTP
   talker_dio_logger: ^4.7.0 # Automatic HTTP request/response logging for Dio
+  shimmer: ^3.0.0 # Shimmer skeleton loading animations
 
 dev_dependencies:
   flutter_test:

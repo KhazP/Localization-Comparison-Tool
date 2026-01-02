@@ -58,6 +58,9 @@ dependencies:
   archive: ^3.6.1
   json_annotation: ^4.8.1
   pluto_grid: ^8.1.0 # Excel-like data grid for Advanced Diff View
+  code_text_field: ^1.1.0
+  highlight: ^0.7.0
+  flutter_highlight: ^0.7.0
 
 dev_dependencies:
   flutter_test:

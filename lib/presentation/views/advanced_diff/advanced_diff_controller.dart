@@ -55,11 +55,15 @@ class AdvancedDiffController extends ChangeNotifier {
   final Map<String, ComparisonStatusDetail> fullDiff;
   final Map<String, String> file1Data;
   final Map<String, String> file2Data;
+  final String? sourceFileExtension;
+  final String? targetFileExtension;
   
   AdvancedDiffController({
     required this.fullDiff,
     required this.file1Data,
     required this.file2Data,
+    this.sourceFileExtension,
+    this.targetFileExtension,
   }) {
     _applyFilters();
   }

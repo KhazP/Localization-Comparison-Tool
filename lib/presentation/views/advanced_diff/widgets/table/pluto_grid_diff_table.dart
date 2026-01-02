@@ -3,6 +3,7 @@ import 'package:pluto_grid/pluto_grid.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/table/pluto_grid_adapter.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/dialogs/detail_edit_dialog.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 
 /// Excel-like data grid for the Advanced Diff View using PlutoGrid.
@@ -110,110 +111,25 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   Future<void> _showEditDialog(AdvancedDiffController controller, String key) async {
     final source = controller.getSourceValue(key);
     final target = controller.getTargetValue(key);
-    final textController = TextEditingController(text: target);
-    final theme = Theme.of(context);
 
-    final result = await showDialog<String>(
+    await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.edit, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Edit: $key',
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        content: SizedBox(
-          width: 700,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Source (read-only)
-              Text(
-                'SOURCE (Original)',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.disabledColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  border: Border.all(color: theme.dividerColor),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: SelectableText(
-                  source.isEmpty ? '(empty)' : source,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontFamily: 'RobotoMono',
-                    color: source.isEmpty ? theme.disabledColor : null,
-                    fontStyle: source.isEmpty ? FontStyle.italic : null,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Target (editable)
-              Text(
-                'TARGET (Translation)',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: textController,
-                maxLines: 6,
-                minLines: 3,
-                autofocus: true,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontFamily: 'RobotoMono',
-                ),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  hintText: 'Enter translation...',
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop(textController.text);
-              controller.addToTM(key, source, textController.text);
-              ToastService.showSuccess(context, 'Saved & Added to TM');
-            },
-            icon: const Icon(Icons.psychology, size: 16),
-            label: const Text('Save & Add to TM'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(textController.text),
-            child: const Text('Save'),
-          ),
-        ],
+      barrierDismissible: true,
+      builder: (context) => DetailEditDialog(
+        keyName: key,
+        sourceValue: source,
+        targetValue: target,
+        fileExtension: controller.targetFileExtension,
+        onSave: (newValue) {
+           // Basic update
+           if (newValue != target) {
+             controller.updateEntry(key, newValue);
+             controller.addToTM(key, source, newValue);
+             _refreshGrid(controller);
+           }
+        },
       ),
     );
-
-    if (result != null && result != target) {
-      controller.updateEntry(key, result);
-      _refreshGrid(controller);
-    }
   }
 
   void _handleBulkMarkReviewed() {

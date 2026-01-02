@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -76,6 +77,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         fullDiff: widget.comparisonResult.diff,
         file1Data: widget.comparisonResult.file1Data,
         file2Data: widget.comparisonResult.file2Data,
+        sourceFileExtension: p.extension(widget.sourceFile.path),
+        targetFileExtension: p.extension(widget.targetFile.path),
       ),
       child: Consumer<AdvancedDiffController>(
         builder: (context, controller, child) {

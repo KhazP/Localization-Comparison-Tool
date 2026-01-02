@@ -9,6 +9,7 @@
       "dependencies": [
         "archive",
         "bitsdojo_window",
+        "code_text_field",
         "cross_file",
         "csv",
         "desktop_drop",
@@ -22,9 +23,11 @@
         "flutter_acrylic",
         "flutter_bloc",
         "flutter_colorpicker",
+        "flutter_highlight",
         "flutter_secure_storage",
         "get_it",
         "google_fonts",
+        "highlight",
         "hive",
         "hive_flutter",
         "http",
@@ -185,6 +188,31 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "flutter_highlight",
+      "version": "0.7.0",
+      "dependencies": [
+        "flutter",
+        "highlight"
+      ]
+    },
+    {
+      "name": "highlight",
+      "version": "0.7.0",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    {
+      "name": "code_text_field",
+      "version": "1.1.0",
+      "dependencies": [
+        "flutter",
+        "flutter_highlight",
+        "highlight",
+        "linked_scroll_controller"
       ]
     },
     {
@@ -1107,6 +1135,13 @@
       "dependencies": [
         "clock",
         "collection"
+      ]
+    },
+    {
+      "name": "linked_scroll_controller",
+      "version": "0.2.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

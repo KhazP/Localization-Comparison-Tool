@@ -1,7 +1,8 @@
-import 'dart:convert';
 import 'dart:developer' as developer;
 
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+
+import 'package:localizer_app_main/core/services/dio_client.dart';
 
 /// Supported providers for API key validation.
 enum ApiProvider {
@@ -32,11 +33,11 @@ class ApiKeyValidationResult {
 
 /// Validates API keys against provider endpoints.
 class ApiKeyValidationService {
-  /// Creates a validator with an optional HTTP client.
-  ApiKeyValidationService({http.Client? client})
-      : _client = client ?? http.Client();
+  /// Creates a validator with an optional DioClient.
+  ApiKeyValidationService({DioClient? dioClient})
+      : _dioClient = dioClient ?? DioClient();
 
-  final http.Client _client;
+  final DioClient _dioClient;
 
   /// Tests a key with the selected provider.
   Future<ApiKeyValidationResult> testApiKey(
@@ -56,20 +57,15 @@ class ApiKeyValidationService {
   }
 
   Future<ApiKeyValidationResult> _testGoogleTranslate(String apiKey) async {
-    final uri = Uri.https(
-      'translation.googleapis.com',
-      '/language/translate/v2',
-      {
+    const baseUrl = 'https://translation.googleapis.com';
+    return _getAndEvaluate(
+      '$baseUrl/language/translate/v2',
+      queryParameters: {
         'q': 'Hello',
         'target': 'en',
         'key': apiKey,
         'format': 'text',
       },
-    );
-
-    return _getAndEvaluate(
-      uri,
-      const {},
       successMessage: 'Connected.',
     );
   }
@@ -78,96 +74,44 @@ class ApiKeyValidationService {
     final host = apiKey.endsWith(':fx')
         ? 'api-free.deepl.com'
         : 'api.deepl.com';
-    final uri = Uri.https(host, '/v2/usage');
+    final url = 'https://$host/v2/usage';
 
-    final response = await _getWithTimeout(
-      uri,
-      {'Authorization': 'DeepL-Auth-Key $apiKey'},
-    );
-    if (response == null) {
-      return const ApiKeyValidationResult(
-        success: false,
-        message: 'Connection timed out. Please try again.',
-      );
-    }
-
-    if (response.statusCode == 200) {
-      final payload = json.decode(response.body) as Map<String, dynamic>;
-      final used = payload['character_count'] as int? ?? 0;
-      final limit = payload['character_limit'] as int? ?? 0;
-      final usageText = 'Usage: ${_formatNumber(used)} / '
-          '${_formatNumber(limit)} characters.';
-      return ApiKeyValidationResult(
-        success: true,
-        message: 'Connected.',
-        usage: usageText,
-      );
-    }
-
-    return ApiKeyValidationResult(
-      success: false,
-      message: _messageForStatus(response.statusCode),
-    );
-  }
-
-  Future<ApiKeyValidationResult> _testGemini(String apiKey) async {
-    final uri = Uri.https(
-      'generativelanguage.googleapis.com',
-      '/v1beta/models',
-      {'key': apiKey},
-    );
-
-    return _getAndEvaluate(
-      uri,
-      const {},
-      successMessage: 'Connected.',
-    );
-  }
-
-  Future<ApiKeyValidationResult> _testOpenAi(String apiKey) async {
-    final uri = Uri.https('api.openai.com', '/v1/models');
-
-    return _getAndEvaluate(
-      uri,
-      {'Authorization': 'Bearer $apiKey'},
-      successMessage: 'Connected.',
-    );
-  }
-
-  Future<ApiKeyValidationResult> _getAndEvaluate(
-    Uri uri,
-    Map<String, String> headers, {
-    required String successMessage,
-  }) async {
-    final response = await _getWithTimeout(uri, headers);
-    if (response == null) {
-      return const ApiKeyValidationResult(
-        success: false,
-        message: 'Connection timed out. Please try again.',
-      );
-    }
-
-    if (response.statusCode == 200) {
-      return ApiKeyValidationResult(
-        success: true,
-        message: successMessage,
-      );
-    }
-
-    return ApiKeyValidationResult(
-      success: false,
-      message: _messageForStatus(response.statusCode),
-    );
-  }
-
-  Future<http.Response?> _getWithTimeout(
-    Uri uri,
-    Map<String, String> headers,
-  ) async {
     try {
-      return await _client
-          .get(uri, headers: headers)
-          .timeout(const Duration(seconds: 10));
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        url,
+        headers: {'Authorization': 'DeepL-Auth-Key $apiKey'},
+        timeout: const Duration(seconds: 10),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final payload = response.data!;
+        final used = payload['character_count'] as int? ?? 0;
+        final limit = payload['character_limit'] as int? ?? 0;
+        final usageText = 'Usage: ${_formatNumber(used)} / '
+            '${_formatNumber(limit)} characters.';
+        return ApiKeyValidationResult(
+          success: true,
+          message: 'Connected.',
+          usage: usageText,
+        );
+      }
+
+      return ApiKeyValidationResult(
+        success: false,
+        message: _messageForStatus(response.statusCode ?? 500),
+      );
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return const ApiKeyValidationResult(
+          success: false,
+          message: 'Connection timed out. Please try again.',
+        );
+      }
+      return ApiKeyValidationResult(
+        success: false,
+        message: _messageForStatus(e.response?.statusCode ?? 500),
+      );
     } catch (e, stackTrace) {
       developer.log(
         'API key test failed.',
@@ -175,7 +119,79 @@ class ApiKeyValidationService {
         error: e,
         stackTrace: stackTrace,
       );
-      return null;
+      return const ApiKeyValidationResult(
+        success: false,
+        message: 'Could not connect. Please try again.',
+      );
+    }
+  }
+
+  Future<ApiKeyValidationResult> _testGemini(String apiKey) async {
+    const baseUrl = 'https://generativelanguage.googleapis.com';
+    return _getAndEvaluate(
+      '$baseUrl/v1beta/models',
+      queryParameters: {'key': apiKey},
+      successMessage: 'Connected.',
+    );
+  }
+
+  Future<ApiKeyValidationResult> _testOpenAi(String apiKey) async {
+    const url = 'https://api.openai.com/v1/models';
+    return _getAndEvaluate(
+      url,
+      headers: {'Authorization': 'Bearer $apiKey'},
+      successMessage: 'Connected.',
+    );
+  }
+
+  Future<ApiKeyValidationResult> _getAndEvaluate(
+    String url, {
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+    required String successMessage,
+  }) async {
+    try {
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        url,
+        queryParameters: queryParameters,
+        headers: headers,
+        timeout: const Duration(seconds: 10),
+      );
+
+      if (response.statusCode == 200) {
+        return ApiKeyValidationResult(
+          success: true,
+          message: successMessage,
+        );
+      }
+
+      return ApiKeyValidationResult(
+        success: false,
+        message: _messageForStatus(response.statusCode ?? 500),
+      );
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return const ApiKeyValidationResult(
+          success: false,
+          message: 'Connection timed out. Please try again.',
+        );
+      }
+      return ApiKeyValidationResult(
+        success: false,
+        message: _messageForStatus(e.response?.statusCode ?? 500),
+      );
+    } catch (e, stackTrace) {
+      developer.log(
+        'API key test failed.',
+        name: 'api_key_validation',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return const ApiKeyValidationResult(
+        success: false,
+        message: 'Could not connect. Please try again.',
+      );
     }
   }
 
@@ -226,15 +242,13 @@ class ApiKeyValidationService {
   }
 
   Future<List<String>> _fetchGeminiModels(String apiKey) async {
-    final uri = Uri.https(
-      'generativelanguage.googleapis.com',
-      '/v1beta/models',
-      {'key': apiKey},
+    const baseUrl = 'https://generativelanguage.googleapis.com';
+    final response = await _dioClient.get<Map<String, dynamic>>(
+      '$baseUrl/v1beta/models',
+      queryParameters: {'key': apiKey},
     );
-    final response = await _client.get(uri);
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
-      final models = (data['models'] as List<dynamic>?) ?? [];
+    if (response.statusCode == 200 && response.data != null) {
+      final models = (response.data!['models'] as List<dynamic>?) ?? [];
       return models
           .map((m) => m['name'] as String)
           .where((name) =>
@@ -247,14 +261,13 @@ class ApiKeyValidationService {
   }
 
   Future<List<String>> _fetchOpenAiModels(String apiKey) async {
-    final uri = Uri.https('api.openai.com', '/v1/models');
-    final response = await _client.get(
-      uri,
+    const url = 'https://api.openai.com/v1/models';
+    final response = await _dioClient.get<Map<String, dynamic>>(
+      url,
       headers: {'Authorization': 'Bearer $apiKey'},
     );
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
-      final models = (data['data'] as List<dynamic>?) ?? [];
+    if (response.statusCode == 200 && response.data != null) {
+      final models = (response.data!['data'] as List<dynamic>?) ?? [];
       return models
           .map((m) => m['id'] as String)
           .where((id) =>
@@ -264,5 +277,9 @@ class ApiKeyValidationService {
     }
     return [];
   }
-}
 
+  /// Closes the underlying HTTP client.
+  void dispose() {
+    _dioClient.close();
+  }
+}

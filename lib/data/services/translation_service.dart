@@ -1,7 +1,7 @@
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:convert';
 
+import 'package:localizer_app_main/core/services/dio_client.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 
 abstract class TranslationService {
@@ -19,11 +19,15 @@ class MissingApiKeyException implements Exception {
 }
 
 class GoogleTranslationService implements TranslationService {
-  final String _baseUrl = "translation.googleapis.com";
+  static const String _baseUrl = 'https://translation.googleapis.com';
   final SecureStorageService _secureStorage;
+  final DioClient _dioClient;
 
-  GoogleTranslationService({required SecureStorageService secureStorage})
-      : _secureStorage = secureStorage;
+  GoogleTranslationService({
+    required SecureStorageService secureStorage,
+    DioClient? dioClient,
+  })  : _secureStorage = secureStorage,
+        _dioClient = dioClient ?? DioClient();
 
   @override
   Future<String> translate(String text, String targetLanguage, {String? sourceLanguage}) async {
@@ -35,7 +39,7 @@ class GoogleTranslationService implements TranslationService {
       );
     }
 
-    final queryParameters = {
+    final queryParameters = <String, dynamic>{
       'q': text,
       'target': targetLanguage,
       if (sourceLanguage != null) 'source': sourceLanguage,
@@ -43,26 +47,28 @@ class GoogleTranslationService implements TranslationService {
       'format': 'text',
     };
 
-    final uri = Uri.https(_baseUrl, '/language/translate/v2', queryParameters);
-
     try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final body = json.decode(response.body);
-        final translations = body['data']['translations'] as List;
+      final response = await _dioClient.get<Map<String, dynamic>>(
+        '$_baseUrl/language/translate/v2',
+        queryParameters: queryParameters,
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final translations = response.data!['data']['translations'] as List;
         if (translations.isNotEmpty) {
           return translations.first['translatedText'];
         }
         throw Exception('No translation found in response');
       } else {
         debugPrint('Error from Google Translate API: ${response.statusCode}');
-        debugPrint('Response body: ${response.body}');
         throw Exception('Failed to translate text. Status code: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      debugPrint('Error calling Google Translate API: ${e.message}');
+      throw Exception('Failed to translate text: ${e.message}');
     } catch (e) {
       debugPrint('Error calling Google Translate API: $e');
       throw Exception('Failed to translate text: $e');
     }
   }
 }
- 

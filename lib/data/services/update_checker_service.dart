@@ -1,7 +1,9 @@
-import 'dart:convert';
 import 'dart:developer' as developer;
-import 'package:http/http.dart' as http;
+
+import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+import 'package:localizer_app_main/core/services/dio_client.dart';
 
 /// Represents the result of an update check.
 class UpdateCheckResult {
@@ -40,11 +42,12 @@ class UpdateCheckerService {
   static const String _repo = 'LocalizerAppMain';
   static const String _apiBaseUrl = 'https://api.github.com';
 
-  final http.Client _client;
+  final DioClient _dioClient;
   String? _cachedCurrentVersion;
   UpdateCheckResult? _lastResult;
 
-  UpdateCheckerService({http.Client? client}) : _client = client ?? http.Client();
+  UpdateCheckerService({DioClient? dioClient})
+      : _dioClient = dioClient ?? DioClient();
 
   /// Gets the cached last update check result.
   UpdateCheckResult? get lastResult => _lastResult;
@@ -57,7 +60,7 @@ class UpdateCheckerService {
 
       // Fetch latest release from GitHub with retry
       final response = await _fetchWithRetry(
-        Uri.parse('$_apiBaseUrl/repos/$_owner/$_repo/releases/latest'),
+        '$_apiBaseUrl/repos/$_owner/$_repo/releases/latest',
         headers: {
           'Accept': 'application/vnd.github.v3+json',
           'User-Agent': 'LocalizerApp/$currentVersion',
@@ -80,8 +83,8 @@ class UpdateCheckerService {
         throw Exception('GitHub API returned ${response.statusCode}');
       }
 
-      final data = json.decode(response.body) as Map<String, dynamic>;
-      
+      final data = response.data as Map<String, dynamic>;
+
       // Parse release info
       final tagName = data['tag_name'] as String? ?? '';
       final latestVersion = _cleanVersionString(tagName);
@@ -136,7 +139,7 @@ class UpdateCheckerService {
     if (_cachedCurrentVersion != null) {
       return _cachedCurrentVersion!;
     }
-    
+
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       _cachedCurrentVersion = packageInfo.version;
@@ -166,7 +169,7 @@ class UpdateCheckerService {
       for (var i = 0; i < 3; i++) {
         final newPart = i < newParts.length ? newParts[i] : 0;
         final currentPart = i < currentParts.length ? currentParts[i] : 0;
-        
+
         if (newPart > currentPart) return true;
         if (newPart < currentPart) return false;
       }
@@ -185,7 +188,7 @@ class UpdateCheckerService {
   List<int> _parseVersion(String version) {
     // Remove any suffix after hyphen (e.g., "1.0.0-beta" -> "1.0.0")
     final mainVersion = version.split('-').first;
-    
+
     return mainVersion
         .split('.')
         .map((part) => int.tryParse(part) ?? 0)
@@ -193,8 +196,8 @@ class UpdateCheckerService {
   }
 
   /// Fetches a URL with retry logic for network errors.
-  Future<http.Response> _fetchWithRetry(
-    Uri url, {
+  Future<Response<Map<String, dynamic>>> _fetchWithRetry(
+    String url, {
     Map<String, String>? headers,
     int retries = 3,
     Duration initialDelay = const Duration(seconds: 1),
@@ -202,21 +205,36 @@ class UpdateCheckerService {
     var delay = initialDelay;
     for (var i = 0; i < retries; i++) {
       try {
-        return await _client.get(url, headers: headers);
-      } catch (e) {
+        return await _dioClient.get<Map<String, dynamic>>(url, headers: headers);
+      } on DioException catch (e) {
         if (i == retries - 1) rethrow; // Rethrow on last attempt
-        
-        // Only retry on network errors (SocketException, etc.)
-        // In Dart http, these are usually covered by ClientException or SocketException
-        // We'll log and wait
+
+        // Only retry on network/timeout errors
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.connectionError) {
+          developer.log(
+            'Update check failed (attempt ${i + 1}/$retries). Retrying in ${delay.inSeconds}s...',
+            name: 'UpdateCheckerService',
+            error: e,
+          );
+
+          await Future.delayed(delay);
+          delay *= 2; // Exponential backoff
+        } else {
+          rethrow;
+        }
+      } catch (e) {
+        if (i == retries - 1) rethrow;
+
         developer.log(
           'Update check failed (attempt ${i + 1}/$retries). Retrying in ${delay.inSeconds}s...',
           name: 'UpdateCheckerService',
           error: e,
         );
-        
+
         await Future.delayed(delay);
-        delay *= 2; // Exponential backoff
+        delay *= 2;
       }
     }
     throw Exception('Failed to fetch after $retries attempts');
@@ -227,7 +245,7 @@ class UpdateCheckerService {
     try {
       final currentVersion = await _getCurrentVersion();
       final response = await _fetchWithRetry(
-        Uri.parse('$_apiBaseUrl/repos/$_owner/$_repo/releases?per_page=$limit'),
+        '$_apiBaseUrl/repos/$_owner/$_repo/releases?per_page=$limit',
         headers: {
           'Accept': 'application/vnd.github.v3+json',
           'User-Agent': 'LocalizerApp/$currentVersion',
@@ -238,9 +256,13 @@ class UpdateCheckerService {
         return [];
       }
 
-      final data = json.decode(response.body) as List<dynamic>;
-      
-      return data.map((release) {
+      // The response for releases list is an array, need to handle differently
+      final data = response.data;
+      if (data is! List) {
+        return [];
+      }
+
+      return (data as List<dynamic>).map((release) {
         return {
           'version': _cleanVersionString(release['tag_name'] as String? ?? ''),
           'name': release['name'] as String? ?? '',
@@ -260,6 +282,6 @@ class UpdateCheckerService {
 
   /// Disposes the HTTP client.
   void dispose() {
-    _client.close();
+    _dioClient.close();
   }
 }

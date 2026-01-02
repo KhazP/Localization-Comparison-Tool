@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
+import 'package:localizer_app_main/core/services/dio_client.dart';
 import 'package:localizer_app_main/core/services/file_discovery_service.dart';
 import 'package:localizer_app_main/core/services/file_watcher_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
@@ -13,6 +14,7 @@ import 'package:localizer_app_main/data/repositories/warning_suppressions_reposi
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
+import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/'
     'translation_memory_service.dart';
 
@@ -30,19 +32,28 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<FileDiscoveryService>(() => FileDiscoveryService());
   sl.registerLazySingleton<AppCommandService>(() => AppCommandService());
   sl.registerLazySingleton<AppTabService>(() => AppTabService());
-  
+
+  // HTTP client - shared across services
+  sl.registerLazySingleton<DioClient>(() => DioClient());
+
   // Translation services
   sl.registerLazySingleton<LocalTranslationCache>(() => LocalTranslationCache());
   sl.registerLazySingleton<TranslationMemoryService>(
     () => TranslationMemoryService(),
   );
   sl.registerLazySingleton<TranslationService>(
-    () => GoogleTranslationService(secureStorage: sl<SecureStorageService>()),
+    () => GoogleTranslationService(
+      secureStorage: sl<SecureStorageService>(),
+      dioClient: sl<DioClient>(),
+    ),
   );
   sl.registerLazySingleton<ApiKeyValidationService>(
-    () => ApiKeyValidationService(),
+    () => ApiKeyValidationService(dioClient: sl<DioClient>()),
   );
-  
+  sl.registerLazySingleton<UpdateCheckerService>(
+    () => UpdateCheckerService(dioClient: sl<DioClient>()),
+  );
+
   // Git service
   sl.registerLazySingleton<GitService>(() => LibGit2DartService());
   

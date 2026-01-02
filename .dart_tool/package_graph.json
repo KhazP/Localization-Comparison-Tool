@@ -15,6 +15,7 @@
         "desktop_drop",
         "device_info_plus",
         "diff_match_patch",
+        "dio",
         "docx_to_text",
         "excel",
         "file_picker",
@@ -30,7 +31,6 @@
         "highlight",
         "hive",
         "hive_flutter",
-        "http",
         "intl",
         "json_annotation",
         "libgit2dart",
@@ -582,16 +582,6 @@
         "meta",
         "path",
         "pub_semver"
-      ]
-    },
-    {
-      "name": "http",
-      "version": "1.4.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
       ]
     },
     {
@@ -1287,6 +1277,16 @@
       ]
     },
     {
+      "name": "http",
+      "version": "1.4.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
+      ]
+    },
+    {
       "name": "flutter_secure_storage_windows",
       "version": "3.1.2",
       "dependencies": [
@@ -1508,16 +1508,6 @@
       ]
     },
     {
-      "name": "http_parser",
-      "version": "4.1.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
-      ]
-    },
-    {
       "name": "petitparser",
       "version": "6.1.0",
       "dependencies": [
@@ -1660,6 +1650,16 @@
       ]
     },
     {
+      "name": "http_parser",
+      "version": "4.1.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
+    },
+    {
       "name": "built_value",
       "version": "8.10.1",
       "dependencies": [
@@ -1767,6 +1767,29 @@
       "dependencies": [
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "dio",
+      "version": "5.9.0",
+      "dependencies": [
+        "async",
+        "collection",
+        "dio_web_adapter",
+        "http_parser",
+        "meta",
+        "mime",
+        "path"
+      ]
+    },
+    {
+      "name": "dio_web_adapter",
+      "version": "2.1.1",
+      "dependencies": [
+        "dio",
+        "http_parser",
+        "meta",
+        "web"
       ]
     }
   ],

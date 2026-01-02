@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
+import 'package:localizer_app_main/core/services/project_import_service.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
 
 /// BLoC for managing project state.
@@ -10,10 +11,13 @@ import 'package:localizer_app_main/data/repositories/project_repository.dart';
 /// Only one project can be open at a time.
 class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   final ProjectRepository _projectRepository;
+  final ProjectImportService _projectImportService;
 
   ProjectBloc({
     required ProjectRepository projectRepository,
+    required ProjectImportService projectImportService,
   })  : _projectRepository = projectRepository,
+        _projectImportService = projectImportService,
         super(ProjectState.initial()) {
     on<CreateProject>(_onCreateProject);
     on<OpenProject>(_onOpenProject);
@@ -23,6 +27,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     on<UpdateProjectSettings>(_onUpdateProjectSettings);
     on<UpdateProjectGlossary>(_onUpdateProjectGlossary);
     on<UpdateProjectTMs>(_onUpdateProjectTMs);
+    on<ImportFilesToProject>(_onImportFilesToProject);
   }
 
   /// Handles project creation.
@@ -183,5 +188,97 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     } catch (e) {
       debugPrint('ProjectBloc: Failed to load last project path: $e');
     }
+  }
+
+  /// Imports files into a project folder.
+  Future<void> _onImportFilesToProject(
+    ImportFilesToProject event,
+    Emitter<ProjectState> emit,
+  ) async {
+    if (event.filePaths.isEmpty) return;
+
+    try {
+      final result = await _projectImportService.importFiles(
+        projectRoot: event.projectPath,
+        filePaths: event.filePaths,
+      );
+
+      final feedback = _buildImportFeedback(result);
+      emit(state.copyWith(importFeedback: feedback));
+    } on ProjectImportException catch (e) {
+      emit(state.copyWith(
+        importFeedback: ProjectImportFeedback(
+          id: DateTime.now().millisecondsSinceEpoch,
+          status: ProjectImportStatus.error,
+          message: e.message,
+        ),
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        importFeedback: ProjectImportFeedback(
+          id: DateTime.now().millisecondsSinceEpoch,
+          status: ProjectImportStatus.error,
+          message: 'Could not import the files. Please try again.',
+        ),
+      ));
+      debugPrint('ProjectBloc: Error importing files: $e');
+    }
+  }
+
+  ProjectImportFeedback _buildImportFeedback(ProjectImportResult result) {
+    final parts = <String>[];
+
+    if (result.importedCount > 0) {
+      parts.add(
+        'Imported ${result.importedCount} '
+        'file${result.importedCount == 1 ? '' : 's'}.',
+      );
+    }
+    if (result.skippedUnsupportedCount > 0) {
+      parts.add(
+        'Skipped ${result.skippedUnsupportedCount} not supported '
+        'file${result.skippedUnsupportedCount == 1 ? '' : 's'}.',
+      );
+    }
+    if (result.skippedInProjectCount > 0) {
+      parts.add(
+        'Skipped ${result.skippedInProjectCount} '
+        'file${result.skippedInProjectCount == 1 ? '' : 's'} already '
+        'in the project.',
+      );
+    }
+    if (result.skippedMissingCount > 0) {
+      parts.add(
+        'Skipped ${result.skippedMissingCount} missing '
+        'file${result.skippedMissingCount == 1 ? '' : 's'}.',
+      );
+    }
+    if (result.failedCount > 0) {
+      parts.add(
+        '${result.failedCount} '
+        'file${result.failedCount == 1 ? '' : 's'} could not be copied.',
+      );
+    }
+
+    final message =
+        parts.isEmpty ? 'No files were imported.' : parts.join(' ');
+
+    final skippedCount = result.skippedUnsupportedCount +
+        result.skippedMissingCount +
+        result.skippedInProjectCount;
+
+    final status = result.importedCount == 0
+        ? (result.failedCount > 0
+            ? ProjectImportStatus.error
+            : ProjectImportStatus.warning)
+        : (result.failedCount > 0 || skippedCount > 0
+            ? ProjectImportStatus.warning
+            : ProjectImportStatus.success);
+
+    return ProjectImportFeedback(
+      id: DateTime.now().millisecondsSinceEpoch,
+      status: status,
+      message: message,
+    );
   }
 }

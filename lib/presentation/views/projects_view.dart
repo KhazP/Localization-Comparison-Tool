@@ -1,12 +1,13 @@
 import 'dart:io';
+import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
-import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/widgets/project/create_project_dialog.dart';
 import 'package:localizer_app_main/presentation/widgets/dialogs/import_review_dialog.dart';
 import 'package:localizer_app_main/presentation/widgets/common/empty_state_icon.dart';
@@ -15,6 +16,7 @@ import 'package:localizer_app_main/core/services/project_sharing_service.dart';
 import 'package:localizer_app_main/core/services/project_stats_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
+import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
 
 class ProjectsView extends StatelessWidget {
   const ProjectsView({super.key});
@@ -26,109 +28,132 @@ class ProjectsView extends StatelessWidget {
     final settingsState = context.watch<SettingsBloc>().state;
     final recentProjects = settingsState.appSettings.recentProjects;
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-         Row(
-            children: [
-              Icon(
-                Icons.folder_special_rounded,
-                size: 32,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'Projects',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+    return BlocListener<ProjectBloc, ProjectState>(
+      listenWhen: (previous, current) =>
+          current.importFeedback != null &&
+          previous.importFeedback?.id != current.importFeedback?.id,
+      listener: (context, state) {
+        final feedback = state.importFeedback;
+        if (feedback == null) return;
+
+        switch (feedback.status) {
+          case ProjectImportStatus.success:
+            ToastService.showSuccess(context, feedback.message);
+            break;
+          case ProjectImportStatus.warning:
+            ToastService.showWarning(context, feedback.message);
+            break;
+          case ProjectImportStatus.error:
+            ToastService.showError(context, feedback.message);
+            break;
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+           Row(
+              children: [
+                Icon(
+                  Icons.folder_special_rounded,
+                  size: 32,
+                  color: theme.colorScheme.primary,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-
-          // Actions
-          Row(
-            children: [
-              _buildActionButton(
-                context,
-                icon: Icons.add_rounded,
-                label: 'Create New Project',
-                color: theme.colorScheme.primary,
-                onTap: () => _showCreateProjectDialog(context),
-              ),
-              const SizedBox(width: 16),
-              _buildActionButton(
-                context,
-                icon: Icons.folder_open_rounded,
-                label: 'Open Project Settings',
-                isOutlined: true,
-                onTap: () => _pickProjectFolder(context),
-              ),
-              const SizedBox(width: 16),
-              _buildActionButton(
-                context,
-                icon: Icons.file_upload_outlined,
-                label: 'Import Project Zip',
-                isOutlined: true,
-                onTap: () => _importProjectZip(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 48),
-
-          // Recent Projects List
-          Text(
-            'Recent Projects',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
+                const SizedBox(width: 16),
+                Text(
+                  'Projects',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          
-          if (recentProjects.isEmpty)
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    EmptyStateIcon(
-                      icon: Icons.history_edu_rounded,
-                      text: 'No recent projects',
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No recent projects',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+            const SizedBox(height: 32),
+
+            // Actions
+            Row(
+              children: [
+                _buildActionButton(
+                  context,
+                  icon: Icons.add_rounded,
+                  label: 'Create New Project',
+                  color: theme.colorScheme.primary,
+                  onTap: () => _showCreateProjectDialog(context),
+                ),
+                const SizedBox(width: 16),
+                _buildActionButton(
+                  context,
+                  icon: Icons.folder_open_rounded,
+                  label: 'Open Project Settings',
+                  isOutlined: true,
+                  onTap: () => _pickProjectFolder(context),
+                ),
+                const SizedBox(width: 16),
+                _buildActionButton(
+                  context,
+                  icon: Icons.file_upload_outlined,
+                  label: 'Import Project Zip',
+                  isOutlined: true,
+                  onTap: () => _importProjectZip(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 48),
+
+            // Recent Projects List
+            Text(
+              'Recent Projects',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            if (recentProjects.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      EmptyStateIcon(
+                        icon: Icons.history_edu_rounded,
+                        text: 'No recent projects',
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        'No recent projects',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: recentProjects.length,
+                  itemBuilder: (context, index) {
+                    final path = recentProjects[index];
+                    // Use folder name as project name fallback
+                    final name = path.split(Platform.pathSeparator).last;
+                    
+                    return _ProjectListTile(
+                      name: name,
+                      path: path,
+                      onTap: () => _openProject(context, path),
+                      onRemove: () => _removeRecentProject(context, path),
+                      onFilesDropped: (paths) =>
+                          _importFilesToProject(context, path, paths),
+                    );
+                  },
                 ),
               ),
-            )
-          else
-            Expanded(
-              child: ListView.builder(
-                itemCount: recentProjects.length,
-                itemBuilder: (context, index) {
-                  final path = recentProjects[index];
-                  // Use folder name as project name fallback
-                  final name = path.split(Platform.pathSeparator).last;
-                  
-                  return _ProjectListTile(
-                    name: name,
-                    path: path,
-                    onTap: () => _openProject(context, path),
-                    onRemove: () => _removeRecentProject(context, path),
-                  );
-                },
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -260,6 +285,25 @@ class ProjectsView extends StatelessWidget {
      
      settingsBloc.add(UpdateRecentProjects(recentProjects));
   }
+
+  void _importFilesToProject(
+    BuildContext context,
+    String projectPath,
+    List<String> filePaths,
+  ) {
+    if (filePaths.isEmpty) {
+      ToastService.showWarning(context, 'No supported files were dropped.');
+      return;
+    }
+
+    ToastService.showInfo(context, 'Importing files...');
+    context.read<ProjectBloc>().add(
+          ImportFilesToProject(
+            projectPath: projectPath,
+            filePaths: filePaths,
+          ),
+        );
+  }
 }
 
 class _ProjectListTile extends StatefulWidget {
@@ -267,12 +311,14 @@ class _ProjectListTile extends StatefulWidget {
   final String path;
   final VoidCallback onTap;
   final VoidCallback onRemove;
+  final void Function(List<String> filePaths)? onFilesDropped;
 
   const _ProjectListTile({
     required this.name,
     required this.path,
     required this.onTap,
     required this.onRemove,
+    this.onFilesDropped,
   });
 
   @override
@@ -281,6 +327,7 @@ class _ProjectListTile extends StatefulWidget {
 
 class _ProjectListTileState extends State<_ProjectListTile> {
   bool _isHovered = false;
+  bool _isDragOver = false;
   ProjectStats? _stats;
   bool _loadingStats = true;
 
@@ -319,7 +366,61 @@ class _ProjectListTileState extends State<_ProjectListTile> {
         ? AppThemeV2.amoledCardHover
         : (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover);
 
-    return MouseRegion(
+    return DropRegion(
+      formats: Formats.standardFormats,
+      onDropOver: (event) async {
+        for (final item in event.session.items) {
+          final localData = item.localData;
+          if (localData is String &&
+              DragDropUtils.isValidFilePath(localData)) {
+            setState(() => _isDragOver = true);
+            return DropOperation.copy;
+          }
+
+          final reader = item.dataReader;
+          if (reader == null) continue;
+          final suggestedName = await reader.getSuggestedName();
+          if (DragDropUtils.isValidFileName(suggestedName)) {
+            setState(() => _isDragOver = true);
+            return DropOperation.copy;
+          }
+        }
+        setState(() => _isDragOver = false);
+        return DropOperation.none;
+      },
+      onDropLeave: (_) => setState(() => _isDragOver = false),
+      onPerformDrop: (event) async {
+        setState(() => _isDragOver = false);
+        final List<String> paths = [];
+        for (final item in event.session.items) {
+          final localData = item.localData;
+          if (localData is String &&
+              DragDropUtils.isValidFilePath(localData)) {
+            paths.add(localData);
+            continue;
+          }
+
+          final reader = item.dataReader;
+          if (reader == null) continue;
+          if (reader.canProvide(Formats.fileUri)) {
+            reader.getValue<Uri>(Formats.fileUri, (uri) {
+              if (uri != null) {
+                final path = uri.toFilePath();
+                if (DragDropUtils.isValidFilePath(path)) {
+                  paths.add(path);
+                }
+              }
+            });
+          }
+        }
+        // Delay to let async getValue complete
+        await Future.delayed(const Duration(milliseconds: 150));
+        final uniquePaths = paths.toSet().toList();
+        if (uniquePaths.isNotEmpty && widget.onFilesDropped != null) {
+          widget.onFilesDropped!(uniquePaths);
+        }
+      },
+      child: MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
@@ -332,9 +433,12 @@ class _ProjectListTileState extends State<_ProjectListTile> {
             color: _isHovered ? hoverColor : cardColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _isHovered 
-                  ? theme.colorScheme.primary.withAlpha(100)
-                  : (isAmoled ? AppThemeV2.amoledBorder : theme.dividerColor),
+              color: _isDragOver
+                  ? theme.colorScheme.secondary
+                  : _isHovered 
+                      ? theme.colorScheme.primary.withAlpha(100)
+                      : (isAmoled ? AppThemeV2.amoledBorder : theme.dividerColor),
+              width: _isDragOver ? 2 : 1,
             ),
              boxShadow: _isHovered
                 ? [
@@ -427,6 +531,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -9,6 +9,7 @@ import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/rendering.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/progress_bloc.dart';
@@ -37,6 +38,7 @@ import 'package:windows_taskbar/windows_taskbar.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/app_command_service.dart';
+import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
 
 // Enum for filter status in Basic View
 
@@ -391,23 +393,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   bool _isValidFileType(String filePath) {
-    final extension = filePath.toLowerCase().split('.').last;
-    const supportedExtensions = [
-      'json',
-      'xml',
-      'xliff',
-      'xlf',
-      'tmx',
-      'csv',
-      'yaml',
-      'yml',
-      'properties',
-      'resx',
-      'txt',
-      'docx',
-      'lang'
-    ];
-    return supportedExtensions.contains(extension);
+    return DragDropUtils.isValidFilePath(filePath);
   }
 
   void _navigateToAdvancedView() {
@@ -1235,6 +1221,211 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   );
   }
 
+  String _exportFileName(String format) {
+    switch (format) {
+      case 'Excel':
+        return 'comparison_report.xlsx';
+      case 'JSON':
+        return 'comparison_report.json';
+      default:
+        return 'comparison_report.csv';
+    }
+  }
+
+  FileFormat _exportFileFormat(String format) {
+    switch (format) {
+      case 'Excel':
+        return Formats.xlsx;
+      case 'JSON':
+        return Formats.json;
+      default:
+        return Formats.csv;
+    }
+  }
+
+  Future<Uint8List> _buildExportBytes(String format) async {
+    switch (format) {
+      case 'Excel':
+        return _buildExcelBytes();
+      case 'JSON':
+        return Uint8List.fromList(utf8.encode(_buildJsonString()));
+      default:
+        return Uint8List.fromList(utf8.encode(_buildCsvString()));
+    }
+  }
+
+  Uint8List _buildExcelBytes() {
+    if (_latestComparisonResult == null) {
+      return Uint8List(0);
+    }
+
+    final excel = Excel.createExcel();
+    final sheetObject = excel['Sheet1'];
+
+    sheetObject.appendRow([
+      TextCellValue('Status'),
+      TextCellValue('String Key'),
+      TextCellValue('Old Value (Source)'),
+      TextCellValue('New Value (Target)'),
+      TextCellValue('Similarity')
+    ]);
+
+    for (final entry in _latestComparisonResult!.diff.entries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
+      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
+
+      final statusText = status == StringComparisonStatus.added
+          ? 'EXTRA'
+          : status == StringComparisonStatus.removed
+              ? 'MISSING'
+              : 'CHANGED';
+      final simText = similarity != null
+          ? '${(similarity * 100).toStringAsFixed(1)}%'
+          : '';
+
+      sheetObject.appendRow([
+        TextCellValue(statusText),
+        TextCellValue(key),
+        TextCellValue(status == StringComparisonStatus.added ? '' : file1Value),
+        TextCellValue(
+            status == StringComparisonStatus.removed ? '' : file2Value),
+        TextCellValue(simText)
+      ]);
+    }
+
+    final fileBytes = excel.save();
+    if (fileBytes == null) {
+      return Uint8List(0);
+    }
+
+    return Uint8List.fromList(fileBytes);
+  }
+
+  String _buildJsonString() {
+    if (_latestComparisonResult == null) {
+      return '[]';
+    }
+
+    final jsonData = <Map<String, dynamic>>[];
+    for (final entry in _latestComparisonResult!.diff.entries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
+      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
+
+      jsonData.add({
+        'status': status == StringComparisonStatus.added
+            ? 'extra'
+            : status == StringComparisonStatus.removed
+                ? 'missing'
+                : status.name,
+        'key': key,
+        'old_value': status == StringComparisonStatus.added ? null : file1Value,
+        'new_value':
+            status == StringComparisonStatus.removed ? null : file2Value,
+        'similarity': similarity
+      });
+    }
+
+    return const JsonEncoder.withIndent('  ').convert(jsonData);
+  }
+
+  String _buildCsvString() {
+    if (_latestComparisonResult == null) {
+      return '';
+    }
+
+    final csvData = <List<dynamic>>[
+      [
+        'Status',
+        'String Key',
+        'Old Value (Source)',
+        'New Value (Target)',
+        'Similarity'
+      ]
+    ];
+    for (final entry in _latestComparisonResult!.diff.entries) {
+      final key = entry.key;
+      final status = entry.value.status;
+      final similarity = entry.value.similarity;
+      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
+      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
+
+      final statusText = status == StringComparisonStatus.added
+          ? 'EXTRA'
+          : status == StringComparisonStatus.removed
+              ? 'MISSING'
+              : 'CHANGED';
+      final simText = similarity != null
+          ? '${(similarity * 100).toStringAsFixed(1)}%'
+          : '';
+
+      csvData.add([
+        statusText,
+        key,
+        status == StringComparisonStatus.added ? '' : file1Value,
+        status == StringComparisonStatus.removed ? '' : file2Value,
+        simText
+      ]);
+    }
+
+    var csvString = const ListToCsvConverter().convert(csvData);
+
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    if (settings.includeUtf8Bom) {
+      csvString = '\uFEFF$csvString';
+    }
+
+    return csvString;
+  }
+
+  Future<DragItem?> _buildExportDragItem(
+    DragItemRequest request,
+  ) async {
+    if (_latestComparisonResult == null) {
+      return null;
+    }
+
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    final format = settings.defaultExportFormat;
+    final fileName = _exportFileName(format);
+
+    final item = DragItem(
+      localData: {
+        'type': 'comparison_export',
+        'format': format,
+      },
+      suggestedName: fileName,
+    );
+
+    if (!item.virtualFileSupported &&
+        format != 'JSON' &&
+        format != 'CSV') {
+      return null;
+    }
+
+    final bytes = await _buildExportBytes(format);
+
+    if (item.virtualFileSupported) {
+      item.addVirtualFile(
+        format: _exportFileFormat(format),
+        provider: (sinkProvider, progress) {
+          final sink = sinkProvider(fileSize: bytes.length);
+          sink.add(bytes);
+          sink.close();
+        },
+      );
+    } else {
+      item.add(Formats.plainText(utf8.decode(bytes)));
+    }
+
+    return item;
+  }
+
   Future<void> _exportResult() async {
     if (_latestComparisonResult == null) return;
 
@@ -1251,42 +1442,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   Future<void> _exportToExcel() async {
-    var excel = Excel.createExcel();
-    Sheet sheetObject = excel['Sheet1'];
-
-    // Header
-    sheetObject.appendRow([
-      TextCellValue('Status'),
-      TextCellValue('String Key'),
-      TextCellValue('Old Value (Source)'),
-      TextCellValue('New Value (Target)'),
-      TextCellValue('Similarity')
-    ]);
-
-    for (var entry in _latestComparisonResult!.diff.entries) {
-      final key = entry.key;
-      final status = entry.value.status;
-      final similarity = entry.value.similarity;
-      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
-      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-
-      String statusText = status == StringComparisonStatus.added
-          ? 'EXTRA'
-          : status == StringComparisonStatus.removed
-              ? 'MISSING'
-              : 'CHANGED';
-      String simText =
-          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-
-      sheetObject.appendRow([
-        TextCellValue(statusText),
-        TextCellValue(key),
-        TextCellValue(status == StringComparisonStatus.added ? '' : file1Value),
-        TextCellValue(
-            status == StringComparisonStatus.removed ? '' : file2Value),
-        TextCellValue(simText)
-      ]);
-    }
+    final fileBytes = _buildExcelBytes();
 
     // Save
     String? outputPath = await FilePicker.platform.saveFile(
@@ -1308,8 +1464,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           targetPath: outputPath,
           settings: settings,
         );
-        var fileBytes = excel.save();
-        if (fileBytes != null) {
+        if (fileBytes.isNotEmpty) {
           File(outputPath)
             ..createSync(recursive: true)
             ..writeAsBytesSync(fileBytes);
@@ -1321,6 +1476,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
             ToastService.showSuccess(context, 'Excel saved to: $outputPath');
           }
+        } else if (mounted) {
+          ToastService.showError(context, 'Failed to save Excel file.');
         }
         
         // Clear taskbar progress on success
@@ -1346,29 +1503,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   Future<void> _exportToJson() async {
-    List<Map<String, dynamic>> jsonData = [];
-    for (var entry in _latestComparisonResult!.diff.entries) {
-      final key = entry.key;
-      final status = entry.value.status;
-      final similarity = entry.value.similarity;
-      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
-      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-
-      jsonData.add({
-        'status': status == StringComparisonStatus.added
-            ? 'extra'
-            : status == StringComparisonStatus.removed
-                ? 'missing'
-                : status.name,
-        'key': key,
-        'old_value': status == StringComparisonStatus.added ? null : file1Value,
-        'new_value':
-            status == StringComparisonStatus.removed ? null : file2Value,
-        'similarity': similarity
-      });
-    }
-
-    String jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
+    final jsonString = _buildJsonString();
 
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save JSON Report',
@@ -1419,45 +1554,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   Future<void> _exportToCsv() async {
-    List<List<dynamic>> csvData = [
-      [
-        'Status',
-        'String Key',
-        'Old Value (Source)',
-        'New Value (Target)',
-        'Similarity'
-      ]
-    ];
-    for (var entry in _latestComparisonResult!.diff.entries) {
-      final key = entry.key;
-      final status = entry.value.status;
-      final similarity = entry.value.similarity;
-      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
-      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-
-      String statusText = status == StringComparisonStatus.added
-          ? 'EXTRA'
-          : status == StringComparisonStatus.removed
-              ? 'MISSING'
-              : 'CHANGED';
-      String simText =
-          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-
-      csvData.add([
-        statusText,
-        key,
-        status == StringComparisonStatus.added ? '' : file1Value,
-        status == StringComparisonStatus.removed ? '' : file2Value,
-        simText
-      ]);
-    }
-
-    String csvString = const ListToCsvConverter().convert(csvData);
-
+    final csvString = _buildCsvString();
     final settings = context.read<SettingsBloc>().state.appSettings;
-    if (settings.includeUtf8Bom) {
-      csvString = '\uFEFF$csvString';
-    }
 
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Save CSV Report',
@@ -1566,8 +1664,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     return Expanded(
       child: DropRegion(
         formats: Formats.standardFormats,
-        onDropOver: (event) {
-          if (event.session.items.isNotEmpty) {
+        onDropOver: (event) async {
+          // Smart Format Rejection: only "light up" for supported file types
+          final hasValidFile = await _hasValidDropItem(event.session.items);
+          if (hasValidFile) {
             setState(() {
               if (fileNumber == 1) {
                 _isDraggingOverFile1 = true;
@@ -1579,6 +1679,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             });
             return DropOperation.copy;
           }
+          setState(() {
+            if (fileNumber == 1) {
+              _isDraggingOverFile1 = false;
+            } else if (fileNumber == 2) {
+              _isDraggingOverFile2 = false;
+            } else {
+              _isDraggingOverBilingualFile = false;
+            }
+          });
           return DropOperation.none;
         },
         onDropLeave: (event) {
@@ -1593,10 +1702,26 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           });
         },
         onPerformDrop: (event) async {
+          setState(() {
+            if (fileNumber == 1) {
+              _isDraggingOverFile1 = false;
+            } else if (fileNumber == 2) {
+              _isDraggingOverFile2 = false;
+            } else {
+              _isDraggingOverBilingualFile = false;
+            }
+          });
           for (final item in event.session.items) {
+            final localData = item.localData;
+            if (localData is String &&
+                DragDropUtils.isValidFilePath(localData)) {
+              _onFileDropped(localData, fileNumber);
+              return;
+            }
+
             final reader = item.dataReader;
             if (reader == null) continue;
-            
+
             if (reader.canProvide(Formats.fileUri)) {
               reader.getValue<Uri>(Formats.fileUri, (uri) {
                 if (uri != null) {
@@ -1608,111 +1733,114 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             }
           }
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(10.0),
-            border: Border.all(
-              color: borderColor,
-              width: isDraggingOver ? 2.0 : 1.0,
-            ),
-          ),
-          child: Material(
-            type: MaterialType.transparency,
-             borderRadius: BorderRadius.circular(10.0),
-             child: InkWell(
-              onTap: onPressed,
+        child: _wrapWithFileDrag(
+          file,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: backgroundColor,
               borderRadius: BorderRadius.circular(10.0),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding, vertical: verticalPadding),
-                child: Row(
-              children: [
-                // Icon
-                Icon(
-                  hasFile
-                      ? Icons.description_rounded
-                      : Icons.cloud_upload_outlined,
-                  color: isDraggingOver
-                      ? theme.colorScheme.primary
-                      : (hasFile
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.primary.withValues(alpha: 0.5)),
-                  size: hasFile ? 20 : 24,
-                  semanticLabel: hasFile ? 'File selected' : 'Upload file',
-                ),
-                const SizedBox(width: 12),
-                // Text content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Title label (small, muted)
-                      Text(
-                        title,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      // Filename or placeholder
-                      Tooltip(
-                        message: hasFile ? tooltipPath : (shortcutHint ?? ''),
-                        waitDuration: const Duration(milliseconds: 400),
-                        child: Text(
-                          displayText,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight:
-                                hasFile ? FontWeight.w600 : FontWeight.w400,
-                            color: hasFile
-                                ? theme.colorScheme.onSurface
-                                : theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.6),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // File extension badge (when file is loaded)
-                if (hasFile && fileExtension != null) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      fileExtension,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ],
-                // Change button (when file is loaded)
-                if (hasFile) ...[
-                  const SizedBox(width: 8),
+              border: Border.all(
+                color: borderColor,
+                width: isDraggingOver ? 2.0 : 1.0,
+              ),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+               borderRadius: BorderRadius.circular(10.0),
+               child: InkWell(
+                onTap: onPressed,
+                borderRadius: BorderRadius.circular(10.0),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding, vertical: verticalPadding),
+                  child: Row(
+                children: [
+                  // Icon
                   Icon(
-                    Icons.swap_horiz_rounded,
-                    size: 18,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    semanticLabel: 'Change file',
+                    hasFile
+                        ? Icons.description_rounded
+                        : Icons.cloud_upload_outlined,
+                    color: isDraggingOver
+                        ? theme.colorScheme.primary
+                        : (hasFile
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.primary.withValues(alpha: 0.5)),
+                    size: hasFile ? 20 : 24,
+                    semanticLabel: hasFile ? 'File selected' : 'Upload file',
                   ),
+                  const SizedBox(width: 12),
+                  // Text content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Title label (small, muted)
+                        Text(
+                          title,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        // Filename or placeholder
+                        Tooltip(
+                          message: hasFile ? tooltipPath : (shortcutHint ?? ''),
+                          waitDuration: const Duration(milliseconds: 400),
+                          child: Text(
+                            displayText,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight:
+                                  hasFile ? FontWeight.w600 : FontWeight.w400,
+                              color: hasFile
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // File extension badge (when file is loaded)
+                  if (hasFile && fileExtension != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        fileExtension,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.primary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Change button (when file is loaded)
+                  if (hasFile) ...[
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.swap_horiz_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      semanticLabel: 'Change file',
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -1720,6 +1848,48 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     ),
   ),
 );
+  }
+
+  Widget _wrapWithFileDrag(File? file, Widget child) {
+    if (file == null) {
+      return child;
+    }
+
+    final filePath = file.path;
+    final fileName = filePath.split(Platform.pathSeparator).last;
+
+    return DragItemWidget(
+      allowedOperations: () => [DropOperation.copy],
+      dragItemProvider: (request) async {
+        final item = DragItem(
+          localData: filePath,
+          suggestedName: fileName,
+        );
+        item.add(Formats.fileUri(Uri.file(filePath)));
+        return item;
+      },
+      child: DraggableWidget(
+        child: child,
+      ),
+    );
+  }
+
+  Future<bool> _hasValidDropItem(List<DropItem> items) async {
+    for (final item in items) {
+      final localData = item.localData;
+      if (localData is String && DragDropUtils.isValidFilePath(localData)) {
+        return true;
+      }
+
+      final reader = item.dataReader;
+      if (reader == null) continue;
+      final suggestedName = await reader.getSuggestedName();
+      if (DragDropUtils.isValidFileName(suggestedName)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   Widget _buildAnalyticsAndActionsBar() {
@@ -1958,7 +2128,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildCompactActionButton(
+              _buildExportActionButton(
                 icon: Icons.download_outlined,
                 label: 'Export',
                 onPressed: _exportResult,
@@ -2155,6 +2325,34 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       return Tooltip(message: tooltip, child: button);
     }
     return button;
+  }
+
+  Widget _buildExportActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required Color color,
+    String? tooltip,
+  }) {
+    final button = _buildCompactActionButton(
+      icon: icon,
+      label: label,
+      onPressed: onPressed,
+      color: color,
+      tooltip: tooltip,
+    );
+
+    if (_latestComparisonResult == null) {
+      return button;
+    }
+
+    return DragItemWidget(
+      allowedOperations: () => [DropOperation.copy],
+      dragItemProvider: _buildExportDragItem,
+      child: DraggableWidget(
+        child: button,
+      ),
+    );
   }
 
   Widget _buildFileWatcherStatus(

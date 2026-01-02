@@ -16,6 +16,25 @@ enum ProjectStatus {
   error,
 }
 
+/// Feedback for a project import action.
+enum ProjectImportStatus { success, warning, error }
+
+/// One-time feedback message for project imports.
+class ProjectImportFeedback extends Equatable {
+  final int id;
+  final ProjectImportStatus status;
+  final String message;
+
+  const ProjectImportFeedback({
+    required this.id,
+    required this.status,
+    required this.message,
+  });
+
+  @override
+  List<Object?> get props => [id, status, message];
+}
+
 /// State for project management.
 class ProjectState extends Equatable {
   /// Current status of the project state.
@@ -27,10 +46,14 @@ class ProjectState extends Equatable {
   /// Error message, if status is error.
   final String? errorMessage;
 
+  /// Latest import feedback message, if any.
+  final ProjectImportFeedback? importFeedback;
+
   const ProjectState({
     this.status = ProjectStatus.initial,
     this.currentProject,
     this.errorMessage,
+    this.importFeedback,
   });
 
   /// Initial state with no project.
@@ -61,16 +84,21 @@ class ProjectState extends Equatable {
     ProjectStatus? status,
     Project? currentProject,
     String? errorMessage,
+    ProjectImportFeedback? importFeedback,
     bool clearProject = false,
     bool clearError = false,
+    bool clearImportFeedback = false,
   }) {
     return ProjectState(
       status: status ?? this.status,
       currentProject: clearProject ? null : (currentProject ?? this.currentProject),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      importFeedback:
+          clearImportFeedback ? null : (importFeedback ?? this.importFeedback),
     );
   }
 
   @override
-  List<Object?> get props => [status, currentProject, errorMessage];
+  List<Object?> get props =>
+      [status, currentProject, errorMessage, importFeedback];
 }

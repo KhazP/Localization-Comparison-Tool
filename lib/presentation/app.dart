@@ -20,6 +20,7 @@ import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/core/services/file_discovery_service.dart';
 import 'package:localizer_app_main/core/services/file_watcher_service.dart';
+import 'package:localizer_app_main/core/services/project_import_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
@@ -61,6 +62,7 @@ class MyApp extends StatelessWidget {
     final gitService = sl<GitService>();
     final fileDiscoveryService = sl<FileDiscoveryService>();
     final fileWatcherService = sl<FileWatcherService>();
+    final projectImportService = sl<ProjectImportService>();
     final settingsRepository = sl<SettingsRepository>();
     final historyRepository = sl<LocalHistoryRepository>();
     final projectRepository = sl<ProjectRepository>();
@@ -129,6 +131,7 @@ class MyApp extends StatelessWidget {
           BlocProvider<ProjectBloc>(
             create: (context) => ProjectBloc(
               projectRepository: projectRepository,
+              projectImportService: projectImportService,
             )..add(const LoadLastProject()),
           ),
         ],

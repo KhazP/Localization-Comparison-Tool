@@ -3,14 +3,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
+import 'package:localizer_app_main/core/services/project_import_service.dart';
 import 'package:localizer_app_main/data/models/project.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockProjectRepository extends Mock implements ProjectRepository {}
+class MockProjectImportService extends Mock implements ProjectImportService {}
 
 void main() {
   late MockProjectRepository mockRepository;
+  late MockProjectImportService mockImportService;
   late ProjectBloc projectBloc;
 
   final testProject = Project(
@@ -28,7 +31,11 @@ void main() {
 
   setUp(() {
     mockRepository = MockProjectRepository();
-    projectBloc = ProjectBloc(projectRepository: mockRepository);
+    mockImportService = MockProjectImportService();
+    projectBloc = ProjectBloc(
+      projectRepository: mockRepository,
+      projectImportService: mockImportService,
+    );
   });
 
   tearDown(() {

@@ -79,3 +79,17 @@ class UpdateProjectTMs extends ProjectEvent {
   @override
   List<Object?> get props => [translationMemories];
 }
+
+/// Event to import files into a project folder.
+class ImportFilesToProject extends ProjectEvent {
+  final String projectPath;
+  final List<String> filePaths;
+
+  const ImportFilesToProject({
+    required this.projectPath,
+    required this.filePaths,
+  });
+
+  @override
+  List<Object?> get props => [projectPath, filePaths];
+}

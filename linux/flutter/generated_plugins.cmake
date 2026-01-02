@@ -4,11 +4,12 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_linux
-  desktop_drop
   flutter_acrylic
   flutter_secure_storage_linux
+  irondash_engine_context
   libgit2dart
   screen_retriever_linux
+  super_native_extensions
   tray_manager
   url_launcher_linux
   window_manager

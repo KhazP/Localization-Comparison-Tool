@@ -66,6 +66,7 @@ class _SettingsViewState extends State<SettingsView>
   // Save confirmation debounce timer
   Timer? _saveConfirmationTimer;
   AppSettings? _previousSettings;
+  bool _hasInitialized = false; // Suppress save toast during startup
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -92,6 +93,13 @@ class _SettingsViewState extends State<SettingsView>
       curve: Curves.easeOut,
     );
     _animationController.forward();
+    
+    // Delay initialization flag to suppress save toast during startup
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        _hasInitialized = true;
+      }
+    });
   }
 
 
@@ -179,23 +187,32 @@ class _SettingsViewState extends State<SettingsView>
         body: BlocConsumer<SettingsBloc, SettingsState>(
           listener: (context, state) {
             // Debounced save confirmation - only show after user stops changing settings
+            // Skip during startup to avoid false positives from initial load
+            if (!_hasInitialized) {
+              _previousSettings = state.appSettings;
+              return;
+            }
             // Exclude window position fields from comparison to avoid toast on resize/move
             if (state.status == SettingsStatus.loaded && _previousSettings != null) {
               final current = state.appSettings;
               final previous = _previousSettings!;
-              // Check if any non-volatile setting changed (exclude window position)
-              final hasUserSettingChanged = 
-                  current.copyWith(
-                    lastWindowX: null,
-                    lastWindowY: null,
-                    lastWindowWidth: null,
-                    lastWindowHeight: null,
-                  ) != previous.copyWith(
-                    lastWindowX: null,
-                    lastWindowY: null,
-                    lastWindowWidth: null,
-                    lastWindowHeight: null,
-                  );
+              
+              // Helper to get comparable map without window bounds
+              Map<String, dynamic> getComparableMap(AppSettings settings) {
+                final map = settings.toJson();
+                map.remove('lastWindowX');
+                map.remove('lastWindowY');
+                map.remove('lastWindowWidth');
+                map.remove('lastWindowHeight');
+                return map;
+              }
+
+              final currentMap = getComparableMap(current);
+              final previousMap = getComparableMap(previous);
+
+              // Use jsonEncode to compare maps deeply (handles lists and nested objects)
+              final hasUserSettingChanged = jsonEncode(currentMap) != jsonEncode(previousMap);
+
               if (hasUserSettingChanged) {
                 _saveConfirmationTimer?.cancel();
                 _saveConfirmationTimer = Timer(const Duration(milliseconds: 800), () {

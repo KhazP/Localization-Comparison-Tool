@@ -263,7 +263,7 @@ packages:
     source: hosted
     version: "1.14.1"
   cross_file:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: cross_file
       sha256: "7caf6a750a0c04effbb52a676dce9a4a592e10ad35c34d6d2d0e4811160d5670"
@@ -294,14 +294,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.8"
-  desktop_drop:
-    dependency: "direct main"
-    description:
-      name: desktop_drop
-      sha256: d55a010fe46c8e8fcff4ea4b451a9ff84a162217bdb3b2a0aa1479776205e15d
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.4.4"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -653,6 +645,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  irondash_engine_context:
+    dependency: transitive
+    description:
+      name: irondash_engine_context
+      sha256: "2bb0bc13dfda9f5aaef8dde06ecc5feb1379f5bb387d59716d799554f3f305d7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.5"
+  irondash_message_channel:
+    dependency: transitive
+    description:
+      name: irondash_message_channel
+      sha256: b4101669776509c76133b8917ab8cfc704d3ad92a8c450b92934dd8884a2f060
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   js:
     dependency: transitive
     description:
@@ -917,6 +925,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
+  pixel_snap:
+    dependency: transitive
+    description:
+      name: pixel_snap
+      sha256: "677410ea37b07cd37ecb6d5e6c0d8d7615a7cf3bd92ba406fd1ac57e937d1fb0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.5"
   platform:
     dependency: transitive
     description:
@@ -1234,6 +1250,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  super_clipboard:
+    dependency: transitive
+    description:
+      name: super_clipboard
+      sha256: "4a6ae6dfaa282ec1f2bff750976f535517ed8ca842d5deae13985eb11c00ac1f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.24"
+  super_drag_and_drop:
+    dependency: "direct main"
+    description:
+      name: super_drag_and_drop
+      sha256: e1ea1528916a728b3d0c3007c0af1303947026011f78564279af68d8856a0205
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.24"
+  super_native_extensions:
+    dependency: transitive
+    description:
+      name: super_native_extensions
+      sha256: a433bba8186cd6b707560c42535bf284804665231c00bca86faf1aa4968b7637
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.24"
   synchronized:
     dependency: transitive
     description:

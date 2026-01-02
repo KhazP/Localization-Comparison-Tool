@@ -5,12 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:desktop_drop/desktop_drop.dart';
+import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
-import 'package:cross_file/cross_file.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/progress_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/file_watcher_bloc/file_watcher_bloc.dart';
@@ -355,41 +354,39 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     }
   }
 
-  void _onFileDropped(List<XFile> files, int fileNumber) {
-    if (files.isNotEmpty) {
-      final file = File(files.first.path);
+  void _onFileDropped(String filePath, int fileNumber) {
+    final file = File(filePath);
 
-      // Validate file extension
-      if (_isValidFileType(file.path)) {
-        setState(() {
-          if (fileNumber == 1) {
-            _file1 = file;
-          } else if (fileNumber == 2) {
-            _file2 = file;
-          } else {
-            _bilingualFile = file;
-          }
-        });
+    // Validate file extension
+    if (_isValidFileType(file.path)) {
+      setState(() {
+        if (fileNumber == 1) {
+          _file1 = file;
+        } else if (fileNumber == 2) {
+          _file2 = file;
+        } else {
+          _bilingualFile = file;
+        }
+      });
 
-        // Update file watcher when files change
-        _updateFileWatcher();
+      // Update file watcher when files change
+      _updateFileWatcher();
 
-        // Show success message
-        final fileName = file.path.split(Platform.pathSeparator).last;
-        final selectionLabel = fileNumber == 1
-            ? 'Source file'
-            : fileNumber == 2
-                ? 'Target file'
-                : 'Bilingual file';
-        ToastService.showSuccess(context, '$selectionLabel selected: $fileName');
-      } else {
-        // Show error for invalid file type
-        ToastService.showError(
-          context,
-          'Invalid file type.',
-          recoverySuggestion: 'Please select a supported localization file.',
-        );
-      }
+      // Show success message
+      final fileName = file.path.split(Platform.pathSeparator).last;
+      final selectionLabel = fileNumber == 1
+          ? 'Source file'
+          : fileNumber == 2
+              ? 'Target file'
+              : 'Bilingual file';
+      ToastService.showSuccess(context, '$selectionLabel selected: $fileName');
+    } else {
+      // Show error for invalid file type
+      ToastService.showError(
+        context,
+        'Invalid file type.',
+        recoverySuggestion: 'Please select a supported localization file.',
+      );
     }
   }
 
@@ -1567,20 +1564,24 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     final double horizontalPadding = 14.0;
 
     return Expanded(
-      child: DropTarget(
-        onDragDone: (details) => _onFileDropped(details.files, fileNumber),
-        onDragEntered: (details) {
-          setState(() {
-            if (fileNumber == 1) {
-              _isDraggingOverFile1 = true;
-            } else if (fileNumber == 2) {
-              _isDraggingOverFile2 = true;
-            } else {
-              _isDraggingOverBilingualFile = true;
-            }
-          });
+      child: DropRegion(
+        formats: Formats.standardFormats,
+        onDropOver: (event) {
+          if (event.session.items.isNotEmpty) {
+            setState(() {
+              if (fileNumber == 1) {
+                _isDraggingOverFile1 = true;
+              } else if (fileNumber == 2) {
+                _isDraggingOverFile2 = true;
+              } else {
+                _isDraggingOverBilingualFile = true;
+              }
+            });
+            return DropOperation.copy;
+          }
+          return DropOperation.none;
         },
-        onDragExited: (details) {
+        onDropLeave: (event) {
           setState(() {
             if (fileNumber == 1) {
               _isDraggingOverFile1 = false;
@@ -1590,6 +1591,22 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               _isDraggingOverBilingualFile = false;
             }
           });
+        },
+        onPerformDrop: (event) async {
+          for (final item in event.session.items) {
+            final reader = item.dataReader;
+            if (reader == null) continue;
+            
+            if (reader.canProvide(Formats.fileUri)) {
+              reader.getValue<Uri>(Formats.fileUri, (uri) {
+                if (uri != null) {
+                  final path = uri.toFilePath();
+                  _onFileDropped(path, fileNumber);
+                }
+              });
+              break;
+            }
+          }
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),

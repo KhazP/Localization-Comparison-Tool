@@ -4,13 +4,14 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
-  desktop_drop
   flutter_acrylic
   flutter_secure_storage_windows
+  irondash_engine_context
   libgit2dart
   protocol_handler
   screen_retriever_windows
   share_plus
+  super_native_extensions
   tray_manager
   url_launcher_windows
   window_manager

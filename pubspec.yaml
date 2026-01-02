@@ -33,8 +33,7 @@ dependencies:
   flutter_colorpicker: ^1.1.0
   fl_chart: ^0.68.0
   watcher: ^1.1.0 # For file system watching
-  desktop_drop: ^0.4.4 # For drag & drop file support
-  cross_file: ^0.3.3+8 # For XFile type used in drag & drop
+  super_drag_and_drop: ^0.8.0 # For native drag & drop support
   url_launcher: ^6.2.5 # For opening URLs and email links
   package_info_plus: ^9.0.0 # For dynamic app version information
   device_info_plus: ^10.1.0 # For platform detection

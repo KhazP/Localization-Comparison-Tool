@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:desktop_drop/desktop_drop.dart';
+import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
@@ -370,14 +370,33 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     final surfaceColor = isAmoled ? AppThemeV2.amoledSurface : (isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface);
     final borderSubtleColor = isAmoled ? AppThemeV2.amoledBorderSubtle : (isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle);
 
-    return DropTarget(
-      onDragEntered: (_) => onDragEnter(),
-      onDragExited: (_) => onDragExit(),
-      onDragDone: (details) {
-        if (details.files.isNotEmpty) {
-          final path = details.files.first.path;
-          if (FileSystemEntity.isDirectorySync(path)) {
-            onDrop(path);
+    return DropRegion(
+      formats: Formats.standardFormats,
+      onDropOver: (event) {
+        // Check if we have a file/folder being dragged
+        if (event.session.items.isNotEmpty) {
+          onDragEnter();
+          return DropOperation.copy;
+        }
+        return DropOperation.none;
+      },
+      onDropLeave: (event) => onDragExit(),
+      onPerformDrop: (event) async {
+        for (final item in event.session.items) {
+          final reader = item.dataReader;
+          if (reader == null) continue;
+          
+          // Try to get file URI
+          if (reader.canProvide(Formats.fileUri)) {
+            reader.getValue<Uri>(Formats.fileUri, (uri) {
+              if (uri != null) {
+                final path = uri.toFilePath();
+                if (FileSystemEntity.isDirectorySync(path)) {
+                  onDrop(path);
+                }
+              }
+            });
+            break; // Only process first item
           }
         }
       },

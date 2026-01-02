@@ -224,12 +224,6 @@
       "languageVersion": "3.0"
     },
     {
-      "name": "desktop_drop",
-      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/desktop_drop-0.4.4",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
-    },
-    {
       "name": "device_info_plus",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/device_info_plus-10.1.2",
       "packageUri": "lib/",
@@ -500,6 +494,18 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "irondash_engine_context",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/irondash_engine_context-0.5.5",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "irondash_message_channel",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/irondash_message_channel-0.7.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "js",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/js-0.6.7",
       "packageUri": "lib/",
@@ -696,6 +702,12 @@
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/petitparser-6.1.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "pixel_snap",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pixel_snap-0.1.5",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "platform",
@@ -936,6 +948,24 @@
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/string_similarity-2.1.1",
       "packageUri": "lib/",
       "languageVersion": "2.12"
+    },
+    {
+      "name": "super_clipboard",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/super_clipboard-0.8.24",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "super_drag_and_drop",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/super_drag_and_drop-0.8.24",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "super_native_extensions",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/super_native_extensions-0.8.24",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
     },
     {
       "name": "synchronized",

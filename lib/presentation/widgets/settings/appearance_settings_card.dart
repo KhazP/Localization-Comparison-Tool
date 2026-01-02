@@ -5,6 +5,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AppearanceSettingsCard extends StatelessWidget {
   final AppSettings settings;
@@ -175,7 +176,7 @@ class AppearanceSettingsCard extends StatelessWidget {
           title: Row(
             children: [
               Icon(
-                Icons.palette_rounded,
+                LucideIcons.palette,
                 color: theme.colorScheme.primary,
                 size: 24,
               ),
@@ -222,7 +223,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Icon(
-                          Icons.arrow_forward_rounded,
+                          LucideIcons.arrowRight,
                           color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                         ),
                       ),
@@ -488,7 +489,7 @@ class LifePreviewPanel extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.visibility_rounded,
+                  LucideIcons.eye,
                   size: 16,
                   color: theme.textMutedColor,
                 ),

@@ -7,6 +7,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class VersionControlSettingsCard extends StatelessWidget {
   final AppSettings settings;
@@ -199,7 +200,7 @@ class VersionControlSettingsCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.folder_open),
+                        icon: const Icon(LucideIcons.folderOpen),
                         tooltip: 'Browse...',
                         onPressed: () async {
                           final result = await FilePicker.platform.pickFiles(
@@ -218,7 +219,7 @@ class VersionControlSettingsCard extends StatelessWidget {
                   Row(
                     children: [
                       OutlinedButton.icon(
-                        icon: const Icon(Icons.content_copy, size: 18),
+                        icon: const Icon(LucideIcons.copy, size: 18),
                         label: const Text('Copy Public Key'),
                         onPressed: settings.sshKeyPath.isEmpty ? null : () async {
                           final pubKeyPath = '${settings.sshKeyPath}.pub';

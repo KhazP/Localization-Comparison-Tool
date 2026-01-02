@@ -566,6 +566,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "lucide_icons",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/lucide_icons-0.257.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "macos_dock_progress",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/macos_dock_progress-0.1.0",
       "packageUri": "lib/",

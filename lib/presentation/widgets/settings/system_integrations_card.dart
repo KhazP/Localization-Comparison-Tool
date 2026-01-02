@@ -8,6 +8,7 @@ import 'package:localizer_app_main/core/services/windows_integration_service.dar
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class SystemIntegrationsCard extends StatefulWidget {
   final AppSettings settings;
@@ -47,7 +48,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.info_outline,
+              Icon(LucideIcons.info,
                   color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 12),
               Expanded(
@@ -132,7 +133,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   }
                                 }
                               : null,
-                          icon: const Icon(Icons.add_rounded, size: 18),
+                          icon: const Icon(LucideIcons.plus, size: 18),
                           label: const Text('Add to Context Menu'),
                         ),
                       ),
@@ -155,7 +156,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   }
                                 }
                               : null,
-                          icon: const Icon(Icons.remove_rounded, size: 18),
+                          icon: const Icon(LucideIcons.minus, size: 18),
                           label: const Text('Remove'),
                         ),
                       ),
@@ -271,7 +272,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                               }
                             }
                           : null,
-                      icon: const Icon(Icons.check_circle_outline_rounded,
+                      icon: const Icon(LucideIcons.checkCircle,
                           size: 18),
                       label: const Text('Register All'),
                     ),
@@ -297,7 +298,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                               }
                             }
                           : null,
-                      icon: const Icon(Icons.remove_circle_outline_rounded,
+                      icon: const Icon(LucideIcons.minusCircle,
                           size: 18),
                       label: const Text('Unregister All'),
                     ),
@@ -346,7 +347,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   }
                                 }
                               : null,
-                          icon: const Icon(Icons.public_rounded, size: 18),
+                          icon: const Icon(LucideIcons.globe, size: 18),
                           label: const Text('Register Protocol'),
                         ),
                       ),
@@ -369,7 +370,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   }
                                 }
                               : null,
-                          icon: const Icon(Icons.public_off_rounded, size: 18),
+                          icon: const Icon(LucideIcons.unlink, size: 18),
                           label: const Text('Unregister'),
                         ),
                       ),

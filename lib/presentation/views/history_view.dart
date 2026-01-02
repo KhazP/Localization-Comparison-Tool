@@ -16,6 +16,7 @@ import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get_it/get_it.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class HistoryView extends StatefulWidget {
   final Function(int) onNavigateToTab;
@@ -205,7 +206,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
               Row(
                 children: [
                   Icon(
-                    Icons.history_rounded,
+                    LucideIcons.clock,
                     size: 28,
                     color: colorScheme.primary,
                   ),
@@ -222,9 +223,10 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                   Tooltip(
                     message: 'Clear all history',
                     child: IconButton(
+                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                       onPressed: () => _showClearConfirmation(context),
                       icon: Icon(
-                        Icons.delete_sweep_rounded,
+                        LucideIcons.trash2,
                         color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                       ),
                     ),
@@ -250,13 +252,13 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         decoration: InputDecoration(
                           hintText: 'Search by file name...',
                           prefixIcon: Icon(
-                            Icons.search_rounded,
+                            LucideIcons.search,
                             color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                           ),
                           suffixIcon: _filterController.text.isNotEmpty
                               ? IconButton(
                                   icon: Icon(
-                                    Icons.clear_rounded,
+                                    LucideIcons.x,
                                     size: 20,
                                     color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                                   ),
@@ -289,7 +291,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.sort_rounded,
+                              LucideIcons.arrowUpDown,
                               size: 20,
                               color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
                             ),
@@ -299,7 +301,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                               style: theme.textTheme.bodyMedium,
                             ),
                             Icon(
-                              _sortAscending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                              _sortAscending ? LucideIcons.arrowUp : LucideIcons.arrowDown,
                               size: 16,
                               color: colorScheme.primary,
                             ),
@@ -307,9 +309,9 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                       ),
                       itemBuilder: (context) => [
-                        _buildSortMenuItem('timestamp', 'Date', Icons.schedule_rounded),
-                        _buildSortMenuItem('file1Path', 'Source File', Icons.source_rounded),
-                        _buildSortMenuItem('file2Path', 'Target File', Icons.compare_arrows_rounded),
+                        _buildSortMenuItem('timestamp', 'Date', LucideIcons.clock),
+                        _buildSortMenuItem('file1Path', 'Source File', LucideIcons.fileInput),
+                        _buildSortMenuItem('file2Path', 'Target File', LucideIcons.arrowRightLeft),
                       ],
                     ),
                   ),
@@ -329,8 +331,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         },
                         icon: Icon(
                           _showOnlyCurrentProject
-                              ? Icons.filter_alt_rounded
-                              : Icons.filter_alt_off_outlined,
+                              ? LucideIcons.filter
+                              : LucideIcons.filterX,
                           color: _showOnlyCurrentProject
                               ? colorScheme.primary
                               : (isDark
@@ -347,7 +349,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                     child: IconButton(
                       onPressed: () => setState(() => _groupByFolder = !_groupByFolder),
                       icon: Icon(
-                        _groupByFolder ? Icons.folder : Icons.folder_outlined,
+                        _groupByFolder ? LucideIcons.folder : LucideIcons.folderOpen,
                         color: _groupByFolder 
                             ? colorScheme.primary 
                             : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
@@ -457,7 +459,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
           if (isSelected) ...[
             const Spacer(),
             Icon(
-              Icons.check_rounded,
+              LucideIcons.check,
               size: 18,
               color: theme.colorScheme.primary,
             ),
@@ -539,7 +541,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                     Row(
                       children: [
                         Icon(
-                          isExpanded ? Icons.folder_open_rounded : Icons.folder_rounded,
+                          isExpanded ? LucideIcons.folderOpen : LucideIcons.folder,
                           size: 18,
                           color: theme.colorScheme.primary,
                         ),
@@ -583,7 +585,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                         const SizedBox(width: 8),
                         Icon(
-                          isExpanded ? Icons.expand_less : Icons.expand_more,
+                          isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                           size: 20,
                           color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                         ),
@@ -704,13 +706,13 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
         IconData projectIcon;
         if (projectId == null) {
           projectName = 'Unassigned';
-          projectIcon = Icons.folder_off_outlined;
+          projectIcon = LucideIcons.folderMinus;
         } else if (projectId == currentProjectId) {
           projectName = _projectNames[projectId] ?? projectState.currentProject?.name ?? 'Current Project';
-          projectIcon = Icons.star_rounded;
+          projectIcon = LucideIcons.star;
         } else {
           projectName = _projectNames[projectId] ?? 'Project ${projectId.substring(0, 8)}...';
-          projectIcon = Icons.folder_special_rounded;
+          projectIcon = LucideIcons.folder;
         }
         
         // Aggregate stats for this project
@@ -753,7 +755,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                     Row(
                       children: [
                         Icon(
-                          isExpanded ? Icons.folder_open_rounded : projectIcon,
+                          isExpanded ? LucideIcons.folderOpen : projectIcon,
                           size: 18,
                           color: projectId == currentProjectId
                               ? theme.colorScheme.primary
@@ -792,7 +794,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                         const SizedBox(width: 8),
                         Icon(
-                          isExpanded ? Icons.expand_less : Icons.expand_more,
+                          isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                           size: 20,
                           color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                         ),
@@ -890,7 +892,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.history_rounded,
+            LucideIcons.history,
             size: 72,
             color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
           ),
@@ -922,7 +924,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.search_off_rounded,
+            LucideIcons.searchX,
             size: 64,
             color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
           ),
@@ -952,7 +954,7 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
       content: 'This will permanently delete all comparison history. This action cannot be undone.',
       confirmText: 'Clear All',
       isDestructive: true,
-      icon: Icons.delete_forever_rounded,
+      icon: LucideIcons.trash2,
     );
 
     if (confirmed == true && context.mounted) {
@@ -1103,7 +1105,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                                         Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: 8),
                                           child: Icon(
-                                            Icons.compare_arrows_rounded,
+                                            LucideIcons.arrowRightLeft,
                                             size: 16,
                                             color: isDark
                                                 ? AppThemeV2.darkTextMuted
@@ -1128,7 +1130,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   Row(
                                     children: [
                                       Icon(
-                                        Icons.schedule_rounded,
+                                        LucideIcons.clock,
                                         size: 12,
                                         color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                                       ),
@@ -1150,15 +1152,15 @@ class _HistoryCardState extends State<_HistoryCard> {
                                         label: isBilingualSession
                                             ? 'Bilingual'
                                             : 'Two files',
-                                        icon: isBilingualSession
-                                            ? Icons.translate_rounded
-                                            : Icons.compare_arrows_rounded,
+                                            icon: isBilingualSession
+                                            ? LucideIcons.languages
+                                            : LucideIcons.arrowRightLeft,
                                         color: theme.colorScheme.primary,
                                       ),
                                       if (fileTypeLabel != null)
                                         _InfoChip(
                                           label: fileTypeLabel,
-                                          icon: Icons.description_rounded,
+                                          icon: LucideIcons.fileText,
                                           color: theme.colorScheme.secondary,
                                         ),
                                     ],
@@ -1174,19 +1176,19 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   _StatPill(
                                     count: session.stringsAdded,
                                     color: themeState.diffAddedColor,
-                                    icon: Icons.add_rounded,
+                                    icon: LucideIcons.plus,
                                   ),
                                 if (session.stringsRemoved > 0)
                                   _StatPill(
                                     count: session.stringsRemoved,
                                     color: themeState.diffRemovedColor,
-                                    icon: Icons.remove_rounded,
+                                    icon: LucideIcons.minus,
                                   ),
                                 if (session.stringsModified > 0)
                                   _StatPill(
                                     count: session.stringsModified,
                                     color: themeState.diffModifiedColor,
-                                    icon: Icons.edit_rounded,
+                                    icon: LucideIcons.pencil,
                                   ),
                                 if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
                                   Text(
@@ -1201,8 +1203,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                             AnimatedRotation(
                               turns: widget.isExpanded ? 0.5 : 0,
                               duration: const Duration(milliseconds: 200),
-                              child: Icon(
-                                Icons.keyboard_arrow_down_rounded,
+                                child: Icon(
+                                  LucideIcons.chevronDown,
                                 color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                               ),
                             ),
@@ -1218,21 +1220,21 @@ class _HistoryCardState extends State<_HistoryCard> {
                             _FilePathRow(
                               label: 'Bilingual file',
                               path: session.file1Path,
-                              icon: Icons.translate_rounded,
+                              icon: LucideIcons.languages,
                               color: Theme.of(context).colorScheme.primary,
                             )
                           else ...[
                             _FilePathRow(
                               label: 'Source',
                               path: session.file1Path,
-                              icon: Icons.source_rounded,
+                              icon: LucideIcons.fileInput,
                               color: Theme.of(context).colorScheme.primary,
                             ),
                             const SizedBox(height: 8),
                             _FilePathRow(
                               label: 'Target',
                               path: session.file2Path,
-                              icon: Icons.compare_arrows_rounded,
+                              icon: LucideIcons.arrowRightLeft,
                               color: Theme.of(context).colorScheme.secondary,
                             ),
                           ],
@@ -1254,35 +1256,35 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   label: 'Added',
                                   count: session.stringsAdded,
                                   color: themeState.diffAddedColor,
-                                  icon: Icons.add_circle_outline_rounded,
+                                  icon: LucideIcons.plusCircle,
                                 ),
                               if (session.stringsRemoved > 0)
                                 _StatChip(
                                   label: 'Removed',
                                   count: session.stringsRemoved,
                                   color: themeState.diffRemovedColor,
-                                  icon: Icons.remove_circle_outline_rounded,
+                                  icon: LucideIcons.minusCircle,
                                 ),
                               if (session.stringsModified > 0)
                                 _StatChip(
                                   label: 'Modified',
                                   count: session.stringsModified,
                                   color: themeState.diffModifiedColor,
-                                  icon: Icons.sync_alt_rounded,
+                                  icon: LucideIcons.refreshCw,
                                 ),
                               if (session.stringsIdentical > 0)
                                 _StatChip(
                                   label: 'Same',
                                   count: session.stringsIdentical,
                                   color: neutralStatColor,
-                                  icon: Icons.check_circle_outline_rounded,
+                                  icon: LucideIcons.checkCircle,
                                 ),
                               if (totalStrings > 0)
                                 _StatChip(
                                   label: 'Total',
                                   count: totalStrings,
                                   color: neutralStatColor,
-                                  icon: Icons.list_alt_rounded,
+                                  icon: LucideIcons.list,
                                 ),
                               if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
                                 Text(
@@ -1302,7 +1304,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                             children: [
                               TextButton.icon(
                                 onPressed: widget.onDelete,
-                                icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppThemeV2.error),
+                                icon: Icon(LucideIcons.trash2, size: 18, color: AppThemeV2.error),
                                 label: Text('Delete', style: TextStyle(color: AppThemeV2.error)),
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1311,7 +1313,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                               const SizedBox(width: 8),
                               FilledButton.icon(
                                 onPressed: widget.onView,
-                                icon: const Icon(Icons.visibility_rounded, size: 18),
+                                icon: const Icon(LucideIcons.eye, size: 18),
                                 label: const Text('View Details'),
                                 style: FilledButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1489,7 +1491,7 @@ class _FilePathRow extends StatelessWidget {
           message: 'Open file location',
           child: IconButton(
             icon: Icon(
-              Icons.folder_open_outlined,
+              LucideIcons.folderOpen,
               size: 16,
               color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),

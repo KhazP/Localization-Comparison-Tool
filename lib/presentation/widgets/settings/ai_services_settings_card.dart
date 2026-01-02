@@ -13,6 +13,7 @@ import 'package:localizer_app_main/presentation/widgets/settings/setting_overrid
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:developer' as developer;
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AiServicesSettingsCard extends StatefulWidget {
   final AppSettings settings;
@@ -133,7 +134,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
       content: 'This removes all saved translation pairs on this device. This action cannot be undone.',
       confirmText: 'Clear Memory',
       isDestructive: true,
-      icon: Icons.delete_forever_rounded,
+      icon: LucideIcons.trash2,
     );
 
     if (confirm != true) return;
@@ -286,7 +287,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                title: const Text('Parameters'),
                subtitle: const Text('Temperature, Context, and more'),
                trailing: IconButton(
-                 icon: Icon(_showAdvancedParameters ? Icons.expand_less : Icons.expand_more),
+                 icon: Icon(_showAdvancedParameters ? LucideIcons.chevronUp : LucideIcons.chevronDown),
                  onPressed: () => setState(() => _showAdvancedParameters = !_showAdvancedParameters),
                ),
               ),
@@ -487,22 +488,22 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                         children: [
                           FilledButton.icon(
                             onPressed: _translationMemoryBusy ? null : () => _importTranslationMemory(context),
-                            icon: const Icon(Icons.download_rounded, size: 18),
+                            icon: const Icon(LucideIcons.download, size: 18),
                             label: const Text('Import'),
                           ),
                           OutlinedButton.icon(
                             onPressed: _translationMemoryBusy ? null : () => _exportTranslationMemoryTmx(context),
-                            icon: const Icon(Icons.upload_rounded, size: 18),
+                            icon: const Icon(LucideIcons.upload, size: 18),
                             label: const Text('Export TMX'),
                           ),
                           OutlinedButton.icon(
                             onPressed: _translationMemoryBusy ? null : () => _exportTranslationMemoryCsv(context),
-                            icon: const Icon(Icons.table_chart_rounded, size: 18),
+                            icon: const Icon(LucideIcons.table, size: 18),
                             label: const Text('Export CSV'),
                           ),
                           OutlinedButton.icon(
                             onPressed: _translationMemoryBusy ? null : () => _confirmClearTranslationMemory(context),
-                            icon: Icon(Icons.delete_forever_rounded, size: 18, color: AppThemeV2.error),
+                            icon: Icon(LucideIcons.trash2, size: 18, color: AppThemeV2.error),
                             label: Text('Clear Memory', style: TextStyle(color: AppThemeV2.error)),
                             style: OutlinedButton.styleFrom(side: BorderSide(color: AppThemeV2.error.withValues(alpha: 0.5))),
                           ),
@@ -585,7 +586,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             child: Row(
               children: [
                 Icon(
-                  testResult.status == ApiKeyTestStatus.success ? Icons.check_circle_outline : Icons.error_outline,
+                  testResult.status == ApiKeyTestStatus.success ? LucideIcons.checkCircle : LucideIcons.alertCircle,
                   size: 16,
                   color: testResult.status == ApiKeyTestStatus.success ? Colors.green : Colors.red,
                 ),
@@ -670,7 +671,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
       message: 'Reset all AI settings to global defaults',
       child: IconButton(
         icon: Icon(
-          Icons.refresh_rounded,
+          LucideIcons.refreshCcw,
           size: 18,
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),

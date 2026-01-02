@@ -14,6 +14,7 @@ import 'package:localizer_app_main/data/services/api_key_validation_service.dart
 import 'package:localizer_app_main/data/services/translation_memory_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -254,7 +255,7 @@ class _SettingsViewState extends State<SettingsView>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.error_outline,
+                          Icon(LucideIcons.alertCircle,
                               size: 48, color: AppThemeV2.error),
                           const SizedBox(height: 16),
                           Text('Error loading settings',
@@ -368,7 +369,7 @@ class _SettingsViewState extends State<SettingsView>
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.settings_rounded,
+                  child: const Icon(LucideIcons.settings,
                       color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
@@ -396,7 +397,7 @@ class _SettingsViewState extends State<SettingsView>
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(
-                  Icons.search,
+                  LucideIcons.search,
                   size: 18,
                   color: isDark
                       ? AppThemeV2.darkTextMuted
@@ -405,7 +406,7 @@ class _SettingsViewState extends State<SettingsView>
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: Icon(
-                          Icons.close,
+                          LucideIcons.x,
                           size: 16,
                           color: isDark
                               ? AppThemeV2.darkTextMuted
@@ -643,7 +644,7 @@ class _SettingsViewState extends State<SettingsView>
                 TextButton.icon(
                   onPressed: () =>
                       _showResetCategoryDialog(context, _selectedCategory),
-                  icon: Icon(Icons.refresh_rounded,
+                  icon: Icon(LucideIcons.refreshCcw,
                       size: 18,
                       color: isDark
                           ? AppThemeV2.darkTextMuted

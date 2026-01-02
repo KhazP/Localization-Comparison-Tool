@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
@@ -127,7 +128,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                           focusNode: _searchFocusNode,
                           decoration: InputDecoration(
                             hintText: 'Search keys & values... (Ctrl+F)',
-                            prefixIcon: const Icon(Icons.search),
+                            prefixIcon: const Icon(LucideIcons.search, size: 18),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
@@ -149,7 +150,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                       color: Theme.of(context).cardColor,
                       child: Row(
                         children: [
-                          const Icon(Icons.arrow_back, size: 16),
+                          const Icon(LucideIcons.arrowLeft, size: 16),
                           const SizedBox(width: 8),
                           const Text('Home  >  Diff View'),
                           const Spacer(),

@@ -33,6 +33,7 @@
         "intl",
         "json_annotation",
         "libgit2dart",
+        "lucide_icons",
         "macos_dock_progress",
         "macos_ui",
         "macos_window_utils",
@@ -635,6 +636,13 @@
       "name": "path",
       "version": "1.9.1",
       "dependencies": []
+    },
+    {
+      "name": "lucide_icons",
+      "version": "0.257.0",
+      "dependencies": [
+        "flutter"
+      ]
     },
     {
       "name": "equatable",

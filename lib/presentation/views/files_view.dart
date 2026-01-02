@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
@@ -149,7 +150,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
               child: Row(
                 children: [
                   Icon(
-                    Icons.folder_copy_rounded,
+                    LucideIcons.folders,
                     size: 28,
                     color: colorScheme.primary,
                   ),
@@ -175,7 +176,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     subtitle: 'Original/Reference files',
                     directory: _sourceDirectory,
                     isDragging: _isDraggingSource,
-                    icon: Icons.source_rounded,
+                    icon: LucideIcons.folderInput,
                     accentColor: Theme.of(context).colorScheme.primary,
                     onBrowse: () => _pickDirectory(true),
                     onDragEnter: () => setState(() => _isDraggingSource = true),
@@ -192,7 +193,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 Padding(
                   padding: const EdgeInsets.only(top: 60),
                   child: Icon(
-                    Icons.arrow_forward_rounded,
+                    LucideIcons.arrowRight,
                     size: 32,
                     color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                   ),
@@ -205,7 +206,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     subtitle: 'Translation/Comparison files',
                     directory: _targetDirectory,
                     isDragging: _isDraggingTarget,
-                    icon: Icons.compare_arrows_rounded,
+                    icon: LucideIcons.folderOutput,
                     accentColor: Theme.of(context).colorScheme.secondary,
                     onBrowse: () => _pickDirectory(false),
                     onDragEnter: () => setState(() => _isDraggingTarget = true),
@@ -243,7 +244,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                   children: [
                     Expanded(
                       child: _ActionButton(
-                        icon: Icons.search_rounded,
+                        icon: LucideIcons.search,
                         label: 'Discover Files',
                         onPressed: hasDirectories ? _startDirectoryComparison : null,
                         isPrimary: !canCompare,
@@ -252,7 +253,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     const SizedBox(width: 12),
                     Expanded(
                       child: _ActionButton(
-                        icon: Icons.compare_arrows_rounded,
+                        icon: LucideIcons.arrowRightLeft,
                         label: 'Compare All',
                         onPressed: canCompare
                             ? () {
@@ -271,7 +272,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     const SizedBox(width: 12),
                     Expanded(
                       child: _ActionButton(
-                        icon: Icons.download_rounded,
+                        icon: LucideIcons.download,
                         label: 'Export All',
                         onPressed: canExport && !_isExporting
                             ? () => _exportAllResults(pairedFiles, comparisonResults)
@@ -480,7 +481,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
               child: Row(
                 children: [
                   Icon(
-                    hasDirectory ? Icons.folder_rounded : Icons.folder_open_outlined,
+                    hasDirectory ? LucideIcons.folder : LucideIcons.folderOpen,
                     color: hasDirectory
                         ? accentColor
                         : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
@@ -502,7 +503,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     Tooltip(
                       message: directory,
                       child: Icon(
-                        Icons.info_outline_rounded,
+                          LucideIcons.info,
                         size: 16,
                         color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                       ),
@@ -517,7 +518,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: onBrowse,
-                icon: const Icon(Icons.folder_open_rounded, size: 18),
+                icon: const Icon(LucideIcons.folderOpen, size: 18),
                 label: const Text('Browse'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -552,7 +553,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.folder_copy_outlined,
+            LucideIcons.folders,
             size: 64,
             color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
           ),
@@ -583,7 +584,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.error_outline_rounded,
+            LucideIcons.alertCircle,
             size: 64,
             color: AppThemeV2.error,
           ),
@@ -680,7 +681,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
       ),
       child: Row(
         children: [
-          Icon(Icons.monitor_heart_outlined, 
+          Icon(LucideIcons.activity, 
                size: 20, 
                color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary),
           const SizedBox(width: 8),
@@ -715,7 +716,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              Icon(Icons.link_rounded, size: 18, color: AppThemeV2.success),
+              Icon(LucideIcons.link, size: 18, color: AppThemeV2.success),
               const SizedBox(width: 8),
               Text(
                 'Paired Files (${pairs.length})',
@@ -795,7 +796,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                         builder: (_) => ComparisonResultDialog(result: result),
                       );
                     },
-                    icon: const Icon(Icons.visibility_rounded, size: 16),
+                    icon: const Icon(LucideIcons.eye, size: 16),
                     label: const Text('View'),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

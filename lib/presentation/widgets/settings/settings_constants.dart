@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 /// Settings categories for navigation
 enum SettingsCategory {
@@ -222,23 +223,23 @@ class SettingsConstants {
   static IconData getCategoryIcon(SettingsCategory category) {
     switch (category) {
       case SettingsCategory.general:
-        return Icons.tune_rounded;
+        return LucideIcons.sliders;
       case SettingsCategory.comparisonEngine:
-        return Icons.compare_arrows_rounded;
+        return LucideIcons.arrowLeftRight;
       case SettingsCategory.appearance:
-        return Icons.palette_rounded;
+        return LucideIcons.palette;
       case SettingsCategory.fileHandling:
-        return Icons.folder_rounded;
+        return LucideIcons.folderOpen;
       case SettingsCategory.aiServices:
-        return Icons.auto_awesome_rounded;
+        return LucideIcons.sparkles;
       case SettingsCategory.versionControl:
-        return Icons.history_rounded;
+        return LucideIcons.gitBranch;
       case SettingsCategory.systemIntegrations:
-        return Icons.desktop_windows_rounded;
+        return LucideIcons.monitor;
       case SettingsCategory.projectResources:
-        return Icons.library_books_rounded;
+        return LucideIcons.bookOpen;
       case SettingsCategory.about:
-        return Icons.info_rounded;
+        return LucideIcons.info;
     }
   }
 

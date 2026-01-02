@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/basic_comparison_view.dart';
@@ -184,50 +185,50 @@ class _MyHomePageState extends State<MyHomePage>
               destinations: [
                 _buildNavDestination(
                   index: 0,
-                  icon: Icons.folder_special_outlined,
-                  selectedIcon: Icons.folder_special,
+                  icon: LucideIcons.layoutGrid,
+                  selectedIcon: LucideIcons.layoutGrid,
                   label: 'Projects',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
                   index: 1,
-                  icon: Icons.compare_arrows_outlined,
-                  selectedIcon: Icons.compare_arrows,
+                  icon: LucideIcons.arrowLeftRight,
+                  selectedIcon: LucideIcons.arrowLeftRight,
                   label: 'Compare',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
                   index: 2,
-                  icon: Icons.history_outlined,
-                  selectedIcon: Icons.history,
+                  icon: LucideIcons.clock3,
+                  selectedIcon: LucideIcons.clock3,
                   label: 'History',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
                   index: 3,
-                  icon: Icons.insights_outlined,
-                  selectedIcon: Icons.insights,
+                  icon: LucideIcons.barChart3,
+                  selectedIcon: LucideIcons.barChart3,
                   label: 'Dashboard',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
                   index: 4,
-                  icon: Icons.folder_outlined,
-                  selectedIcon: Icons.folder,
+                  icon: LucideIcons.folderOpen,
+                  selectedIcon: LucideIcons.folderOpen,
                   label: 'Files',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
                   index: 5,
-                  icon: Icons.source_outlined,
-                  selectedIcon: Icons.source,
+                  icon: LucideIcons.gitBranch,
+                  selectedIcon: LucideIcons.gitBranch,
                   label: 'Git',
                   colorScheme: colorScheme,
                 ),
                 _buildNavDestination(
                   index: 6,
-                  icon: Icons.settings_outlined,
-                  selectedIcon: Icons.settings,
+                  icon: LucideIcons.settings,
+                  selectedIcon: LucideIcons.settings,
                   label: 'Settings',
                   colorScheme: colorScheme,
                 ),
@@ -273,8 +274,8 @@ class _MyHomePageState extends State<MyHomePage>
                                   },
                                   child: Icon(
                                     isDarkMode
-                                        ? Icons.light_mode_rounded
-                                        : Icons.dark_mode_rounded,
+                                        ? LucideIcons.sun
+                                        : LucideIcons.moon,
                                     key: ValueKey(isDarkMode),
                                     size: 20,
                                     color: colorScheme.primary,
@@ -317,7 +318,7 @@ class _MyHomePageState extends State<MyHomePage>
                                     ),
                                   ),
                                   child: Icon(
-                                    Icons.terminal_rounded,
+                                    LucideIcons.terminal,
                                     size: 20,
                                     color: colorScheme.tertiary,
                                   ),

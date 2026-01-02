@@ -4,6 +4,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
@@ -66,7 +67,7 @@ class GeneralSettingsCard extends StatelessWidget {
                     const SizedBox(width: 16),
                     FilledButton.icon(
                       onPressed: () => _handleExport(context, projectState),
-                      icon: const Icon(Icons.output_rounded),
+                      icon: const Icon(LucideIcons.package),
                       label: const Text('Export'),
                     ),
                   ],

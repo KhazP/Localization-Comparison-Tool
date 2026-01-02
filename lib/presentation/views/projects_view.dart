@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,7 +58,7 @@ class ProjectsView extends StatelessWidget {
            Row(
               children: [
                 Icon(
-                  Icons.folder_special_rounded,
+                  LucideIcons.folder,
                   size: 32,
                   color: theme.colorScheme.primary,
                 ),
@@ -77,7 +78,7 @@ class ProjectsView extends StatelessWidget {
               children: [
                 _buildActionButton(
                   context,
-                  icon: Icons.add_rounded,
+                  icon: LucideIcons.plus,
                   label: 'Create New Project',
                   color: theme.colorScheme.primary,
                   onTap: () => _showCreateProjectDialog(context),
@@ -85,7 +86,7 @@ class ProjectsView extends StatelessWidget {
                 const SizedBox(width: 16),
                 _buildActionButton(
                   context,
-                  icon: Icons.folder_open_rounded,
+                  icon: LucideIcons.folderOpen,
                   label: 'Open Project Settings',
                   isOutlined: true,
                   onTap: () => _pickProjectFolder(context),
@@ -93,7 +94,7 @@ class ProjectsView extends StatelessWidget {
                 const SizedBox(width: 16),
                 _buildActionButton(
                   context,
-                  icon: Icons.file_upload_outlined,
+                  icon: LucideIcons.upload,
                   label: 'Import Project Zip',
                   isOutlined: true,
                   onTap: () => _importProjectZip(context),
@@ -118,7 +119,7 @@ class ProjectsView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       EmptyStateIcon(
-                        icon: Icons.history_edu_rounded,
+                        icon: LucideIcons.history,
                         text: 'No recent projects',
                       ),
                       const SizedBox(height: 16),
@@ -459,7 +460,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  Icons.folder_shared_rounded,
+                  LucideIcons.folder,
                   color: theme.colorScheme.primary,
                   size: 24,
                 ),
@@ -490,7 +491,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
                       Row(
                         children: [
                           Icon(
-                            Icons.description_outlined,
+                            LucideIcons.fileText,
                             size: 12,
                             color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
                           ),
@@ -523,11 +524,11 @@ class _ProjectListTileState extends State<_ProjectListTile> {
               ),
               if (_isHovered)
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20),
+                  icon: const Icon(LucideIcons.x, size: 20),
                   onPressed: widget.onRemove,
                   tooltip: 'Remove from recent',
                 ),
-              const Icon(Icons.chevron_right_rounded),
+              const Icon(LucideIcons.chevronRight),
             ],
           ),
         ),

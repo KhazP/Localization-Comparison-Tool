@@ -11,6 +11,7 @@ import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 
 import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class GitView extends StatelessWidget {
   const GitView({super.key});
@@ -68,7 +69,7 @@ class GitView extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 48),
+                          Icon(LucideIcons.alertCircle, color: Theme.of(context).colorScheme.error, size: 48),
                           const SizedBox(height: 16),
                           Text('Error: ${state.message}', style: TextStyle(color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center),
                           const SizedBox(height: 16),
@@ -144,7 +145,7 @@ class _RepositorySelector extends StatelessWidget {
           children: [
             ElevatedButton.icon(
               onPressed: () => _pickRepository(context),
-              icon: const Icon(Icons.folder_open),
+              icon: const Icon(LucideIcons.folderOpen),
               label: const Text('Open Repository'),
             ),
             const SizedBox(width: 16),
@@ -228,12 +229,12 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                   ButtonSegment(
                     value: ComparisonMode.branch,
                     label: Text('Branch Comparison'),
-                    icon: Icon(Icons.call_split),
+                    icon: Icon(LucideIcons.gitBranch),
                   ),
                   ButtonSegment(
                     value: ComparisonMode.commit,
                     label: Text('Commit Comparison'),
-                    icon: Icon(Icons.history),
+                    icon: Icon(LucideIcons.history),
                   ),
                 ],
                 selected: {mode},
@@ -257,7 +258,7 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
               height: 48,
               child: FilledButton.icon(
                 onPressed: _canCompare() ? _performCompare : null,
-                icon: const Icon(Icons.compare_arrows),
+                icon: const Icon(LucideIcons.arrowRightLeft),
                 label: const Text('Compare', style: TextStyle(fontSize: 16)),
               ),
             ),
@@ -311,7 +312,7 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
               onPressed: (_baseBranch != null && _targetBranch != null)
                   ? _swapBranches
                   : null,
-              icon: const Icon(Icons.swap_horiz),
+              icon: const Icon(LucideIcons.arrowRightLeft),
               tooltip: 'Swap branches',
             ),
             const SizedBox(width: 8),
@@ -379,7 +380,7 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
               )
             else
               IconButton(
-                icon: const Icon(Icons.refresh),
+                icon: const Icon(LucideIcons.refreshCcw),
                 onPressed: () => context
                     .read<GitBloc>()
                     .add(LoadCommits(branchName: _filterBranch)),
@@ -418,7 +419,7 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: IconButton(
                   onPressed: (_baseCommitSha != null && _targetCommitSha != null) ? _swapCommits : null,
-                  icon: const Icon(Icons.swap_horiz),
+                  icon: const Icon(LucideIcons.arrowRightLeft),
                   tooltip: 'Swap commits',
                 ),
               ),
@@ -585,7 +586,7 @@ class _RepoActionsToolbar extends StatelessWidget {
       color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Row(
         children: [
-          const Icon(Icons.call_split, size: 20),
+          const Icon(LucideIcons.gitBranch, size: 20),
           const SizedBox(width: 8),
           Text('Actions:', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
           const SizedBox(width: 16),
@@ -593,7 +594,7 @@ class _RepoActionsToolbar extends StatelessWidget {
           // Checkout
           OutlinedButton.icon(
             onPressed: () => _showCheckoutDialog(context),
-            icon: const Icon(Icons.switch_access_shortcut, size: 18),
+            icon: const Icon(LucideIcons.cornerUpRight, size: 18),
             label: const Text('Checkout'),
           ),
           const SizedBox(width: 8),
@@ -601,7 +602,7 @@ class _RepoActionsToolbar extends StatelessWidget {
           // Merge
           OutlinedButton.icon(
              onPressed: () => _showMergeDialog(context),
-             icon: const Icon(Icons.merge, size: 18),
+             icon: const Icon(LucideIcons.merge, size: 18),
              label: const Text('Merge'),
           ),
           const SizedBox(width: 8),
@@ -609,7 +610,7 @@ class _RepoActionsToolbar extends StatelessWidget {
           // Pull
           OutlinedButton.icon(
             onPressed: () => context.read<GitBloc>().add(PullChanges()),
-            icon: const Icon(Icons.download, size: 18),
+            icon: const Icon(LucideIcons.download, size: 18),
             label: const Text('Pull'),
           ),
         ],
@@ -646,7 +647,7 @@ class _BranchSelectionDialog extends StatelessWidget {
             final branch = filtered[index];
             return ListTile(
               title: Text(branch.name),
-              leading: const Icon(Icons.code),
+              leading: const Icon(LucideIcons.code),
               onTap: () {
                 Navigator.pop(context);
                 onSelected(branch.name);
@@ -698,7 +699,7 @@ class _ComparisonResultList extends StatelessWidget {
       children: [
          Row(
            children: [
-             IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back)),
+             IconButton(onPressed: onBack, icon: const Icon(LucideIcons.arrowLeft)),
              const Text('Comparison Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
            ],
          ),
@@ -726,19 +727,19 @@ class _ComparisonResultList extends StatelessWidget {
                    switch (file.status) {
                      case 'added':
                        statusColor = themeState.diffAddedColor;
-                       statusIcon = Icons.add_circle_outline;
+                       statusIcon = LucideIcons.plusCircle;
                        break;
                      case 'deleted':
                        statusColor = themeState.diffRemovedColor;
-                       statusIcon = Icons.remove_circle_outline;
+                       statusIcon = LucideIcons.minusCircle;
                        break;
                      case 'modified':
                        statusColor = themeState.diffModifiedColor;
-                       statusIcon = Icons.edit_outlined;
+                       statusIcon = LucideIcons.pencil;
                        break;
                      default:
                        statusColor = Colors.grey;
-                       statusIcon = Icons.help_outline;
+                       statusIcon = LucideIcons.helpCircle;
                    }
 
                    return Card(

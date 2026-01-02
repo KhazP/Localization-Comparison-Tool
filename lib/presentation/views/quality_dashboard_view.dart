@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:fl_chart/fl_chart.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -260,7 +261,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
             message: 'No usable data was found yet.',
             action: OutlinedButton.icon(
               onPressed: () => _refreshDashboard(reloadHistory: true),
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(LucideIcons.refreshCcw),
               label: const Text('Refresh'),
             ),
           );
@@ -339,7 +340,7 @@ class _DashboardHeader extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          Icons.insights_rounded,
+          LucideIcons.barChart3,
           size: 28,
           color: theme.colorScheme.primary,
         ),
@@ -356,7 +357,7 @@ class _DashboardHeader extends StatelessWidget {
           message: 'Refresh',
           child: IconButton(
             onPressed: onRefresh,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(LucideIcons.refreshCcw),
           ),
         ),
         if (isProjectLoaded) ...[
@@ -369,11 +370,11 @@ class _DashboardHeader extends StatelessWidget {
               onPressed: onToggleProjectFilter,
               icon: Icon(
                 showProjectFilter
-                    ? Icons.filter_alt_rounded
-                    : Icons.filter_alt_off_outlined,
+                    ? LucideIcons.filter
+                    : LucideIcons.filterX,
                 color: showProjectFilter
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    : theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
           ),
@@ -381,7 +382,7 @@ class _DashboardHeader extends StatelessWidget {
         const SizedBox(width: 8),
         OutlinedButton.icon(
           onPressed: onExport,
-          icon: const Icon(Icons.download_rounded, size: 18),
+          icon: const Icon(LucideIcons.download, size: 18),
           label: const Text('Export'),
         ),
       ],
@@ -405,17 +406,17 @@ class _SummaryRow extends StatelessWidget {
           _SummaryCard(
             title: 'Languages',
             value: data.totalLanguages.toString(),
-            icon: Icons.language_rounded,
+            icon: LucideIcons.languages,
           ),
           _SummaryCard(
             title: 'Average coverage',
             value: '${avgCoverage.toStringAsFixed(1)}%',
-            icon: Icons.check_circle_rounded,
+            icon: LucideIcons.percent,
           ),
           _SummaryCard(
             title: 'Potential issues',
             value: data.totalIssues.toString(),
-            icon: Icons.warning_amber_rounded,
+            icon: LucideIcons.alertTriangle,
           ),
         ];
 
@@ -476,7 +477,7 @@ class _SummaryCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.12),
+              color: theme.colorScheme.primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: theme.colorScheme.primary),
@@ -489,7 +490,7 @@ class _SummaryCard extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -575,7 +576,7 @@ class _CoverageSection extends StatelessWidget {
                       value: percent / 100,
                       minHeight: 8,
                       backgroundColor:
-                          theme.colorScheme.primary.withValues(alpha: 0.12),
+                          theme.colorScheme.primary.withOpacity(0.12),
                       color: theme.colorScheme.primary,
                     ),
                   ),
@@ -584,7 +585,7 @@ class _CoverageSection extends StatelessWidget {
                     '${coverage.translatedKeyCount} of '
                     '${coverage.sourceKeyCount} entries translated',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                 ],
@@ -672,17 +673,17 @@ class _MainChartSection extends StatelessWidget {
                   ButtonSegment(
                     value: DashboardChartMode.words,
                     label: Text('Words'),
-                    icon: Icon(Icons.text_fields),
+                    icon: Icon(LucideIcons.type),
                   ),
                   ButtonSegment(
                     value: DashboardChartMode.coverage,
                     label: Text('Coverage'),
-                    icon: Icon(Icons.percent),
+                    icon: Icon(LucideIcons.percent),
                   ),
                   ButtonSegment(
                     value: DashboardChartMode.burnUp,
                     label: Text('Scope'),
-                    icon: Icon(Icons.show_chart),
+                    icon: Icon(LucideIcons.trendingUp),
                   ),
                 ],
                 selected: {mode},
@@ -706,10 +707,10 @@ class _MainChartSection extends StatelessWidget {
             height: 280,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.5),
+              color: theme.colorScheme.surface.withOpacity(0.5),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: theme.dividerColor.withValues(alpha: 0.4),
+                color: theme.dividerColor.withOpacity(0.4),
               ),
             ),
             child: mode == DashboardChartMode.burnUp
@@ -789,17 +790,17 @@ class _TrendSummaryRow extends StatelessWidget {
       case DashboardChartMode.coverage:
         latestLabel = '${latestValue.toStringAsFixed(1)}%';
         deltaLabel = _formatSignedPercent(delta);
-        icon = Icons.percent_rounded;
+        icon = LucideIcons.percent;
         break;
       case DashboardChartMode.words:
         latestLabel = _formatCompactNumber(latestValue);
         deltaLabel = _formatSignedCount(delta);
-        icon = Icons.text_fields_rounded;
+        icon = LucideIcons.type;
         break;
       case DashboardChartMode.burnUp:
         latestLabel = _formatCompactNumber(latestValue);
         deltaLabel = _formatSignedCount(delta);
-        icon = Icons.all_inclusive_rounded; // or distinct icon for Scope
+        icon = LucideIcons.infinity; // or distinct icon for Scope
         break;
     }
 
@@ -850,13 +851,13 @@ class _TrendSummaryRow extends StatelessWidget {
             value: deltaLabel,
             valueColor: deltaColor,
             icon: delta >= 0
-                ? Icons.trending_up_rounded
-                : Icons.trending_down_rounded,
+                ? LucideIcons.trendingUp
+                : LucideIcons.trendingDown,
           ),
           _TrendStatChip(
             label: 'Range',
             value: dateRange,
-            icon: Icons.calendar_today_rounded,
+            icon: LucideIcons.calendar,
           ),
         ];
 
@@ -912,7 +913,7 @@ class _TrendStatChip extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.4),
+          color: theme.dividerColor.withOpacity(0.4),
         ),
       ),
       child: Row(
@@ -921,7 +922,7 @@ class _TrendStatChip extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              color: theme.colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 16, color: theme.colorScheme.primary),
@@ -935,7 +936,7 @@ class _TrendStatChip extends StatelessWidget {
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        theme.colorScheme.onSurface.withOpacity(0.6),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -991,8 +992,8 @@ class _WordTrendChart extends StatelessWidget {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        lineColor.withValues(alpha: 0.35),
-        lineColor.withValues(alpha: 0.02),
+        lineColor.withOpacity(0.35),
+        lineColor.withOpacity(0.02),
       ],
     );
     final tooltipStyle = theme.textTheme.bodySmall?.copyWith(
@@ -1015,13 +1016,13 @@ class _WordTrendChart extends StatelessWidget {
           horizontalInterval: adjustedMaxY / 4,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: theme.dividerColor.withValues(alpha: 0.3),
+              color: theme.dividerColor.withOpacity(0.3),
               strokeWidth: 1,
             );
           },
           getDrawingVerticalLine: (value) {
             return FlLine(
-              color: theme.dividerColor.withValues(alpha: 0.15),
+              color: theme.dividerColor.withOpacity(0.15),
               strokeWidth: 1,
             );
           },
@@ -1054,7 +1055,7 @@ class _WordTrendChart extends StatelessWidget {
                   child: Text(
                     dateFormat.format(points[index].timestamp),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                 );
@@ -1075,7 +1076,7 @@ class _WordTrendChart extends StatelessWidget {
                         ? '${value.toInt()}%'
                         : _formatCompactNumber(value),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                 );
@@ -1119,7 +1120,7 @@ class _WordTrendChart extends StatelessWidget {
             return spotIndexes.map((index) {
               return TouchedSpotIndicatorData(
                 FlLine(
-                  color: lineColor.withValues(alpha: 0.4),
+                  color: lineColor.withOpacity(0.4),
                   strokeWidth: 1,
                 ),
                 FlDotData(
@@ -1247,7 +1248,7 @@ class _IssuesSection extends StatelessWidget {
             Text(
               'No issues found in the latest comparisons.',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             )
           else ...[
@@ -1387,7 +1388,7 @@ class _IssueRow extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    color: theme.colorScheme.primary.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -1404,7 +1405,7 @@ class _IssueRow extends StatelessWidget {
             Text(
               description,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             if (samples.isNotEmpty) ...[
@@ -1421,7 +1422,7 @@ class _IssueRow extends StatelessWidget {
                           color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: theme.dividerColor.withValues(alpha: 0.5),
+                            color: theme.dividerColor.withOpacity(0.5),
                           ),
                         ),
                         child: Text(
@@ -1466,7 +1467,7 @@ class _WarningsBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.info_outline,
+            LucideIcons.info,
             color: theme.colorScheme.primary,
           ),
           const SizedBox(width: 12),

@@ -6,6 +6,7 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/setting_override_indicator.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class FileHandlingSettingsCard extends StatelessWidget {
   final AppSettings settings;
@@ -292,7 +293,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
                       onPressed: () => _pickBackupDirectory(context),
-                      icon: const Icon(Icons.folder_open_rounded, size: 18),
+                      icon: const Icon(LucideIcons.folderOpen, size: 18),
                       label: const Text('Browse'),
                     ),
                   ],
@@ -375,7 +376,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
       message: 'Reset all file handling settings to global defaults',
       child: IconButton(
         icon: Icon(
-          Icons.refresh_rounded,
+          LucideIcons.refreshCcw,
           size: 18,
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),

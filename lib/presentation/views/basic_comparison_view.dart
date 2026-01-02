@@ -11,6 +11,7 @@ import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/rendering.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/progress_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/file_watcher_bloc/file_watcher_bloc.dart';
@@ -598,7 +599,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           children: [
                             Expanded(
                               child: ElevatedButton.icon(
-                                icon: const Icon(Icons.compare_arrows,
+                                icon: const Icon(LucideIcons.arrowRightLeft,
                                     size: 18),
                                 label: Text(_isBilingualMode
                                     ? 'Compare File'
@@ -614,7 +615,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                             ),
                             const SizedBox(width: 12),
                             OutlinedButton.icon(
-                              icon: const Icon(Icons.translate_rounded,
+                              icon: const Icon(LucideIcons.languages,
                                   size: 18),
                               label: Text(_isBilingualMode
                                   ? 'Two Files'
@@ -675,9 +676,16 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                     if (state is ProgressFailure) {
                       return Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Text('Error during processing: ${state.error}',
-                              style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error)));
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(LucideIcons.alertCircle, color: Theme.of(context).colorScheme.error, size: 20),
+                              const SizedBox(width: 8),
+                              Text('Error during processing: ${state.error}',
+                                  style: TextStyle(
+                                      color: Theme.of(context).colorScheme.error)),
+                            ],
+                          ));
                     }
                     return const SizedBox.shrink();
                   },
@@ -907,7 +915,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.search_off,
+                                  Icon(LucideIcons.searchX,
                                       size: 48,
                                       color: theme.colorScheme.onSurface
                                           .withAlpha(100)),
@@ -987,7 +995,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.visibility_off_outlined,
+                                      Icon(LucideIcons.eyeOff,
                                           size: 16,
                                           color: theme
                                               .colorScheme.onSurfaceVariant),
@@ -1148,7 +1156,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                                 Text('${startIndex + 1}-$endIndex of $filteredCount', style: theme.textTheme.bodySmall),
                                                 const SizedBox(width: 8),
                                                 IconButton(
-                                                    icon: const Icon(Icons.first_page),
+                                                    icon: const Icon(LucideIcons.chevronsLeft),
                                                     splashRadius: 20,
                                                     onPressed: _currentPage > 0 ? () {
                                                       setState(() => _currentPage = 0);
@@ -1156,7 +1164,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                                     } : null,
                                                 ),
                                                 IconButton(
-                                                    icon: const Icon(Icons.chevron_left),
+                                                    icon: const Icon(LucideIcons.chevronLeft),
                                                     splashRadius: 20,
                                                     onPressed: _currentPage > 0 ? () {
                                                       setState(() => _currentPage--);
@@ -1165,7 +1173,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                                 ),
                                                 Text(' ${_currentPage + 1} / ${(filteredCount / effectiveItemsPerPage).ceil()} ', style: theme.textTheme.bodySmall),
                                                 IconButton(
-                                                    icon: const Icon(Icons.chevron_right),
+                                                    icon: const Icon(LucideIcons.chevronRight),
                                                     splashRadius: 20,
                                                     onPressed: endIndex < filteredCount ? () {
                                                       setState(() => _currentPage++);
@@ -1173,7 +1181,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                                     } : null,
                                                 ),
                                                 IconButton(
-                                                    icon: const Icon(Icons.last_page),
+                                                    icon: const Icon(LucideIcons.chevronsRight),
                                                     splashRadius: 20,
                                                     onPressed: endIndex < filteredCount ? () {
                                                       final lastPage = (filteredCount / effectiveItemsPerPage).ceil() - 1;
@@ -1620,7 +1628,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     final hasFile = file != null;
 
     // Abbreviated path display for long paths
-    String displayText;
+    String displayText = '';
     String tooltipPath = '';
     String? fileExtension;
 
@@ -1759,8 +1767,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   // Icon
                   Icon(
                     hasFile
-                        ? Icons.description_rounded
-                        : Icons.cloud_upload_outlined,
+                        ? LucideIcons.fileText
+                        : LucideIcons.upload,
                     color: isDraggingOver
                         ? theme.colorScheme.primary
                         : (hasFile
@@ -1833,7 +1841,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   if (hasFile) ...[
                     const SizedBox(width: 8),
                     Icon(
-                      Icons.swap_horiz_rounded,
+                      LucideIcons.arrowRightLeft,
                       size: 18,
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       semanticLabel: 'Change file',
@@ -1986,14 +1994,14 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   color: theme.colorScheme.onSurface.withAlpha(100),
                 ),
                 prefixIcon: Icon(
-                  Icons.search,
+                  LucideIcons.search,
                   size: 18,
                   color: theme.colorScheme.onSurface.withAlpha(120),
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: Icon(
-                          Icons.clear,
+                          LucideIcons.x,
                           size: 16,
                           color: theme.colorScheme.onSurface.withAlpha(120),
                         ),
@@ -2089,8 +2097,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 IconButton(
                   icon: Icon(
                     settingsState.appSettings.showIdenticalEntries
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+                        ? LucideIcons.eye
+                        : LucideIcons.eyeOff,
                     color: settingsState.appSettings.showIdenticalEntries
                         ? theme.colorScheme.onSurface.withAlpha(180)
                         : theme.colorScheme.onSurface.withAlpha(100),
@@ -2106,7 +2114,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 ),
                  // Show All reset
                 IconButton(
-                  icon: const Icon(Icons.filter_list_off, size: 20),
+                  icon: const Icon(LucideIcons.filterX, size: 20),
                   tooltip: 'Show All',
                   onPressed: _currentFilter != BasicDiffFilter.all
                       ? () => setState(() => _currentFilter = BasicDiffFilter.all)
@@ -2129,7 +2137,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildExportActionButton(
-                icon: Icons.download_outlined,
+                icon: LucideIcons.download,
                 label: 'Export',
                 onPressed: _exportResult,
                 color: theme.colorScheme.onSurface,
@@ -2137,7 +2145,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               ),
               const SizedBox(width: 8),
               _buildCompactActionButton(
-                icon: Icons.zoom_in_map,
+                icon: LucideIcons.maximize,
                 label: 'Advanced',
                 onPressed: _navigateToAdvancedView,
                 color: theme.colorScheme.primary,
@@ -2373,7 +2381,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             avatar: isWatching
                 ? const _PulsingIndicator()
                 : Icon(
-                    Icons.visibility_off,
+                    LucideIcons.eyeOff,
                     size: 16,
                     color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
                   ),
@@ -2615,7 +2623,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                           Padding(
                             padding: const EdgeInsets.only(top: 16),
                             child: Icon(
-                              Icons.arrow_forward_rounded,
+                              LucideIcons.arrowRight,
                               size: 14,
                               color: textMuted,
                             ),
@@ -2796,7 +2804,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               // Quick Tutorial Link
               TextButton.icon(
                 onPressed: () => _showQuickTutorialDialog(context),
-                icon: Icon(Icons.lightbulb_outline,
+                icon: Icon(LucideIcons.lightbulb,
                     size: 18, color: theme.colorScheme.secondary),
                 label: Text(
                   'Quick Tutorial',
@@ -2852,7 +2860,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.history,
+      leading: Icon(LucideIcons.clock,
           color: theme.colorScheme.primary.withValues(alpha: 0.7)),
       title: Text(
         title,
@@ -2929,7 +2937,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 color: theme.colorScheme.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.lightbulb_rounded, color: theme.colorScheme.secondary, size: 24),
+              child: Icon(LucideIcons.lightbulb, color: theme.colorScheme.secondary, size: 24),
             ),
             const SizedBox(width: 12),
             const Text('Quick Tutorial'),
@@ -2942,35 +2950,35 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             children: [
               _buildTutorialStep(
                 theme: theme,
-                icon: Icons.file_upload_outlined,
+                icon: LucideIcons.upload,
                 title: 'Import & Sync',
                 description: 'Drag & drop two files, or use "Bilingual Mode" for a single file containing both languages.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
-                icon: Icons.compare_arrows_rounded,
+                icon: LucideIcons.arrowRightLeft,
                 title: 'Smart Comparison',
                 description: 'See additions, removals, and modifications immediately with smart key-based matching.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
-                icon: Icons.auto_awesome_outlined,
+                icon: LucideIcons.sparkles,
                 title: 'Quality & AI',
                 description: 'Spot translation issues automatically and use AI suggestions to fix missing keys.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
-                icon: Icons.folder_copy_outlined,
+                icon: LucideIcons.folders,
                 title: 'Version Control',
                 description: 'Use the Git tab to compare branches, view diffs, and resolve conflicts directly.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
-                icon: Icons.insights_outlined,
+                icon: LucideIcons.barChart2,
                 title: 'Deep Insights',
                 description: 'Switch to "Advanced View" for detailed metrics, charts, and complex diff analysis.',
               ),
@@ -3182,7 +3190,7 @@ class _PulsingIndicatorState extends State<_PulsingIndicator>
     return FadeTransition(
       opacity: _animation,
       child: Icon(
-        Icons.visibility,
+        LucideIcons.eye,
         size: 16,
         color: isDark ? Colors.green[400] : Colors.green[700],
       ),
@@ -3273,7 +3281,7 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon>
                 child: Transform.rotate(
                   angle: _rotateAnimation.value,
                   child: Icon(
-                    Icons.compare_arrows_rounded,
+                    LucideIcons.arrowRightLeft,
                     size: 48,
                     color: primaryColor,
                   ),

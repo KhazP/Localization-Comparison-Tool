@@ -7,6 +7,7 @@ import 'package:localizer_app_main/presentation/widgets/settings/settings_consta
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/setting_override_indicator.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/live_logic_preview_card.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 /// Comparison Engine Settings card widget
 class ComparisonSettingsCard extends StatelessWidget {
@@ -150,7 +151,7 @@ class ComparisonSettingsCard extends StatelessWidget {
                       ],
                     ),
                     child: Icon(
-                      Icons.info_outline_rounded,
+                      LucideIcons.info,
                       size: 18,
                       color: theme.textMutedColor,
                     ),
@@ -200,7 +201,7 @@ class ComparisonSettingsCard extends StatelessWidget {
               child: OutlinedButton.icon(
                 key: const Key('settings_addPattern_button'),
                 onPressed: onShowAddPatternDialog,
-                icon: const Icon(Icons.add_rounded, size: 18),
+                icon: const Icon(LucideIcons.plus, size: 18),
                 label: const Text('Add Pattern'),
                 style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 40)),
@@ -228,7 +229,7 @@ class ComparisonSettingsCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.code_rounded,
+            LucideIcons.code,
             size: 16,
             color: theme.textMutedColor,
           ),
@@ -243,7 +244,7 @@ class ComparisonSettingsCard extends StatelessWidget {
           ),
           IconButton(
             key: Key('ignorePattern_delete_${pattern}_$index'),
-            icon: Icon(Icons.delete_outline_rounded,
+            icon: Icon(LucideIcons.trash2,
                 size: 18, color: AppThemeV2.error, semanticLabel: 'Delete $pattern'),
             onPressed: () {
                if (state.isProjectScope) {
@@ -268,7 +269,7 @@ class ComparisonSettingsCard extends StatelessWidget {
       children: SettingsConstants.patternPresets.entries
           .map(
             (entry) => OutlinedButton.icon(
-              icon: const Icon(Icons.add, size: 16, semanticLabel: 'Add ignore pattern'),
+              icon: const Icon(LucideIcons.plus, size: 16, semanticLabel: 'Add ignore pattern'),
               label: Text(entry.key),
               onPressed: () {
                 if (state.isProjectScope) {
@@ -339,7 +340,7 @@ class ComparisonSettingsCard extends StatelessWidget {
       message: 'Reset all comparison settings to global defaults',
       child: IconButton(
         icon: Icon(
-          Icons.refresh_rounded,
+          LucideIcons.refreshCcw,
           size: 18,
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         ),

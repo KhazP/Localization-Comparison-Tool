@@ -9,6 +9,7 @@ import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AboutSettingsCard extends StatelessWidget {
   final AppSettings settings;
@@ -138,7 +139,7 @@ class AboutSettingsCard extends StatelessWidget {
                       onPressed: isCheckingForUpdates ? null : onCheckForUpdates,
                       icon: isCheckingForUpdates
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.refresh_rounded, size: 18),
+                          : const Icon(LucideIcons.refreshCcw, size: 18),
                       label: Text(isCheckingForUpdates ? 'Checking...' : 'Check for Updates'),
                     ),
                   ),
@@ -146,7 +147,7 @@ class AboutSettingsCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     OutlinedButton.icon(
                       onPressed: onShowChangelog,
-                      icon: const Icon(Icons.notes_rounded, size: 18),
+                      icon: const Icon(LucideIcons.fileText, size: 18),
                       label: const Text("What's New"),
                     ),
                   ],
@@ -154,7 +155,7 @@ class AboutSettingsCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     FilledButton.icon(
                       onPressed: () => onLaunchUrl(updateCheckResult!.downloadUrl!),
-                      icon: const Icon(Icons.download_rounded, size: 18),
+                      icon: const Icon(LucideIcons.download, size: 18),
                       label: const Text('Download'),
                       style: FilledButton.styleFrom(backgroundColor: AppThemeV2.success),
                     ),
@@ -199,7 +200,7 @@ class AboutSettingsCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: OutlinedButton.icon(
                 onPressed: onRefreshSystemInfo,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
+                icon: const Icon(LucideIcons.refreshCcw, size: 18),
                 label: const Text('Refresh'),
               ),
             ),
@@ -231,7 +232,7 @@ class AboutSettingsCard extends StatelessWidget {
               isDark: isDark,
               isAmoled: isAmoled,
             ),
-            _buildLinkRow(context, 'Privacy Policy', Icons.privacy_tip_rounded, 
+            _buildLinkRow(context, 'Privacy Policy', LucideIcons.shieldAlert, 
                 () => onLaunchUrl('https://github.com/KhazP/LocalizerAppMain/blob/main/PRIVACY.md'), 
                 showDivider: false),
           ],
@@ -256,7 +257,7 @@ class AboutSettingsCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.upload_rounded, size: 18),
+                          icon: const Icon(LucideIcons.upload, size: 18),
                           label: const Text('Export'),
                           onPressed: onExportSettings,
                         ),
@@ -264,7 +265,7 @@ class AboutSettingsCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.download_rounded, size: 18),
+                          icon: const Icon(LucideIcons.download, size: 18),
                           label: const Text('Import'),
                           onPressed: onImportSettings,
                         ),
@@ -272,7 +273,7 @@ class AboutSettingsCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          icon: const Icon(LucideIcons.refreshCcw, size: 18),
                           label: const Text('Reset All'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppThemeV2.error,
@@ -294,11 +295,11 @@ class AboutSettingsCard extends StatelessWidget {
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
-            _buildLinkRow(context, 'GitHub Repository', Icons.code_rounded, 
+            _buildLinkRow(context, 'GitHub Repository', LucideIcons.github, 
                 () => onLaunchUrl('https://github.com/KhazP/LocalizerAppMain')),
-            _buildLinkRow(context, 'Report Issue', Icons.bug_report_rounded, 
+            _buildLinkRow(context, 'Report Issue', LucideIcons.bug, 
                 () => onLaunchUrl('https://github.com/KhazP/LocalizerAppMain/issues')),
-            _buildLinkRow(context, 'Licenses', Icons.article_rounded, onShowLicenses, showDivider: false),
+            _buildLinkRow(context, 'Licenses', LucideIcons.fileText, onShowLicenses, showDivider: false),
           ],
         ),
       ],
@@ -332,7 +333,7 @@ class AboutSettingsCard extends StatelessWidget {
                 Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
                 Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium)),
-                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                Icon(LucideIcons.chevronRight, size: 16, color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
               ],
             ),
           ),

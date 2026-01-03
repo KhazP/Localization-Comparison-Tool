@@ -46,10 +46,12 @@ class AiSuggestionDialog extends StatefulWidget {
     required this.keyName,
     required this.originalText,
     required this.suggestedText,
+    this.titleOverride,
     this.providerName,
     this.confidence,
     this.alternatives,
     this.isRephrase = false,
+    this.showKeyName = false,
     this.rejectLabel = 'Reject',
     this.showStopButton = false,
     this.stopLabel = 'Stop',
@@ -64,6 +66,9 @@ class AiSuggestionDialog extends StatefulWidget {
   /// The AI-suggested text.
   final String suggestedText;
 
+  /// Optional title override for the dialog.
+  final String? titleOverride;
+
   /// Name of the AI provider.
   final String? providerName;
 
@@ -75,6 +80,9 @@ class AiSuggestionDialog extends StatefulWidget {
 
   /// Whether this is a rephrase (vs translation) dialog.
   final bool isRephrase;
+
+  /// Whether to show the key name in the header.
+  final bool showKeyName;
 
   /// Label for the reject button.
   final String rejectLabel;
@@ -90,6 +98,8 @@ class AiSuggestionDialog extends StatefulWidget {
     BuildContext context, {
     required String keyName,
     required TranslationSuggestion suggestion,
+    String? titleOverride,
+    bool showKeyName = false,
     String rejectLabel = 'Reject',
     bool showStopButton = false,
     String stopLabel = 'Stop',
@@ -101,10 +111,12 @@ class AiSuggestionDialog extends StatefulWidget {
         keyName: keyName,
         originalText: suggestion.originalText,
         suggestedText: suggestion.translatedText,
+        titleOverride: titleOverride,
         providerName: suggestion.providerName,
         confidence: suggestion.confidence,
         alternatives: suggestion.alternatives,
         isRephrase: false,
+        showKeyName: showKeyName,
         rejectLabel: rejectLabel,
         showStopButton: showStopButton,
         stopLabel: stopLabel,
@@ -117,6 +129,8 @@ class AiSuggestionDialog extends StatefulWidget {
     BuildContext context, {
     required String keyName,
     required RephraseResult result,
+    String? titleOverride,
+    bool showKeyName = false,
     String rejectLabel = 'Reject',
     bool showStopButton = false,
     String stopLabel = 'Stop',
@@ -128,9 +142,11 @@ class AiSuggestionDialog extends StatefulWidget {
         keyName: keyName,
         originalText: result.originalText,
         suggestedText: result.rephrasedText,
+        titleOverride: titleOverride,
         providerName: result.providerName,
         alternatives: result.alternatives,
         isRephrase: true,
+        showKeyName: showKeyName,
         rejectLabel: rejectLabel,
         showStopButton: showStopButton,
         stopLabel: stopLabel,
@@ -172,6 +188,8 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final titleText = widget.titleOverride ??
+        (widget.isRephrase ? 'AI Rephrase' : 'AI Translation');
 
     return AlertDialog(
       title: Row(
@@ -187,16 +205,17 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.isRephrase ? 'AI Rephrase' : 'AI Translation',
+                  titleText,
                   style: theme.textTheme.titleLarge,
                 ),
-                Text(
-                  widget.keyName,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
+                if (widget.showKeyName && widget.keyName.trim().isNotEmpty)
+                  Text(
+                    'Key: ${widget.keyName}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
             ),
           ),

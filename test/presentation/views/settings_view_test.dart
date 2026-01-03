@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 // SettingsEvent should be exported by settings_bloc.dart
 // import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_event.dart';
@@ -24,11 +27,17 @@ Map<ApiProvider, ApiKeyTestResult> get defaultApiKeyTests => {
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
 
+class MockProjectBloc extends MockBloc<ProjectEvent, ProjectState>
+    implements ProjectBloc {}
+
 // Fake SettingsEvent for mocktail
 // SettingsEvent itself is an abstract class, so we can extend it if it's exported by settings_bloc.dart
 // Or, if there's a concrete base event class we can use, that would be even better.
 // For now, assuming SettingsEvent is accessible via settings_bloc.dart
+// For now, assuming SettingsEvent is accessible via settings_bloc.dart
 class FakeSettingsEvent extends Fake implements SettingsEvent {}
+
+class FakeProjectEvent extends Fake implements ProjectEvent {}
 
 // Helper to find category navigation tile
 Finder findSettingsCategoryTile(String title) {
@@ -38,20 +47,31 @@ Finder findSettingsCategoryTile(String title) {
 
 void main() {
   late MockSettingsBloc mockSettingsBloc;
+  late MockProjectBloc mockProjectBloc;
   late AppSettings initialAppSettings;
 
   // Register fallback for SettingsEvent
   setUpAll(() {
     registerFallbackValue(FakeSettingsEvent());
+    registerFallbackValue(FakeProjectEvent());
   });
 
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
+    mockProjectBloc = MockProjectBloc();
     initialAppSettings = AppSettings.defaultSettings();
 
     // Default stub for any add/remove event if not specifically overridden in a test
     // This should now work because FakeSettingsEvent is registered.
     when(() => mockSettingsBloc.add(any())).thenReturn(null);
+    when(() => mockProjectBloc.add(any())).thenReturn(null);
+
+    // Explicitly mock state property as read logic might access it directly
+    when(() => mockSettingsBloc.state).thenReturn(SettingsState(
+        status: SettingsStatus.loaded,
+        appSettings: initialAppSettings,
+        apiKeyTests: defaultApiKeyTests));
+    when(() => mockProjectBloc.state).thenReturn(const ProjectState());
 
     whenListen(
       mockSettingsBloc,
@@ -66,6 +86,12 @@ void main() {
           appSettings: initialAppSettings,
           apiKeyTests: defaultApiKeyTests),
     );
+
+    whenListen(
+      mockProjectBloc,
+      Stream.fromIterable([const ProjectState()]),
+      initialState: const ProjectState(),
+    );
   });
 
   // tearDown is not strictly necessary for MockBloc as it handles its own cleanup if any.
@@ -75,8 +101,15 @@ void main() {
       {SettingsBloc? settingsBloc}) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: BlocProvider<SettingsBloc>.value(
-          value: settingsBloc ?? mockSettingsBloc,
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<SettingsBloc>.value(
+              value: settingsBloc ?? mockSettingsBloc,
+            ),
+            BlocProvider<ProjectBloc>.value(
+              value: mockProjectBloc,
+            ),
+          ],
           child: const SettingsView(),
         ),
       ),

@@ -141,6 +141,8 @@ mobile platforms.
 ### Persistence
 * **Hive:** Used for local storage (user preferences, session history, warning suppressions).
 * **Secure Storage:** `flutter_secure_storage` is used for sensitive data like API keys.
+* **AI Service:** `google_generative_ai` is used for AI-powered translation and suggestions. OpenAI will be used in the future. Also Google Translate and DeepL will be used in the future.
+
 
 ### UI & UX
 * **Icons:** Use `lucide_icons` as the standard icon set.

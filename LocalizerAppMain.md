@@ -8,7 +8,7 @@ A Flutter-based desktop application for comparing localization files, tracking c
 *   **Real-Time Comparison Engine:** Supports various file formats (XLIFF, TMX, CSV, JSON, YAML, Properties, RESX, XML, TXT, DOCX) with diff highlighting in the Basic View. Utilizes Isolates for parsing. `.lang` files are parsed as plain text, where each line is treated as both a key and a value (similar to `.txt` files). `.txt` and `.docx` files are treated as list-of-phrases, where each line is a key.
 *   **Translation History & Diff Tracking:** Stores past comparison sessions in Hive. A History View displays these sessions in a sortable and filterable table, with options to clear history (with confirmation) and reload a past comparison into the Basic view.
 *   **Application Settings:** User-configurable settings (Default File Formats, Ignore Patterns, Ignore Case) are implemented with persistence in Hive. UI is available in the Settings tab.
-*   **AI-Assisted Translation (Stubbed):** Core BLoC, Service (Google Translate API stub), and Cache (stub) structures are in place.
+*   **AI-Assisted Translation:** Integrated Gemini 3 Flash (via `google_generative_ai`) for intelligent translations, rephrasing, and suggestions.
 *   **Git Integration (Stubbed):** Core BLoC and Service (libgit2dart stub) structures are in place.
 
 ## Database Schema
@@ -100,11 +100,11 @@ The application uses Hive for local data storage.
 ### 🌱 Future Goals
 - **Advanced Directory Comparison View**: Integrate a powerful, side-by-side diff viewer for directory comparison results, similar to the existing "Advanced" view for single files.
 - **Translation Cache**: Implement Hive persistence for `TranslationCache`.
-- **AI Translation Service**: Fully implement `GoogleTranslationService`, including secure API key storage and integrate into UI.
+- **AI Translation Service**: Full implementation of `GeminiTranslationService` with caching, streaming, and retry logic.
 - **Git Integration**: Implement `LibGit2DartService` using `libgit2dart` for actual Git operations. Build UI for repository selection, branch listing, and displaying branch comparison results.
 - **UI & UX Polish**:
   - Refine file previews and progress reporting.
   - Enhance error handling and result exporting.
 
 ---
-*This document will be updated as the project progresses.* 
+*This document will be updated as the project progresses.*

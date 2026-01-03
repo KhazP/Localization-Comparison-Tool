@@ -1,5 +1,6 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 
+import 'package:localizer_app_main/core/services/ai_usage_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
@@ -18,15 +19,18 @@ class GeminiAiAssistanceService implements AiAssistanceService {
     required SecureStorageService secureStorage,
     required LocalTranslationCache cache,
     required TalkerService talkerService,
+    required AiUsageService usageService,
     GeminiTranslationConfig? config,
   })  : _secureStorage = secureStorage,
         _cache = cache,
         _talker = talkerService,
+        _usageService = usageService,
         _config = config ?? const GeminiTranslationConfig();
 
   final SecureStorageService _secureStorage;
   final LocalTranslationCache _cache;
   final TalkerService _talker;
+  final AiUsageService _usageService;
   GeminiTranslationConfig _config;
 
   static const _modelName = 'gemini-2.5-flash';
@@ -62,7 +66,9 @@ class GeminiAiAssistanceService implements AiAssistanceService {
       );
     }
 
-    final prompt = systemInstruction ?? _defaultTranslationPrompt;
+    final prompt = systemInstruction ??
+        _config.systemInstructions ??
+        _defaultTranslationPrompt;
 
     final model = GenerativeModel(
       model: _modelName,
@@ -158,6 +164,7 @@ RULES:
       stopwatch.stop();
       _talker.info(
           'AI translation suggestion completed in ${stopwatch.elapsedMilliseconds}ms');
+      await _recordUsage(response.usageMetadata, stopwatch.elapsedMilliseconds);
 
       // Cache the result
       await _cache.cacheTranslation(
@@ -187,6 +194,7 @@ RULES:
     List<String>? contextStrings,
   ) {
     final buffer = StringBuffer();
+    UsageMetadata? usageMetadata;
 
     if (contextStrings != null && contextStrings.isNotEmpty) {
       buffer.writeln('CONTEXT (surrounding strings for reference):');
@@ -257,6 +265,7 @@ RULES:
       stopwatch.stop();
       _talker
           .info('AI rephrase completed in ${stopwatch.elapsedMilliseconds}ms');
+      await _recordUsage(response.usageMetadata, stopwatch.elapsedMilliseconds);
 
       return RephraseResult(
         originalText: text,
@@ -335,6 +344,7 @@ RULES:
 
     final stopwatch = Stopwatch()..start();
     final buffer = StringBuffer();
+    UsageMetadata? usageMetadata;
 
     try {
       final responseStream =
@@ -345,6 +355,9 @@ RULES:
         if (chunkText != null && chunkText.isNotEmpty) {
           buffer.write(chunkText);
           yield chunkText;
+        }
+        if (chunk.usageMetadata != null) {
+          usageMetadata = chunk.usageMetadata;
         }
       }
 
@@ -357,6 +370,7 @@ RULES:
         _talker.info(
             'AI streaming translation completed in ${stopwatch.elapsedMilliseconds}ms');
       }
+      await _recordUsage(usageMetadata, stopwatch.elapsedMilliseconds);
     } on GenerativeAIException catch (e) {
       _talker.error('AI streaming error: ${e.message}');
       if (e.message.contains('429') ||
@@ -365,5 +379,22 @@ RULES:
       }
       throw TranslationException('AI streaming failed: ${e.message}', cause: e);
     }
+  }
+
+  Future<void> _recordUsage(
+    UsageMetadata? usage,
+    int latencyMs,
+  ) async {
+    final promptTokens = usage?.promptTokenCount ?? 0;
+    final completionTokens = usage?.candidatesTokenCount ?? 0;
+    final totalTokens = usage?.totalTokenCount ?? 0;
+    await _usageService.recordUsage(
+      providerName: providerName,
+      promptTokens: promptTokens,
+      completionTokens: completionTokens,
+      totalTokens: totalTokens,
+      model: _modelName,
+      latencyMs: latencyMs,
+    );
   }
 }

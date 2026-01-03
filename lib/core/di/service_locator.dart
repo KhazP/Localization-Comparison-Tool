@@ -5,6 +5,7 @@ import 'package:localizer_app_main/core/services/file_discovery_service.dart';
 import 'package:localizer_app_main/core/services/file_watcher_service.dart';
 import 'package:localizer_app_main/core/services/project_import_service.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
+import 'package:localizer_app_main/core/services/ai_usage_service.dart';
 import 'package:localizer_app_main/core/services/app_command_service.dart';
 import 'package:localizer_app_main/core/services/app_tab_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
@@ -15,9 +16,12 @@ import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
+import 'package:localizer_app_main/data/services/adaptive_ai_assistance_service.dart';
+import 'package:localizer_app_main/data/services/deepl_translation_service.dart';
 import 'package:localizer_app_main/data/services/gemini_translation_service.dart';
 import 'package:localizer_app_main/data/services/gemini_ai_assistance_service.dart';
 import 'package:localizer_app_main/data/services/ai_assistance_service.dart';
+import 'package:localizer_app_main/data/services/openai_ai_assistance_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/'
@@ -55,10 +59,18 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<TranslationMemoryService>(
     () => TranslationMemoryService(),
   );
+  sl.registerLazySingleton<AiUsageService>(() => AiUsageService());
   sl.registerLazySingleton<TranslationService>(
     () => GoogleTranslationService(
       secureStorage: sl<SecureStorageService>(),
       dioClient: sl<DioClient>(),
+    ),
+  );
+  sl.registerLazySingleton<DeepLTranslationService>(
+    () => DeepLTranslationService(
+      secureStorage: sl<SecureStorageService>(),
+      dioClient: sl<DioClient>(),
+      talkerService: sl<TalkerService>(),
     ),
   );
   sl.registerLazySingleton<GeminiTranslationService>(
@@ -68,11 +80,32 @@ Future<void> setupServiceLocator() async {
       talkerService: sl<TalkerService>(),
     ),
   );
-  sl.registerLazySingleton<AiAssistanceService>(
+  sl.registerLazySingleton<GeminiAiAssistanceService>(
     () => GeminiAiAssistanceService(
       secureStorage: sl<SecureStorageService>(),
       cache: sl<LocalTranslationCache>(),
       talkerService: sl<TalkerService>(),
+      usageService: sl<AiUsageService>(),
+    ),
+  );
+  sl.registerLazySingleton<OpenAiAiAssistanceService>(
+    () => OpenAiAiAssistanceService(
+      secureStorage: sl<SecureStorageService>(),
+      cache: sl<LocalTranslationCache>(),
+      dioClient: sl<DioClient>(),
+      talkerService: sl<TalkerService>(),
+      usageService: sl<AiUsageService>(),
+    ),
+  );
+  sl.registerLazySingleton<AiAssistanceService>(
+    () => AdaptiveAiAssistanceService(
+      settingsRepository: sl<SettingsRepository>(),
+      secureStorage: sl<SecureStorageService>(),
+      cache: sl<LocalTranslationCache>(),
+      geminiService: sl<GeminiAiAssistanceService>(),
+      openAiService: sl<OpenAiAiAssistanceService>(),
+      googleTranslateService: sl<TranslationService>(),
+      deeplTranslationService: sl<DeepLTranslationService>(),
     ),
   );
   sl.registerLazySingleton<ApiKeyValidationService>(

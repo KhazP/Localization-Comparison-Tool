@@ -63,12 +63,20 @@ const _commonLanguages = <String, String>{
 /// - Source/target language selectors
 /// - Translate All Missing button with progress
 class AiSection extends StatelessWidget {
-  const AiSection({super.key});
+  const AiSection({super.key, required this.isCloudTranslation});
+
+  final bool isCloudTranslation;
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AdvancedDiffController>(
       builder: (context, controller, child) {
+        final infoLabel = isCloudTranslation
+            ? 'Uses cloud translation to translate empty target values '
+                'from source.'
+            : 'Uses AI to translate empty target values from source.';
+        final settingsLabel =
+            isCloudTranslation ? 'Translation Settings' : 'AI Settings';
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -166,14 +174,14 @@ class AiSection extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => _openAiSettings(context),
               icon: const Icon(LucideIcons.settings, size: 18),
-              label: const Text('AI Settings'),
+              label: Text(settingsLabel),
             ),
 
             const SizedBox(height: 8),
 
             // Info text
             Text(
-              'Uses AI to translate empty target values from source.',
+              infoLabel,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).hintColor,
                   ),
@@ -204,8 +212,9 @@ class AiSection extends StatelessWidget {
           ],
         ),
         content: Text(
-          'This will use AI to translate all entries with empty target values '
-          'from $sourceLabel to $targetLabel.\n\n'
+          'This will use ${isCloudTranslation ? 'cloud translation' : 'AI'} '
+          'to translate all entries with empty target values from '
+          '$sourceLabel to $targetLabel.\n\n'
           'You can review each suggestion or apply all at once.',
         ),
         actions: [
@@ -239,7 +248,9 @@ class AiSection extends StatelessWidget {
       if (context.mounted) {
         ToastService.showSuccess(
           context,
-          'Translated $count entries with AI.',
+          isCloudTranslation
+              ? 'Translated $count entries with cloud translation.'
+              : 'Translated $count entries with AI.',
         );
       }
     } catch (e, stackTrace) {
@@ -282,6 +293,8 @@ class AiSection extends StatelessWidget {
             context,
             keyName: key,
             suggestion: suggestion,
+            titleOverride:
+                isCloudTranslation ? 'Cloud Translation' : 'AI Translation',
             rejectLabel: 'Skip',
             showStopButton: true,
             stopLabel: 'Stop',
@@ -319,7 +332,9 @@ class AiSection extends StatelessWidget {
     if (context.mounted && appliedCount > 0) {
       ToastService.showSuccess(
         context,
-        'Applied $appliedCount AI suggestions.',
+        isCloudTranslation
+            ? 'Applied $appliedCount suggestions.'
+            : 'Applied $appliedCount AI suggestions.',
       );
     }
   }

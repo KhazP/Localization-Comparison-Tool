@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:provider/provider.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/'
     'advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/'
@@ -61,14 +63,20 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
 
   void _initializeGrid() {
     final controller = context.read<AdvancedDiffController>();
-    _updateGridData(controller);
+    _updateGridData(
+      controller,
+      isCloudTranslation: _isCloudTranslationFromSettings(),
+    );
   }
 
   void _handleControllerUpdate() {
     final controller = _controller;
     if (!mounted || controller == null) return;
 
-    _updateGridData(controller);
+    _updateGridData(
+      controller,
+      isCloudTranslation: _isCloudTranslationFromSettings(),
+    );
 
     if (_stateManager == null) {
       setState(() {});
@@ -85,9 +93,13 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     setState(() {});
   }
 
-  void _updateGridData(AdvancedDiffController controller) {
+  void _updateGridData(
+    AdvancedDiffController controller, {
+    required bool isCloudTranslation,
+  }) {
     _columns = PlutoGridAdapter.createColumns(
       context: context,
+      isCloudTranslation: isCloudTranslation,
       onAddToTM: (key) => _handleAddToTM(controller, key),
       onMarkReviewed: (key) => _handleMarkReviewed(controller, key),
       onRevert: (key) => _handleRevert(controller, key),
@@ -134,7 +146,10 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
 
   void _refreshGrid(AdvancedDiffController controller) {
     setState(() {
-      _updateGridData(controller);
+      _updateGridData(
+        controller,
+        isCloudTranslation: _isCloudTranslationFromSettings(),
+      );
     });
   }
 
@@ -142,10 +157,12 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     AdvancedDiffController controller,
     String key,
   ) async {
+    final isCloud = _isCloudTranslationFromSettings();
     await _runTranslationSuggestion(
       controller,
       key,
-      successMessage: 'AI translation applied.',
+      titleOverride: _translationTitle(isCloud),
+      successMessage: _translationAppliedMessage(isCloud),
     );
   }
 
@@ -153,16 +170,19 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     AdvancedDiffController controller,
     String key,
   ) async {
+    final isCloud = _isCloudTranslationFromSettings();
     await _runTranslationSuggestion(
       controller,
       key,
-      successMessage: 'AI suggestion applied.',
+      titleOverride: _translationTitle(isCloud),
+      successMessage: _suggestionAppliedMessage(isCloud),
     );
   }
 
   Future<void> _runTranslationSuggestion(
     AdvancedDiffController controller,
     String key, {
+    String? titleOverride,
     required String successMessage,
   }) async {
     final sourceValue = controller.getSourceValue(key);
@@ -179,6 +199,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         context,
         keyName: key,
         suggestion: suggestion,
+        titleOverride: titleOverride,
       );
 
       if (!context.mounted || decision == null) return;
@@ -214,10 +235,12 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
       final result = await controller.rephraseTarget(key);
       if (!context.mounted) return;
 
+      final isCloud = _isCloudTranslationFromSettings();
       final decision = await AiSuggestionDialog.showForRephrase(
         context,
         keyName: key,
         result: result,
+        titleOverride: _rephraseTitle(isCloud),
       );
 
       if (!context.mounted || decision == null) return;
@@ -225,7 +248,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
           decision.text != null) {
         controller.applyAiSuggestion(key, decision.text!);
         _refreshGrid(controller);
-        ToastService.showSuccess(context, 'AI rephrase applied.');
+        ToastService.showSuccess(context, _rephraseAppliedMessage(isCloud));
       }
     } catch (e, stackTrace) {
       sl<TalkerService>().handle(
@@ -325,12 +348,16 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCloud = _isCloudStrategy(
+      context.watch<SettingsBloc>().state.appSettings.translationStrategy,
+    );
 
     return Consumer<AdvancedDiffController>(
       builder: (context, controller, _) {
         // Rebuild columns and rows when controller changes
         _columns = PlutoGridAdapter.createColumns(
           context: context,
+          isCloudTranslation: isCloud,
           onAddToTM: (key) => _handleAddToTM(controller, key),
           onMarkReviewed: (key) => _handleMarkReviewed(controller, key),
           onRevert: (key) => _handleRevert(controller, key),
@@ -483,5 +510,35 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         );
       },
     );
+  }
+
+  bool _isCloudTranslationFromSettings() {
+    final strategy =
+        context.read<SettingsBloc>().state.appSettings.translationStrategy;
+    return _isCloudStrategy(strategy);
+  }
+
+  bool _isCloudStrategy(String value) {
+    return value.toLowerCase().contains('cloud');
+  }
+
+  String _translationTitle(bool isCloud) {
+    return isCloud ? 'Cloud Translation' : 'AI Translation';
+  }
+
+  String _rephraseTitle(bool isCloud) {
+    return isCloud ? 'Rephrase' : 'AI Rephrase';
+  }
+
+  String _translationAppliedMessage(bool isCloud) {
+    return isCloud ? 'Cloud translation applied.' : 'AI translation applied.';
+  }
+
+  String _suggestionAppliedMessage(bool isCloud) {
+    return isCloud ? 'Suggestion applied.' : 'AI suggestion applied.';
+  }
+
+  String _rephraseAppliedMessage(bool isCloud) {
+    return isCloud ? 'Rephrase applied.' : 'AI rephrase applied.';
   }
 }

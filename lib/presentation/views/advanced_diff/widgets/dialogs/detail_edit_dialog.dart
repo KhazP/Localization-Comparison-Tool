@@ -1,5 +1,6 @@
 import 'package:code_text_field/code_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
 import 'package:highlight/languages/json.dart';
@@ -8,6 +9,8 @@ import 'package:highlight/languages/yaml.dart';
 import 'package:highlight/languages/ini.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/'
+    'settings_bloc.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
@@ -108,6 +111,9 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     setState(() => _isAiLoading = true);
 
     try {
+      final isCloud = _isCloudTranslation(
+        context.read<SettingsBloc>().state.appSettings.translationStrategy,
+      );
       final controller = context.read<AdvancedDiffController>();
       final suggestion = await controller.suggestTranslation(widget.keyName);
       if (!mounted) return;
@@ -116,13 +122,17 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
         context,
         keyName: widget.keyName,
         suggestion: suggestion,
+        titleOverride: isCloud ? 'Cloud Translation' : 'AI Translation',
       );
 
       if (!mounted || decision == null) return;
       if (decision.action == AiSuggestionAction.accept &&
           decision.text != null) {
         _targetController.text = decision.text!;
-        ToastService.showSuccess(context, 'AI suggestion added.');
+        ToastService.showSuccess(
+          context,
+          isCloud ? 'Translation suggestion added.' : 'AI suggestion added.',
+        );
       }
     } catch (e, stackTrace) {
       sl<TalkerService>().handle(
@@ -154,11 +164,18 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     return atomOneLightTheme;
   }
 
+  bool _isCloudTranslation(String value) {
+    return value.toLowerCase().contains('cloud');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final codeTheme = isDark ? atomOneDarkTheme : atomOneLightTheme;
+    final isCloud = _isCloudTranslation(
+      context.watch<SettingsBloc>().state.appSettings.translationStrategy,
+    );
 
     return AlertDialog(
       title: Row(
@@ -284,7 +301,11 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
           onPressed: _isAiLoading ? null : _handleAiTranslate,
           icon: const Icon(LucideIcons.sparkles, size: 16),
           label: Text(
-            _isAiLoading ? 'Translating...' : 'Translate with AI',
+            _isAiLoading
+                ? 'Translating...'
+                : isCloud
+                    ? 'Translate with Cloud'
+                    : 'Translate with AI',
           ),
         ),
         FilledButton.icon(

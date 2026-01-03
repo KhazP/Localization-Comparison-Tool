@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/'
+    'settings_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/presentation/widgets/common/'
     'diff_highlighter.dart';
@@ -119,6 +122,12 @@ class _DiffRowItemState extends State<DiffRowItem> {
   @override
   Widget build(BuildContext context) {
     final isDimmed = widget.isReviewed;
+    final isCloud = _isCloudTranslation(
+      context.watch<SettingsBloc>().state.appSettings.translationStrategy,
+    );
+    final translateLabel =
+        isCloud ? 'Translate with Cloud' : 'Translate with AI';
+    final rephraseLabel = isCloud ? 'Rephrase' : 'Rephrase with AI';
 
     return Material(
       type: MaterialType.transparency,
@@ -265,7 +274,7 @@ class _DiffRowItemState extends State<DiffRowItem> {
                             Icon(LucideIcons.sparkles,
                                 size: 18, color: Colors.purple),
                             const SizedBox(width: 8),
-                            const Text('Translate with AI'),
+                            Text(translateLabel),
                           ],
                         ),
                       ),
@@ -277,7 +286,7 @@ class _DiffRowItemState extends State<DiffRowItem> {
                             Icon(LucideIcons.wand2,
                                 size: 18, color: Colors.orange),
                             const SizedBox(width: 8),
-                            const Text('Rephrase with AI'),
+                            Text(rephraseLabel),
                           ],
                         ),
                       ),
@@ -454,5 +463,9 @@ class _DiffRowItemState extends State<DiffRowItem> {
         textAlign: TextAlign.center,
       ),
     );
+  }
+
+  bool _isCloudTranslation(String value) {
+    return value.toLowerCase().contains('cloud');
   }
 }

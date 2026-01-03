@@ -9,7 +9,10 @@ import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/ai_usage_service.dart';
 import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
+import 'package:localizer_app_main/data/models/ai_usage_summary.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/models/quality_metrics.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
@@ -33,10 +36,12 @@ class QualityDashboardView extends StatefulWidget {
 class _QualityDashboardViewState extends State<QualityDashboardView>
     with SingleTickerProviderStateMixin {
   final QualityMetricsService _metricsService = QualityMetricsService();
+  final AiUsageService _aiUsageService = sl<AiUsageService>();
   late final AnimationController _animationController;
   late final Animation<double> _fadeAnimation;
 
   Future<QualityDashboardData>? _dashboardFuture;
+  Future<AiUsageSummary>? _aiUsageFuture;
   List<ComparisonSession> _history = [];
   DashboardChartMode _chartMode = DashboardChartMode.words;
   bool _showOnlyCurrentProject = true;
@@ -91,6 +96,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
         history: filteredHistory,
         settings: settingsState.appSettings,
       );
+      _aiUsageFuture = _aiUsageService.getSummary();
     });
   }
 
@@ -279,6 +285,23 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SummaryRow(data: data),
+              if (_aiUsageFuture != null) ...[
+                const SizedBox(height: 20),
+                FutureBuilder<AiUsageSummary>(
+                  future: _aiUsageFuture,
+                  builder: (context, usageSnapshot) {
+                    final summary = usageSnapshot.data;
+                    if (summary == null || !summary.hasUsage) {
+                      return const SizedBox.shrink();
+                    }
+                    return _AiUsageSection(
+                      summary: summary,
+                      cardColor: cardColor,
+                      borderColor: borderColor,
+                    );
+                  },
+                ),
+              ],
               const SizedBox(height: 20),
               _CoverageSection(
                 data: data,
@@ -508,6 +531,169 @@ class _SummaryCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiUsageSection extends StatelessWidget {
+  const _AiUsageSection({
+    required this.summary,
+    required this.cardColor,
+    required this.borderColor,
+  });
+
+  final AiUsageSummary summary;
+  final Color cardColor;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!summary.hasUsage) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'AI usage',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: summary.providers
+                .map((provider) => _AiUsageCard(summary: provider))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiUsageCard extends StatelessWidget {
+  const _AiUsageCard({required this.summary});
+
+  final AiUsageProviderSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurface.withOpacity(0.6),
+    );
+    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+
+    final lastUsed = summary.lastUsedAt;
+    final lastUsedLabel = lastUsed != null
+        ? DateFormat('MMM d, yyyy h:mm a').format(lastUsed)
+        : null;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minWidth: 220,
+        maxWidth: 320,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              summary.providerName,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildUsageRow(
+              label: 'Requests',
+              value: summary.requestCount.toString(),
+              labelStyle: labelStyle,
+              valueStyle: valueStyle,
+            ),
+            _buildUsageRow(
+              label: 'Total tokens',
+              value: summary.totalTokens.toString(),
+              labelStyle: labelStyle,
+              valueStyle: valueStyle,
+            ),
+            _buildUsageRow(
+              label: 'Prompt tokens',
+              value: summary.promptTokens.toString(),
+              labelStyle: labelStyle,
+              valueStyle: valueStyle,
+            ),
+            _buildUsageRow(
+              label: 'Completion tokens',
+              value: summary.completionTokens.toString(),
+              labelStyle: labelStyle,
+              valueStyle: valueStyle,
+            ),
+            if (summary.lastModel != null &&
+                summary.lastModel!.trim().isNotEmpty)
+              _buildUsageRow(
+                label: 'Last model',
+                value: summary.lastModel!,
+                labelStyle: labelStyle,
+                valueStyle: valueStyle,
+              ),
+            if (lastUsedLabel != null)
+              _buildUsageRow(
+                label: 'Last used',
+                value: lastUsedLabel,
+                labelStyle: labelStyle,
+                valueStyle: valueStyle,
+              ),
+            if (summary.lastLatencyMs != null)
+              _buildUsageRow(
+                label: 'Last time',
+                value: '${summary.lastLatencyMs} ms',
+                labelStyle: labelStyle,
+                valueStyle: valueStyle,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUsageRow({
+    required String label,
+    required String value,
+    TextStyle? labelStyle,
+    TextStyle? valueStyle,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: Text(label, style: labelStyle)),
+          const SizedBox(width: 8),
+          Flexible(child: Text(value, style: valueStyle)),
         ],
       ),
     );

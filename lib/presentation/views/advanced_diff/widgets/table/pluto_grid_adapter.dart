@@ -8,6 +8,7 @@ class PlutoGridAdapter {
   /// Creates column definitions for the diff grid.
   static List<PlutoColumn> createColumns({
     required BuildContext context,
+    required bool isCloudTranslation,
     required void Function(String key) onAddToTM,
     required void Function(String key) onMarkReviewed,
     required void Function(String key) onRevert,
@@ -204,6 +205,7 @@ class PlutoGridAdapter {
             context: context,
             hasSource: hasSource,
             hasTarget: hasTarget,
+            isCloudTranslation: isCloudTranslation,
             onAiTranslate: onAiTranslate,
             onAiSuggest: onAiSuggest,
             onAiRephrase: onAiRephrase,
@@ -340,21 +342,26 @@ Widget? _buildAiMenu({
   required bool hasSource,
   required bool hasTarget,
   required String rowKey,
+  required bool isCloudTranslation,
   void Function(String key)? onAiTranslate,
   void Function(String key)? onAiSuggest,
   void Function(String key)? onAiRephrase,
 }) {
   final items = <PopupMenuEntry<_AiRowAction>>[];
+  final translateLabel =
+      isCloudTranslation ? 'Translate with Cloud' : 'Translate with AI';
+  final rephraseLabel = isCloudTranslation ? 'Rephrase' : 'Rephrase with AI';
+  final toolsLabel = isCloudTranslation ? 'Translation tools' : 'AI tools';
 
   if (hasSource && !hasTarget && onAiTranslate != null) {
     items.add(
       PopupMenuItem(
         value: _AiRowAction.translate,
         child: Row(
-          children: const [
-            Icon(LucideIcons.sparkles, size: 16),
-            SizedBox(width: 8),
-            Text('Translate with AI'),
+          children: [
+            const Icon(LucideIcons.sparkles, size: 16),
+            const SizedBox(width: 8),
+            Text(translateLabel),
           ],
         ),
       ),
@@ -381,10 +388,10 @@ Widget? _buildAiMenu({
       PopupMenuItem(
         value: _AiRowAction.rephrase,
         child: Row(
-          children: const [
-            Icon(LucideIcons.wand2, size: 16),
-            SizedBox(width: 8),
-            Text('Rephrase with AI'),
+          children: [
+            const Icon(LucideIcons.wand2, size: 16),
+            const SizedBox(width: 8),
+            Text(rephraseLabel),
           ],
         ),
       ),
@@ -394,7 +401,7 @@ Widget? _buildAiMenu({
   if (items.isEmpty) return null;
 
   return Tooltip(
-    message: 'AI tools',
+    message: toolsLabel,
     child: SizedBox(
       width: 24,
       height: 24,

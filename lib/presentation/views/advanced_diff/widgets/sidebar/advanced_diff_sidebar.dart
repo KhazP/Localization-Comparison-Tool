@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/sidebar_section.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/status_section.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/translation_memory_section.dart';
@@ -12,6 +14,10 @@ class AdvancedDiffSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsBloc>().state.appSettings;
+    final isCloud = _isCloudStrategy(settings.translationStrategy);
+    final aiTitle = isCloud ? 'Cloud Translation' : 'AI Translation';
+
     return Container(
       width: 320,
       decoration: BoxDecoration(
@@ -44,25 +50,33 @@ class AdvancedDiffSidebar extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
-              children: const [
-                SidebarSection(title: 'AI Translation', child: AiSection()),
-                SizedBox(height: 16),
-                SidebarSection(title: 'Status', child: StatusSection()),
-                SizedBox(height: 16),
+              children: [
                 SidebarSection(
+                  title: aiTitle,
+                  child: AiSection(isCloudTranslation: isCloud),
+                ),
+                const SizedBox(height: 16),
+                const SidebarSection(title: 'Status', child: StatusSection()),
+                const SizedBox(height: 16),
+                const SidebarSection(
                     title: 'Translation Memory',
                     child: TranslationMemorySection()),
-                SizedBox(height: 16),
-                SidebarSection(title: 'Filters', child: FiltersSection()),
-                SizedBox(height: 16),
-                SidebarSection(title: 'Actions', child: ActionsSection()),
-                SizedBox(height: 16),
-                SidebarSection(title: 'Similarity', child: SimilaritySection()),
+                const SizedBox(height: 16),
+                const SidebarSection(title: 'Filters', child: FiltersSection()),
+                const SizedBox(height: 16),
+                const SidebarSection(title: 'Actions', child: ActionsSection()),
+                const SizedBox(height: 16),
+                const SidebarSection(
+                    title: 'Similarity', child: SimilaritySection()),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  bool _isCloudStrategy(String value) {
+    return value.toLowerCase().contains('cloud');
   }
 }

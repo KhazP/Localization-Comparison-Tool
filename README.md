@@ -20,6 +20,9 @@ The **Localization Comparison Tool** helps developers, translators, and localiza
 - **Intelligent Diff Detection**: Automatically identifies added, removed, and modified strings
 - **Similarity Analysis**: Advanced algorithms detect how much modified strings have changed
 - **Batch Processing**: Compare entire directories with matching file pairs
+- **AI-Powered Translations**: Generate suggestions and translations using Gemini AI
+- **Super Drag & Drop**: Advanced file interactions with visual feedback
+
 
 <img src="https://github.com/user-attachments/assets/15a392c6-2c9f-4bd9-9ec7-019d9d63fef9" width="800">
 
@@ -42,6 +45,8 @@ The **Localization Comparison Tool** helps developers, translators, and localiza
 - **Custom Settings**: Configure ignore patterns, case sensitivity, and default file formats
 - **Progress Tracking**: Real-time progress indicators for large file operations
 - **Cross-Platform**: Native desktop performance on Windows, macOS, and Linux
+- **Glassmorphism Toasts**: Beautiful, non-intrusive notification system
+
 
 ## 🔧 Supported File Formats
 

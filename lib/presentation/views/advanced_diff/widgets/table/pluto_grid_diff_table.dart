@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:provider/provider.dart';
-import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
-import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/table/pluto_grid_adapter.dart';
-import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/dialogs/detail_edit_dialog.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/'
+    'advanced_diff_controller.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/'
+    'table/pluto_grid_adapter.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/'
+    'dialogs/detail_edit_dialog.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
+import 'package:localizer_app_main/presentation/utils/ai_error_mapper.dart';
+import 'package:localizer_app_main/presentation/widgets/dialogs/'
+    'ai_suggestion_dialog.dart';
 
 /// Excel-like data grid for the Advanced Diff View using PlutoGrid.
 ///
@@ -28,19 +36,53 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   List<PlutoRow> _rows = [];
   List<PlutoColumn> _columns = [];
   bool _initialized = false;
+  AdvancedDiffController? _controller;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final controller = context.read<AdvancedDiffController>();
+    if (_controller != controller) {
+      _controller?.removeListener(_handleControllerUpdate);
+      _controller = controller;
+      _controller?.addListener(_handleControllerUpdate);
+    }
     if (!_initialized) {
       _initializeGrid();
       _initialized = true;
     }
   }
 
+  @override
+  void dispose() {
+    _controller?.removeListener(_handleControllerUpdate);
+    super.dispose();
+  }
+
   void _initializeGrid() {
     final controller = context.read<AdvancedDiffController>();
     _updateGridData(controller);
+  }
+
+  void _handleControllerUpdate() {
+    final controller = _controller;
+    if (!mounted || controller == null) return;
+
+    _updateGridData(controller);
+
+    if (_stateManager == null) {
+      setState(() {});
+      return;
+    }
+
+    if (_stateManager?.isEditing == true) {
+      return;
+    }
+
+    _stateManager?.removeAllRows();
+    _stateManager?.appendRows(_rows);
+    _stateManager?.notifyListeners();
+    setState(() {});
   }
 
   void _updateGridData(AdvancedDiffController controller) {
@@ -50,6 +92,9 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
       onMarkReviewed: (key) => _handleMarkReviewed(controller, key),
       onRevert: (key) => _handleRevert(controller, key),
       onDelete: (key) => _handleDelete(controller, key),
+      onAiTranslate: (key) => _handleAiTranslate(controller, key),
+      onAiSuggest: (key) => _handleAiSuggest(controller, key),
+      onAiRephrase: (key) => _handleAiRephrase(controller, key),
       reviewedKeys: controller.reviewedKeys,
       useInlineEditing: controller.useInlineEditing,
       onEditCell: (key) => _showEditDialog(controller, key),
@@ -91,6 +136,107 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     setState(() {
       _updateGridData(controller);
     });
+  }
+
+  Future<void> _handleAiTranslate(
+    AdvancedDiffController controller,
+    String key,
+  ) async {
+    await _runTranslationSuggestion(
+      controller,
+      key,
+      successMessage: 'AI translation applied.',
+    );
+  }
+
+  Future<void> _handleAiSuggest(
+    AdvancedDiffController controller,
+    String key,
+  ) async {
+    await _runTranslationSuggestion(
+      controller,
+      key,
+      successMessage: 'AI suggestion applied.',
+    );
+  }
+
+  Future<void> _runTranslationSuggestion(
+    AdvancedDiffController controller,
+    String key, {
+    required String successMessage,
+  }) async {
+    final sourceValue = controller.getSourceValue(key);
+    if (sourceValue.trim().isEmpty) {
+      ToastService.showInfo(context, 'No source text to translate.');
+      return;
+    }
+
+    try {
+      final suggestion = await controller.suggestTranslation(key);
+      if (!context.mounted) return;
+
+      final decision = await AiSuggestionDialog.showForTranslation(
+        context,
+        keyName: key,
+        suggestion: suggestion,
+      );
+
+      if (!context.mounted || decision == null) return;
+      if (decision.action == AiSuggestionAction.accept &&
+          decision.text != null) {
+        controller.applyAiSuggestion(key, decision.text!);
+        _refreshGrid(controller);
+        ToastService.showSuccess(context, successMessage);
+      }
+    } catch (e, stackTrace) {
+      sl<TalkerService>().handle(
+        e,
+        stackTrace,
+        'AI translation failed for "$key"',
+      );
+      if (context.mounted) {
+        ToastService.showError(context, aiUserMessageForError(e));
+      }
+    }
+  }
+
+  Future<void> _handleAiRephrase(
+    AdvancedDiffController controller,
+    String key,
+  ) async {
+    final targetValue = controller.getTargetValue(key);
+    if (targetValue.trim().isEmpty) {
+      ToastService.showInfo(context, 'No target text to rephrase.');
+      return;
+    }
+
+    try {
+      final result = await controller.rephraseTarget(key);
+      if (!context.mounted) return;
+
+      final decision = await AiSuggestionDialog.showForRephrase(
+        context,
+        keyName: key,
+        result: result,
+      );
+
+      if (!context.mounted || decision == null) return;
+      if (decision.action == AiSuggestionAction.accept &&
+          decision.text != null) {
+        controller.applyAiSuggestion(key, decision.text!);
+        _refreshGrid(controller);
+        ToastService.showSuccess(context, 'AI rephrase applied.');
+      }
+    } catch (e, stackTrace) {
+      sl<TalkerService>().handle(
+        e,
+        stackTrace,
+        'AI rephrase failed for "$key"',
+      );
+      if (context.mounted) {
+        ToastService.showError(context, aiUserMessageForError(e));
+      }
+    }
   }
 
   void _handleCellChanged(PlutoGridOnChangedEvent event) {
@@ -189,6 +335,9 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
           onMarkReviewed: (key) => _handleMarkReviewed(controller, key),
           onRevert: (key) => _handleRevert(controller, key),
           onDelete: (key) => _handleDelete(controller, key),
+          onAiTranslate: (key) => _handleAiTranslate(controller, key),
+          onAiSuggest: (key) => _handleAiSuggest(controller, key),
+          onAiRephrase: (key) => _handleAiRephrase(controller, key),
           reviewedKeys: controller.reviewedKeys,
           useInlineEditing: controller.useInlineEditing,
           onEditCell: (key) => _showEditDialog(controller, key),

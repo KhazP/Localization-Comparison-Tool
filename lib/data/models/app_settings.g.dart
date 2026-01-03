@@ -112,13 +112,15 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
           fields[78] == null ? [] : (fields[78] as List).cast<String>(),
       toastPosition: fields[79] == null ? 'BottomRight' : fields[79] as String,
       toastStyle: fields[80] == null ? 'Compact' : fields[80] as String,
+      advancedDiffUseInlineEditing:
+          fields[81] == null ? false : fields[81] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(81)
+      ..writeByte(82)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -280,7 +282,9 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(79)
       ..write(obj.toastPosition)
       ..writeByte(80)
-      ..write(obj.toastStyle);
+      ..write(obj.toastStyle)
+      ..writeByte(81)
+      ..write(obj.advancedDiffUseInlineEditing);
   }
 
   @override

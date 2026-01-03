@@ -43,6 +43,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateDiffIdenticalColor>(_onUpdateDiffIdenticalColor);
     on<UpdateDiffFontSize>(_onUpdateDiffFontSize);
     on<UpdateDiffFontFamily>(_onUpdateDiffFontFamily);
+    on<UpdateAdvancedDiffEditMode>(_onUpdateAdvancedDiffEditMode);
     on<UpdateDiffColors>(_onUpdateDiffColors);
     on<UpdateDefaultSourceEncoding>(_onUpdateDefaultSourceEncoding);
     on<UpdateDefaultTargetEncoding>(_onUpdateDefaultTargetEncoding);
@@ -357,6 +358,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateDiffFontFamily event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(diffFontFamily: event.fontFamily);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateAdvancedDiffEditMode(
+      UpdateAdvancedDiffEditMode event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(
+      advancedDiffUseInlineEditing: event.useInlineEditing,
+    );
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

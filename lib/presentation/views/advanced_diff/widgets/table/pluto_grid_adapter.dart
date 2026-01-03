@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 
 /// Converts comparison diff data to PlutoGrid format.
@@ -11,6 +12,9 @@ class PlutoGridAdapter {
     required void Function(String key) onMarkReviewed,
     required void Function(String key) onRevert,
     required void Function(String key) onDelete,
+    void Function(String key)? onAiTranslate,
+    void Function(String key)? onAiSuggest,
+    void Function(String key)? onAiRephrase,
     required Set<String> reviewedKeys,
     required bool useInlineEditing,
     required void Function(String key) onEditCell,
@@ -189,10 +193,28 @@ class PlutoGridAdapter {
 
           final isReviewed = reviewedKeys.contains(rowKey);
 
+          final sourceValue =
+              rendererContext.row.cells['source']?.value?.toString() ?? '';
+          final targetValue =
+              rendererContext.row.cells['target']?.value?.toString() ?? '';
+          final hasSource = sourceValue.trim().isNotEmpty;
+          final hasTarget = targetValue.trim().isNotEmpty;
+
+          final aiMenu = _buildAiMenu(
+            context: context,
+            hasSource: hasSource,
+            hasTarget: hasTarget,
+            onAiTranslate: onAiTranslate,
+            onAiSuggest: onAiSuggest,
+            onAiRephrase: onAiRephrase,
+            rowKey: rowKey,
+          );
+
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (aiMenu != null) aiMenu,
               _ActionIconButton(
                 icon: Icons.psychology,
                 tooltip: 'Add to TM',
@@ -305,6 +327,101 @@ class PlutoGridAdapter {
       ),
     );
   }
+}
+
+enum _AiRowAction {
+  translate,
+  suggest,
+  rephrase,
+}
+
+Widget? _buildAiMenu({
+  required BuildContext context,
+  required bool hasSource,
+  required bool hasTarget,
+  required String rowKey,
+  void Function(String key)? onAiTranslate,
+  void Function(String key)? onAiSuggest,
+  void Function(String key)? onAiRephrase,
+}) {
+  final items = <PopupMenuEntry<_AiRowAction>>[];
+
+  if (hasSource && !hasTarget && onAiTranslate != null) {
+    items.add(
+      PopupMenuItem(
+        value: _AiRowAction.translate,
+        child: Row(
+          children: const [
+            Icon(LucideIcons.sparkles, size: 16),
+            SizedBox(width: 8),
+            Text('Translate with AI'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  if (hasSource && hasTarget && onAiSuggest != null) {
+    items.add(
+      PopupMenuItem(
+        value: _AiRowAction.suggest,
+        child: Row(
+          children: const [
+            Icon(LucideIcons.lightbulb, size: 16),
+            SizedBox(width: 8),
+            Text('Suggest Translation'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  if (hasTarget && onAiRephrase != null) {
+    items.add(
+      PopupMenuItem(
+        value: _AiRowAction.rephrase,
+        child: Row(
+          children: const [
+            Icon(LucideIcons.wand2, size: 16),
+            SizedBox(width: 8),
+            Text('Rephrase with AI'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  if (items.isEmpty) return null;
+
+  return Tooltip(
+    message: 'AI tools',
+    child: SizedBox(
+      width: 24,
+      height: 24,
+      child: PopupMenuButton<_AiRowAction>(
+        padding: EdgeInsets.zero,
+        icon: Icon(
+          LucideIcons.sparkles,
+          size: 16,
+          color: Theme.of(context).iconTheme.color,
+        ),
+        onSelected: (action) {
+          switch (action) {
+            case _AiRowAction.translate:
+              onAiTranslate?.call(rowKey);
+              break;
+            case _AiRowAction.suggest:
+              onAiSuggest?.call(rowKey);
+              break;
+            case _AiRowAction.rephrase:
+              onAiRephrase?.call(rowKey);
+              break;
+          }
+        },
+        itemBuilder: (context) => items,
+      ),
+    ),
+  );
 }
 
 class _ActionIconButton extends StatelessWidget {

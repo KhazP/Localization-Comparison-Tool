@@ -6,7 +6,16 @@ import 'package:highlight/languages/json.dart';
 import 'package:highlight/languages/xml.dart';
 import 'package:highlight/languages/yaml.dart';
 import 'package:highlight/languages/ini.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/presentation/utils/ai_error_mapper.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/'
+    'advanced_diff_controller.dart';
+import 'package:localizer_app_main/presentation/widgets/dialogs/'
+    'ai_suggestion_dialog.dart';
 
 class DetailEditDialog extends StatefulWidget {
   final String keyName;
@@ -32,12 +41,13 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
   late CodeController _sourceController;
   late CodeController _targetController;
   late Map<String, TextStyle> _theme;
+  bool _isAiLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _theme =
-        _getTheme(); // Will be updated in didChangeDependencies usually, but simplistic here.
+    // Will be updated in didChangeDependencies, but keep a safe default here.
+    _theme = _getTheme();
 
     final language = _getLanguageMode();
 
@@ -58,7 +68,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     // Update theme based on brightness
     final isDark = Theme.of(context).brightness == Brightness.dark;
     _theme = isDark ? atomOneDarkTheme : atomOneLightTheme;
-    // We strictly shouldn't update controller theme dynamically without recreating?
+    // We shouldn't update controller theme dynamically without recreating.
     // CodeField takes a theme separately? No, CodeField takes a theme map.
     // Wait, CodeField uses styles from theme if not provided?
     // In code_text_field 2.x/3.x:
@@ -66,7 +76,8 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     // Actually CodeTheme wraps CodeField usually?
     // Let's check constructor of CodeField.
     // It has `style` or similar.
-    // The theme is usually passed to CodeTheme widget that wraps CodeField, OR CodeField allows passing a theme map?
+    // The theme is usually passed to CodeTheme widget that wraps CodeField,
+    // or CodeField allows passing a theme map.
     // Actually, common usage:
     // CodeTheme(
     //   data: CodeThemeData(styles: themeMap),
@@ -85,6 +96,48 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     _sourceController.dispose();
     _targetController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleAiTranslate() async {
+    if (_isAiLoading) return;
+    if (widget.sourceValue.trim().isEmpty) {
+      ToastService.showInfo(context, 'No source text to translate.');
+      return;
+    }
+
+    setState(() => _isAiLoading = true);
+
+    try {
+      final controller = context.read<AdvancedDiffController>();
+      final suggestion = await controller.suggestTranslation(widget.keyName);
+      if (!mounted) return;
+
+      final decision = await AiSuggestionDialog.showForTranslation(
+        context,
+        keyName: widget.keyName,
+        suggestion: suggestion,
+      );
+
+      if (!mounted || decision == null) return;
+      if (decision.action == AiSuggestionAction.accept &&
+          decision.text != null) {
+        _targetController.text = decision.text!;
+        ToastService.showSuccess(context, 'AI suggestion added.');
+      }
+    } catch (e, stackTrace) {
+      sl<TalkerService>().handle(
+        e,
+        stackTrace,
+        'AI dialog translate failed for "${widget.keyName}"',
+      );
+      if (mounted) {
+        ToastService.showError(context, aiUserMessageForError(e));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isAiLoading = false);
+      }
+    }
   }
 
   dynamic _getLanguageMode() {
@@ -226,6 +279,13 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
+        ),
+        OutlinedButton.icon(
+          onPressed: _isAiLoading ? null : _handleAiTranslate,
+          icon: const Icon(LucideIcons.sparkles, size: 16),
+          label: Text(
+            _isAiLoading ? 'Translating...' : 'Translate with AI',
+          ),
         ),
         FilledButton.icon(
           onPressed: () {

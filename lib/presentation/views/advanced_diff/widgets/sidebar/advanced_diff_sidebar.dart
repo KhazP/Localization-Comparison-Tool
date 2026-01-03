@@ -5,6 +5,7 @@ import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/side
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/filters_section.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/actions_section.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/similarity_section.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/ai_section.dart';
 
 class AdvancedDiffSidebar extends StatelessWidget {
   const AdvancedDiffSidebar({super.key});
@@ -44,6 +45,8 @@ class AdvancedDiffSidebar extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: const [
+                SidebarSection(title: 'AI Translation', child: AiSection()),
+                SizedBox(height: 16),
                 SidebarSection(title: 'Status', child: StatusSection()),
                 SizedBox(height: 16),
                 SidebarSection(

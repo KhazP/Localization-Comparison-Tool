@@ -35,6 +35,10 @@ class SettingsThemeHelper {
         ? AppThemeV2.darkTextSecondary
         : AppThemeV2.lightTextSecondary;
   }
+
+  Color get textColor {
+    return isDark ? AppThemeV2.darkTextPrimary : AppThemeV2.lightTextPrimary;
+  }
 }
 
 /// A reusable settings card container
@@ -223,7 +227,9 @@ class SettingsDropdown<T> extends StatelessWidget {
                   DropdownMenuItem(value: item, child: Text(item.toString())))
               .toList(),
           onChanged: onChanged,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: theme.textColor,
+              ),
           borderRadius: BorderRadius.circular(8),
         ),
       ),

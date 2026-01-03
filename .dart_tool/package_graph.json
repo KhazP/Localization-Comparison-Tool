@@ -30,6 +30,7 @@
         "fuzzy",
         "get_it",
         "google_fonts",
+        "google_generative_ai",
         "highlight",
         "hive",
         "hive_flutter",
@@ -214,6 +215,13 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "google_generative_ai",
+      "version": "0.4.7",
+      "dependencies": [
+        "http"
       ]
     },
     {

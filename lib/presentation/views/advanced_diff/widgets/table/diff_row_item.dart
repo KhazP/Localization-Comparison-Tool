@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
-import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
+import 'package:localizer_app_main/presentation/widgets/common/'
+    'diff_highlighter.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 
 class DiffRowItem extends StatefulWidget {
@@ -18,6 +20,9 @@ class DiffRowItem extends StatefulWidget {
   final VoidCallback? onAddToTM;
   final VoidCallback? onMarkReviewed;
   final ValueChanged<String>? onInlineSave;
+  final VoidCallback? onAiTranslate;
+  final VoidCallback? onAiSuggest;
+  final VoidCallback? onAiRephrase;
 
   const DiffRowItem({
     super.key,
@@ -34,6 +39,9 @@ class DiffRowItem extends StatefulWidget {
     this.onAddToTM,
     this.onMarkReviewed,
     this.onInlineSave,
+    this.onAiTranslate,
+    this.onAiSuggest,
+    this.onAiRephrase,
   });
 
   @override
@@ -248,6 +256,47 @@ class _DiffRowItemState extends State<DiffRowItem> {
                   icon: const Icon(Icons.more_vert, size: 18),
                   tooltip: 'Actions',
                   itemBuilder: (context) => [
+                    // AI Actions
+                    if (widget.onAiTranslate != null)
+                      PopupMenuItem(
+                        value: 'aiTranslate',
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.sparkles,
+                                size: 18, color: Colors.purple),
+                            const SizedBox(width: 8),
+                            const Text('Translate with AI'),
+                          ],
+                        ),
+                      ),
+                    if (widget.onAiRephrase != null)
+                      PopupMenuItem(
+                        value: 'aiRephrase',
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.wand2,
+                                size: 18, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            const Text('Rephrase with AI'),
+                          ],
+                        ),
+                      ),
+                    if (widget.onAiSuggest != null)
+                      PopupMenuItem(
+                        value: 'aiSuggest',
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.lightbulb,
+                                size: 18, color: Colors.amber),
+                            const SizedBox(width: 8),
+                            const Text('Suggest Translation'),
+                          ],
+                        ),
+                      ),
+                    if (widget.onAiTranslate != null ||
+                        widget.onAiRephrase != null ||
+                        widget.onAiSuggest != null)
+                      const PopupMenuDivider(),
                     const PopupMenuItem(
                       value: 'addToTM',
                       child: Row(
@@ -299,6 +348,15 @@ class _DiffRowItemState extends State<DiffRowItem> {
                   ],
                   onSelected: (value) {
                     switch (value) {
+                      case 'aiTranslate':
+                        widget.onAiTranslate?.call();
+                        break;
+                      case 'aiSuggest':
+                        widget.onAiSuggest?.call();
+                        break;
+                      case 'aiRephrase':
+                        widget.onAiRephrase?.call();
+                        break;
                       case 'addToTM':
                         widget.onAddToTM?.call();
                         break;

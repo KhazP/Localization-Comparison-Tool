@@ -71,6 +71,7 @@ dependencies:
   open_file_plus: ^3.4.1 # Open files with system default application
   toastification: ^3.0.3
   fast_immutable_collections: ^9.0.0 # High-performance immutable data structures for large translation maps
+  google_generative_ai: ^0.4.3 # Gemini 3 Flash with chat/streaming
 
 dev_dependencies:
   flutter_test:

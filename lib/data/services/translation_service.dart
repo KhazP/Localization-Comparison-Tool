@@ -5,7 +5,15 @@ import 'package:localizer_app_main/core/services/dio_client.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 
 abstract class TranslationService {
+  /// Translates text to the target language.
   Future<String> translate(String text, String targetLanguage,
+      {String? sourceLanguage});
+
+  /// Streams translation chunks in real-time.
+  ///
+  /// Yields translation text as it becomes available.
+  /// For services that don't support streaming, this yields the full result once.
+  Stream<String> translateStream(String text, String targetLanguage,
       {String? sourceLanguage});
 }
 
@@ -75,5 +83,14 @@ class GoogleTranslationService implements TranslationService {
       debugPrint('Error calling Google Translate API: $e');
       throw Exception('Failed to translate text: $e');
     }
+  }
+
+  @override
+  Stream<String> translateStream(String text, String targetLanguage,
+      {String? sourceLanguage}) async* {
+    // Google Translate API doesn't support streaming, yield full result
+    final result =
+        await translate(text, targetLanguage, sourceLanguage: sourceLanguage);
+    yield result;
   }
 }

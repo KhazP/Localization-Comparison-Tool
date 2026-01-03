@@ -37,7 +37,14 @@ export 'package:localizer_app_main/presentation/widgets/settings/settings_consta
     show SettingsCategory;
 
 class SettingsView extends StatefulWidget {
-  const SettingsView({super.key});
+  const SettingsView({
+    super.key,
+    this.initialCategory = SettingsCategory.general,
+    this.showBackButton = false,
+  });
+
+  final SettingsCategory initialCategory;
+  final bool showBackButton;
 
   @override
   State<SettingsView> createState() => _SettingsViewState();
@@ -45,7 +52,7 @@ class SettingsView extends StatefulWidget {
 
 class _SettingsViewState extends State<SettingsView>
     with SingleTickerProviderStateMixin {
-  SettingsCategory _selectedCategory = SettingsCategory.general;
+  late SettingsCategory _selectedCategory;
   final TextEditingController _newPatternController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _navScrollController = ScrollController();
@@ -76,6 +83,7 @@ class _SettingsViewState extends State<SettingsView>
   @override
   void initState() {
     super.initState();
+    _selectedCategory = widget.initialCategory;
     _loadAppInfo();
     if (sl.isRegistered<TranslationMemoryService>()) {
       _translationMemoryService = sl<TranslationMemoryService>();
@@ -181,6 +189,15 @@ class _SettingsViewState extends State<SettingsView>
       opacity: _fadeAnimation,
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        appBar: widget.showBackButton
+            ? AppBar(
+                title: const Text('Settings'),
+                leading: IconButton(
+                  icon: const Icon(LucideIcons.arrowLeft),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              )
+            : null,
         body: BlocConsumer<SettingsBloc, SettingsState>(
           listener: (context, state) {
             // Debounced save confirmation - only show after user stops changing settings

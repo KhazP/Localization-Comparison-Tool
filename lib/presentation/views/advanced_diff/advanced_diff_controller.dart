@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
-import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_enums.dart';
-import 'package:localizer_app_main/core/services/localization_file_service.dart';
-import 'package:localizer_app_main/data/services/translation_memory_service.dart';
+import 'package:localizer_app_main/data/models/ai_suggestion_result.dart';
+import 'package:localizer_app_main/presentation/views/advanced_diff/'
+    'advanced_diff_enums.dart';
+import 'package:localizer_app_main/core/services/'
+    'localization_file_service.dart';
+import 'package:localizer_app_main/core/services/talker_service.dart';
+import 'package:localizer_app_main/data/services/'
+    'translation_memory_service.dart';
+import 'package:localizer_app_main/data/services/ai_assistance_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fuzzy/fuzzy.dart';
-import 'package:open_file_plus/open_file_plus.dart';
 
 // Re-export enums if needed or define new ones here.
-// For now, reusing Enums from the old view to minimize breakage during transition,
-// eventually we should move them to a shared model file.
+// For now, reuse Enums from the old view to minimize breakage during
+// transition. We should move them to a shared model file later.
 
 class AdvancedDiffController extends ChangeNotifier {
   // State
@@ -34,7 +39,7 @@ class AdvancedDiffController extends ChangeNotifier {
   Set<String> reviewedKeys = {};
 
   // Editing mode preference
-  bool useInlineEditing = true;
+  bool useInlineEditing = false;
 
   // Pagination
   int currentPage = 0;
@@ -53,6 +58,12 @@ class AdvancedDiffController extends ChangeNotifier {
   bool onlyFillEmpty = false;
   bool limitToVisible = true;
 
+  // AI Translation Settings
+  String sourceLang = 'en';
+  String targetLang = 'tr';
+  bool isAiProcessing = false;
+  double aiProgress = 0.0;
+
   // Dependencies or initial data
   final Map<String, ComparisonStatusDetail> fullDiff;
   final Map<String, String> file1Data;
@@ -66,7 +77,9 @@ class AdvancedDiffController extends ChangeNotifier {
     required this.file2Data,
     this.sourceFileExtension,
     this.targetFileExtension,
+    bool? initialUseInlineEditing,
   }) {
+    useInlineEditing = initialUseInlineEditing ?? useInlineEditing;
     _applyFilters();
   }
 
@@ -353,7 +366,8 @@ class AdvancedDiffController extends ChangeNotifier {
     // We can iterate.
     int successCount = 0;
 
-    // Create backup once before first edit? Service creates backup on every upsert call which is slow for batch.
+    // Create backup once before first edit? Service creates backup on every
+    // upsert call which is slow for batch.
     // Ideally service should have batchUpsert.
     // For now, we accept the overhead or try to be smart.
 
@@ -379,14 +393,12 @@ class AdvancedDiffController extends ChangeNotifier {
 
   Future<void> addToTM(String key, String source, String target) async {
     final tmService = sl<TranslationMemoryService>();
-    // Assume Languages? En -> Tr placeholder for now?
-    // We need language codes.
-    // Ideally we pass them in Controller constructor.
     await tmService.addTranslationUnit(
-        sourceLang: 'en', // TODO: Dynamic
-        targetLang: 'tr', // TODO: Dynamic
-        sourceText: source,
-        targetText: target);
+      sourceLang: sourceLang.isNotEmpty ? sourceLang : 'und',
+      targetLang: targetLang.isNotEmpty ? targetLang : 'und',
+      sourceText: source,
+      targetText: target,
+    );
   }
 
   /// Reverts the target value to match the source value.
@@ -502,5 +514,151 @@ class AdvancedDiffController extends ChangeNotifier {
       _applyFilters();
     }
     return filledCount;
+  }
+
+  // ============================================
+  // AI Translation Methods
+  // ============================================
+
+  /// Sets the source language for AI translation.
+  void setSourceLang(String lang) {
+    sourceLang = lang;
+    notifyListeners();
+  }
+
+  /// Sets the target language for AI translation.
+  void setTargetLang(String lang) {
+    targetLang = lang;
+    notifyListeners();
+  }
+
+  /// Gets the AI assistance service.
+  AiAssistanceService get _aiService => sl<AiAssistanceService>();
+
+  TalkerService get _talker => sl<TalkerService>();
+
+  /// Returns keys that have a source value but no target value.
+  List<String> getMissingKeys() {
+    final missingKeys = <String>[];
+
+    for (final entry in fullDiff.entries) {
+      final key = entry.key;
+      final targetValue = getTargetValue(key);
+      final sourceValue = getSourceValue(key);
+
+      if (sourceValue.isNotEmpty && targetValue.isEmpty) {
+        missingKeys.add(key);
+      }
+    }
+
+    return missingKeys;
+  }
+
+  /// Starts AI progress tracking.
+  void startAiProcessing() {
+    isAiProcessing = true;
+    aiProgress = 0.0;
+    notifyListeners();
+  }
+
+  /// Updates AI progress tracking.
+  void updateAiProgress(double progress) {
+    aiProgress = progress;
+    notifyListeners();
+  }
+
+  /// Stops AI progress tracking.
+  void stopAiProcessing() {
+    isAiProcessing = false;
+    aiProgress = 0.0;
+    notifyListeners();
+  }
+
+  /// Requests a translation suggestion for a specific key.
+  ///
+  /// Returns a [TranslationSuggestion] for user review.
+  Future<TranslationSuggestion> suggestTranslation(String key) async {
+    final sourceText = getSourceValue(key);
+    if (sourceText.isEmpty) {
+      throw Exception('No source text for key: $key');
+    }
+
+    return await _aiService.suggestTranslation(
+      text: sourceText,
+      targetLanguage: targetLang,
+      sourceLanguage: sourceLang,
+    );
+  }
+
+  /// Requests a rephrase suggestion for the target value of a specific key.
+  ///
+  /// Returns a [RephraseResult] for user review.
+  Future<RephraseResult> rephraseTarget(String key) async {
+    final targetText = getTargetValue(key);
+    if (targetText.isEmpty) {
+      throw Exception('No target text to rephrase for key: $key');
+    }
+
+    final sourceText = getSourceValue(key);
+
+    return await _aiService.rephrase(
+      text: targetText,
+      targetLanguage: targetLang,
+      sourceText: sourceText.isNotEmpty ? sourceText : null,
+    );
+  }
+
+  /// Applies an accepted AI suggestion to a key.
+  void applyAiSuggestion(String key, String newValue) {
+    updateEntry(key, newValue);
+  }
+
+  /// Translates all missing entries using AI.
+  ///
+  /// Calls [onProgress] with the current progress (0.0 to 1.0).
+  /// Returns the number of entries translated.
+  Future<int> translateAllMissing({
+    void Function(double progress)? onProgress,
+  }) async {
+    startAiProcessing();
+
+    int translatedCount = 0;
+    final missingKeys = getMissingKeys();
+
+    if (missingKeys.isEmpty) {
+      stopAiProcessing();
+      return 0;
+    }
+
+    try {
+      for (int i = 0; i < missingKeys.length; i++) {
+        final key = missingKeys[i];
+        final sourceText = getSourceValue(key);
+
+        try {
+          final suggestion = await _aiService.suggestTranslation(
+            text: sourceText,
+            targetLanguage: targetLang,
+            sourceLanguage: sourceLang,
+          );
+
+          // Apply the translation
+          updateEntry(key, suggestion.translatedText);
+          translatedCount++;
+        } catch (e) {
+          // Skip failed translations but continue with others
+          _talker.warning('AI translate failed for "$key"', e);
+        }
+
+        // Update progress
+        final progress = (i + 1) / missingKeys.length;
+        updateAiProgress(progress);
+        onProgress?.call(progress);
+      }
+    } finally {
+      stopAiProcessing();
+    }
+
+    return translatedCount;
   }
 }

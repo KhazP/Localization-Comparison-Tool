@@ -84,14 +84,18 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AdvancedDiffController(
-        // Convert IMap to mutable Map for editing (controller mutates this)
-        fullDiff: widget.comparisonResult.diff.unlock,
-        file1Data: widget.comparisonResult.file1Data,
-        file2Data: widget.comparisonResult.file2Data,
-        sourceFileExtension: p.extension(widget.sourceFile.path),
-        targetFileExtension: p.extension(widget.targetFile.path),
-      ),
+      create: (context) {
+        final settings = context.read<SettingsBloc>().state.appSettings;
+        return AdvancedDiffController(
+          // Convert IMap to mutable Map for editing (controller mutates this)
+          fullDiff: widget.comparisonResult.diff.unlock,
+          file1Data: widget.comparisonResult.file1Data,
+          file2Data: widget.comparisonResult.file2Data,
+          sourceFileExtension: p.extension(widget.sourceFile.path),
+          targetFileExtension: p.extension(widget.targetFile.path),
+          initialUseInlineEditing: settings.advancedDiffUseInlineEditing,
+        );
+      },
       child: Consumer<AdvancedDiffController>(
         builder: (context, controller, child) {
           return Actions(

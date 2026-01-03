@@ -268,6 +268,9 @@ class AppSettings extends HiveObject {
   @HiveField(80, defaultValue: 'Compact')
   String toastStyle;
 
+  @HiveField(81, defaultValue: false)
+  bool advancedDiffUseInlineEditing;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -350,6 +353,7 @@ class AppSettings extends HiveObject {
     required this.recentProjects,
     required this.toastPosition,
     required this.toastStyle,
+    required this.advancedDiffUseInlineEditing,
   });
 
   // Default settings
@@ -437,6 +441,7 @@ class AppSettings extends HiveObject {
       recentProjects: [],
       toastPosition: 'BottomRight',
       toastStyle: 'Compact',
+      advancedDiffUseInlineEditing: false,
     );
   }
 
@@ -679,6 +684,10 @@ class AppSettings extends HiveObject {
           _readStringList('recentProjects', defaults.recentProjects),
       toastPosition: _readString('toastPosition', defaults.toastPosition),
       toastStyle: _readString('toastStyle', defaults.toastStyle),
+      advancedDiffUseInlineEditing: _readBool(
+        'advancedDiffUseInlineEditing',
+        defaults.advancedDiffUseInlineEditing,
+      ),
     );
   }
 
@@ -766,6 +775,7 @@ class AppSettings extends HiveObject {
       'recentProjects': recentProjects,
       'toastPosition': toastPosition,
       'toastStyle': toastStyle,
+      'advancedDiffUseInlineEditing': advancedDiffUseInlineEditing,
     };
   }
 
@@ -805,6 +815,7 @@ class AppSettings extends HiveObject {
     bool? enableTranslationMemory,
     String? toastPosition,
     String? toastStyle,
+    bool? advancedDiffUseInlineEditing,
     bool? enableFuzzyFill,
     double? fuzzyFillMinScore,
     bool? fuzzyFillAutoApply,
@@ -950,6 +961,8 @@ class AppSettings extends HiveObject {
       recentProjects: recentProjects ?? this.recentProjects,
       toastPosition: toastPosition ?? this.toastPosition,
       toastStyle: toastStyle ?? this.toastStyle,
+      advancedDiffUseInlineEditing:
+          advancedDiffUseInlineEditing ?? this.advancedDiffUseInlineEditing,
     );
   }
 }

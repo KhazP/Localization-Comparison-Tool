@@ -43,6 +43,71 @@ class AiServicesSettingsCard extends StatefulWidget {
 class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
   bool _translationMemoryBusy = false;
   bool _showAdvancedParameters = false;
+  late final Map<ApiProvider, TextEditingController> _apiKeyControllers;
+  late final Map<ApiProvider, FocusNode> _apiKeyFocusNodes;
+
+  @override
+  void initState() {
+    super.initState();
+    _apiKeyControllers = {
+      ApiProvider.gemini:
+          TextEditingController(text: widget.settings.geminiApiKey),
+      ApiProvider.openAi:
+          TextEditingController(text: widget.settings.openaiApiKey),
+      ApiProvider.googleTranslate:
+          TextEditingController(text: widget.settings.googleTranslateApiKey),
+      ApiProvider.deepl:
+          TextEditingController(text: widget.settings.deeplApiKey),
+    };
+    _apiKeyFocusNodes = {
+      ApiProvider.gemini: FocusNode(),
+      ApiProvider.openAi: FocusNode(),
+      ApiProvider.googleTranslate: FocusNode(),
+      ApiProvider.deepl: FocusNode(),
+    };
+  }
+
+  @override
+  void didUpdateWidget(covariant AiServicesSettingsCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncApiKeyController(
+      ApiProvider.gemini,
+      widget.settings.geminiApiKey,
+    );
+    _syncApiKeyController(
+      ApiProvider.openAi,
+      widget.settings.openaiApiKey,
+    );
+    _syncApiKeyController(
+      ApiProvider.googleTranslate,
+      widget.settings.googleTranslateApiKey,
+    );
+    _syncApiKeyController(
+      ApiProvider.deepl,
+      widget.settings.deeplApiKey,
+    );
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _apiKeyControllers.values) {
+      controller.dispose();
+    }
+    for (final focusNode in _apiKeyFocusNodes.values) {
+      focusNode.dispose();
+    }
+    super.dispose();
+  }
+
+  void _syncApiKeyController(ApiProvider provider, String value) {
+    final controller = _apiKeyControllers[provider];
+    final focusNode = _apiKeyFocusNodes[provider];
+    if (controller == null || focusNode == null) return;
+    if (focusNode.hasFocus) return;
+    if (controller.text != value) {
+      controller.text = value;
+    }
+  }
 
   String _formatMemorySize(int bytes) {
     if (bytes <= 0) return '0 KB';
@@ -252,16 +317,18 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                 _buildApiKeyField(
                   context,
                   'Gemini API Key',
-                  widget.settings.geminiApiKey,
                   ApiProvider.gemini,
+                  _apiKeyControllers[ApiProvider.gemini]!,
+                  _apiKeyFocusNodes[ApiProvider.gemini]!,
                   (val) => bloc.add(UpdateGeminiApiKey(val)),
                 ),
               if (widget.settings.aiTranslationService == 'OpenAI')
                 _buildApiKeyField(
                   context,
                   'OpenAI API Key',
-                  widget.settings.openaiApiKey,
                   ApiProvider.openAi,
+                  _apiKeyControllers[ApiProvider.openAi]!,
+                  _apiKeyFocusNodes[ApiProvider.openAi]!,
                   (val) => bloc.add(UpdateOpenAiApiKey(val)),
                 ),
               _buildOverridableSettingsRow(
@@ -320,17 +387,29 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               if (_showAdvancedParameters) ...[
                 SettingsRow(
                   label: 'Temperature',
-                  description:
-                      'Higher values make output more creative (${widget.settings.aiTemperature.toStringAsFixed(1)})',
-                  control: SizedBox(
-                    width: 200,
-                    child: Slider(
-                      value: widget.settings.aiTemperature,
-                      min: 0.0,
-                      max: 2.0,
-                      divisions: 20,
-                      onChanged: (val) => bloc.add(UpdateAiTemperature(val)),
-                    ),
+                  description: 'Higher values make output more creative',
+                  control: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.settings.aiTemperature.toStringAsFixed(1),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                            ),
+                      ),
+                      SizedBox(
+                        width: 160,
+                        child: Slider(
+                          value: widget.settings.aiTemperature,
+                          min: 0.0,
+                          max: 2.0,
+                          divisions: 20,
+                          onChanged: (val) =>
+                              bloc.add(UpdateAiTemperature(val)),
+                        ),
+                      ),
+                    ],
                   ),
                   isDark: widget.isDark,
                   isAmoled: widget.isAmoled,
@@ -342,10 +421,12 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                     width: 150,
                     child: SettingsDropdown<int>(
                       value: widget.settings.maxTokens,
-                      items: const [512, 1024, 2048, 4096, 8192],
+                      items: const [512, 1024, 2048, 4096, 8192, 16384, 32768],
                       onChanged: (val) {
                         if (val != null) bloc.add(UpdateMaxTokens(val));
                       },
+                      isDark: widget.isDark,
+                      isAmoled: widget.isAmoled,
                     ),
                   ),
                   isDark: widget.isDark,
@@ -464,15 +545,17 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               _buildApiKeyField(
                 context,
                 'Google Translate API Key',
-                widget.settings.googleTranslateApiKey,
                 ApiProvider.googleTranslate,
+                _apiKeyControllers[ApiProvider.googleTranslate]!,
+                _apiKeyFocusNodes[ApiProvider.googleTranslate]!,
                 (val) => bloc.add(UpdateGoogleTranslateApiKey(val)),
               ),
               _buildApiKeyField(
                 context,
                 'DeepL API Key',
-                widget.settings.deeplApiKey,
                 ApiProvider.deepl,
+                _apiKeyControllers[ApiProvider.deepl]!,
+                _apiKeyFocusNodes[ApiProvider.deepl]!,
                 (val) => bloc.add(UpdateDeeplApiKey(val)),
                 showDivider: false,
               ),
@@ -587,8 +670,9 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
   Widget _buildApiKeyField(
     BuildContext context,
     String label,
-    String value,
     ApiProvider provider,
+    TextEditingController controller,
+    FocusNode focusNode,
     ValueChanged<String> onChanged, {
     bool showDivider = true,
   }) {
@@ -614,7 +698,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                             ?.copyWith(fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     TextField(
-                      controller: TextEditingController(text: value),
+                      controller: controller,
+                      focusNode: focusNode,
                       onChanged: onChanged,
                       obscureText: true,
                       decoration: InputDecoration(
@@ -638,6 +723,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                     onPressed: isTesting
                         ? null
                         : () {
+                            final value = controller.text;
                             context.read<SettingsBloc>().add(
                                 TestApiKey(provider: provider, apiKey: value));
                           },

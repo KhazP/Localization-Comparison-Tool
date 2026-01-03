@@ -446,6 +446,12 @@
       "languageVersion": "3.7"
     },
     {
+      "name": "google_generative_ai",
+      "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/google_generative_ai-0.4.7",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
       "name": "gradient_borders",
       "rootUri": "file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/gradient_borders-1.0.2",
       "packageUri": "lib/",

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
-
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_enums.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 
 class FiltersSection extends StatelessWidget {
   const FiltersSection({super.key});
@@ -83,7 +83,12 @@ class FiltersSection extends StatelessWidget {
                   child: ChoiceChip(
                     label: const Text('Dialog', style: TextStyle(fontSize: 12)),
                     selected: !controller.useInlineEditing,
-                    onSelected: (_) => controller.setInlineEditing(false),
+                    onSelected: (_) {
+                      controller.setInlineEditing(false);
+                      context.read<SettingsBloc>().add(
+                            const UpdateAdvancedDiffEditMode(false),
+                          );
+                    },
                     selectedColor:
                         Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   ),
@@ -93,7 +98,12 @@ class FiltersSection extends StatelessWidget {
                   child: ChoiceChip(
                     label: const Text('Inline', style: TextStyle(fontSize: 12)),
                     selected: controller.useInlineEditing,
-                    onSelected: (_) => controller.setInlineEditing(true),
+                    onSelected: (_) {
+                      controller.setInlineEditing(true);
+                      context.read<SettingsBloc>().add(
+                            const UpdateAdvancedDiffEditMode(true),
+                          );
+                    },
                     selectedColor:
                         Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   ),

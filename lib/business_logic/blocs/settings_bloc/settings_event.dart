@@ -138,6 +138,13 @@ class UpdateDiffFontFamily extends SettingsEvent {
   List<Object> get props => [fontFamily];
 }
 
+class UpdateAdvancedDiffEditMode extends SettingsEvent {
+  final bool useInlineEditing;
+  const UpdateAdvancedDiffEditMode(this.useInlineEditing);
+  @override
+  List<Object> get props => [useInlineEditing];
+}
+
 class UpdateDefaultSourceEncoding extends SettingsEvent {
   final String encoding;
   const UpdateDefaultSourceEncoding(this.encoding);

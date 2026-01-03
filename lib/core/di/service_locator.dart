@@ -15,6 +15,9 @@ import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
+import 'package:localizer_app_main/data/services/gemini_translation_service.dart';
+import 'package:localizer_app_main/data/services/gemini_ai_assistance_service.dart';
+import 'package:localizer_app_main/data/services/ai_assistance_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/'
@@ -56,6 +59,20 @@ Future<void> setupServiceLocator() async {
     () => GoogleTranslationService(
       secureStorage: sl<SecureStorageService>(),
       dioClient: sl<DioClient>(),
+    ),
+  );
+  sl.registerLazySingleton<GeminiTranslationService>(
+    () => GeminiTranslationService(
+      secureStorage: sl<SecureStorageService>(),
+      cache: sl<LocalTranslationCache>(),
+      talkerService: sl<TalkerService>(),
+    ),
+  );
+  sl.registerLazySingleton<AiAssistanceService>(
+    () => GeminiAiAssistanceService(
+      secureStorage: sl<SecureStorageService>(),
+      cache: sl<LocalTranslationCache>(),
+      talkerService: sl<TalkerService>(),
     ),
   );
   sl.registerLazySingleton<ApiKeyValidationService>(

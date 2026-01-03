@@ -36,15 +36,24 @@ import 'package:localizer_app_main/presentation/widgets/project/project_conflict
 export 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart'
     show SettingsCategory;
 
+/// Main settings screen for the app.
 class SettingsView extends StatefulWidget {
+  /// Creates the settings screen.
   const SettingsView({
     super.key,
     this.initialCategory = SettingsCategory.general,
     this.showBackButton = false,
+    this.enableAnimations = true,
   });
 
+  /// The category shown when the screen opens.
   final SettingsCategory initialCategory;
+
+  /// Whether the back button is shown in the app bar.
   final bool showBackButton;
+
+  /// Whether to run page animations.
+  final bool enableAnimations;
 
   @override
   State<SettingsView> createState() => _SettingsViewState();
@@ -53,7 +62,6 @@ class SettingsView extends StatefulWidget {
 class _SettingsViewState extends State<SettingsView>
     with SingleTickerProviderStateMixin {
   late SettingsCategory _selectedCategory;
-  final TextEditingController _newPatternController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _navScrollController = ScrollController();
   final ScrollController _contentScrollController = ScrollController();
@@ -80,6 +88,10 @@ class _SettingsViewState extends State<SettingsView>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
+  Duration get _switcherDuration => widget.enableAnimations
+      ? const Duration(milliseconds: 200)
+      : Duration.zero;
+
   @override
   void initState() {
     super.initState();
@@ -94,7 +106,9 @@ class _SettingsViewState extends State<SettingsView>
     _loadSystemInfo();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: widget.enableAnimations
+          ? const Duration(milliseconds: 300)
+          : Duration.zero,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
@@ -112,7 +126,6 @@ class _SettingsViewState extends State<SettingsView>
 
   @override
   void dispose() {
-    _newPatternController.dispose();
     _searchController.dispose();
     _navScrollController.dispose();
     _contentScrollController.dispose();
@@ -630,6 +643,26 @@ class _SettingsViewState extends State<SettingsView>
   ) {
     final theme = Theme.of(context);
 
+    final categoryContent = KeyedSubtree(
+      key: ValueKey(_selectedCategory),
+      child: _buildCategoryContent(context, state, isDark, isAmoled),
+    );
+    final settingsContent = widget.enableAnimations
+        ? AnimatedSwitcher(
+            duration: _switcherDuration,
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: AlignmentDirectional.topStart,
+                children: [
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            child: categoryContent,
+          )
+        : categoryContent;
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -686,23 +719,7 @@ class _SettingsViewState extends State<SettingsView>
               thumbVisibility: true,
               child: SingleChildScrollView(
                 controller: _contentScrollController,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  layoutBuilder: (currentChild, previousChildren) {
-                    return Stack(
-                      alignment: AlignmentDirectional.topStart,
-                      children: [
-                        ...previousChildren,
-                        if (currentChild != null) currentChild,
-                      ],
-                    );
-                  },
-                  child: KeyedSubtree(
-                    key: ValueKey(_selectedCategory),
-                    child:
-                        _buildCategoryContent(context, state, isDark, isAmoled),
-                  ),
-                ),
+                child: settingsContent,
               ),
             ),
           ),
@@ -732,7 +749,7 @@ class _SettingsViewState extends State<SettingsView>
           state: state,
           isDark: isDark,
           isAmoled: isAmoled,
-          onShowAddPatternDialog: () => _showAddPatternDialog(context, isDark),
+          onShowAddPatternDialog: () => _showAddPatternDialog(context),
         );
       case SettingsCategory.appearance:
         return AppearanceSettingsCard(
@@ -805,109 +822,15 @@ class _SettingsViewState extends State<SettingsView>
   // GENERAL SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  void _showAddPatternDialog(BuildContext context, bool isDark) {
-    _newPatternController.clear();
-    String? errorMessage;
-    String testString = '';
-    bool? matchResult;
+  void _showAddPatternDialog(BuildContext context) {
     final settingsBloc = context.read<SettingsBloc>();
 
     showDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) {
-          void submitPattern() {
-            if (_newPatternController.text.isNotEmpty && errorMessage == null) {
-              settingsBloc.add(AddIgnorePattern(_newPatternController.text));
-              Navigator.of(dialogContext).pop();
-            }
-          }
-
-          void validateAndTest(String pattern) {
-            try {
-              final regex = RegExp(pattern);
-              setState(() {
-                errorMessage = null;
-                if (testString.isNotEmpty && pattern.isNotEmpty) {
-                  matchResult = regex.hasMatch(testString);
-                } else {
-                  matchResult = null;
-                }
-              });
-            } catch (e) {
-              setState(() {
-                errorMessage = 'Invalid regex pattern';
-                matchResult = null;
-              });
-            }
-          }
-
-          return AlertDialog(
-            title: const Text('Add Ignore Pattern'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  key: const Key('addPattern_textField'),
-                  controller: _newPatternController,
-                  decoration: InputDecoration(
-                    hintText: 'e.g., ^temp_.*',
-                    labelText: 'Pattern (regex)',
-                    errorText: errorMessage,
-                  ),
-                  autofocus: true,
-                  onChanged: (value) => validateAndTest(value),
-                  onSubmitted: (_) => submitPattern(),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Test String',
-                    hintText: 'Enter a key to test against pattern',
-                    suffixIcon: matchResult == null
-                        ? null
-                        : Icon(
-                            matchResult! ? Icons.check_circle : Icons.cancel,
-                            color: matchResult! ? Colors.green : Colors.red,
-                          ),
-                  ),
-                  onChanged: (value) {
-                    testString = value;
-                    validateAndTest(_newPatternController.text);
-                  },
-                ),
-                if (matchResult != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      matchResult!
-                          ? '✓ Pattern matches test string'
-                          : '✗ Pattern does not match',
-                      style: TextStyle(
-                        color: matchResult! ? Colors.green : Colors.red,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                key: const Key('addPattern_cancelButton'),
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                key: const Key('addPattern_addButton'),
-                onPressed: errorMessage == null &&
-                        _newPatternController.text.isNotEmpty
-                    ? submitPattern
-                    : null,
-                child: const Text('Add'),
-              ),
-            ],
-          );
+      builder: (_) => AddIgnorePatternDialog(
+        autofocus: widget.enableAnimations,
+        onSubmit: (pattern) {
+          settingsBloc.add(AddIgnorePattern(pattern));
         },
       ),
     );

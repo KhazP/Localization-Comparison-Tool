@@ -141,6 +141,18 @@ windows_backup_*/
 # AI & Project Documentation
 GEMINI.md
 CLAUDE.md
+claude.md
+gemini.md
 agents.md
 TECHNICAL.md
+LocalizerAppMain.md
 docs/
+
+# Flutter Internal / Dev Files
+.metadata
+.pre-commit-config.yaml
+devtools_options.yaml
+
+# Developer Scripts
+run_localizer.bat
+run_quick.bat

@@ -137,3 +137,9 @@ error_log.txt
 
 # Backups
 windows_backup_*/
+
+# AI & Project Documentation
+GEMINI.md
+CLAUDE.md
+agents.md
+TECHNICAL.md

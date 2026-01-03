@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localizer - Simple Translation Comparison</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <i data-lucide="globe" style="color: var(--pk-accent-secondary)"></i>
+                Localizer
+            </a>
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#showcase">Showcase</a>
+                <a href="https://github.com/KhazP/LocalizerAppMain" target="_blank">Docs</a>
+                <a href="https://github.com/KhazP/LocalizerAppMain" target="_blank">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h1>
+                    Find Untranslated <br>
+                    <span class="text-gradient">Strings Instantly</span>
+                </h1>
+                <p>
+                    The perfect tool for indie developers and translators.
+                    Compare translation files to spot new updates, find missing keys, and ensure your game is ready for
+                    every language.
+                </p>
+                <div class="cta-group">
+                    <a href="https://github.com/KhazP/LocalizerAppMain/releases" class="btn btn-primary">
+                        <i data-lucide="download"></i>
+                        Download for Windows
+                    </a>
+                    <a href="https://github.com/KhazP/LocalizerAppMain" class="btn btn-secondary">
+                        <i data-lucide="github"></i>
+                        View Source
+                    </a>
+                </div>
+
+                <div class="app-preview-wrapper">
+                    <div class="app-preview clickable-image"
+                        onclick="toggleImage(this, 'images/comparisonpage.png', 'images/comparisonpageempty.png')">
+                        <img src="images/comparisonpage.png" alt="Localizer App Interface - Click to toggle view state">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Grid -->
+        <section id="features" class="features">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Everything you need</h2>
+                    <p>Designed to streamline the most complex localization workflows.</p>
+                </div>
+
+                <div class="grid">
+                    <div class="feature-card glass-card">
+                        <div class="icon-box">
+                            <i data-lucide="bot"></i>
+                        </div>
+                        <h3>AI Translation</h3>
+                        <p>Generate translations and suggestions instantly using Gemini, OpenAI, or DeepL directly
+                            within the editor.</p>
+                    </div>
+
+                    <div class="feature-card glass-card">
+                        <div class="icon-box">
+                            <i data-lucide="git-compare"></i>
+                        </div>
+                        <h3>Smart Diff</h3>
+                        <p>Intelligently identify added, removed, and modified strings across different versions of your
+                            files.</p>
+                    </div>
+
+                    <div class="feature-card glass-card">
+                        <div class="icon-box">
+                            <i data-lucide="file-json"></i>
+                        </div>
+                        <h3>Multi-Format</h3>
+                        <p>Support for JSON, XML, XLIFF, ARB, CSV, and more. One tool for all your project needs.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Showcase Section -->
+        <section id="showcase" class="showcase">
+            <div class="container">
+                <div class="section-title">
+                    <h2>In-Depth Look</h2>
+                    <p>Explore the powerful tools that make Localizer the best choice for your workflow.</p>
+                </div>
+
+                <!-- Feature 1: Advanced Diff -->
+                <div class="feature-row">
+                    <div class="feature-text">
+                        <h3>Deep Dive Editing</h3>
+                        <p>
+                            Need to fix a typo or update a variable? The Advanced View is built for precision work.
+                            Easily perform small to medium edits, update keys, and fill in missing translations without
+                            leaving the app.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i data-lucide="check-circle" class="check-icon"></i> Character-level diff highlighting
+                            </li>
+                            <li><i data-lucide="check-circle" class="check-icon"></i> Side-by-side editing</li>
+                        </ul>
+                    </div>
+                    <div class="image-container glass-card">
+                        <img src="images/advanceddiff.png" alt="Advanced Diff Analysis">
+                    </div>
+                </div>
+
+                <!-- Feature 2: Dashboard -->
+                <div class="feature-row reversed">
+                    <div class="feature-text">
+                        <h3>Advanced Quality Analytics</h3>
+                        <p>
+                            Get a bird's-eye view of your project's health. The Quality Dashboard analyzes translation
+                            coverage, identifies missing keys, and provides actionable insights to ensure your app is
+                            100% ready for global launch.
+                        </p>
+                        <ul class="feature-list">
+                            <li><i data-lucide="check-circle" class="check-icon"></i> Real-time coverage metrics</li>
+                            <li><i data-lucide="check-circle" class="check-icon"></i> Duplicate key detection</li>
+                        </ul>
+                    </div>
+                    <div class="image-container glass-card">
+                        <img src="images/dashboard.png" alt="Quality Dashboard">
+                    </div>
+                </div>
+
+                <!-- Feature 3: Batch Processing with Toggle -->
+                <div class="feature-row">
+                    <div class="feature-text">
+                        <h3>Batch & Comparison</h3>
+                        <p>
+                            Need to update 50 language files at once? The Batch Processor handles entire directories.
+                            Click the image to see the file explorer view.
+                        </p>
+                    </div>
+                    <div class="clickable-image glass-card"
+                        onclick="toggleImage(this, 'images/directorycomparisonindirectorypage.png', 'images/directorypage.png')">
+                        <img src="images/directorycomparisonindirectorypage.png"
+                            alt="Directory Comparison - Click to toggle">
+                    </div>
+                </div>
+
+                <!-- Feature 4: History -->
+                <div class="feature-row reversed">
+                    <div class="feature-text">
+                        <h3>Comparison History</h3>
+                        <p>
+                            Never lose track of your work. Localizer automatically saves your session history, allowing
+                            you to instantly reload previous comparisons or audit past changes without restarting from
+                            scratch.
+                        </p>
+                    </div>
+                    <div class="image-container glass-card">
+                        <img src="images/history.png" alt="History View">
+                    </div>
+                </div>
+
+                <!-- Feature 5: Settings -->
+                <div class="feature-row">
+                    <div class="feature-text">
+                        <h3>Total Customization</h3>
+                        <p>
+                            Make the tool your own. Configure AI providers, set custom ignore patterns, tweak UI themes,
+                            and adjust comparison sensitivity to match your specific project requirements.
+                        </p>
+                    </div>
+                    <div class="image-container glass-card">
+                        <img src="images/settings.png" alt="Settings View">
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>
+                        <i data-lucide="globe"></i>
+                        Localizer
+                    </h3>
+                    <p>The ultimate tool for developers and translators to manage application localization.</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="https://github.com/KhazP/LocalizerAppMain/releases">Download</a></li>
+                        <li><a href="https://github.com/KhazP/LocalizerAppMain/issues">Changelog</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/KhazP/LocalizerAppMain">GitHub</a></li>
+                        <li><a href="https://github.com/KhazP/LocalizerAppMain/issues">Issues</a></li>
+                        <li><a href="https://github.com/KhazP/LocalizerAppMain/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024-2026 Localizer App. Open Source under GPLv3.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Image Toggle Function
+        function toggleImage(container, img1, img2) {
+            const img = container.querySelector('img');
+            const currentSrc = img.getAttribute('src');
+
+            // Simple logic to swap source
+            // Note: In a real environment, we'd preload images for smoothness
+            if (currentSrc.includes(img1.split('/').pop())) {
+                img.setAttribute('src', img2);
+            } else {
+                img.setAttribute('src', img1);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -8,7 +8,7 @@ Each section includes a **Copyable Prompt** that you can paste into our chat to 
 
 ## 1. Smart Search & Filter System 🔍
 **Why:** As your files grow, finding specific keys or missing translations becomes difficult.
-**What:** 
+**What:**
 - A persistent search bar (Ctrl+F).
 - Filters for: "Missing Translations", "Modified", "New", "Problems/Errors".
 - Regex support for power users.
@@ -52,4 +52,3 @@ Each section includes a **Copyable Prompt** that you can paste into our chat to 
 > ```
 
 ---
-

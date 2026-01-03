@@ -205,11 +205,11 @@ Widget _buildPatternPresets(BuildContext context) {
     'Placeholders': ['^TODO_.*', '^PLACEHOLDER.*'],
     'Dev Only': ['^DEBUG_.*', '^DEV_.*'],
   };
-  
+
   return Wrap(
     spacing: 8,
     runSpacing: 8,
-    children: presets.entries.map((entry) => 
+    children: presets.entries.map((entry) =>
       OutlinedButton.icon(
         icon: const Icon(Icons.add, size: 16),
         label: Text(entry.key),
@@ -238,7 +238,7 @@ Widget _buildPatternPresets(BuildContext context) {
 ```dart
 void _showAddPatternDialog(BuildContext context, bool isDark) {
   String? errorMessage;
-  
+
   showDialog(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
@@ -635,7 +635,7 @@ _buildSettingsCard(
       context: context,
       label: 'Max Tokens',
       description: 'Maximum response length',
-      control: _buildDropdown(context, settings.maxTokens.toString(), 
+      control: _buildDropdown(context, settings.maxTokens.toString(),
         ['256', '512', '1024', '2048', '4096'], (val) {
         if (val != null) context.read<SettingsBloc>().add(UpdateMaxTokens(int.parse(val)));
       }, isDark),

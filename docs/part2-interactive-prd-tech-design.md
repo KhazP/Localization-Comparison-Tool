@@ -211,8 +211,8 @@ class TMXParser extends LocalizationParser {
 
 ```dart
 Future<ComparisonResult> compareBranches(
-  String repoPath, 
-  String baseBranch, 
+  String repoPath,
+  String baseBranch,
   String targetBranch
 ) async {
   final git = Git(Directory(repoPath));
@@ -265,7 +265,7 @@ Future<ComparisonResult> compareBranches(
 ```dart
 class TranslationCache {
   static const Duration _cacheDuration = Duration(days: 7);
-  
+
   Future<String?> getCachedTranslation(String source, String targetLang) {
     // Hive-based local storage with expiration
   }
@@ -480,4 +480,3 @@ class TranslationCache {
 [^64]: https://phrase.com/blog/posts/10-common-mistakes-in-software-localization/
 
 [^65]: https://lokalise.com/blog/9-biggest-localization-issues-developers-face-and-how-to-solve-them/
-

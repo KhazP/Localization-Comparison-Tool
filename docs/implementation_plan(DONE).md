@@ -124,7 +124,7 @@ class DiffHighlighter {
     final dmp = DiffMatchPatch();
     final diffs = dmp.diff_main(oldText, newText);
     dmp.diff_cleanupSemantic(diffs);
-    
+
     List<TextSpan> spans = [];
     for (final diff in diffs) {
       TextStyle? style;
@@ -142,7 +142,7 @@ class DiffHighlighter {
       } else {
         continue; // Skip insertions when showing source, deletions when showing target
       }
-      
+
       if (style != null || diff.operation == DIFF_EQUAL) {
         spans.add(TextSpan(text: diff.text, style: style));
       }
@@ -155,8 +155,8 @@ class DiffHighlighter {
 RichText(
   text: TextSpan(
     children: DiffHighlighter.highlightDiff(
-      oldValue, 
-      newValue, 
+      oldValue,
+      newValue,
       isSource: true,
     ),
     style: DefaultTextStyle.of(context).style,
@@ -240,7 +240,7 @@ import 'package:fl_chart/fl_chart.dart';
 Widget buildStatsChart(int added, int removed, int modified) {
   final total = added + removed + modified;
   if (total == 0) return SizedBox.shrink();
-  
+
   return SizedBox(
     width: 36,
     height: 36,
@@ -279,7 +279,7 @@ Widget buildStatsChart(int added, int removed, int modified) {
 Widget buildStatsBar(int added, int removed, int modified) {
   final total = added + removed + modified;
   if (total == 0) return SizedBox.shrink();
-  
+
   return Container(
     width: 100,
     height: 8,
@@ -604,21 +604,21 @@ Future<void> _exportAllResults() async {
   final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
   final exportDir = Directory('${directory.path}/exports/$timestamp');
   await exportDir.create(recursive: true);
-  
+
   for (int i = 0; i < _pairedFiles.length; i++) {
     final pair = _pairedFiles[i];
     // Show progress
     _updateProgress(i + 1, _pairedFiles.length);
-    
+
     // Export each comparison
     final csvContent = await generateCsvForPair(pair);
     final file = File('${exportDir.path}/${pair.baseName}_comparison.csv');
     await file.writeAsString(csvContent);
   }
-  
+
   // Generate summary
   await generateSummaryFile(exportDir);
-  
+
   // Show completion dialog with path
   showExportCompleteDialog(exportDir.path);
 }
@@ -715,7 +715,7 @@ final themePresets = {
 Widget buildPresetButtons() {
   return Wrap(
     spacing: 8,
-    children: themePresets.entries.map((entry) => 
+    children: themePresets.entries.map((entry) =>
       OutlinedButton(
         onPressed: () => applyPreset(entry.value),
         child: Text(entry.key),
@@ -852,7 +852,7 @@ Widget buildSummaryBar() {
   final totalAdded = _pairedFiles.fold(0, (sum, f) => sum + f.addedCount);
   final totalRemoved = _pairedFiles.fold(0, (sum, f) => sum + f.removedCount);
   final totalModified = _pairedFiles.fold(0, (sum, f) => sum + f.modifiedCount);
-  
+
   return Container(
     padding: EdgeInsets.all(12),
     color: Theme.of(context).colorScheme.surfaceVariant,

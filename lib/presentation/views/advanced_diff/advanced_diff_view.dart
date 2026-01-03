@@ -84,7 +84,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AdvancedDiffController(
-        fullDiff: widget.comparisonResult.diff,
+        // Convert IMap to mutable Map for editing (controller mutates this)
+        fullDiff: widget.comparisonResult.diff.unlock,
         file1Data: widget.comparisonResult.file1Data,
         file2Data: widget.comparisonResult.file2Data,
         sourceFileExtension: p.extension(widget.sourceFile.path),

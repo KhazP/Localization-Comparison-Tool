@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart'; // For compute
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:localizer_app_main/data/parsers/file_parser_factory.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; // Import new model
@@ -11,10 +12,13 @@ import 'package:localizer_app_main/core/services/diff_calculator.dart';
 import 'package:localizer_app_main/core/services/file_cache_service.dart';
 
 // Data structure to hold comparison results
+// Uses IMap for the diff field for better performance with large translation maps (50k+ keys).
+// IMap provides O(log n) operations with structural sharing, reducing memory overhead
+// and improving iteration speed compared to standard Map.
 class ComparisonResult {
   final Map<String, String> file1Data;
   final Map<String, String> file2Data;
-  final Map<String, ComparisonStatusDetail> diff;
+  final IMap<String, ComparisonStatusDetail> diff;
 
   ComparisonResult(this.file1Data, this.file2Data, this.diff);
 }
@@ -277,12 +281,12 @@ class ComparisonEngine {
     return ComparisonResult(file1Data, file2Data, diff);
   }
 
-  static Map<String, ComparisonStatusDetail> _deserializeDiff(
+  static IMap<String, ComparisonStatusDetail> _deserializeDiff(
     Map<String, Map<String, Object?>> rawDiff,
   ) {
     return rawDiff.map(
       (key, value) => MapEntry(key, ComparisonStatusDetail.fromMap(value)),
-    );
+    ).toIMap();
   }
 
   static ExtractionMode _modeFromName(String name) {

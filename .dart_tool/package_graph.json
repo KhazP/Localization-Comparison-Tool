@@ -17,6 +17,7 @@
         "docx_to_text",
         "equatable",
         "excel",
+        "fast_immutable_collections",
         "file_picker",
         "fl_chart",
         "flutter",
@@ -2000,6 +2001,14 @@
       "dependencies": [
         "meta",
         "path"
+      ]
+    },
+    {
+      "name": "fast_immutable_collections",
+      "version": "9.2.1",
+      "dependencies": [
+        "collection",
+        "meta"
       ]
     }
   ],

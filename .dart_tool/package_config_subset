@@ -306,6 +306,10 @@ http_parser
 3.4
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2/lib/
+iconsax_flutter
+3.0
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/iconsax_flutter-1.0.1/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/iconsax_flutter-1.0.1/lib/
 intl
 3.3
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.20.2/
@@ -414,6 +418,10 @@ node_preamble
 2.12
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/node_preamble-2.0.2/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/node_preamble-2.0.2/lib/
+open_file_plus
+2.19
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/open_file_plus-3.4.1+1/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/open_file_plus-3.4.1+1/lib/
 package_config
 3.4
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/package_config-2.2.0/
@@ -454,6 +462,10 @@ path_provider_windows
 3.2
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_windows-2.3.0/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_windows-2.3.0/lib/
+pausable_timer
+3.0
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pausable_timer-3.1.0+3/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/pausable_timer-3.1.0+3/lib/
 petitparser
 3.5
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/petitparser-6.1.0/
@@ -682,6 +694,10 @@ timing
 3.4
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/timing-1.0.2/
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/timing-1.0.2/lib/
+toastification
+3.0
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/toastification-3.0.3/
+file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/toastification-3.0.3/lib/
 tray_manager
 3.0
 file:///C:/Users/alpya/AppData/Local/Pub/Cache/hosted/pub.dev/tray_manager-0.2.4/
@@ -808,6 +824,6 @@ file:///C:/Users/alpya/Documents/Flutter/flutter/packages/flutter_web_plugins/
 file:///C:/Users/alpya/Documents/Flutter/flutter/packages/flutter_web_plugins/lib/
 localizer_app_main
 3.0
-file:///c:/Users/alpya/Documents/GitHub/LocalizerAppMain/
-file:///c:/Users/alpya/Documents/GitHub/LocalizerAppMain/lib/
+file:///C:/Users/alpya/Documents/GitHub/LocalizerAppMain/
+file:///C:/Users/alpya/Documents/GitHub/LocalizerAppMain/lib/
 2

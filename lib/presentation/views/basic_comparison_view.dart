@@ -30,6 +30,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:localizer_app_main/core/services/problem_detector.dart';
 import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
@@ -1482,7 +1483,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               Process.run('explorer.exe', [File(outputPath).parent.path]);
             }
 
-            ToastService.showSuccess(context, 'Excel saved to: $outputPath');
+            ToastService.showSuccessWithAction(
+              context,
+              'Excel saved',
+              actionLabel: 'Open',
+              onAction: () => OpenFile.open(outputPath),
+            );
           }
         } else if (mounted) {
           ToastService.showError(context, 'Failed to save Excel file.');
@@ -1537,7 +1543,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           if (settings.openFolderAfterExport && Platform.isWindows) {
             Process.run('explorer.exe', [File(outputPath).parent.path]);
           }
-          ToastService.showSuccess(context, 'JSON saved to: $outputPath');
+          ToastService.showSuccessWithAction(
+            context,
+            'JSON saved',
+            actionLabel: 'Open',
+            onAction: () => OpenFile.open(outputPath),
+          );
         }
         
         // Clear taskbar progress on success
@@ -1588,7 +1599,12 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           if (settings.openFolderAfterExport && Platform.isWindows) {
             Process.run('explorer.exe', [File(outputPath).parent.path]);
           }
-          ToastService.showSuccess(context, 'CSV saved to: $outputPath');
+          ToastService.showSuccessWithAction(
+            context,
+            'CSV saved',
+            actionLabel: 'Open',
+            onAction: () => OpenFile.open(outputPath),
+          );
         }
         
         // Clear taskbar progress on success
@@ -2483,11 +2499,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       height: 1.4,
     );
 
-    return InkWell(
-      onTap: () {}, // Enable hover effect
-      hoverColor: theme.colorScheme.onSurface.withOpacity(0.05),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: () {}, // Enable hover effect
+        hoverColor: theme.colorScheme.onSurface.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         decoration: BoxDecoration(
           color: bgColor,
@@ -2745,6 +2763,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             ),
           ],
         ),
+      ),
       ),
       ),
     );

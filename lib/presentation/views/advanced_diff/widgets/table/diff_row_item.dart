@@ -113,7 +113,9 @@ class _DiffRowItemState extends State<DiffRowItem> {
   Widget build(BuildContext context) {
     final isDimmed = widget.isReviewed;
 
-    return Opacity(
+    return Material(
+      type: MaterialType.transparency,
+      child: Opacity(
       opacity: isDimmed ? 0.5 : 1.0,
       child: Container(
         height: 60,
@@ -294,6 +296,7 @@ class _DiffRowItemState extends State<DiffRowItem> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

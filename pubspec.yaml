@@ -67,6 +67,8 @@ dependencies:
   shimmer: ^3.0.0 # Shimmer skeleton loading animations
   fuzzy: ^0.5.1 # Typo-tolerant fuzzy search
   recase: ^4.1.0 # Key case transformations (camelCase, snake_case, etc.)
+  open_file_plus: ^3.4.1 # Open files with system default application
+  toastification: ^3.0.3
 
 dev_dependencies:
   flutter_test:

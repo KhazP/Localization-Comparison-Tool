@@ -1,13 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/presentation/widgets/common/premium_toast.dart';
+import 'package:toastification/toastification.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 /// Types of toast notifications
 enum ToastType { success, error, info, warning }
 
 /// A service for showing standardized toast notifications throughout the app.
-/// Uses `ScaffoldMessenger` under the hood for consistent, Material-style feedback.
+/// Uses `toastification` under the hood for consistent, premium-style feedback.
 class ToastService {
   ToastService._();
+
+  static Alignment _getAlignment() {
+    try {
+      final box = Hive.box<AppSettings>('settings');
+      // If box is not open or empty, return default
+      if (!box.isOpen || box.isEmpty) return Alignment.bottomRight;
+      
+      final settings = box.getAt(0);
+      return switch (settings?.toastPosition) {
+        'TopLeft' => Alignment.topLeft,
+        'TopRight' => Alignment.topRight,
+        'BottomLeft' => Alignment.bottomLeft,
+        // Default to bottomRight
+        _ => Alignment.bottomRight,
+      };
+    } catch (_) {
+      return Alignment.bottomRight;
+    }
+  }
+
+  static bool _isCompact() {
+    try {
+      final box = Hive.box<AppSettings>('settings');
+       // If box is not open or empty, return default
+      if (!box.isOpen || box.isEmpty) return true;
+      
+      final settings = box.getAt(0);
+      return settings?.toastStyle == 'Compact';
+    } catch (_) {
+      return true;
+    }
+  }
 
   /// Shows a success toast with a green checkmark icon.
   static void showSuccess(
@@ -21,6 +57,24 @@ class ToastService {
       message: message,
       type: ToastType.success,
       onUndo: onUndo,
+      duration: duration,
+    );
+  }
+
+  /// Shows a success toast with a custom action button.
+  static void showSuccessWithAction(
+    BuildContext context,
+    String message, {
+    required String actionLabel,
+    required VoidCallback onAction,
+    Duration duration = const Duration(seconds: 6),
+  }) {
+    _show(
+      context,
+      message: message,
+      type: ToastType.success,
+      actionLabel: actionLabel,
+      onAction: onAction,
       duration: duration,
     );
   }
@@ -77,87 +131,50 @@ class ToastService {
     required String message,
     required ToastType type,
     VoidCallback? onUndo,
+    String? actionLabel,
+    VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
   }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final alignment = _getAlignment();
+    final isCompact = _isCompact();
 
-    final Color backgroundColor;
-    final Color foregroundColor;
-    final IconData icon;
-
-    switch (type) {
-      case ToastType.success:
-        backgroundColor = isDark
-            ? AppThemeV2.success.withAlpha(40)
-            : AppThemeV2.success.withAlpha(230);
-        foregroundColor = isDark ? AppThemeV2.success : Colors.white;
-        icon = Icons.check_circle_rounded;
-        break;
-      case ToastType.error:
-        backgroundColor = isDark
-            ? AppThemeV2.error.withAlpha(40)
-            : AppThemeV2.error.withAlpha(230);
-        foregroundColor = isDark ? AppThemeV2.error : Colors.white;
-        icon = Icons.error_rounded;
-        break;
-      case ToastType.info:
-        backgroundColor = isDark
-            ? AppThemeV2.info.withAlpha(40)
-            : AppThemeV2.info.withAlpha(230);
-        foregroundColor = isDark ? AppThemeV2.info : Colors.white;
-        icon = Icons.info_rounded;
-        break;
-      case ToastType.warning:
-        backgroundColor = isDark
-            ? AppThemeV2.warning.withAlpha(40)
-            : AppThemeV2.warning.withAlpha(230);
-        foregroundColor = isDark ? AppThemeV2.warning : Colors.white;
-        icon = Icons.warning_rounded;
-        break;
-    }
-
-    // Clear any existing snackbars before showing the new one
-    ScaffoldMessenger.of(context).clearSnackBars();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(icon, color: foregroundColor, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  color: isDark ? AppThemeV2.darkTextPrimary : Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+    toastification.showCustom(
+      context: context,
+      autoCloseDuration: duration,
+      alignment: alignment,
+      direction: TextDirection.ltr,
+      builder: (BuildContext context, ToastificationItem holder) {
+        return SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: PremiumToast(
+                message: message,
+                type: type,
+                isCompact: isCompact,
+                onDismiss: () {
+                  toastification.dismiss(holder);
+                },
+                onUndo: onUndo != null
+                    ? () {
+                        onUndo();
+                        toastification.dismiss(holder);
+                      }
+                    : null,
+                actionLabel: actionLabel,
+                onAction: onAction != null
+                    ? () {
+                        onAction();
+                        toastification.dismiss(holder);
+                      }
+                    : null,
               ),
             ),
-          ],
-        ),
-        backgroundColor: isDark
-            ? AppThemeV2.darkCard
-            : backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: isDark
-              ? BorderSide(color: foregroundColor.withAlpha(100), width: 1)
-              : BorderSide.none,
-        ),
-        duration: duration,
-        margin: const EdgeInsets.all(16),
-        action: onUndo != null
-            ? SnackBarAction(
-                label: 'Undo',
-                textColor: foregroundColor,
-                onPressed: onUndo,
-              )
-            : null,
-      ),
+          ),
+        );
+      },
     );
   }
 }

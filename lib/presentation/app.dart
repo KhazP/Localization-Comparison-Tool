@@ -314,16 +314,8 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                   ),
                 );
 
-                // Wrap with TalkerWrapper for in-app error alerts (debug mode only)
-                if (kDebugMode) {
-                  app = TalkerWrapper(
-                    talker: widget.talkerService.talker,
-                    options: const TalkerWrapperOptions(
-                      enableErrorAlerts: true,
-                    ),
-                    child: app,
-                  );
-                }
+                // TalkerWrapper error alerts disabled - they cause large UI overlay issues
+                // Errors are still logged to console via TalkerService
 
                 // PlatformMenuBar is only supported on macOS
                 if (Platform.isMacOS) {

@@ -14,6 +14,7 @@ import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:developer' as developer;
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 
 class AiServicesSettingsCard extends StatefulWidget {
   final AppSettings settings;
@@ -100,7 +101,14 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
       );
       if (outputPath == null) return;
       await service.exportToTmx(File(outputPath));
-      if (mounted) ToastService.showSuccess(context, 'TMX saved.');
+      if (mounted) {
+        ToastService.showSuccessWithAction(
+          context,
+          'TMX saved',
+          actionLabel: 'Open',
+          onAction: () => OpenFile.open(outputPath),
+        );
+      }
     });
   }
 
@@ -121,7 +129,14 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
       );
       if (outputPath == null) return;
       await service.exportToCsv(File(outputPath));
-      if (mounted) ToastService.showSuccess(context, 'CSV saved.');
+      if (mounted) {
+        ToastService.showSuccessWithAction(
+          context,
+          'CSV saved',
+          actionLabel: 'Open',
+          onAction: () => OpenFile.open(outputPath),
+        );
+      }
     });
   }
 

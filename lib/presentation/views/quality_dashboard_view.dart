@@ -19,6 +19,7 @@ import 'package:localizer_app_main/core/services/quality_report_exporter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 
 enum DashboardChartMode { words, coverage, burnUp }
 
@@ -144,7 +145,12 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
       final file = File(path);
       await file.writeAsBytes(bytes, flush: true);
       if (mounted) {
-        ToastService.showSuccess(context, 'Report saved to ${file.path}');
+        ToastService.showSuccessWithAction(
+          context,
+          'Report saved',
+          actionLabel: 'Open',
+          onAction: () => OpenFile.open(file.path),
+        );
       }
     }
   }

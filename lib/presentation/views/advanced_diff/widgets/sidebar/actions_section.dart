@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
+import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 
 class ActionsSection extends StatelessWidget {
   const ActionsSection({super.key});
@@ -15,8 +17,16 @@ class ActionsSection extends StatelessWidget {
         // Image shows "Export matches" and "Preview" as lines.
         
         TextButton.icon(
-          onPressed: () {
-            context.read<AdvancedDiffController>().exportData();
+          onPressed: () async {
+            final path = await context.read<AdvancedDiffController>().exportData();
+            if (path != null && context.mounted) {
+              ToastService.showSuccessWithAction(
+                context,
+                'CSV exported',
+                actionLabel: 'Open',
+                onAction: () => OpenFile.open(path),
+              );
+            }
           },
           icon: const Icon(Icons.download, size: 16),
           label: const Text('Export matches'),

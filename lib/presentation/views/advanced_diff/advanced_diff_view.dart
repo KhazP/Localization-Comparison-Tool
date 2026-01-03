@@ -12,6 +12,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/table/pluto_grid_diff_table.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 
 class AdvancedDiffView extends StatefulWidget {
   final ComparisonResult comparisonResult;
@@ -68,7 +69,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
   }
 
   Future<void> _handleExport(BuildContext context, AdvancedDiffController controller) async {
-    await controller.exportData();
+    final path = await controller.exportData();
+    if (path != null && context.mounted) {
+      ToastService.showSuccessWithAction(
+        context,
+        'CSV exported',
+        actionLabel: 'Open',
+        onAction: () => OpenFile.open(path),
+      );
+    }
   }
 
   @override

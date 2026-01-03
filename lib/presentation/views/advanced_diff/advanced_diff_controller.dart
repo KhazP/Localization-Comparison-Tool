@@ -10,7 +10,8 @@ import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:fuzzy/fuzzy.dart'; 
+import 'package:fuzzy/fuzzy.dart';
+import 'package:open_file_plus/open_file_plus.dart'; 
 
 // Re-export enums if needed or define new ones here.
 // For now, reusing Enums from the old view to minimize breakage during transition, 
@@ -406,7 +407,7 @@ class AdvancedDiffController extends ChangeNotifier {
     _applyFilters();
   }
 
-  Future<void> exportData() async {
+  Future<String?> exportData() async {
     List<List<dynamic>> rows = [];
     rows.add(["Status", "Key", "Score", "Source", "Target"]);
     
@@ -438,7 +439,9 @@ class AdvancedDiffController extends ChangeNotifier {
       if (!output.endsWith('.csv')) output += '.csv';
       final file = File(output);
       await file.writeAsString(csv);
+      return output;
     }
+    return null;
   }
 
   Future<int> fillMissingFromTM() async {

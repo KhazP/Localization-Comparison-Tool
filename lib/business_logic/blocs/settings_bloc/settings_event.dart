@@ -635,6 +635,20 @@ class ApplyThemePreset extends SettingsEvent {
   List<Object?> get props => [added, removed, modified];
 }
 
+class UpdateToastPosition extends SettingsEvent {
+  final String position;
+  const UpdateToastPosition(this.position);
+  @override
+  List<Object> get props => [position];
+}
+
+class UpdateToastStyle extends SettingsEvent {
+  final String style;
+  const UpdateToastStyle(this.style);
+  @override
+  List<Object> get props => [style];
+}
+
 // ============================================================================
 // Project Settings Scope Events (Phase 2)
 // ============================================================================

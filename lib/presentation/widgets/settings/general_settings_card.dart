@@ -12,6 +12,7 @@ import 'package:localizer_app_main/core/services/project_sharing_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 
 /// General Settings card widget
 class GeneralSettingsCard extends StatelessWidget {
@@ -228,7 +229,12 @@ class GeneralSettingsCard extends StatelessWidget {
       );
 
       if (context.mounted) {
-        ToastService.showSuccess(context, 'Project exported successfully.');
+        ToastService.showSuccessWithAction(
+          context,
+          'Project exported',
+          actionLabel: 'Open',
+          onAction: () => OpenFile.open(finalPath),
+        );
       }
     } catch (e) {
       if (context.mounted) {

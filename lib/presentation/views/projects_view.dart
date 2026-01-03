@@ -427,8 +427,10 @@ class _ProjectListTileState extends State<_ProjectListTile> {
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        child: Material(
+          type: MaterialType.transparency,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -526,6 +528,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
             ],
           ),
         ),
+      ),
       ),
       ),
     );

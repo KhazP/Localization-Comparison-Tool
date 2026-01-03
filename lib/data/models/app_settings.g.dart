@@ -110,13 +110,15 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       translationStrategy: fields[77] == null ? 'llm' : fields[77] as String,
       recentProjects:
           fields[78] == null ? [] : (fields[78] as List).cast<String>(),
+      toastPosition: fields[79] == null ? 'BottomRight' : fields[79] as String,
+      toastStyle: fields[80] == null ? 'Compact' : fields[80] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(79)
+      ..writeByte(81)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -274,7 +276,11 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(77)
       ..write(obj.translationStrategy)
       ..writeByte(78)
-      ..write(obj.recentProjects);
+      ..write(obj.recentProjects)
+      ..writeByte(79)
+      ..write(obj.toastPosition)
+      ..writeByte(80)
+      ..write(obj.toastStyle);
   }
 
   @override

@@ -38,6 +38,7 @@
         "macos_dock_progress",
         "macos_ui",
         "macos_window_utils",
+        "open_file_plus",
         "package_info_plus",
         "path",
         "pluto_grid",
@@ -51,6 +52,7 @@
         "super_drag_and_drop",
         "talker_dio_logger",
         "talker_flutter",
+        "toastification",
         "tray_manager",
         "url_launcher",
         "uuid",
@@ -194,6 +196,27 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "toastification",
+      "version": "3.0.3",
+      "dependencies": [
+        "collection",
+        "equatable",
+        "flutter",
+        "http",
+        "iconsax_flutter",
+        "pausable_timer",
+        "uuid"
+      ]
+    },
+    {
+      "name": "open_file_plus",
+      "version": "3.4.1+1",
+      "dependencies": [
+        "ffi",
+        "flutter"
       ]
     },
     {
@@ -1195,6 +1218,35 @@
       ]
     },
     {
+      "name": "pausable_timer",
+      "version": "3.1.0+3",
+      "dependencies": [
+        "clock"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.4.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
+      ]
+    },
+    {
+      "name": "ffi",
+      "version": "2.1.4",
+      "dependencies": []
+    },
+    {
+      "name": "stringr",
+      "version": "1.2.1",
+      "dependencies": [
+        "characters"
+      ]
+    },
+    {
       "name": "talker",
       "version": "4.9.3",
       "dependencies": [
@@ -1300,11 +1352,6 @@
       ]
     },
     {
-      "name": "ffi",
-      "version": "2.1.4",
-      "dependencies": []
-    },
-    {
       "name": "screen_retriever_windows",
       "version": "0.2.0",
       "dependencies": [
@@ -1372,16 +1419,6 @@
         "flutter",
         "meta",
         "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "http",
-      "version": "1.4.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
       ]
     },
     {
@@ -1959,10 +1996,10 @@
       ]
     },
     {
-      "name": "stringr",
-      "version": "1.2.1",
+      "name": "iconsax_flutter",
+      "version": "1.0.1",
       "dependencies": [
-        "characters"
+        "flutter"
       ]
     }
   ],

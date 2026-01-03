@@ -262,6 +262,12 @@ class AppSettings extends HiveObject {
   @HiveField(78, defaultValue: [])
   List<String> recentProjects;
 
+  @HiveField(79, defaultValue: 'BottomRight')
+  String toastPosition;
+
+  @HiveField(80, defaultValue: 'Compact')
+  String toastStyle;
+
   AppSettings({
     required this.defaultSourceFormat,
     required this.defaultTargetFormat,
@@ -342,6 +348,8 @@ class AppSettings extends HiveObject {
     required this.macosWindowMaterial,
     required this.translationStrategy,
     required this.recentProjects,
+    required this.toastPosition,
+    required this.toastStyle,
   });
 
   // Default settings
@@ -427,6 +435,8 @@ class AppSettings extends HiveObject {
       macosWindowMaterial: 'sidebar',
       translationStrategy: 'llm',
       recentProjects: [],
+      toastPosition: 'BottomRight',
+      toastStyle: 'Compact',
     );
   }
 
@@ -676,6 +686,8 @@ class AppSettings extends HiveObject {
           _readString('translationStrategy', defaults.translationStrategy),
       recentProjects:
           _readStringList('recentProjects', defaults.recentProjects),
+      toastPosition: _readString('toastPosition', defaults.toastPosition),
+      toastStyle: _readString('toastStyle', defaults.toastStyle),
     );
   }
 
@@ -761,6 +773,8 @@ class AppSettings extends HiveObject {
       'macosWindowMaterial': macosWindowMaterial,
       'translationStrategy': translationStrategy,
       'recentProjects': recentProjects,
+      'toastPosition': toastPosition,
+      'toastStyle': toastStyle,
     };
   }
 
@@ -798,6 +812,8 @@ class AppSettings extends HiveObject {
     int? contextStringsCount,
     bool? includeContextStrings,
     bool? enableTranslationMemory,
+    String? toastPosition,
+    String? toastStyle,
     bool? enableFuzzyFill,
     double? fuzzyFillMinScore,
     bool? fuzzyFillAutoApply,
@@ -939,6 +955,8 @@ class AppSettings extends HiveObject {
       macosWindowMaterial: macosWindowMaterial ?? this.macosWindowMaterial,
       translationStrategy: translationStrategy ?? this.translationStrategy,
       recentProjects: recentProjects ?? this.recentProjects,
+      toastPosition: toastPosition ?? this.toastPosition,
+      toastStyle: toastStyle ?? this.toastStyle,
     );
   }
 }

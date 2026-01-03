@@ -16,6 +16,7 @@ import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/system_integrations_card.dart';
@@ -1083,7 +1084,12 @@ class _SettingsViewState extends State<SettingsView>
         await file.writeAsString(jsonString);
 
         if (context.mounted) {
-          ToastService.showSuccess(context, 'Settings exported successfully!');
+          ToastService.showSuccessWithAction(
+            context,
+            'Settings exported',
+            actionLabel: 'Open',
+            onAction: () => OpenFile.open(result),
+          );
         }
       }
     } catch (e) {

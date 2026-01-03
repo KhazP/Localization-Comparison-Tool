@@ -138,6 +138,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<ResetAllProjectSettings>(_onResetAllProjectSettings);
     on<UpdateProjectOverridableSetting>(_onUpdateProjectOverridableSetting);
     on<UpdateRecentProjects>(_onUpdateRecentProjects);
+    on<UpdateToastPosition>(_onUpdateToastPosition);
+    on<UpdateToastStyle>(_onUpdateToastStyle);
   }
 
   Future<void> _onLoadSettings(
@@ -1380,6 +1382,21 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       UpdateRecentProjects event, Emitter<SettingsState> emit) async {
     final newSettings =
         state.appSettings.copyWith(recentProjects: event.recentProjects);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateToastPosition(
+      UpdateToastPosition event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(toastPosition: event.position);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateToastStyle(
+      UpdateToastStyle event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(toastStyle: event.style);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

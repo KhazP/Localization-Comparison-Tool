@@ -16,6 +16,7 @@ class ComparisonSettingsCard extends StatelessWidget {
   final bool isDark;
   final bool isAmoled;
   final VoidCallback onShowAddPatternDialog;
+  final bool showLivePreview;
 
   const ComparisonSettingsCard({
     super.key,
@@ -24,6 +25,7 @@ class ComparisonSettingsCard extends StatelessWidget {
     required this.isDark,
     required this.isAmoled,
     required this.onShowAddPatternDialog,
+    this.showLivePreview = true,
   });
 
   @override
@@ -223,11 +225,12 @@ class ComparisonSettingsCard extends StatelessWidget {
             ),
           ],
         ),
-        LiveLogicPreviewCard(
-          settings: settings,
-          isDark: isDark,
-          isAmoled: isAmoled,
-        ),
+        if (showLivePreview)
+          LiveLogicPreviewCard(
+            settings: settings,
+            isDark: isDark,
+            isAmoled: isAmoled,
+          ),
       ],
     );
   }

@@ -94,13 +94,18 @@ class MyApp extends StatelessWidget {
             create: (context) => ComparisonBloc(
               comparisonEngine: comparisonEngine,
               warningSuppressionsRepository: warningSuppressionsRepository,
-              onProgress: (completed, total, message) {
+              onProgress: (percentage, stage, {bytesProcessed, totalBytes}) {
                 final progressBloc = context.read<ProgressBloc>();
-                if (completed <= 0) {
-                  progressBloc.add(ComparisonStarted(total));
+                if (percentage <= 0) {
+                  progressBloc.add(ComparisonStarted(initialMessage: stage));
                   return;
                 }
-                progressBloc.add(ProgressUpdated(completed, message));
+                progressBloc.add(ProgressUpdated(
+                  percentage: percentage,
+                  stage: stage,
+                  bytesProcessed: bytesProcessed,
+                  totalBytes: totalBytes,
+                ));
               },
             ),
           ),

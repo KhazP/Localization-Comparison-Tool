@@ -184,9 +184,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   // Flag to show loading state while we determine if we should auto-load
   bool _isCheckingAutoLoad = true;
   
-  // Time tracking for progress estimation
-  DateTime? _comparisonStartTime;
-
   @override
   void initState() {
     super.initState();
@@ -292,7 +289,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     if (_file1 != null && _file2 != null) {
       setState(() {
         _currentFilter = BasicDiffFilter.all; // Reset filter on new comparison
-        _comparisonStartTime = DateTime.now(); // Track start time for progress estimation
       });
       final settingsState = context.read<SettingsBloc>().state;
       if (settingsState.status == SettingsStatus.loaded) {
@@ -312,7 +308,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     if (_bilingualFile != null) {
       setState(() {
         _currentFilter = BasicDiffFilter.all; // Reset filter on new comparison
-        _comparisonStartTime = DateTime.now(); // Track start time for progress estimation
       });
       final settingsState = context.read<SettingsBloc>().state;
       if (settingsState.status == SettingsStatus.loaded) {
@@ -413,6 +408,134 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     } else {
       ToastService.showInfo(context, 'Please perform a comparison first to see advanced details.');
     }
+  }
+
+  Widget _buildAnimatedProgressOverlay(BuildContext context, ProgressLoading state) {
+    final progress = state.percentage / 100.0;
+    
+    // Build ETA text
+    String timeEstimate = '';
+    final eta = state.estimatedTimeRemaining;
+    if (eta != null && eta.inSeconds > 0) {
+      if (eta.inSeconds < 60) {
+        timeEstimate = '${eta.inSeconds}s remaining';
+      } else {
+        final minutes = (eta.inSeconds / 60).ceil();
+        timeEstimate = '$minutes min remaining';
+      }
+    }
+    
+    // Build bytes progress text
+    final bytesText = state.formattedBytesProgress;
+  
+    return Center(
+      child: Container(
+        width: 400,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Processing...',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '${state.percentage}%',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Stack(
+                children: [
+                  LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 12,
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(
+                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    state.stage,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (bytesText != null) 
+                  Text(
+                    bytesText,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+              ],
+            ),
+            if (timeEstimate.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  timeEstimate,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -635,44 +758,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 BlocBuilder<ProgressBloc, ProgressState>(
                   builder: (context, state) {
                     if (state is ProgressLoading) {
-                      double progress =
-                          state.total > 0 ? state.current / state.total : 0.0;
-                      
-                      // Calculate estimated time remaining
-                      String timeEstimate = '';
-                      if (_comparisonStartTime != null && progress > 0.1) {
-                        final elapsed = DateTime.now().difference(_comparisonStartTime!);
-                        final estimatedTotal = elapsed.inMilliseconds / progress;
-                        final remaining = estimatedTotal - elapsed.inMilliseconds;
-                        if (remaining > 0) {
-                          final remainingSeconds = (remaining / 1000).round();
-                          if (remainingSeconds < 60) {
-                            timeEstimate = ' • ~$remainingSeconds seconds remaining';
-                          } else {
-                            final minutes = (remainingSeconds / 60).round();
-                            timeEstimate = ' • ~$minutes minute${minutes > 1 ? 's' : ''} remaining';
-                          }
-                        }
-                      }
-                      
-                      return Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: progress,
-                              minHeight: 6,
-                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${state.message ?? "Processing..."}$timeEstimate',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 8), // Space before diff list
-                        ],
-                      );
+                      return _buildAnimatedProgressOverlay(context, state);
                     }
                     if (state is ProgressFailure) {
                       return Padding(

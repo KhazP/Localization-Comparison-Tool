@@ -11,6 +11,7 @@ class DocxParser extends LocalizationParser {
     AppSettings settings, {
     ExtractionMode extractionMode = ExtractionMode.target,
     bool requireBilingual = false,
+    ParseProgressCallback? onProgress,
   }) async {
     // Note: The AppSettings for encoding are not applicable here because
     // docx_to_text package works directly on the byte stream of the DOCX file.

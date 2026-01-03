@@ -52,8 +52,13 @@ class CompareFilesFromHistoryRequested extends ComparisonEvent {
   });
 }
 
-// Progress callback type for decoupled progress reporting
-typedef ProgressCallback = void Function(int completed, int total, String message);
+/// Updated progress callback type for percentage-based progress reporting
+typedef ProgressCallback = void Function(
+  int percentage,
+  String stage, {
+  int? bytesProcessed,
+  int? totalBytes,
+});
 
 /// Event to proceed with comparison after a warning
 class ProceedWithComparison extends ComparisonEvent {
@@ -135,7 +140,7 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
   final ComparisonEngine comparisonEngine;
   final WarningSuppressionsRepository? warningSuppressionsRepository;
   
-  /// Optional progress callback for external progress tracking
+  /// Optional progress callback for external progress tracking (percentage-based)
   final ProgressCallback? onProgress;
 
   ComparisonBloc({
@@ -198,19 +203,27 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     CompareFilesRequested event, 
     Emitter<ComparisonState> emit,
   ) async {
-    emit(ComparisonLoading(message: 'Starting comparison...'));
-    onProgress?.call(0, 2, 'Starting comparison...');
+    emit(const ComparisonLoading(message: 'Starting comparison...'));
+    onProgress?.call(0, 'Starting comparison...');
 
     try {
-      onProgress?.call(1, 2, 'Parsing files...');
-      
       final result = await comparisonEngine.compareFiles(
         event.file1, 
         event.file2, 
         event.settings,
+        onProgress: onProgress != null 
+          ? (percentage, stage, {bytesProcessed, totalBytes}) {
+              onProgress?.call(
+                percentage, 
+                stage, 
+                bytesProcessed: bytesProcessed, 
+                totalBytes: totalBytes,
+              );
+            }
+          : null,
       );
       
-      onProgress?.call(2, 2, 'Comparison complete');
+      onProgress?.call(100, 'Comparison complete');
       _handleComparisonResult(emit, result, event.file1, event.file2, false);
     } catch (e) {
       final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
@@ -222,8 +235,8 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     CompareFilesFromHistoryRequested event, 
     Emitter<ComparisonState> emit,
   ) async {
-    emit(ComparisonLoading(message: 'Loading files from history...'));
-    onProgress?.call(0, 2, 'Loading files from history...');
+    emit(const ComparisonLoading(message: 'Loading files from history...'));
+    onProgress?.call(0, 'Loading files from history...');
 
     try {
       final File file1 = File(event.file1Path);
@@ -231,19 +244,27 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
 
       if (!await file1.exists() || !await file2.exists()) {
         const errorMessage = 'One or both files from history not found at original paths.';
-        emit(ComparisonFailure(errorMessage));
+        emit(const ComparisonFailure(errorMessage));
         return;
       }
 
-      onProgress?.call(1, 2, 'Parsing files...');
-      
       final result = await comparisonEngine.compareFiles(
         file1, 
         file2, 
         event.settings,
+        onProgress: onProgress != null 
+          ? (percentage, stage, {bytesProcessed, totalBytes}) {
+              onProgress?.call(
+                percentage, 
+                stage, 
+                bytesProcessed: bytesProcessed, 
+                totalBytes: totalBytes,
+              );
+            }
+          : null,
       );
       
-      onProgress?.call(2, 2, 'Comparison complete');
+      onProgress?.call(100, 'Comparison complete');
       _handleComparisonResult(emit, result, file1, file2, event.isFromHistory);
     } catch (e) {
       final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
@@ -255,18 +276,26 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     CompareBilingualFileRequested event,
     Emitter<ComparisonState> emit,
   ) async {
-    emit(ComparisonLoading(message: 'Starting comparison...'));
-    onProgress?.call(0, 2, 'Starting comparison...');
+    emit(const ComparisonLoading(message: 'Starting comparison...'));
+    onProgress?.call(0, 'Starting comparison...');
 
     try {
-      onProgress?.call(1, 2, 'Parsing file...');
-
       final result = await comparisonEngine.compareBilingualFile(
         event.file,
         event.settings,
+        onProgress: onProgress != null 
+          ? (percentage, stage, {bytesProcessed, totalBytes}) {
+              onProgress?.call(
+                percentage, 
+                stage, 
+                bytesProcessed: bytesProcessed, 
+                totalBytes: totalBytes,
+              );
+            }
+          : null,
       );
 
-      onProgress?.call(2, 2, 'Comparison complete');
+      onProgress?.call(100, 'Comparison complete');
       _handleComparisonResult(emit, result, event.file, event.file, event.isFromHistory);
     } on InvalidBilingualFileException catch (e) {
       emit(ComparisonFailure(e.message));
@@ -276,4 +305,3 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     }
   }
 }
-

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart'; // For compute
 import 'package:localizer_app_main/data/parsers/file_parser_factory.dart';
@@ -18,11 +19,33 @@ class ComparisonResult {
   ComparisonResult(this.file1Data, this.file2Data, this.diff);
 }
 
-// enum StringComparisonStatus is REMOVED from here, will use the one from comparison_status_detail.dart
+/// Callback for reporting comparison progress.
+/// [percentage] is 0-100 indicating overall progress.
+/// [stage] describes the current operation.
+/// [bytesProcessed] and [totalBytes] are optional for file reading stages.
+typedef ComparisonProgressCallback = void Function(
+  int percentage,
+  String stage, {
+  int? bytesProcessed,
+  int? totalBytes,
+});
 
-// _ParseRequest and _parseFileIsolate are not used if we stick to compute.
-// Can be removed or kept if direct Isolate management is planned later for finer progress.
-// For now, let's assume compute is sufficient as per existing code.
+/// Message types for isolate communication
+class _IsolateProgressMessage {
+  final int processed;
+  final int total;
+  _IsolateProgressMessage(this.processed, this.total);
+}
+
+class _IsolateResultMessage {
+  final Map<String, Map<String, Object?>> result;
+  _IsolateResultMessage(this.result);
+}
+
+class _IsolateErrorMessage {
+  final String error;
+  _IsolateErrorMessage(this.error);
+}
 
 class ComparisonEngine {
   final FileParserFactory _parserFactory = FileParserFactory();
@@ -33,6 +56,9 @@ class ComparisonEngine {
     String? format,
     ExtractionMode extractionMode = ExtractionMode.target,
     bool requireBilingual = false,
+    ComparisonProgressCallback? onProgress,
+    int basePercentage = 0,
+    int targetPercentage = 25,
   }) async {
     final parser = _parserFactory.getParserForFile(file, format: format);
     if (parser == null) {
@@ -51,11 +77,11 @@ class ComparisonEngine {
     final cached = await FileCacheService().getCached(file, keySuffix: suffix);
     if (cached != null) {
       developer.log('Cache hit for ${file.path} ($suffix)', name: 'ComparisonEngine');
+      onProgress?.call(targetPercentage, 'Using cached data...');
       return cached;
     }
 
-    // Using compute for simplicity, which manages its own Isolate.
-    // For more complex progress reporting or cancellation, direct Isolate management is better.
+    // Using compute for parsing, which manages its own Isolate.
     final result = await compute(
       _performParse,
       _ComputeParseParams(
@@ -75,6 +101,7 @@ class ComparisonEngine {
       developer.log('Failed to cache file: $e', name: 'ComparisonEngine');
     }
 
+    onProgress?.call(targetPercentage, 'Parsing complete');
     return result;
   }
 
@@ -106,58 +133,148 @@ class ComparisonEngine {
     );
   }
 
-  Future<ComparisonResult> compareFiles(File file1, File file2, AppSettings settings) async {
+  /// Run diff calculation in an isolate with progress reporting.
+  /// 
+  /// This uses Isolate.spawn with SendPort/ReceivePort to receive
+  /// progress updates during the calculation.
+  Future<Map<String, Map<String, Object?>>> _runDiffWithProgress(
+    _ComputeDiffParams params,
+    ComparisonProgressCallback? onProgress,
+    int basePercentage,
+    int targetPercentage,
+    String stageLabel,
+  ) async {
+    final receivePort = ReceivePort();
+    
+    // Calculate progress range for this stage
+    final progressRange = targetPercentage - basePercentage;
+    
+    late Isolate isolate;
+    try {
+      // Spawn the isolate
+      isolate = await Isolate.spawn(
+        _diffIsolateEntryPoint,
+        _DiffIsolateParams(
+          sendPort: receivePort.sendPort,
+          diffParams: params,
+        ),
+      );
+      
+      // Listen for messages from the isolate
+      final completer = Completer<Map<String, Map<String, Object?>>>();
+      
+      receivePort.listen((message) {
+        if (message is _IsolateProgressMessage) {
+          // Calculate percentage within our range (50-90% for diff)
+          if (message.total > 0) {
+            final stageProgress = message.processed / message.total;
+            final percentage = basePercentage + (progressRange * stageProgress).round();
+            onProgress?.call(percentage.clamp(basePercentage, targetPercentage), stageLabel);
+          }
+        } else if (message is _IsolateResultMessage) {
+          completer.complete(message.result);
+        } else if (message is _IsolateErrorMessage) {
+          completer.completeError(Exception(message.error));
+        }
+      });
+      
+      return await completer.future;
+    } finally {
+      receivePort.close();
+      isolate.kill(priority: Isolate.immediate);
+    }
+  }
+
+  /// Isolate entry point for diff calculation with progress reporting
+  static void _diffIsolateEntryPoint(_DiffIsolateParams params) {
+    try {
+      final diff = DiffCalculator.calculateDiff(
+        data1: params.diffParams.data1,
+        data2: params.diffParams.data2,
+        ignoreCase: params.diffParams.ignoreCase,
+        ignorePatterns: params.diffParams.ignorePatterns,
+        ignoreWhitespace: params.diffParams.ignoreWhitespace,
+        comparisonMode: params.diffParams.comparisonMode,
+        similarityThreshold: params.diffParams.similarityThreshold,
+        onProgress: (processed, total) {
+          params.sendPort.send(_IsolateProgressMessage(processed, total));
+        },
+      );
+      
+      // Convert to serializable format
+      final serialized = diff.map((key, value) => MapEntry(key, value.toMap()));
+      params.sendPort.send(_IsolateResultMessage(serialized));
+    } catch (e) {
+      params.sendPort.send(_IsolateErrorMessage(e.toString()));
+    }
+  }
+
+  /// Compare two files with progress reporting.
+  /// 
+  /// Progress stages:
+  /// - 0-25%: Parsing source file
+  /// - 25-50%: Parsing target file
+  /// - 50-95%: Calculating differences (with granular progress)
+  /// - 95-100%: Finalizing
+  Future<ComparisonResult> compareFiles(
+    File file1, 
+    File file2, 
+    AppSettings settings, {
+    ComparisonProgressCallback? onProgress,
+  }) async {
     developer.log('Starting comparison', name: 'ComparisonEngine', error: '${file1.path} vs ${file2.path}');
 
-    final file1DataFuture = _parseFile(
+    // Stage 1: Parse source file (0-25%)
+    onProgress?.call(0, 'Parsing source file...');
+    final file1Data = await _parseFile(
       file1,
       settings,
       format: settings.defaultSourceFormat,
       extractionMode: ExtractionMode.source,
+      onProgress: onProgress,
+      basePercentage: 0,
+      targetPercentage: 25,
     );
-    final file2DataFuture = _parseFile(
+    
+    // Stage 2: Parse target file (25-50%)
+    onProgress?.call(25, 'Parsing target file...');
+    final file2Data = await _parseFile(
       file2,
       settings,
       format: settings.defaultTargetFormat,
       extractionMode: ExtractionMode.target,
+      onProgress: onProgress,
+      basePercentage: 25,
+      targetPercentage: 50,
     );
 
-    final results = await Future.wait([file1DataFuture, file2DataFuture]);
-    final file1Data = results[0];
-    final file2Data = results[1];
-
-    // Run diff calculation in background isolate to prevent UI freeze
-    final rawDiff = await compute(
-      _performDiffCalculation,
-      _ComputeDiffParams(
-        data1: file1Data,
-        data2: file2Data,
-        ignoreCase: settings.ignoreCase,
-        ignorePatterns: settings.ignorePatterns,
-        ignoreWhitespace: settings.ignoreWhitespace,
-        comparisonMode: settings.comparisonMode,
-        similarityThreshold: settings.similarityThreshold,
-      ),
+    // Stage 3: Calculate diff with progress (50-95%)
+    onProgress?.call(50, 'Calculating differences...');
+    
+    final diffParams = _ComputeDiffParams(
+      data1: file1Data,
+      data2: file2Data,
+      ignoreCase: settings.ignoreCase,
+      ignorePatterns: settings.ignorePatterns,
+      ignoreWhitespace: settings.ignoreWhitespace,
+      comparisonMode: settings.comparisonMode,
+      similarityThreshold: settings.similarityThreshold,
     );
+    
+    final rawDiff = await _runDiffWithProgress(
+      diffParams,
+      onProgress,
+      50,  // base percentage
+      95,  // target percentage
+      'Calculating differences...',
+    );
+    
+    onProgress?.call(95, 'Finalizing results...');
     developer.log('Comparison finished', name: 'ComparisonEngine');
     final diff = _deserializeDiff(rawDiff);
+    
+    onProgress?.call(100, 'Complete');
     return ComparisonResult(file1Data, file2Data, diff);
-  }
-
-  // Static method for compute isolate
-  static Map<String, Map<String, Object?>> _performDiffCalculation(
-    _ComputeDiffParams params,
-  ) {
-    final diff = DiffCalculator.calculateDiff(
-      data1: params.data1,
-      data2: params.data2,
-      ignoreCase: params.ignoreCase,
-      ignorePatterns: params.ignorePatterns,
-      ignoreWhitespace: params.ignoreWhitespace,
-      comparisonMode: params.comparisonMode,
-      similarityThreshold: params.similarityThreshold,
-    );
-    return diff.map((key, value) => MapEntry(key, value.toMap()));
   }
 
   static Map<String, ComparisonStatusDetail> _deserializeDiff(
@@ -176,48 +293,73 @@ class ComparisonEngine {
   }
 
   /// Compares source and target text extracted from a single bilingual file.
+  /// 
+  /// Progress stages:
+  /// - 0-25%: Extracting source text
+  /// - 25-50%: Extracting target text
+  /// - 50-95%: Calculating differences (with granular progress)
+  /// - 95-100%: Finalizing
   Future<ComparisonResult> compareBilingualFile(
     File file,
-    AppSettings settings,
-  ) async {
+    AppSettings settings, {
+    ComparisonProgressCallback? onProgress,
+  }) async {
     developer.log(
       'Starting bilingual comparison',
       name: 'ComparisonEngine',
       error: file.path,
     );
 
-    final sourceDataFuture = _parseFile(
+    // Stage 1: Extract source text (0-25%)
+    onProgress?.call(0, 'Extracting source text...');
+    final sourceData = await _parseFile(
       file,
       settings,
       extractionMode: ExtractionMode.source,
       requireBilingual: true,
+      onProgress: onProgress,
+      basePercentage: 0,
+      targetPercentage: 25,
     );
-    final targetDataFuture = _parseFile(
+    
+    // Stage 2: Extract target text (25-50%)
+    onProgress?.call(25, 'Extracting target text...');
+    final targetData = await _parseFile(
       file,
       settings,
       extractionMode: ExtractionMode.target,
       requireBilingual: true,
+      onProgress: onProgress,
+      basePercentage: 25,
+      targetPercentage: 50,
     );
 
-    final results = await Future.wait([sourceDataFuture, targetDataFuture]);
-    final sourceData = results[0];
-    final targetData = results[1];
-
-    // Run diff calculation in background isolate to prevent UI freeze
-    final rawDiff = await compute(
-      _performDiffCalculation,
-      _ComputeDiffParams(
-        data1: sourceData,
-        data2: targetData,
-        ignoreCase: settings.ignoreCase,
-        ignorePatterns: settings.ignorePatterns,
-        ignoreWhitespace: settings.ignoreWhitespace,
-        comparisonMode: settings.comparisonMode,
-        similarityThreshold: settings.similarityThreshold,
-      ),
+    // Stage 3: Calculate diff with progress (50-95%)
+    onProgress?.call(50, 'Calculating differences...');
+    
+    final diffParams = _ComputeDiffParams(
+      data1: sourceData,
+      data2: targetData,
+      ignoreCase: settings.ignoreCase,
+      ignorePatterns: settings.ignorePatterns,
+      ignoreWhitespace: settings.ignoreWhitespace,
+      comparisonMode: settings.comparisonMode,
+      similarityThreshold: settings.similarityThreshold,
     );
+    
+    final rawDiff = await _runDiffWithProgress(
+      diffParams,
+      onProgress,
+      50,  // base percentage
+      95,  // target percentage
+      'Calculating differences...',
+    );
+    
+    onProgress?.call(95, 'Finalizing results...');
     developer.log('Bilingual comparison finished', name: 'ComparisonEngine');
     final diff = _deserializeDiff(rawDiff);
+    
+    onProgress?.call(100, 'Complete');
     return ComparisonResult(sourceData, targetData, diff);
   }
 }
@@ -239,7 +381,7 @@ class _ComputeParseParams {
   final bool requireBilingual;
 }
 
-// Helper class for parameters to compute function (diff calculation)
+// Helper class for parameters to diff calculation
 class _ComputeDiffParams {
   final Map<String, String> data1;
   final Map<String, String> data2;
@@ -257,5 +399,16 @@ class _ComputeDiffParams {
     required this.ignoreWhitespace,
     required this.comparisonMode,
     required this.similarityThreshold,
+  });
+}
+
+// Parameters for the diff isolate
+class _DiffIsolateParams {
+  final SendPort sendPort;
+  final _ComputeDiffParams diffParams;
+  
+  _DiffIsolateParams({
+    required this.sendPort,
+    required this.diffParams,
   });
 }

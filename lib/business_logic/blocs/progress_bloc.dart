@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
@@ -6,14 +7,24 @@ import 'package:windows_taskbar/windows_taskbar.dart';
 abstract class ProgressEvent {}
 
 class ComparisonStarted extends ProgressEvent {
-  final int totalFiles; // Or total steps
-  ComparisonStarted(this.totalFiles);
+  final int totalSteps;
+  final String initialMessage;
+  ComparisonStarted({this.totalSteps = 100, this.initialMessage = 'Starting...'});
 }
 
+/// Updated progress event with more granular information
 class ProgressUpdated extends ProgressEvent {
-  final int completedFiles; // Or completed steps
-  final String currentFile;
-  ProgressUpdated(this.completedFiles, this.currentFile);
+  final int percentage; // 0-100
+  final String stage; // Current operation name
+  final int? bytesProcessed; // For file reading stages
+  final int? totalBytes; // Total file size
+  
+  ProgressUpdated({
+    required this.percentage,
+    required this.stage,
+    this.bytesProcessed,
+    this.totalBytes,
+  });
 }
 
 class ComparisonCompleted extends ProgressEvent {}
@@ -24,59 +35,125 @@ class ComparisonError extends ProgressEvent {
 }
 
 // States
-abstract class ProgressState {}
+abstract class ProgressState extends Equatable {
+  const ProgressState();
+  
+  @override
+  List<Object?> get props => [];
+}
 
 class ProgressInitial extends ProgressState {}
 
 class ProgressLoading extends ProgressState {
-  final int total;
-  final int current;
-  final String? message;
-  ProgressLoading(this.total, this.current, {this.message});
+  final int percentage; // 0-100
+  final String stage; // Current operation description
+  final int? bytesProcessed; // For file reading stages
+  final int? totalBytes; // Total file size
+  final DateTime startTime; // For ETA calculation
+  
+  const ProgressLoading({
+    required this.percentage,
+    required this.stage,
+    this.bytesProcessed,
+    this.totalBytes,
+    required this.startTime,
+  });
+
+  /// Calculate estimated time remaining based on current progress
+  Duration? get estimatedTimeRemaining {
+    if (percentage < 5) return null; // Not enough data yet
+    
+    final elapsed = DateTime.now().difference(startTime);
+    if (elapsed.inMilliseconds == 0) return null;
+    
+    final progressRate = percentage / elapsed.inMilliseconds;
+    final remainingProgress = 100 - percentage;
+    final remainingMs = remainingProgress / progressRate;
+    
+    return Duration(milliseconds: remainingMs.round());
+  }
+
+  /// Format bytes for display (e.g., "45.2 MB")
+  String? get formattedBytesProgress {
+    if (bytesProcessed == null || totalBytes == null || totalBytes == 0) {
+      return null;
+    }
+    return '${_formatBytes(bytesProcessed!)} / ${_formatBytes(totalBytes!)}';
+  }
+
+  static String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
+
+  // Legacy getters for backward compatibility
+  int get total => 100;
+  int get current => percentage;
+  String? get message => stage;
+
+  @override
+  List<Object?> get props => [percentage, stage, bytesProcessed, totalBytes, startTime];
 }
 
-class ProgressSuccess extends ProgressState {
-  // Optionally, include results or a success message
-  ProgressSuccess();
-}
+class ProgressSuccess extends ProgressState {}
 
 class ProgressFailure extends ProgressState {
   final String error;
-  ProgressFailure(this.error);
+  const ProgressFailure(this.error);
+
+  @override
+  List<Object?> get props => [error];
 }
 
 // BLoC
 class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
+  DateTime? _startTime;
+
   ProgressBloc() : super(ProgressInitial()) {
     on<ComparisonStarted>((event, emit) {
-      emit(ProgressLoading(event.totalFiles, 0, message: 'Starting comparison...'));
-      _updateTaskbarProgress(0, event.totalFiles);
+      _startTime = DateTime.now();
+      emit(ProgressLoading(
+        percentage: 0,
+        stage: event.initialMessage,
+        startTime: _startTime!,
+      ));
+      _updateTaskbarProgress(0);
     });
 
     on<ProgressUpdated>((event, emit) {
-      if (state is ProgressLoading) {
-        final currentTotal = (state as ProgressLoading).total;
-        emit(ProgressLoading(currentTotal, event.completedFiles, message: 'Processing: ${event.currentFile}'));
-        _updateTaskbarProgress(event.completedFiles, currentTotal);
-      }
+      final startTime = _startTime ?? DateTime.now();
+      emit(ProgressLoading(
+        percentage: event.percentage.clamp(0, 100),
+        stage: event.stage,
+        bytesProcessed: event.bytesProcessed,
+        totalBytes: event.totalBytes,
+        startTime: startTime,
+      ));
+      _updateTaskbarProgress(event.percentage);
     });
 
     on<ComparisonCompleted>((event, emit) {
+      _startTime = null;
       emit(ProgressSuccess());
       _clearTaskbarProgress();
     });
 
     on<ComparisonError>((event, emit) {
+      _startTime = null;
       emit(ProgressFailure(event.errorMessage));
       _setTaskbarError();
     });
   }
 
   /// Update the Windows taskbar progress indicator
-  void _updateTaskbarProgress(int current, int total) {
-    if (!Platform.isWindows || total == 0) return;
+  void _updateTaskbarProgress(int percentage) {
+    if (!Platform.isWindows) return;
     
-    final progress = (current / total * 100).round();
+    final progress = percentage.clamp(0, 100);
     WindowsTaskbar.setProgress(progress, 100);
     WindowsTaskbar.setProgressMode(TaskbarProgressMode.normal);
   }

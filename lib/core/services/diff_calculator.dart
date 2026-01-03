@@ -2,12 +2,17 @@ import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 
+/// Progress callback for reporting diff calculation progress.
+typedef DiffProgressCallback = void Function(int processed, int total);
+
 class DiffCalculator {
   /// Calculates diff between two data maps based on the comparison mode.
   ///
   /// - `Key-based`: Matches entries by key name (traditional approach).
   /// - `Order-based`: Matches entries by position in file (index-based).
   /// - `Smart Match`: Key-based first, then attempts to detect renamed keys.
+  /// 
+  /// [onProgress] is an optional callback for reporting progress during calculation.
   static Map<String, ComparisonStatusDetail> calculateDiff({
     required Map<String, String> data1,
     required Map<String, String> data2,
@@ -16,6 +21,7 @@ class DiffCalculator {
     required bool ignoreWhitespace,
     required String comparisonMode,
     required double similarityThreshold,
+    DiffProgressCallback? onProgress,
   }) {
     switch (comparisonMode) {
       case 'Order-based':
@@ -26,6 +32,7 @@ class DiffCalculator {
           ignorePatterns: ignorePatterns,
           ignoreWhitespace: ignoreWhitespace,
           similarityThreshold: similarityThreshold,
+          onProgress: onProgress,
         );
       case 'Smart Match':
         return _calculateSmartMatchDiff(
@@ -35,6 +42,7 @@ class DiffCalculator {
           ignorePatterns: ignorePatterns,
           ignoreWhitespace: ignoreWhitespace,
           similarityThreshold: similarityThreshold,
+          onProgress: onProgress,
         );
       case 'Key-based':
       default:
@@ -45,6 +53,7 @@ class DiffCalculator {
           ignorePatterns: ignorePatterns,
           ignoreWhitespace: ignoreWhitespace,
           similarityThreshold: similarityThreshold,
+          onProgress: onProgress,
         );
     }
   }
@@ -57,12 +66,19 @@ class DiffCalculator {
     required List<String> ignorePatterns,
     required bool ignoreWhitespace,
     required double similarityThreshold,
+    DiffProgressCallback? onProgress,
   }) {
     final diff = <String, ComparisonStatusDetail>{};
     final allKeys = {...data1.keys, ...data2.keys}.toList();
+    final totalKeys = allKeys.length;
+    int processedKeys = 0;
+    int lastReportedPercent = 0;
 
     for (final key in allKeys) {
-      if (_shouldIgnoreKey(key, ignorePatterns)) continue;
+      if (_shouldIgnoreKey(key, ignorePatterns)) {
+        processedKeys++;
+        continue;
+      }
 
       String? value1 = data1[key];
       String? value2 = data2[key];
@@ -71,7 +87,21 @@ class DiffCalculator {
       value2 = _normalizeValue(value2, ignoreCase, ignoreWhitespace);
 
       diff[key] = _compareValues(value1, value2, similarityThreshold);
+      
+      processedKeys++;
+      
+      // Report progress every 1% to avoid too many callbacks
+      if (onProgress != null && totalKeys > 0) {
+        final currentPercent = (processedKeys * 100 / totalKeys).floor();
+        if (currentPercent > lastReportedPercent) {
+          lastReportedPercent = currentPercent;
+          onProgress(processedKeys, totalKeys);
+        }
+      }
     }
+    
+    // Final progress report
+    onProgress?.call(totalKeys, totalKeys);
     return diff;
   }
 
@@ -83,12 +113,14 @@ class DiffCalculator {
     required List<String> ignorePatterns,
     required bool ignoreWhitespace,
     required double similarityThreshold,
+    DiffProgressCallback? onProgress,
   }) {
     final diff = <String, ComparisonStatusDetail>{};
     final keys1 = data1.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
     final keys2 = data2.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
 
     final maxLength = keys1.length > keys2.length ? keys1.length : keys2.length;
+    int lastReportedPercent = 0;
 
     for (int i = 0; i < maxLength; i++) {
       final key1 = i < keys1.length ? keys1[i] : null;
@@ -104,7 +136,18 @@ class DiffCalculator {
       value2 = _normalizeValue(value2, ignoreCase, ignoreWhitespace);
 
       diff[displayKey] = _compareValues(value1, value2, similarityThreshold);
+      
+      // Report progress every 1%
+      if (onProgress != null && maxLength > 0) {
+        final currentPercent = ((i + 1) * 100 / maxLength).floor();
+        if (currentPercent > lastReportedPercent) {
+          lastReportedPercent = currentPercent;
+          onProgress(i + 1, maxLength);
+        }
+      }
     }
+    
+    onProgress?.call(maxLength, maxLength);
     return diff;
   }
 
@@ -116,14 +159,33 @@ class DiffCalculator {
     required List<String> ignorePatterns,
     required bool ignoreWhitespace,
     required double similarityThreshold,
+    DiffProgressCallback? onProgress,
   }) {
     final diff = <String, ComparisonStatusDetail>{};
     final matchedKeys1 = <String>{};
     final matchedKeys2 = <String>{};
+    
+    // Calculate total work: phase1 + phase2 + phase3 + phase4
+    final totalKeys = data1.length + data2.length;
+    int processedKeys = 0;
+    int lastReportedPercent = 0;
+    
+    void reportProgress() {
+      if (onProgress != null && totalKeys > 0) {
+        final currentPercent = (processedKeys * 100 / totalKeys).floor();
+        if (currentPercent > lastReportedPercent) {
+          lastReportedPercent = currentPercent;
+          onProgress(processedKeys, totalKeys);
+        }
+      }
+    }
 
     // Phase 1: Exact key matches
     for (final key in data1.keys) {
-      if (_shouldIgnoreKey(key, ignorePatterns)) continue;
+      if (_shouldIgnoreKey(key, ignorePatterns)) {
+        processedKeys++;
+        continue;
+      }
 
       if (data2.containsKey(key)) {
         String? value1 = _normalizeValue(data1[key], ignoreCase, ignoreWhitespace);
@@ -132,6 +194,8 @@ class DiffCalculator {
         matchedKeys1.add(key);
         matchedKeys2.add(key);
       }
+      processedKeys++;
+      reportProgress();
     }
 
     // Phase 2: Find unmatched keys
@@ -174,8 +238,11 @@ class DiffCalculator {
       if (!usedKeys2.contains(key2)) {
         diff[key2] = ComparisonStatusDetail.added();
       }
+      processedKeys++;
+      reportProgress();
     }
 
+    onProgress?.call(totalKeys, totalKeys);
     return diff;
   }
 

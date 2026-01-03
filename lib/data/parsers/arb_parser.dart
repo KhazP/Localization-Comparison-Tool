@@ -13,6 +13,7 @@ class ArbParser extends LocalizationParser {
     AppSettings settings, {
     ExtractionMode extractionMode = ExtractionMode.target,
     bool requireBilingual = false,
+    ParseProgressCallback? onProgress,
   }) async {
     final Map<String, String> translations = {};
     try {

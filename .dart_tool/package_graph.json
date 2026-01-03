@@ -1218,13 +1218,6 @@
       ]
     },
     {
-      "name": "pausable_timer",
-      "version": "3.1.0+3",
-      "dependencies": [
-        "clock"
-      ]
-    },
-    {
       "name": "http",
       "version": "1.4.0",
       "dependencies": [
@@ -1232,6 +1225,20 @@
         "http_parser",
         "meta",
         "web"
+      ]
+    },
+    {
+      "name": "iconsax_flutter",
+      "version": "1.0.1",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "pausable_timer",
+      "version": "3.1.0+3",
+      "dependencies": [
+        "clock"
       ]
     },
     {
@@ -1993,13 +2000,6 @@
       "dependencies": [
         "meta",
         "path"
-      ]
-    },
-    {
-      "name": "iconsax_flutter",
-      "version": "1.0.1",
-      "dependencies": [
-        "flutter"
       ]
     }
   ],

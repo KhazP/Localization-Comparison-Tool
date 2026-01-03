@@ -245,9 +245,17 @@ class SettingsDropdown<T> extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: items.contains(value) ? value : items.first,
+          isExpanded: true,
           items: items
-              .map((item) =>
-                  DropdownMenuItem(value: item, child: Text(item.toString())))
+              .map(
+                (item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    item.toString(),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
               .toList(),
           onChanged: onChanged,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(

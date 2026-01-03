@@ -33,7 +33,6 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 build/
-pubspec.lock
 
 # Android related
 **/android/**/gradle-wrapper.jar
@@ -126,3 +125,15 @@ htmlcov/
 lcov.info
 
 sample translations/
+
+# Custom Analysis & Logs
+*_analysis.txt
+error_log.txt
+
+# Agent & IDE Configurations
+.agent/
+.claude/
+.cursor/
+
+# Backups
+windows_backup_*/

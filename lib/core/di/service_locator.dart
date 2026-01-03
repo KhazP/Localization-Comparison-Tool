@@ -64,6 +64,7 @@ Future<void> setupServiceLocator() async {
     () => GoogleTranslationService(
       secureStorage: sl<SecureStorageService>(),
       dioClient: sl<DioClient>(),
+      usageService: sl<AiUsageService>(),
     ),
   );
   sl.registerLazySingleton<DeepLTranslationService>(
@@ -71,6 +72,7 @@ Future<void> setupServiceLocator() async {
       secureStorage: sl<SecureStorageService>(),
       dioClient: sl<DioClient>(),
       talkerService: sl<TalkerService>(),
+      usageService: sl<AiUsageService>(),
     ),
   );
   sl.registerLazySingleton<GeminiTranslationService>(

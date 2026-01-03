@@ -1,4 +1,5 @@
 import 'package:localizer_app_main/core/di/service_locator.dart';
+import 'package:localizer_app_main/core/services/ai_usage_service.dart';
 import 'package:localizer_app_main/core/services/dio_client.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
@@ -36,6 +37,7 @@ class TranslationServiceFactory {
     return GoogleTranslationService(
       secureStorage: sl<SecureStorageService>(),
       dioClient: sl<DioClient>(),
+      usageService: sl<AiUsageService>(),
     );
   }
 

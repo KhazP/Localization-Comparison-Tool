@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:localizer_app_main/core/services/ai_usage_service.dart';
 import 'package:localizer_app_main/core/services/dio_client.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 
@@ -31,12 +32,15 @@ class GoogleTranslationService implements TranslationService {
   static const String _baseUrl = 'https://translation.googleapis.com';
   final SecureStorageService _secureStorage;
   final DioClient _dioClient;
+  final AiUsageService? _usageService;
 
   GoogleTranslationService({
     required SecureStorageService secureStorage,
     DioClient? dioClient,
+    AiUsageService? usageService,
   })  : _secureStorage = secureStorage,
-        _dioClient = dioClient ?? DioClient();
+        _dioClient = dioClient ?? DioClient(),
+        _usageService = usageService;
 
   @override
   Future<String> translate(String text, String targetLanguage,
@@ -68,7 +72,15 @@ class GoogleTranslationService implements TranslationService {
       if (response.statusCode == 200 && response.data != null) {
         final translations = response.data!['data']['translations'] as List;
         if (translations.isNotEmpty) {
-          return translations.first['translatedText'];
+          final translatedText = translations.first['translatedText'] as String;
+
+          // Record character usage for cost tracking
+          await _usageService?.recordUsage(
+            providerName: 'Google Translate',
+            characters: text.length,
+          );
+
+          return translatedText;
         }
         throw Exception('No translation found in response');
       } else {

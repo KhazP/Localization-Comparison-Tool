@@ -11,6 +11,7 @@ import 'package:localizer_app_main/data/services/translation_service.dart';
 /// Based on Google Generative AI Interactions API parameters.
 class GeminiTranslationConfig {
   const GeminiTranslationConfig({
+    this.model = 'gemini-2.0-flash',
     this.temperature = 0.3,
     this.topP = 0.95,
     this.topK,
@@ -20,6 +21,9 @@ class GeminiTranslationConfig {
     this.systemInstructions,
     this.contextStrings,
   });
+
+  /// The Gemini model to use. Default: gemini-2.0-flash.
+  final String model;
 
   /// Controls randomness in generation. Lower values (0.0-0.5) produce more
   /// deterministic, consistent translations. Higher values (0.7-1.0) produce
@@ -58,6 +62,7 @@ class GeminiTranslationConfig {
 
   /// Creates a copy with the given fields replaced.
   GeminiTranslationConfig copyWith({
+    String? model,
     double? temperature,
     double? topP,
     int? topK,
@@ -68,6 +73,7 @@ class GeminiTranslationConfig {
     List<String>? contextStrings,
   }) {
     return GeminiTranslationConfig(
+      model: model ?? this.model,
       temperature: temperature ?? this.temperature,
       topP: topP ?? this.topP,
       topK: topK ?? this.topK,
@@ -83,6 +89,7 @@ class GeminiTranslationConfig {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is GeminiTranslationConfig &&
+        other.model == model &&
         other.temperature == temperature &&
         other.topP == topP &&
         other.topK == topK &&
@@ -94,6 +101,7 @@ class GeminiTranslationConfig {
 
   @override
   int get hashCode => Object.hash(
+        model,
         temperature,
         topP,
         topK,
@@ -132,9 +140,6 @@ class GeminiTranslationService implements TranslationService {
   // Retry configuration
   static const _maxRetries = 3;
   static const _initialDelayMs = 1000;
-
-  // Model configuration - Gemini 3 Flash
-  static const _modelName = 'gemini-2.5-flash';
 
   /// Default system instruction that ensures only translated text is returned.
   static const _defaultSystemInstruction = '''You are a professional translator.
@@ -181,7 +186,7 @@ RULES:
         _config.systemInstructions ?? _defaultSystemInstruction;
 
     _model = GenerativeModel(
-      model: _modelName,
+      model: _config.model,
       apiKey: apiKey,
       systemInstruction: Content.text(systemPrompt),
       generationConfig: GenerationConfig(

@@ -1,3 +1,4 @@
+import 'package:localizer_app_main/core/services/ai_usage_service.dart';
 import 'package:localizer_app_main/core/services/dio_client.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
@@ -9,13 +10,16 @@ class DeepLTranslationService implements TranslationService {
     required SecureStorageService secureStorage,
     required DioClient dioClient,
     required TalkerService talkerService,
+    AiUsageService? usageService,
   })  : _secureStorage = secureStorage,
         _dioClient = dioClient,
-        _talker = talkerService;
+        _talker = talkerService,
+        _usageService = usageService;
 
   final SecureStorageService _secureStorage;
   final DioClient _dioClient;
   final TalkerService _talker;
+  final AiUsageService? _usageService;
 
   /// Translates text using DeepL.
   @override
@@ -59,6 +63,12 @@ class DeepLTranslationService implements TranslationService {
           final first = translations.first as Map<String, dynamic>;
           final translatedText = first['text'] as String?;
           if (translatedText != null) {
+            // Record character usage for cost tracking
+            await _usageService?.recordUsage(
+              providerName: 'DeepL',
+              characters: text.length,
+            );
+
             return translatedText;
           }
         }

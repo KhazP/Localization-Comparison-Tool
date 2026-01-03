@@ -285,23 +285,6 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SummaryRow(data: data),
-              if (_aiUsageFuture != null) ...[
-                const SizedBox(height: 20),
-                FutureBuilder<AiUsageSummary>(
-                  future: _aiUsageFuture,
-                  builder: (context, usageSnapshot) {
-                    final summary = usageSnapshot.data;
-                    if (summary == null || !summary.hasUsage) {
-                      return const SizedBox.shrink();
-                    }
-                    return _AiUsageSection(
-                      summary: summary,
-                      cardColor: cardColor,
-                      borderColor: borderColor,
-                    );
-                  },
-                ),
-              ],
               const SizedBox(height: 20),
               _CoverageSection(
                 data: data,
@@ -320,12 +303,31 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
                   });
                 },
               ),
-              const SizedBox(height: 20),
-              _ActivityTrendSection(
-                data: data,
-                cardColor: cardColor,
-                borderColor: borderColor,
-              ),
+              // AI Usage section - now after "Words added over time"
+              if (_aiUsageFuture != null) ...[
+                const SizedBox(height: 20),
+                FutureBuilder<AiUsageSummary>(
+                  future: _aiUsageFuture,
+                  builder: (context, usageSnapshot) {
+                    final summary = usageSnapshot.data;
+                    if (summary == null || !summary.hasUsage) {
+                      return const SizedBox.shrink();
+                    }
+                    return _AiUsageSection(
+                      summary: summary,
+                      cardColor: cardColor,
+                      borderColor: borderColor,
+                    );
+                  },
+                ),
+              ],
+              // Activity Trend hidden for now
+              // const SizedBox(height: 20),
+              // _ActivityTrendSection(
+              //   data: data,
+              //   cardColor: cardColor,
+              //   borderColor: borderColor,
+              // ),
               const SizedBox(height: 20),
               _IssuesSection(
                 data: data,
@@ -566,19 +568,58 @@ class _AiUsageSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'AI usage',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          // Header with icon and title
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary.withOpacity(0.2),
+                      theme.colorScheme.tertiary.withOpacity(0.2),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  LucideIcons.brain,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'AI & Translation Usage',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              // TODO: Add date range filter button here
+            ],
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: summary.providers
-                .map((provider) => _AiUsageCard(summary: provider))
-                .toList(),
+          const SizedBox(height: 16),
+          // Provider cards in a responsive grid
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cardWidth = constraints.maxWidth > 700
+                  ? (constraints.maxWidth - 16) / 2
+                  : constraints.maxWidth;
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: summary.providers
+                    .map((provider) => SizedBox(
+                          width: cardWidth > 400 ? cardWidth : null,
+                          child: _AiUsageCard(summary: provider),
+                        ))
+                    .toList(),
+              );
+            },
           ),
         ],
       ),
@@ -591,109 +632,376 @@ class _AiUsageCard extends StatelessWidget {
 
   final AiUsageProviderSummary summary;
 
+  IconData _getProviderIcon() {
+    switch (summary.providerName) {
+      case 'Gemini':
+        return LucideIcons.sparkles;
+      case 'OpenAI':
+        return LucideIcons.bot;
+      case 'Google Translate':
+        return LucideIcons.languages;
+      case 'DeepL':
+        return LucideIcons.globe;
+      default:
+        return LucideIcons.cpu;
+    }
+  }
+
+  Color _getProviderAccentColor(ThemeData theme) {
+    switch (summary.providerName) {
+      case 'Gemini':
+        return const Color(0xFF4285F4); // Google Blue
+      case 'OpenAI':
+        return const Color(0xFF10A37F); // OpenAI Green
+      case 'Google Translate':
+        return const Color(0xFF4285F4); // Google Blue
+      case 'DeepL':
+        return const Color(0xFF0F2B46); // DeepL Dark Blue
+      default:
+        return theme.colorScheme.primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final labelStyle = theme.textTheme.bodySmall?.copyWith(
-      color: theme.colorScheme.onSurface.withOpacity(0.6),
-    );
-    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
+    final accentColor = _getProviderAccentColor(theme);
+    final isDark = theme.brightness == Brightness.dark;
 
     final lastUsed = summary.lastUsedAt;
-    final lastUsedLabel = lastUsed != null
-        ? DateFormat('MMM d, yyyy h:mm a').format(lastUsed)
-        : null;
+    final lastUsedLabel =
+        lastUsed != null ? DateFormat('MMM d, h:mm a').format(lastUsed) : null;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(
-        minWidth: 220,
-        maxWidth: 320,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.dividerColor),
+    // Primary metric - tokens or characters depending on provider type
+    final primaryLabel = summary.isCharacterBased ? 'Characters' : 'Tokens';
+    final primaryValue = summary.isCharacterBased
+        ? _formatNumber(summary.totalCharacters)
+        : _formatNumber(summary.totalTokens);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            accentColor.withOpacity(isDark ? 0.15 : 0.08),
+            theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.95),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: accentColor.withOpacity(isDark ? 0.3 : 0.2),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              summary.providerName,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
+            // Provider header with icon
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getProviderIcon(),
+                    size: 18,
+                    color: accentColor,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        summary.providerName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (summary.lastModel != null &&
+                          summary.lastModel!.isNotEmpty)
+                        Text(
+                          summary.lastModel!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.5),
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Primary metrics row
+            Row(
+              children: [
+                Expanded(
+                  child: _MetricTile(
+                    label: 'Requests',
+                    value: summary.requestCount.toString(),
+                    accentColor: accentColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MetricTile(
+                    label: primaryLabel,
+                    value: primaryValue,
+                    accentColor: accentColor,
+                  ),
+                ),
+                if (summary.estimatedCostUsd != null) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _MetricTile(
+                      label: 'Est. Cost',
+                      value: _formatCost(summary.estimatedCostUsd!),
+                      accentColor: accentColor,
+                      highlight: true,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+
+            // Token breakdown for AI providers (not character-based)
+            if (!summary.isCharacterBased && summary.totalTokens > 0) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _TokenBreakdownTile(
+                      promptTokens: summary.promptTokens,
+                      completionTokens: summary.completionTokens,
+                      accentColor: accentColor,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            _buildUsageRow(
-              label: 'Requests',
-              value: summary.requestCount.toString(),
-              labelStyle: labelStyle,
-              valueStyle: valueStyle,
-            ),
-            _buildUsageRow(
-              label: 'Total tokens',
-              value: summary.totalTokens.toString(),
-              labelStyle: labelStyle,
-              valueStyle: valueStyle,
-            ),
-            _buildUsageRow(
-              label: 'Prompt tokens',
-              value: summary.promptTokens.toString(),
-              labelStyle: labelStyle,
-              valueStyle: valueStyle,
-            ),
-            _buildUsageRow(
-              label: 'Completion tokens',
-              value: summary.completionTokens.toString(),
-              labelStyle: labelStyle,
-              valueStyle: valueStyle,
-            ),
-            if (summary.lastModel != null &&
-                summary.lastModel!.trim().isNotEmpty)
-              _buildUsageRow(
-                label: 'Last model',
-                value: summary.lastModel!,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
+            ],
+
+            // Footer with last used
+            if (lastUsedLabel != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.clock,
+                    size: 12,
+                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Last used $lastUsedLabel',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      fontSize: 11,
+                    ),
+                  ),
+                  if (summary.lastLatencyMs != null) ...[
+                    const Spacer(),
+                    Icon(
+                      LucideIcons.zap,
+                      size: 12,
+                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${summary.lastLatencyMs}ms',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            if (lastUsedLabel != null)
-              _buildUsageRow(
-                label: 'Last used',
-                value: lastUsedLabel,
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
-              ),
-            if (summary.lastLatencyMs != null)
-              _buildUsageRow(
-                label: 'Last time',
-                value: '${summary.lastLatencyMs} ms',
-                labelStyle: labelStyle,
-                valueStyle: valueStyle,
-              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildUsageRow({
-    required String label,
-    required String value,
-    TextStyle? labelStyle,
-    TextStyle? valueStyle,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
+  String _formatNumber(int value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(2)}M';
+    } else if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(1)}K';
+    }
+    return value.toString();
+  }
+
+  String _formatCost(double cost) {
+    if (cost < 0.01) {
+      return '< \$0.01';
+    }
+    return '\$${cost.toStringAsFixed(2)}';
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.label,
+    required this.value,
+    required this.accentColor,
+    this.highlight = false,
+  });
+
+  final String label;
+  final String value;
+  final Color accentColor;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: highlight
+            ? accentColor.withOpacity(0.1)
+            : theme.colorScheme.surface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(8),
+        border:
+            highlight ? Border.all(color: accentColor.withOpacity(0.3)) : null,
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Text(label, style: labelStyle)),
-          const SizedBox(width: 8),
-          Flexible(child: Text(value, style: valueStyle)),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: highlight ? accentColor : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TokenBreakdownTile extends StatelessWidget {
+  const _TokenBreakdownTile({
+    required this.promptTokens,
+    required this.completionTokens,
+    required this.accentColor,
+  });
+
+  final int promptTokens;
+  final int completionTokens;
+  final Color accentColor;
+
+  String _formatNumber(int value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1)}M';
+    } else if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(1)}K';
+    }
+    return value.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = promptTokens + completionTokens;
+    final promptPercent = total > 0 ? (promptTokens / total) : 0.5;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.arrowUp,
+                    size: 10,
+                    color: accentColor.withOpacity(0.7),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Prompt: ${_formatNumber(promptTokens)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.arrowDown,
+                    size: 10,
+                    color: accentColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Completion: ${_formatNumber(completionTokens)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Progress bar showing split
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: SizedBox(
+              height: 4,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: (promptPercent * 100).round(),
+                    child: Container(color: accentColor.withOpacity(0.5)),
+                  ),
+                  Expanded(
+                    flex: ((1 - promptPercent) * 100).round(),
+                    child: Container(color: accentColor),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1173,7 +1481,8 @@ class _WordTrendChart extends StatelessWidget {
             showCoverage ? point.coveragePercent : point.words.toDouble())
         .fold<double>(0.0, (max, value) => value > max ? value : max);
 
-    final adjustedMaxY = showCoverage ? 100.0 : (maxY == 0 ? 10.0 : maxY * 1.2);
+    // Add headroom to prevent line clipping at chart edges
+    final adjustedMaxY = showCoverage ? 105.0 : (maxY == 0 ? 10.0 : maxY * 1.2);
     final dateFormat = DateFormat('MMM d');
     final tooltipDateFormat = DateFormat('MMM d, yyyy');
     final interval =
@@ -1197,10 +1506,10 @@ class _WordTrendChart extends StatelessWidget {
       LineChartData(
         minX: 0,
         maxX: (points.length - 1).toDouble(),
-        minY: 0,
+        minY:
+            -adjustedMaxY * 0.02, // Slight negative to prevent bottom clipping
         maxY: adjustedMaxY,
-        clipData:
-            const FlClipData.all(), // Ensure lines don't bleed out of grid area
+        clipData: const FlClipData.horizontal(), // Only clip horizontally
         gridData: FlGridData(
           show: true,
           drawVerticalLine: true,
@@ -2018,9 +2327,10 @@ class _BurnUpChart extends StatelessWidget {
       LineChartData(
         minX: 0,
         maxX: (points.length - 1).toDouble(),
-        minY: 0,
+        minY:
+            -adjustedMaxY * 0.02, // Slight negative to prevent bottom clipping
         maxY: adjustedMaxY,
-        clipData: const FlClipData.all(),
+        clipData: const FlClipData.horizontal(), // Only clip horizontally
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,

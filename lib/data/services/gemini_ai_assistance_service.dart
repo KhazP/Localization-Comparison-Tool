@@ -33,8 +33,6 @@ class GeminiAiAssistanceService implements AiAssistanceService {
   final AiUsageService _usageService;
   GeminiTranslationConfig _config;
 
-  static const _modelName = 'gemini-2.5-flash';
-
   GenerativeModel? _model;
   GeminiTranslationConfig? _cachedConfig;
 
@@ -71,7 +69,7 @@ class GeminiAiAssistanceService implements AiAssistanceService {
         _defaultTranslationPrompt;
 
     final model = GenerativeModel(
-      model: _modelName,
+      model: _config.model,
       apiKey: apiKey,
       systemInstruction: Content.text(prompt),
       generationConfig: GenerationConfig(
@@ -393,7 +391,7 @@ RULES:
       promptTokens: promptTokens,
       completionTokens: completionTokens,
       totalTokens: totalTokens,
-      model: _modelName,
+      model: _config.model,
       latencyMs: latencyMs,
     );
   }

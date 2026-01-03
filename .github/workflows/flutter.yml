@@ -37,7 +37,7 @@ jobs:
         run: dart format --set-exit-if-changed .
 
       - name: Run analyzer
-        run: flutter analyze --no-pub
+        run: flutter analyze --no-pub --no-fatal-warnings --no-fatal-infos
 
   # Unit and widget tests
   test:

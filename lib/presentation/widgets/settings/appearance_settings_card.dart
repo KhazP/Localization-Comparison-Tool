@@ -138,7 +138,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                       Color(settings.accentColorValue),
                       (color) => context
                           .read<SettingsBloc>()
-                          .add(UpdateAccentColor(color.toARGB32())),
+                          .add(UpdateAccentColor(color.value)),
                       title: 'Pick Accent Color',
                     ),
                     child: const Text('Change'),
@@ -347,27 +347,23 @@ class DiffColorsSettingsCard extends StatelessWidget {
         ),
         _buildColorRow(context, 'Added', Color(settings.diffAddedColor),
             (color) {
-          context
-              .read<SettingsBloc>()
-              .add(UpdateDiffAddedColor(color.toARGB32()));
+          context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.value));
         }),
         _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor),
             (color) {
-          context
-              .read<SettingsBloc>()
-              .add(UpdateDiffRemovedColor(color.toARGB32()));
+          context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.value));
         }),
         _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor),
             (color) {
           context
               .read<SettingsBloc>()
-              .add(UpdateDiffModifiedColor(color.toARGB32()));
+              .add(UpdateDiffModifiedColor(color.value));
         }),
         _buildColorRow(context, 'Identical', Color(settings.diffIdenticalColor),
             (color) {
           context
               .read<SettingsBloc>()
-              .add(UpdateDiffIdenticalColor(color.toARGB32()));
+              .add(UpdateDiffIdenticalColor(color.value));
         }, showDivider: false),
       ],
     );
@@ -382,9 +378,9 @@ class DiffColorsSettingsCard extends StatelessWidget {
           label: Text(entry.key),
           onPressed: () {
             context.read<SettingsBloc>().add(ApplyThemePreset(
-                  added: entry.value.added.toARGB32(),
-                  removed: entry.value.removed.toARGB32(),
-                  modified: entry.value.modified.toARGB32(),
+                  added: entry.value.added.value,
+                  removed: entry.value.removed.value,
+                  modified: entry.value.modified.value,
                 ));
           },
           labelStyle: const TextStyle(fontSize: 12),

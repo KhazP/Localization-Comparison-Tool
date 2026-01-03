@@ -41,7 +41,10 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
     try {
       final fullPath = '${widget.repoPath}\\\\$filePath';
       debugPrint('Parsing conflict markers for: $fullPath');
-      final markers = await context.read<GitBloc>().gitService.parseConflictMarkers(fullPath);
+      final markers = await context
+          .read<GitBloc>()
+          .gitService
+          .parseConflictMarkers(fullPath);
       debugPrint('Found ${markers.length} conflict markers');
       if (mounted) {
         setState(() {
@@ -57,15 +60,17 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
 
   void _resolveFile(ResolutionStrategy strategy) {
     if (_selectedFile == null) return;
-    context.read<GitBloc>().add(ResolveConflict(widget.repoPath, _selectedFile!, strategy));
+    context
+        .read<GitBloc>()
+        .add(ResolveConflict(widget.repoPath, _selectedFile!, strategy));
   }
 
-  void _resolveSingleMarker(ConflictMarker marker, ResolutionStrategy strategy) async {
+  void _resolveSingleMarker(
+      ConflictMarker marker, ResolutionStrategy strategy) async {
     if (_selectedFile == null) return;
     final fullPath = '${widget.repoPath}/$_selectedFile';
     context.read<GitBloc>().add(
-      ResolveSingleConflict(widget.repoPath, fullPath, marker, strategy)
-    );
+        ResolveSingleConflict(widget.repoPath, fullPath, marker, strategy));
     // Refresh markers after resolution
     await Future.delayed(const Duration(milliseconds: 100));
     if (mounted) {
@@ -76,9 +81,11 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
   void _markFileResolved() {
     if (_selectedFile == null) return;
     debugPrint('Marking file as resolved: ${widget.repoPath}, $_selectedFile');
-    context.read<GitBloc>().add(MarkFileResolved(widget.repoPath, _selectedFile!));
+    context
+        .read<GitBloc>()
+        .add(MarkFileResolved(widget.repoPath, _selectedFile!));
     ToastService.showInfo(
-      context, 
+      context,
       'Staging $_selectedFile for commit...',
       duration: const Duration(seconds: 2),
     );
@@ -86,24 +93,26 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
 
   void _abortMerge() {
     showDialog(
-      context: context, 
-      builder: (ctx) => AlertDialog(
-        title: const Text('Abort Merge?'),
-        content: const Text('This will revert all merge changes and return to the state before the merge. This cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(ctx); // Close dialog
-              context.read<GitBloc>().add(AbortMerge(widget.repoPath));
-              // Close view handled by parent listener usually, but we are inside a full view/dialog?
-            }, 
-            child: const Text('Abort Merge'),
-          ),
-        ],
-      )
-    );
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: const Text('Abort Merge?'),
+              content: const Text(
+                  'This will revert all merge changes and return to the state before the merge. This cannot be undone.'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel')),
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                  onPressed: () {
+                    Navigator.pop(ctx); // Close dialog
+                    context.read<GitBloc>().add(AbortMerge(widget.repoPath));
+                    // Close view handled by parent listener usually, but we are inside a full view/dialog?
+                  },
+                  child: const Text('Abort Merge'),
+                ),
+              ],
+            ));
   }
 
   @override
@@ -118,11 +127,13 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.errorContainer,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.onErrorContainer),
+                Icon(Icons.warning_amber_rounded,
+                    color: Theme.of(context).colorScheme.onErrorContainer),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -131,15 +142,20 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                       Text(
                         'Merge Conflicts Detected',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onErrorContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onErrorContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       Text(
                         'You must resolve these conflicts before you can continue.',
-                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onErrorContainer.withValues(alpha: 0.8),
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onErrorContainer
+                                  .withValues(alpha: 0.8),
+                            ),
                       ),
                     ],
                   ),
@@ -156,7 +172,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
               ],
             ),
           ),
-          
+
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,7 +185,10 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Text('Conflicted Files (${widget.conflictedFiles.length})', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(
+                            'Conflicted Files (${widget.conflictedFiles.length})',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                       ),
                       Expanded(
                         child: ListView.separated(
@@ -180,20 +199,31 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                             final isSelected = file == _selectedFile;
                             return ListTile(
                               title: Text(
-                                file, 
-                                maxLines: 1, 
+                                file,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: isSelected ? Theme.of(context).colorScheme.onPrimaryContainer : null,
-                                  fontWeight: isSelected ? FontWeight.bold : null,
+                                  color: isSelected
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer
+                                      : null,
+                                  fontWeight:
+                                      isSelected ? FontWeight.bold : null,
                                 ),
                               ),
                               leading: Icon(
                                 Icons.description_outlined,
-                                color: isSelected ? Theme.of(context).colorScheme.onPrimaryContainer : null,
+                                color: isSelected
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer
+                                    : null,
                               ),
                               selected: isSelected,
-                              selectedTileColor: Theme.of(context).colorScheme.primaryContainer,
+                              selectedTileColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
                               onTap: () => _selectFile(file),
                             );
                           },
@@ -203,45 +233,52 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                   ),
                 ),
                 const VerticalDivider(width: 1),
-                
+
                 // Details / Resolution Area
                 Expanded(
-                  child: _selectedFile == null 
-                  ? const Center(child: Text('Select a file to resolve'))
-                  : Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: _selectedFile == null
+                      ? const Center(child: Text('Select a file to resolve'))
+                      : Column(
                           children: [
-                            Text('Resolving: $_selectedFile', style: Theme.of(context).textTheme.titleMedium),
-                            Row(
-                              children: [
-                                OutlinedButton.icon(
-                                  icon: const Icon(Icons.undo),
-                                  label: const Text('Keep All Ours'),
-                                  onPressed: () => _resolveFile(ResolutionStrategy.ours),
-                                ),
-                                const SizedBox(width: 12),
-                                FilledButton.icon(
-                                  icon: const Icon(Icons.input),
-                                  label: const Text('Accept All Theirs'),
-                                  onPressed: () => _resolveFile(ResolutionStrategy.theirs),
-                                ),
-                              ],
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Resolving: $_selectedFile',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium),
+                                  Row(
+                                    children: [
+                                      OutlinedButton.icon(
+                                        icon: const Icon(Icons.undo),
+                                        label: const Text('Keep All Ours'),
+                                        onPressed: () => _resolveFile(
+                                            ResolutionStrategy.ours),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      FilledButton.icon(
+                                        icon: const Icon(Icons.input),
+                                        label: const Text('Accept All Theirs'),
+                                        onPressed: () => _resolveFile(
+                                            ResolutionStrategy.theirs),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: _isLoadingMarkers
+                                  ? const Center(
+                                      child: CircularProgressIndicator())
+                                  : _buildMarkersList(),
                             ),
                           ],
                         ),
-                      ),
-                      const Divider(height: 1),
-                      Expanded(
-                        child: _isLoadingMarkers 
-                          ? const Center(child: CircularProgressIndicator())
-                          : _buildMarkersList(),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),
@@ -257,17 +294,20 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-             Icon(Icons.check_circle_outline, size: 64, color: Colors.green.withValues(alpha: 0.5)),
-             const SizedBox(height: 16),
-             const Text('All conflicts in this file have been resolved!', style: TextStyle(fontSize: 16)),
-             const SizedBox(height: 16),
-             FilledButton.icon(
-               onPressed: _markFileResolved,
-               icon: const Icon(Icons.check),
-               label: const Text('Mark as Resolved'),
-             ),
-             const SizedBox(height: 8),
-             const Text('This will stage the file for commit.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            Icon(Icons.check_circle_outline,
+                size: 64, color: Colors.green.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            const Text('All conflicts in this file have been resolved!',
+                style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _markFileResolved,
+              icon: const Icon(Icons.check),
+              label: const Text('Mark as Resolved'),
+            ),
+            const SizedBox(height: 8),
+            const Text('This will stage the file for commit.',
+                style: TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
       );
@@ -280,13 +320,18 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
         final marker = _markers![index];
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          color: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest
+              .withValues(alpha: 0.3),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Conflict #${index + 1}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text('Conflict #${index + 1}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.grey)),
                 const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,12 +341,15 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.blue.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text('OURS (Current)', style: TextStyle(fontSize: 12, color: Colors.blue)),
+                            child: const Text('OURS (Current)',
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.blue)),
                           ),
                           const SizedBox(height: 8),
                           Container(
@@ -309,7 +357,9 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                             color: Theme.of(context).colorScheme.surface,
                             width: double.infinity,
                             child: Text(
-                              marker.ours.trim().isEmpty ? '(Empty)' : marker.ours.trim(), 
+                              marker.ours.trim().isEmpty
+                                  ? '(Empty)'
+                                  : marker.ours.trim(),
                               style: const TextStyle(fontFamily: 'monospace'),
                             ),
                           ),
@@ -322,12 +372,15 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text('THEIRS (Incoming)', style: TextStyle(fontSize: 12, color: Colors.green)),
+                            child: const Text('THEIRS (Incoming)',
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.green)),
                           ),
                           const SizedBox(height: 8),
                           Container(
@@ -335,7 +388,9 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                             color: Theme.of(context).colorScheme.surface,
                             width: double.infinity,
                             child: Text(
-                              marker.theirs.trim().isEmpty ? '(Empty)' : marker.theirs.trim(), 
+                              marker.theirs.trim().isEmpty
+                                  ? '(Empty)'
+                                  : marker.theirs.trim(),
                               style: const TextStyle(fontFamily: 'monospace'),
                             ),
                           ),
@@ -361,13 +416,15 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
         OutlinedButton.icon(
           icon: const Icon(Icons.check, size: 16),
           label: const Text('Keep Ours'),
-          onPressed: () => _resolveSingleMarker(marker, ResolutionStrategy.ours),
+          onPressed: () =>
+              _resolveSingleMarker(marker, ResolutionStrategy.ours),
         ),
         const SizedBox(width: 8),
         FilledButton.icon(
           icon: const Icon(Icons.check, size: 16),
           label: const Text('Accept Theirs'),
-          onPressed: () => _resolveSingleMarker(marker, ResolutionStrategy.theirs),
+          onPressed: () =>
+              _resolveSingleMarker(marker, ResolutionStrategy.theirs),
         ),
       ],
     );

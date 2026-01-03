@@ -28,7 +28,8 @@ class TmxParser extends LocalizationParser {
 
       final bodyElement = document.findAllElements('body').firstOrNull;
       if (bodyElement == null) {
-        debugPrint('Warning: No <body> element found in TMX file: ${file.path}');
+        debugPrint(
+            'Warning: No <body> element found in TMX file: ${file.path}');
         return {};
       }
 
@@ -62,10 +63,8 @@ class TmxParser extends LocalizationParser {
         final tuvElements = tuElement.findElements('tuv').toList();
 
         if (tuvElements.isNotEmpty) {
-          final sourceTuv =
-              _findTuvForLanguage(tuvElements, sourceLanguage);
-          final targetTuv =
-              _findTuvForLanguage(tuvElements, targetLanguage);
+          final sourceTuv = _findTuvForLanguage(tuvElements, sourceLanguage);
+          final targetTuv = _findTuvForLanguage(tuvElements, targetLanguage);
 
           final sourceSeg = sourceTuv.findElements('seg').firstOrNull;
           final targetSeg = targetTuv.findElements('seg').firstOrNull;
@@ -94,26 +93,29 @@ class TmxParser extends LocalizationParser {
                 'Warning: Missing target <seg> for tuid "$tuid" in ${file.path}');
           }
         } else {
-          debugPrint('Warning: TMX <tu> element does not have at least two <tuv> children or a single <tuv> with a tuid. Skipping. ID: "$tuid", File: ${file.path}');
+          debugPrint(
+              'Warning: TMX <tu> element does not have at least two <tuv> children or a single <tuv> with a tuid. Skipping. ID: "$tuid", File: ${file.path}');
         }
 
         if (key != null && key.isNotEmpty && value != null) {
           if (translations.containsKey(key)) {
-            debugPrint('Warning: Duplicate key "$key" found in TMX file ${file.path}. Overwriting previous value.');
+            debugPrint(
+                'Warning: Duplicate key "$key" found in TMX file ${file.path}. Overwriting previous value.');
           }
           translations[key] = value;
         } else if (key != null && key.isNotEmpty && value == null) {
-            // Key was determined (e.g. tuid) but no valid value found from TUVs
-            translations[key] = ''; // Store with empty value
-            debugPrint('Warning: Key "$key" determined for TMX but no valid value found from TUVs. Storing with empty value. File: ${file.path}');
+          // Key was determined (e.g. tuid) but no valid value found from TUVs
+          translations[key] = ''; // Store with empty value
+          debugPrint(
+              'Warning: Key "$key" determined for TMX but no valid value found from TUVs. Storing with empty value. File: ${file.path}');
         }
       }
       if (translations.isEmpty && tuElements.isNotEmpty) {
-          debugPrint('Warning: Parsed TMX file ${file.path} but no valid translation entries were extracted.');
+        debugPrint(
+            'Warning: Parsed TMX file ${file.path} but no valid translation entries were extracted.');
       } else if (tuElements.isEmpty) {
-          debugPrint('Warning: No <tu> elements found in TMX file: ${file.path}');
+        debugPrint('Warning: No <tu> elements found in TMX file: ${file.path}');
       }
-
     } catch (e) {
       debugPrint('Error parsing TMX file ${file.path}: $e');
       return {};

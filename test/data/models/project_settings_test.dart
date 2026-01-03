@@ -5,8 +5,8 @@ void main() {
   group('ProjectSettings', () {
     group('constructor', () {
       test('empty constructor creates empty settings', () {
-        const settings = ProjectSettings.empty();
-        
+        const settings = ProjectSettings();
+
         expect(settings.systemTranslationContext, isNull);
         expect(settings.aiTranslationService, isNull);
         expect(settings.defaultAiModel, isNull);
@@ -20,7 +20,7 @@ void main() {
           aiTranslationService: 'Gemini',
           defaultAiModel: 'gemini-1.5-pro',
         );
-        
+
         expect(settings.systemTranslationContext, 'Test context');
         expect(settings.aiTranslationService, 'Gemini');
         expect(settings.defaultAiModel, 'gemini-1.5-pro');
@@ -29,7 +29,7 @@ void main() {
 
     group('overriddenSettings', () {
       test('returns empty set when no overrides', () {
-        const settings = ProjectSettings.empty();
+        const settings = ProjectSettings();
         expect(settings.overriddenSettings, isEmpty);
       });
 
@@ -37,7 +37,7 @@ void main() {
         const settings = ProjectSettings(
           systemTranslationContext: 'Custom context',
         );
-        
+
         expect(settings.overriddenSettings, {'systemTranslationContext'});
       });
 
@@ -47,7 +47,7 @@ void main() {
           aiTranslationService: 'OpenAI',
           defaultAiModel: 'gpt-4o',
         );
-        
+
         expect(settings.overriddenSettings, {
           'systemTranslationContext',
           'aiTranslationService',
@@ -58,7 +58,7 @@ void main() {
 
     group('hasOverrides', () {
       test('returns false for empty settings', () {
-        const settings = ProjectSettings.empty();
+        const settings = ProjectSettings();
         expect(settings.hasOverrides, isFalse);
       });
 
@@ -72,8 +72,8 @@ void main() {
 
     group('isOverridden', () {
       test('returns false for unset settings', () {
-        const settings = ProjectSettings.empty();
-        
+        const settings = ProjectSettings();
+
         expect(settings.isOverridden('systemTranslationContext'), isFalse);
         expect(settings.isOverridden('aiTranslationService'), isFalse);
         expect(settings.isOverridden('defaultAiModel'), isFalse);
@@ -83,7 +83,7 @@ void main() {
         const settings = ProjectSettings(
           systemTranslationContext: 'Custom',
         );
-        
+
         expect(settings.isOverridden('systemTranslationContext'), isTrue);
         expect(settings.isOverridden('aiTranslationService'), isFalse);
       });
@@ -92,7 +92,7 @@ void main() {
         const settings = ProjectSettings(
           systemTranslationContext: 'Custom',
         );
-        
+
         expect(settings.isOverridden('unknownSetting'), isFalse);
       });
     });
@@ -100,13 +100,13 @@ void main() {
     group('JSON serialization', () {
       test('fromJson with null returns empty settings', () {
         final settings = ProjectSettings.fromJson(null);
-        
+
         expect(settings.hasOverrides, isFalse);
       });
 
       test('fromJson with empty map returns empty settings', () {
         final settings = ProjectSettings.fromJson({});
-        
+
         expect(settings.hasOverrides, isFalse);
       });
 
@@ -116,7 +116,7 @@ void main() {
           'aiTranslationService': 'Gemini',
           'defaultAiModel': 'gemini-1.5-pro',
         });
-        
+
         expect(settings.systemTranslationContext, 'Test context');
         expect(settings.aiTranslationService, 'Gemini');
         expect(settings.defaultAiModel, 'gemini-1.5-pro');
@@ -127,16 +127,16 @@ void main() {
           systemTranslationContext: 'Test',
         );
         final json = settings.toJson();
-        
+
         expect(json['systemTranslationContext'], 'Test');
         expect(json.containsKey('aiTranslationService'), isFalse);
         expect(json.containsKey('defaultAiModel'), isFalse);
       });
 
       test('toJson returns empty map for empty settings', () {
-        const settings = ProjectSettings.empty();
+        const settings = ProjectSettings();
         final json = settings.toJson();
-        
+
         expect(json, isEmpty);
       });
 
@@ -146,10 +146,10 @@ void main() {
           aiTranslationService: 'OpenAI',
           defaultAiModel: 'gpt-4-turbo',
         );
-        
+
         final json = original.toJson();
         final restored = ProjectSettings.fromJson(json);
-        
+
         expect(restored, equals(original));
       });
     });
@@ -159,25 +159,25 @@ void main() {
         const original = ProjectSettings(
           systemTranslationContext: 'Original',
         );
-        
+
         final updated = original.copyWith(
           aiTranslationService: 'Gemini',
         );
-        
+
         expect(updated.systemTranslationContext, 'Original');
         expect(updated.aiTranslationService, 'Gemini');
       });
 
-      test('clear flag removes override', () {
+      test('passing null clears an override', () {
         const original = ProjectSettings(
           systemTranslationContext: 'To be cleared',
           aiTranslationService: 'Keep this',
         );
-        
+
         final cleared = original.copyWith(
-          clearSystemTranslationContext: true,
+          systemTranslationContext: null,
         );
-        
+
         expect(cleared.systemTranslationContext, isNull);
         expect(cleared.aiTranslationService, 'Keep this');
       });
@@ -189,9 +189,9 @@ void main() {
           systemTranslationContext: 'Test',
           aiTranslationService: 'Gemini',
         );
-        
+
         final cleared = original.clearOverride('systemTranslationContext');
-        
+
         expect(cleared.systemTranslationContext, isNull);
         expect(cleared.aiTranslationService, 'Gemini');
       });
@@ -200,9 +200,9 @@ void main() {
         const original = ProjectSettings(
           systemTranslationContext: 'Test',
         );
-        
+
         final result = original.clearOverride('unknownKey');
-        
+
         expect(result.systemTranslationContext, 'Test');
       });
     });
@@ -214,9 +214,9 @@ void main() {
           aiTranslationService: 'Gemini',
           defaultAiModel: 'gemini-1.5-pro',
         );
-        
+
         final cleared = original.clearCategoryOverrides('aiServices');
-        
+
         expect(cleared.hasOverrides, isFalse);
       });
 
@@ -224,9 +224,9 @@ void main() {
         const original = ProjectSettings(
           systemTranslationContext: 'Test',
         );
-        
+
         final result = original.clearCategoryOverrides('otherCategory');
-        
+
         expect(result.systemTranslationContext, 'Test');
       });
     });
@@ -239,7 +239,7 @@ void main() {
         const settings2 = ProjectSettings(
           systemTranslationContext: 'Test',
         );
-        
+
         expect(settings1, equals(settings2));
         expect(settings1.hashCode, settings2.hashCode);
       });
@@ -251,14 +251,14 @@ void main() {
         const settings2 = ProjectSettings(
           systemTranslationContext: 'Test2',
         );
-        
+
         expect(settings1, isNot(equals(settings2)));
       });
 
       test('empty settings are equal', () {
-        const settings1 = ProjectSettings.empty();
-        const settings2 = ProjectSettings.empty();
-        
+        const settings1 = ProjectSettings();
+        const settings2 = ProjectSettings();
+
         expect(settings1, equals(settings2));
       });
     });
@@ -269,7 +269,7 @@ void main() {
           systemTranslationContext: 'Test',
           defaultAiModel: 'gpt-4o',
         );
-        
+
         final str = settings.toString();
         expect(str, contains('overrides:'));
         expect(str, contains('systemTranslationContext'));

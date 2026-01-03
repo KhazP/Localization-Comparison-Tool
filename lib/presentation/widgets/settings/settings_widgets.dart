@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 /// A styled card container for settings sections
 class SettingsCard extends StatelessWidget {
   final String title;
@@ -75,7 +74,8 @@ class SettingItemRow extends StatelessWidget {
                   const SizedBox(width: 6),
                   Tooltip(
                     message: tooltip!,
-                    child: Icon(Icons.info_outline, size: 16, color: tooltipColor),
+                    child:
+                        Icon(Icons.info_outline, size: 16, color: tooltipColor),
                   ),
                 ],
               ],
@@ -109,7 +109,8 @@ class SettingsDropdown extends StatelessWidget {
     final theme = Theme.of(context);
 
     final dropdownBg = theme.cardColor;
-    final dropdownTextColor = theme.textTheme.bodyMedium?.color ?? theme.colorScheme.onSurface;
+    final dropdownTextColor =
+        theme.textTheme.bodyMedium?.color ?? theme.colorScheme.onSurface;
     final borderColor = theme.dividerColor;
 
     return Container(
@@ -123,10 +124,14 @@ class SettingsDropdown extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: items.contains(currentValue) ? currentValue : items.first,
-          items: items.map((item) => DropdownMenuItem(
-            value: item,
-            child: Text(item, style: TextStyle(fontSize: 14, color: dropdownTextColor)),
-          )).toList(),
+          items: items
+              .map((item) => DropdownMenuItem(
+                    value: item,
+                    child: Text(item,
+                        style:
+                            TextStyle(fontSize: 14, color: dropdownTextColor)),
+                  ))
+              .toList(),
           onChanged: onChanged,
           isExpanded: true,
           dropdownColor: dropdownBg,

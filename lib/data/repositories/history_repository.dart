@@ -75,4 +75,4 @@ class LocalHistoryRepository implements HistoryRepository {
       debugPrint('Comparison history Hive box closed.');
     }
   }
-} 
+}

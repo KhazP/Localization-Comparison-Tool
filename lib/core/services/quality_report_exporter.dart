@@ -34,7 +34,8 @@ class QualityReportExporter {
 
     var rowIndex = 0;
 
-    rowIndex = _writeSectionTitle(sheet, 'Report Summary', rowIndex, sectionTitleStyle);
+    rowIndex = _writeSectionTitle(
+        sheet, 'Report Summary', rowIndex, sectionTitleStyle);
     rowIndex = _buildSummarySection(
       sheet: sheet,
       data: data,
@@ -42,7 +43,8 @@ class QualityReportExporter {
     );
     rowIndex = _addSectionSpacing(rowIndex);
 
-    rowIndex = _writeSectionTitle(sheet, 'Translation Coverage by Language', rowIndex, sectionTitleStyle);
+    rowIndex = _writeSectionTitle(
+        sheet, 'Translation Coverage by Language', rowIndex, sectionTitleStyle);
     rowIndex = _buildLanguagesSection(
       sheet: sheet,
       data: data,
@@ -50,7 +52,8 @@ class QualityReportExporter {
     );
     rowIndex = _addSectionSpacing(rowIndex);
 
-    rowIndex = _writeSectionTitle(sheet, 'Detected Quality Issues', rowIndex, sectionTitleStyle);
+    rowIndex = _writeSectionTitle(
+        sheet, 'Detected Quality Issues', rowIndex, sectionTitleStyle);
     rowIndex = _buildIssuesSection(
       sheet: sheet,
       data: data,
@@ -58,7 +61,8 @@ class QualityReportExporter {
     );
     rowIndex = _addSectionSpacing(rowIndex);
 
-    rowIndex = _writeSectionTitle(sheet, 'Progress Over Time', rowIndex, sectionTitleStyle);
+    rowIndex = _writeSectionTitle(
+        sheet, 'Progress Over Time', rowIndex, sectionTitleStyle);
     _buildTrendSection(
       sheet: sheet,
       data: data,

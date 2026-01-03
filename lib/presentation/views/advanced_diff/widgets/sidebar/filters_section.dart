@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
@@ -15,53 +14,68 @@ class FiltersSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('View Filters', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Text('View Filters',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 8),
-             _buildCheckbox(
+            _buildCheckbox(
               'Show All',
               controller.selectedFilters.contains(AdvancedDiffFilter.all),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.all),
             ),
-             _buildCheckbox(
+            _buildCheckbox(
               'Added',
               controller.selectedFilters.contains(AdvancedDiffFilter.added),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.added),
             ),
-             _buildCheckbox(
+            _buildCheckbox(
               'Removed',
               controller.selectedFilters.contains(AdvancedDiffFilter.removed),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.removed),
             ),
-             _buildCheckbox(
+            _buildCheckbox(
               'Modified',
               controller.selectedFilters.contains(AdvancedDiffFilter.modified),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.modified),
             ),
             const Divider(height: 24),
-            const Text('Action Scope', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-             const SizedBox(height: 8),
+            const Text('Action Scope',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const SizedBox(height: 8),
             _buildCheckbox(
               'Apply to Added',
               controller.applyToAdded,
-              (v) { controller.applyToAdded = v; controller.notifyListeners(); },
+              (v) {
+                controller.applyToAdded = v;
+                controller.notifyListeners();
+              },
             ),
-             _buildCheckbox(
+            _buildCheckbox(
               'Apply to Modified',
               controller.applyToModified,
-              (v) { controller.applyToModified = v; controller.notifyListeners(); },
+              (v) {
+                controller.applyToModified = v;
+                controller.notifyListeners();
+              },
             ),
-             _buildCheckbox(
+            _buildCheckbox(
               'Only fill empty targets',
               controller.onlyFillEmpty,
-              (v) { controller.onlyFillEmpty = v; controller.notifyListeners(); },
+              (v) {
+                controller.onlyFillEmpty = v;
+                controller.notifyListeners();
+              },
             ),
             _buildCheckbox(
               'Limit to visible',
               controller.limitToVisible,
-              (v) { controller.limitToVisible = v; controller.notifyListeners(); },
+              (v) {
+                controller.limitToVisible = v;
+                controller.notifyListeners();
+              },
             ),
             const Divider(height: 24),
-            const Text('Edit Mode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const Text('Edit Mode',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -70,7 +84,8 @@ class FiltersSection extends StatelessWidget {
                     label: const Text('Dialog', style: TextStyle(fontSize: 12)),
                     selected: !controller.useInlineEditing,
                     onSelected: (_) => controller.setInlineEditing(false),
-                    selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                    selectedColor:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -79,7 +94,8 @@ class FiltersSection extends StatelessWidget {
                     label: const Text('Inline', style: TextStyle(fontSize: 12)),
                     selected: controller.useInlineEditing,
                     onSelected: (_) => controller.setInlineEditing(true),
-                    selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                    selectedColor:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   ),
                 ),
               ],

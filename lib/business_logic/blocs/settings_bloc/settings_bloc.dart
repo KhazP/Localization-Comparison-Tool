@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/models/project_settings.dart';
@@ -9,6 +10,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_s
 
 part 'settings_event.dart';
 part 'settings_state.dart';
+part 'settings_bloc.freezed.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository _settingsRepository;
@@ -200,10 +202,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Map<ApiProvider, ApiKeyTestResult> _initialApiKeyTests() {
     return {
-      ApiProvider.googleTranslate: const ApiKeyTestResult.idle(),
-      ApiProvider.deepl: const ApiKeyTestResult.idle(),
-      ApiProvider.gemini: const ApiKeyTestResult.idle(),
-      ApiProvider.openAi: const ApiKeyTestResult.idle(),
+      ApiProvider.googleTranslate: ApiKeyTestResult.idle,
+      ApiProvider.deepl: ApiKeyTestResult.idle,
+      ApiProvider.gemini: ApiKeyTestResult.idle,
+      ApiProvider.openAi: ApiKeyTestResult.idle,
     };
   }
 
@@ -608,7 +610,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       appSettings: newSettings,
       apiKeyTests: _updateApiKeyTest(
         ApiProvider.googleTranslate,
-        const ApiKeyTestResult.idle(),
+        ApiKeyTestResult.idle,
       ),
     ));
   }
@@ -622,7 +624,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       appSettings: newSettings,
       apiKeyTests: _updateApiKeyTest(
         ApiProvider.deepl,
-        const ApiKeyTestResult.idle(),
+        ApiKeyTestResult.idle,
       ),
     ));
   }
@@ -653,7 +655,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       appSettings: newSettings,
       apiKeyTests: _updateApiKeyTest(
         ApiProvider.gemini,
-        const ApiKeyTestResult.idle(),
+        ApiKeyTestResult.idle,
       ),
     ));
   }
@@ -667,7 +669,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       appSettings: newSettings,
       apiKeyTests: _updateApiKeyTest(
         ApiProvider.openAi,
-        const ApiKeyTestResult.idle(),
+        ApiKeyTestResult.idle,
       ),
     ));
   }
@@ -853,16 +855,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onUpdateDefaultBranch(
       UpdateDefaultBranch event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(defaultBranch: event.branch);
+    final newSettings = state.appSettings.copyWith(defaultBranch: event.branch);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
 
   Future<void> _onUpdateDefaultRemote(
       UpdateDefaultRemote event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(defaultRemote: event.remote);
+    final newSettings = state.appSettings.copyWith(defaultRemote: event.remote);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
@@ -877,8 +877,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onUpdateSshKeyPath(
       UpdateSshKeyPath event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(sshKeyPath: event.path);
+    final newSettings = state.appSettings.copyWith(sshKeyPath: event.path);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
@@ -1057,8 +1056,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onUpdateSkipVersion(
       UpdateSkipVersion event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(skipVersion: event.version);
+    final newSettings = state.appSettings.copyWith(skipVersion: event.version);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }
@@ -1086,21 +1084,24 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onReplaceAllSettings(
       ReplaceAllSettings event, Emitter<SettingsState> emit) async {
     await _saveSettingsToRepository(event.settings);
-    
+
     // Also update secure storage if API keys are present in the imported settings
     if (event.settings.googleTranslateApiKey.isNotEmpty) {
-      await _secureStorageService.storeGoogleApiKey(event.settings.googleTranslateApiKey);
+      await _secureStorageService
+          .storeGoogleApiKey(event.settings.googleTranslateApiKey);
     }
     if (event.settings.deeplApiKey.isNotEmpty) {
       await _secureStorageService.storeDeepLApiKey(event.settings.deeplApiKey);
     }
     if (event.settings.geminiApiKey.isNotEmpty) {
-      await _secureStorageService.storeGeminiApiKey(event.settings.geminiApiKey);
+      await _secureStorageService
+          .storeGeminiApiKey(event.settings.geminiApiKey);
     }
     if (event.settings.openaiApiKey.isNotEmpty) {
-      await _secureStorageService.storeOpenAiApiKey(event.settings.openaiApiKey);
+      await _secureStorageService
+          .storeOpenAiApiKey(event.settings.openaiApiKey);
     }
-    
+
     emit(state.copyWith(appSettings: event.settings));
   }
 
@@ -1195,7 +1196,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onClearProjectSettings(
       ClearProjectSettings event, Emitter<SettingsState> emit) async {
     emit(state.copyWith(
-      clearProjectSettings: true,
+      projectSettings: null,
+      currentProjectId: null,
+      currentProjectName: null,
       scope: SettingsScope.global,
     ));
   }
@@ -1204,10 +1207,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onResetSettingToGlobal(
       ResetSettingToGlobal event, Emitter<SettingsState> emit) async {
     if (state.projectSettings == null) return;
-    
-    final newProjectSettings = state.projectSettings!.clearOverride(event.settingKey);
+
+    final newProjectSettings =
+        state.projectSettings!.clearOverride(event.settingKey);
     emit(state.copyWith(projectSettings: newProjectSettings));
-    
+
     // Note: The actual saving to project.json happens through ProjectBloc
     // when the project is saved. SettingsBloc just manages the state.
   }
@@ -1216,8 +1220,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onResetCategoryToGlobal(
       ResetCategoryToGlobal event, Emitter<SettingsState> emit) async {
     if (state.projectSettings == null) return;
-    
-    final newProjectSettings = state.projectSettings!.clearCategoryOverrides(event.category);
+
+    final newProjectSettings =
+        state.projectSettings!.clearCategoryOverrides(event.category);
     emit(state.copyWith(projectSettings: newProjectSettings));
   }
 
@@ -1225,19 +1230,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onResetAllProjectSettings(
       ResetAllProjectSettings event, Emitter<SettingsState> emit) async {
     if (state.projectSettings == null) return;
-    
-    emit(state.copyWith(projectSettings: const ProjectSettings.empty()));
+
+    emit(state.copyWith(projectSettings: const ProjectSettings()));
   }
 
   /// Update a project-overridable setting.
   /// When in project scope, this creates an override.
   /// When in global scope, this updates the global default.
   Future<void> _onUpdateProjectOverridableSetting(
-      UpdateProjectOverridableSetting event, Emitter<SettingsState> emit) async {
+      UpdateProjectOverridableSetting event,
+      Emitter<SettingsState> emit) async {
     if (state.scope == SettingsScope.project) {
       // In project scope - create/update an override
       if (state.projectSettings == null) return;
-      
+
       ProjectSettings newProjectSettings;
       switch (event.settingKey) {
         case 'systemTranslationContext':

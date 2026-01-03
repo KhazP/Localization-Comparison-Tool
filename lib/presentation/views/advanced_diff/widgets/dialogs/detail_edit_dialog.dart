@@ -36,8 +36,9 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
   @override
   void initState() {
     super.initState();
-    _theme = _getTheme(); // Will be updated in didChangeDependencies usually, but simplistic here.
-    
+    _theme =
+        _getTheme(); // Will be updated in didChangeDependencies usually, but simplistic here.
+
     final language = _getLanguageMode();
 
     _sourceController = CodeController(
@@ -57,7 +58,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     // Update theme based on brightness
     final isDark = Theme.of(context).brightness == Brightness.dark;
     _theme = isDark ? atomOneDarkTheme : atomOneLightTheme;
-    // We strictly shouldn't update controller theme dynamically without recreating? 
+    // We strictly shouldn't update controller theme dynamically without recreating?
     // CodeField takes a theme separately? No, CodeField takes a theme map.
     // Wait, CodeField uses styles from theme if not provided?
     // In code_text_field 2.x/3.x:
@@ -71,7 +72,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     //   data: CodeThemeData(styles: themeMap),
     //   child: CodeField(controller: controller),
     // )
-    // OR 
+    // OR
     // CodeField has no internal theme logic, it relies on RichText.
     // But syntax highlighting needs styles.
     // Provide styles to CodeField?
@@ -94,7 +95,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
     if (ext.endsWith('properties') || ext.endsWith('ini')) return ini;
     return null; // Plain text
   }
-  
+
   Map<String, TextStyle> _getTheme() {
     // Default fallback
     return atomOneLightTheme;
@@ -137,7 +138,8 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
                 const SizedBox(width: 8),
                 Text(
                   _getKeyLanguageName(),
-                  style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: theme.disabledColor),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      fontStyle: FontStyle.italic, color: theme.disabledColor),
                 ),
               ],
             ),
@@ -148,7 +150,9 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
                 decoration: BoxDecoration(
                   border: Border.all(color: theme.dividerColor),
                   borderRadius: BorderRadius.circular(8),
-                  color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA),
+                  color: isDark
+                      ? const Color(0xFF1E1E1E)
+                      : const Color(0xFFFAFAFA),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
@@ -159,7 +163,8 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
                       child: CodeField(
                         controller: _sourceController,
                         readOnly: true,
-                        textStyle: const TextStyle(fontFamily: 'RobotoMono', fontSize: 13),
+                        textStyle: const TextStyle(
+                            fontFamily: 'RobotoMono', fontSize: 13),
                         lineNumberStyle: const LineNumberStyle(
                           width: 48,
                           margin: 8,
@@ -171,9 +176,9 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Target (Editable)
             Text(
               'TARGET (Translation)',
@@ -186,9 +191,12 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
               height: 180,
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: theme.colorScheme.primary.withOpacity(0.5)),
+                  border: Border.all(
+                      color: theme.colorScheme.primary.withOpacity(0.5)),
                   borderRadius: BorderRadius.circular(8),
-                  color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA),
+                  color: isDark
+                      ? const Color(0xFF1E1E1E)
+                      : const Color(0xFFFAFAFA),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
@@ -198,10 +206,11 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
                       alignment: Alignment.topLeft,
                       child: CodeField(
                         controller: _targetController,
-                        textStyle: const TextStyle(fontFamily: 'RobotoMono', fontSize: 13),
+                        textStyle: const TextStyle(
+                            fontFamily: 'RobotoMono', fontSize: 13),
                         lineNumberStyle: const LineNumberStyle(
-                           width: 48,
-                           margin: 8,
+                          width: 48,
+                          margin: 8,
                         ),
                         wrap: true,
                       ),
@@ -213,8 +222,6 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
           ],
         ),
       ),
-
-
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

@@ -1,49 +1,23 @@
-abstract class FileWatcherState {
-  const FileWatcherState();
-}
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class FileWatcherInitial extends FileWatcherState {
-  const FileWatcherInitial();
-}
+part 'file_watcher_state.freezed.dart';
 
-class FileWatcherActive extends FileWatcherState {
-  final String file1Path;
-  final String file2Path;
-  final bool isEnabled;
+@freezed
+class FileWatcherState with _$FileWatcherState {
+  const factory FileWatcherState.initial() = FileWatcherInitial;
 
-  const FileWatcherActive({
-    required this.file1Path,
-    required this.file2Path,
-    required this.isEnabled,
-  });
+  const factory FileWatcherState.active({
+    required String file1Path,
+    required String file2Path,
+    required bool isEnabled,
+  }) = FileWatcherActive;
 
-  FileWatcherActive copyWith({
-    String? file1Path,
-    String? file2Path,
-    bool? isEnabled,
-  }) {
-    return FileWatcherActive(
-      file1Path: file1Path ?? this.file1Path,
-      file2Path: file2Path ?? this.file2Path,
-      isEnabled: isEnabled ?? this.isEnabled,
-    );
-  }
-}
+  const factory FileWatcherState.inactive() = FileWatcherInactive;
 
-class FileWatcherInactive extends FileWatcherState {
-  const FileWatcherInactive();
-}
-
-class FileChangedDetected extends FileWatcherState {
-  final String changedFilePath;
-  final String file1Path;
-  final String file2Path;
-  final DateTime timestamp;
-
-  const FileChangedDetected({
-    required this.changedFilePath,
-    required this.file1Path,
-    required this.file2Path,
-    required this.timestamp,
-  });
+  const factory FileWatcherState.fileChangedDetected({
+    required String changedFilePath,
+    required String file1Path,
+    required String file2Path,
+    required DateTime timestamp,
+  }) = FileChangedDetected;
 }

@@ -9,17 +9,21 @@ class FriendlyErrorService {
     final errorString = error.toString().toLowerCase();
 
     // File system errors
-    if (error is FileSystemException || errorString.contains('filesystemexception')) {
-      if (errorString.contains('no such file') || errorString.contains('cannot find')) {
+    if (error is FileSystemException ||
+        errorString.contains('filesystemexception')) {
+      if (errorString.contains('no such file') ||
+          errorString.contains('cannot find')) {
         return FriendlyError(
           message: 'The file or folder could not be found.',
           suggestion: 'Check if the file was moved or deleted.',
         );
       }
-      if (errorString.contains('access denied') || errorString.contains('permission denied')) {
+      if (errorString.contains('access denied') ||
+          errorString.contains('permission denied')) {
         return FriendlyError(
           message: 'Access to the file was denied.',
-          suggestion: 'Try running the app as administrator or check file permissions.',
+          suggestion:
+              'Try running the app as administrator or check file permissions.',
         );
       }
       if (errorString.contains('is a directory')) {
@@ -46,7 +50,9 @@ class FriendlyErrorService {
     }
 
     // Network errors
-    if (errorString.contains('socket') || errorString.contains('network') || errorString.contains('connection')) {
+    if (errorString.contains('socket') ||
+        errorString.contains('network') ||
+        errorString.contains('connection')) {
       return FriendlyError(
         message: 'Could not connect to the server.',
         suggestion: 'Check your internet connection and try again.',
@@ -61,13 +67,15 @@ class FriendlyErrorService {
           suggestion: 'Navigate to a folder that contains a .git directory.',
         );
       }
-      if (errorString.contains('merge conflict') || errorString.contains('conflict')) {
+      if (errorString.contains('merge conflict') ||
+          errorString.contains('conflict')) {
         return FriendlyError(
           message: 'There are merge conflicts in the repository.',
           suggestion: 'Resolve the conflicts before continuing.',
         );
       }
-      if (errorString.contains('authentication') || errorString.contains('credentials')) {
+      if (errorString.contains('authentication') ||
+          errorString.contains('credentials')) {
         return FriendlyError(
           message: 'Git authentication failed.',
           suggestion: 'Check your credentials in Settings > Version Control.',
@@ -80,7 +88,8 @@ class FriendlyErrorService {
     }
 
     // JSON parsing errors
-    if (errorString.contains('json') || errorString.contains('formatexception')) {
+    if (errorString.contains('json') ||
+        errorString.contains('formatexception')) {
       return FriendlyError(
         message: 'The file format is invalid or corrupted.',
         suggestion: 'Ensure the file contains valid JSON content.',
@@ -95,7 +104,8 @@ class FriendlyErrorService {
           suggestion: 'Wait a few minutes or check your API plan limits.',
         );
       }
-      if (errorString.contains('invalid key') || errorString.contains('unauthorized')) {
+      if (errorString.contains('invalid key') ||
+          errorString.contains('unauthorized')) {
         return FriendlyError(
           message: 'Invalid API key.',
           suggestion: 'Go to Settings > AI Translation to update your API key.',
@@ -108,7 +118,8 @@ class FriendlyErrorService {
     }
 
     // Out of memory
-    if (errorString.contains('out of memory') || errorString.contains('memory')) {
+    if (errorString.contains('out of memory') ||
+        errorString.contains('memory')) {
       return FriendlyError(
         message: 'Not enough memory to complete this operation.',
         suggestion: 'Try closing other applications or using smaller files.',

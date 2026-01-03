@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class SidebarSection extends StatefulWidget {
@@ -47,10 +46,13 @@ class _SidebarSectionState extends State<SidebarSection> {
                 children: [
                   Text(
                     widget.title,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13),
                   ),
-                   Icon(
-                    _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
                     size: 16,
                     color: Theme.of(context).hintColor,
                   ),

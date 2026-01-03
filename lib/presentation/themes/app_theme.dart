@@ -27,27 +27,38 @@ class AppTheme {
   static const Color lightSettingsMutedTextColor = Color(0xFF757575);
   static const Color lightSettingsBorderColor = Color(0xFFE0E0E0);
 
-  static TextTheme _buildTextTheme(TextTheme base, Color primaryColor, Color secondaryColor) {
+  static TextTheme _buildTextTheme(
+      TextTheme base, Color primaryColor, Color secondaryColor) {
     return GoogleFonts.interTextTheme(base).copyWith(
-      displayLarge: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.bold),
-      displayMedium: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.bold),
-      displaySmall: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
-      headlineLarge: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.bold),
-      headlineMedium: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
-      headlineSmall: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
-      titleLarge: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
-      titleMedium: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w500),
-      titleSmall: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w500),
+      displayLarge:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.bold),
+      displayMedium:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.bold),
+      displaySmall:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
+      headlineLarge:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.bold),
+      headlineMedium:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
+      headlineSmall:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
+      titleLarge:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w600),
+      titleMedium:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w500),
+      titleSmall:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w500),
       bodyLarge: GoogleFonts.inter(color: primaryColor),
       bodyMedium: GoogleFonts.inter(color: primaryColor),
       bodySmall: GoogleFonts.inter(color: secondaryColor),
-      labelLarge: GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w500),
+      labelLarge:
+          GoogleFonts.inter(color: primaryColor, fontWeight: FontWeight.w500),
     );
   }
 
   static ThemeData getLightTheme() {
     final base = ThemeData.light();
-    
+
     return base.copyWith(
       brightness: Brightness.light,
       primaryColor: lightPrimary,
@@ -59,7 +70,8 @@ class AppTheme {
         onPrimary: Colors.white,
         onSurface: lightTextPrimary,
       ),
-      textTheme: _buildTextTheme(base.textTheme, lightTextPrimary, lightTextSecondary),
+      textTheme:
+          _buildTextTheme(base.textTheme, lightTextPrimary, lightTextSecondary),
       appBarTheme: AppBarTheme(
         backgroundColor: lightSurface,
         elevation: 0,
@@ -103,7 +115,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: lightSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: lightBorder),
@@ -148,7 +161,7 @@ class AppTheme {
     final base = ThemeData.dark();
     final bgColor = isAmoled ? Colors.black : darkBackground;
     final surfaceColor = isAmoled ? const Color(0xFF121212) : darkSurface;
-    
+
     return base.copyWith(
       brightness: Brightness.dark,
       primaryColor: darkPrimary,
@@ -161,7 +174,8 @@ class AppTheme {
         onPrimary: Colors.white,
         onSurface: darkTextPrimary,
       ),
-      textTheme: _buildTextTheme(base.textTheme, darkTextPrimary, darkTextSecondary),
+      textTheme:
+          _buildTextTheme(base.textTheme, darkTextPrimary, darkTextSecondary),
       appBarTheme: AppBarTheme(
         backgroundColor: surfaceColor,
         elevation: 0,
@@ -205,7 +219,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceColor,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: darkBorder),
@@ -245,4 +260,4 @@ class AppTheme {
       ),
     );
   }
-} 
+}

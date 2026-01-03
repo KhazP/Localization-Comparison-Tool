@@ -17,20 +17,21 @@ import 'package:localizer_app_main/data/parsers/docx_parser.dart';
 class FileParserFactory {
   final List<LocalizationParser> _parsers;
 
-  FileParserFactory() : _parsers = [
-    XliffParser(),
-    TmxParser(),
-    CsvParser(),
-    ArbParser(),
-    JsonParser(),
-    YamlParser(),
-    PropertiesParser(),
-    ResxParser(),
-    PlainTextParser(),
-    XmlParser(),
-    DocxParser(),
-    // Add other parsers here as they are implemented
-  ];
+  FileParserFactory()
+      : _parsers = [
+          XliffParser(),
+          TmxParser(),
+          CsvParser(),
+          ArbParser(),
+          JsonParser(),
+          YamlParser(),
+          PropertiesParser(),
+          ResxParser(),
+          PlainTextParser(),
+          XmlParser(),
+          DocxParser(),
+          // Add other parsers here as they are implemented
+        ];
 
   LocalizationParser? getParserForFile(File file, {String? format}) {
     // If format is provided and is not 'Auto', attempt to find a parser that supports that format (mapped to extension)
@@ -41,7 +42,8 @@ class FileParserFactory {
           return parser;
         }
       }
-      debugPrint('No parser found for forced format: $format (`$targetExt`). Falling back to file extension.');
+      debugPrint(
+          'No parser found for forced format: $format (`$targetExt`). Falling back to file extension.');
     }
 
     final extension = p.extension(file.path).toLowerCase();
@@ -53,4 +55,4 @@ class FileParserFactory {
     debugPrint('No parser found for file extension: $extension');
     return null;
   }
-} 
+}

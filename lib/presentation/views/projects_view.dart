@@ -56,7 +56,7 @@ class ProjectsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-           Row(
+            Row(
               children: [
                 Icon(
                   LucideIcons.folder,
@@ -112,7 +112,7 @@ class ProjectsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             if (recentProjects.isEmpty)
               Expanded(
                 child: Center(
@@ -127,7 +127,9 @@ class ProjectsView extends StatelessWidget {
                       Text(
                         'No recent projects',
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                          color: isDark
+                              ? AppThemeV2.darkTextSecondary
+                              : AppThemeV2.lightTextSecondary,
                         ),
                       ),
                     ],
@@ -142,7 +144,7 @@ class ProjectsView extends StatelessWidget {
                     final path = recentProjects[index];
                     // Use folder name as project name fallback
                     final name = path.split(Platform.pathSeparator).last;
-                    
+
                     return _ProjectListTile(
                       name: name,
                       path: path,
@@ -169,7 +171,7 @@ class ProjectsView extends StatelessWidget {
     bool isOutlined = false,
   }) {
     final theme = Theme.of(context);
-    
+
     if (isOutlined) {
       return OutlinedButton.icon(
         onPressed: onTap,
@@ -183,7 +185,7 @@ class ProjectsView extends StatelessWidget {
         ),
       );
     }
-    
+
     return FilledButton.icon(
       onPressed: onTap,
       icon: Icon(icon),
@@ -213,32 +215,35 @@ class ProjectsView extends StatelessWidget {
   }
 
   Future<void> _importProjectZip(BuildContext context) async {
-     final result = await DialogService.pickFile(
+    final result = await DialogService.pickFile(
       allowedExtensions: ['zip'],
       dialogTitle: 'Select Project Zip',
     );
 
-    if (result != null && result.files.isNotEmpty && result.files.single.path != null && context.mounted) {
-       final zipPath = result.files.single.path!;
-       try {
-         // Pick destination
-         final destDir = await DialogService.pickFolder(
-           dialogTitle: 'Select Destination Folder for Import',
-         );
-         
-         if (destDir == null || !context.mounted) return;
+    if (result != null &&
+        result.files.isNotEmpty &&
+        result.files.single.path != null &&
+        context.mounted) {
+      final zipPath = result.files.single.path!;
+      try {
+        // Pick destination
+        final destDir = await DialogService.pickFolder(
+          dialogTitle: 'Select Destination Folder for Import',
+        );
 
-         ToastService.showInfo(context, 'Importing project...');
+        if (destDir == null || !context.mounted) return;
 
-         final sharingService = ProjectSharingService();
-         final importResult = await sharingService.importProject(
-            zipPath: zipPath,
-            extractToPath: destDir,
-         );
+        ToastService.showInfo(context, 'Importing project...');
 
-         if (!context.mounted) return;
+        final sharingService = ProjectSharingService();
+        final importResult = await sharingService.importProject(
+          zipPath: zipPath,
+          extractToPath: destDir,
+        );
 
-         final accepted = await showDialog<bool>(
+        if (!context.mounted) return;
+
+        final accepted = await showDialog<bool>(
           context: context,
           builder: (context) => ImportReviewDialog(
             project: importResult.project,
@@ -247,45 +252,49 @@ class ProjectsView extends StatelessWidget {
         );
 
         if (accepted == true && context.mounted) {
-           // Import History if present
-           if (importResult.history.isNotEmpty) {
-             context.read<HistoryBloc>().add(ImportHistory(importResult.history));
-           }
+          // Import History if present
+          if (importResult.history.isNotEmpty) {
+            context
+                .read<HistoryBloc>()
+                .add(ImportHistory(importResult.history));
+          }
 
-           // Open Project
-           _openProject(context, importResult.project.rootPath);
-           ToastService.showSuccess(context, 'Project imported successfully');
+          // Open Project
+          _openProject(context, importResult.project.rootPath);
+          ToastService.showSuccess(context, 'Project imported successfully');
         }
-       } catch (e) {
-         ToastService.showError(context, 'Import failed: $e');
-       }
+      } catch (e) {
+        ToastService.showError(context, 'Import failed: $e');
+      }
     }
   }
 
   void _openProject(BuildContext context, String path) {
     context.read<ProjectBloc>().add(OpenProject(path));
     // Also update settings to move this to top of recent list
-     final settingsBloc = context.read<SettingsBloc>();
-     final currentRecent = List<String>.from(settingsBloc.state.appSettings.recentProjects);
-     
-     currentRecent.remove(path);
-     currentRecent.insert(0, path); // Add to top
-     
-     // Limit to 10
-     if (currentRecent.length > 10) {
-       currentRecent.removeRange(10, currentRecent.length);
-     }
-     
-     settingsBloc.add(UpdateRecentProjects(currentRecent));
+    final settingsBloc = context.read<SettingsBloc>();
+    final currentRecent =
+        List<String>.from(settingsBloc.state.appSettings.recentProjects);
+
+    currentRecent.remove(path);
+    currentRecent.insert(0, path); // Add to top
+
+    // Limit to 10
+    if (currentRecent.length > 10) {
+      currentRecent.removeRange(10, currentRecent.length);
+    }
+
+    settingsBloc.add(UpdateRecentProjects(currentRecent));
   }
 
   void _removeRecentProject(BuildContext context, String path) {
-     final settingsBloc = context.read<SettingsBloc>();
-     final recentProjects = List<String>.from(settingsBloc.state.appSettings.recentProjects);
-     
-     recentProjects.remove(path);
-     
-     settingsBloc.add(UpdateRecentProjects(recentProjects));
+    final settingsBloc = context.read<SettingsBloc>();
+    final recentProjects =
+        List<String>.from(settingsBloc.state.appSettings.recentProjects);
+
+    recentProjects.remove(path);
+
+    settingsBloc.add(UpdateRecentProjects(recentProjects));
   }
 
   void _importFilesToProject(
@@ -354,16 +363,16 @@ class _ProjectListTileState extends State<_ProjectListTile> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Check if AMOLED
     final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = isDark && 
+    final bool isAmoled = isDark &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
-    final cardColor = isAmoled 
-        ? AppThemeV2.amoledCard 
+    final cardColor = isAmoled
+        ? AppThemeV2.amoledCard
         : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
-        
+
     final hoverColor = isAmoled
         ? AppThemeV2.amoledCardHover
         : (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover);
@@ -373,8 +382,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
       onDropOver: (event) async {
         for (final item in event.session.items) {
           final localData = item.localData;
-          if (localData is String &&
-              DragDropUtils.isValidFilePath(localData)) {
+          if (localData is String && DragDropUtils.isValidFilePath(localData)) {
             setState(() => _isDragOver = true);
             return DropOperation.copy;
           }
@@ -396,8 +404,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
         final List<String> paths = [];
         for (final item in event.session.items) {
           final localData = item.localData;
-          if (localData is String &&
-              DragDropUtils.isValidFilePath(localData)) {
+          if (localData is String && DragDropUtils.isValidFilePath(localData)) {
             paths.add(localData);
             continue;
           }
@@ -423,115 +430,122 @@ class _ProjectListTileState extends State<_ProjectListTile> {
         }
       },
       child: MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Material(
-          type: MaterialType.transparency,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _isHovered ? hoverColor : cardColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _isDragOver
-                  ? theme.colorScheme.secondary
-                  : _isHovered 
-                      ? theme.colorScheme.primary.withAlpha(100)
-                      : (isAmoled ? AppThemeV2.amoledBorder : theme.dividerColor),
-              width: _isDragOver ? 2 : 1,
-            ),
-             boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(isDark ? 50 : 20),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                : null,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(20),
-                  borderRadius: BorderRadius.circular(10),
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Material(
+            type: MaterialType.transparency,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _isHovered ? hoverColor : cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _isDragOver
+                      ? theme.colorScheme.secondary
+                      : _isHovered
+                          ? theme.colorScheme.primary.withAlpha(100)
+                          : (isAmoled
+                              ? AppThemeV2.amoledBorder
+                              : theme.dividerColor),
+                  width: _isDragOver ? 2 : 1,
                 ),
-                child: Icon(
-                  LucideIcons.folder,
-                  color: theme.colorScheme.primary,
-                  size: 24,
-                ),
+                boxShadow: _isHovered
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(isDark ? 50 : 20),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ]
+                    : null,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(height: 4),
-                    // Stats row
-                    if (_loadingStats)
-                      const ProjectStatsSkeleton()
-                    else if (_stats != null)
-                      Row(
-                        children: [
-                          Icon(
-                            LucideIcons.fileText,
-                            size: 12,
-                            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    child: Icon(
+                      LucideIcons.folder,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              _stats!.displayString,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                        ),
+                        const SizedBox(height: 4),
+                        // Stats row
+                        if (_loadingStats)
+                          const ProjectStatsSkeleton()
+                        else if (_stats != null)
+                          Row(
+                            children: [
+                              Icon(
+                                LucideIcons.fileText,
+                                size: 12,
+                                color: isDark
+                                    ? AppThemeV2.darkTextMuted
+                                    : AppThemeV2.lightTextMuted,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  _stats!.displayString,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: isDark
+                                        ? AppThemeV2.darkTextSecondary
+                                        : AppThemeV2.lightTextSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.path,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                        fontFamily: 'Consolas', 
-                        fontSize: 10,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.path,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? AppThemeV2.darkTextMuted
+                                : AppThemeV2.lightTextMuted,
+                            fontFamily: 'Consolas',
+                            fontSize: 10,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  if (_isHovered)
+                    IconButton(
+                      icon: const Icon(LucideIcons.x, size: 20),
+                      onPressed: widget.onRemove,
+                      tooltip: 'Remove from recent',
+                    ),
+                  const Icon(LucideIcons.chevronRight),
+                ],
               ),
-              if (_isHovered)
-                IconButton(
-                  icon: const Icon(LucideIcons.x, size: 20),
-                  onPressed: widget.onRemove,
-                  tooltip: 'Remove from recent',
-                ),
-              const Icon(LucideIcons.chevronRight),
-            ],
+            ),
           ),
         ),
-      ),
-      ),
       ),
     );
   }
 }
-

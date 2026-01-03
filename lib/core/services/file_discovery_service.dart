@@ -23,15 +23,17 @@ class FileDiscoveryService {
     final targetDir = Directory(targetDirPath);
 
     if (!await sourceDir.exists()) {
-      throw DirectoryNotFoundException('Source directory not found: $sourceDirPath');
+      throw DirectoryNotFoundException(
+          'Source directory not found: $sourceDirPath');
     }
     if (!await targetDir.exists()) {
-      throw DirectoryNotFoundException('Target directory not found: $targetDirPath');
+      throw DirectoryNotFoundException(
+          'Target directory not found: $targetDirPath');
     }
 
     final List<FilePair> pairedFiles = [];
     final List<File> unmatchedSourceFiles = [];
-    
+
     final allSourceFiles =
         (await sourceDir.list(recursive: true).toList()).whereType<File>();
     final allTargetFiles = (await targetDir.list(recursive: true).toList())
@@ -77,4 +79,4 @@ class DirectoryNotFoundException implements Exception {
 
   @override
   String toString() => 'DirectoryNotFoundException: $message';
-} 
+}

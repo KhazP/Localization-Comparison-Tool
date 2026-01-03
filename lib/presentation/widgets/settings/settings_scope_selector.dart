@@ -5,7 +5,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_s
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 
 /// Selector widget for switching between global and project settings scope.
-/// 
+///
 /// Appears at the top of the Settings view when a project is open.
 /// Allows users to choose whether to edit global defaults or project overrides.
 class SettingsScopeSelector extends StatelessWidget {
@@ -64,7 +64,9 @@ class SettingsScopeSelector extends StatelessWidget {
               _buildScopeSelector(context, state, colorScheme, isDark),
               const SizedBox(height: 8),
               _buildScopeDescription(context, state, colorScheme),
-              if (state.hasProject && state.isProjectScope && (state.projectSettings?.hasOverrides ?? false)) ...[
+              if (state.hasProject &&
+                  state.isProjectScope &&
+                  (state.projectSettings?.hasOverrides ?? false)) ...[
                 const SizedBox(height: 12),
                 _buildResetProjectButton(context, theme, colorScheme),
               ],
@@ -75,18 +77,20 @@ class SettingsScopeSelector extends StatelessWidget {
     );
   }
 
-  Widget _buildResetProjectButton(BuildContext context, ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildResetProjectButton(
+      BuildContext context, ThemeData theme, ColorScheme colorScheme) {
     return Center(
       child: TextButton.icon(
         onPressed: () async {
           final confirm = await DialogService.showConfirmation(
             context: context,
             title: 'Reset Project Settings?',
-            content: 'This will clear all overrides for this project and revert to global defaults. This action cannot be undone.',
+            content:
+                'This will clear all overrides for this project and revert to global defaults. This action cannot be undone.',
             confirmText: 'Reset',
             isDestructive: true,
           );
-          
+
           if (confirm == true && context.mounted) {
             context.read<SettingsBloc>().add(const ResetAllProjectSettings());
           }
@@ -133,8 +137,8 @@ class SettingsScopeSelector extends StatelessWidget {
               isSelected: state.scope == SettingsScope.global,
               onTap: () {
                 context.read<SettingsBloc>().add(
-                  const SwitchSettingsScope(SettingsScope.global),
-                );
+                      const SwitchSettingsScope(SettingsScope.global),
+                    );
               },
             ),
           ),
@@ -145,8 +149,8 @@ class SettingsScopeSelector extends StatelessWidget {
               isSelected: state.scope == SettingsScope.project,
               onTap: () {
                 context.read<SettingsBloc>().add(
-                  const SwitchSettingsScope(SettingsScope.project),
-                );
+                      const SwitchSettingsScope(SettingsScope.project),
+                    );
               },
             ),
           ),
@@ -215,9 +219,7 @@ class _ScopeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? colorScheme.primary
-              : Colors.transparent,
+          color: isSelected ? colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           boxShadow: isSelected
               ? [

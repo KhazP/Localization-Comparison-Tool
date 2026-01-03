@@ -32,21 +32,20 @@ class AppThemeV2 {
   static const Color lightBorder = Color(0xFFE2E4EA);
   static const Color lightBorderSubtle = Color(0xFFEEEFF3);
 
-
   // Semantic Colors
-  static const Color added = Color(0xFF22C55E);            // Green
-  static const Color addedBg = Color(0x3322C55E);          // 20% alpha green
-  static const Color removed = Color(0xFFEF4444);          // Red
-  static const Color removedBg = Color(0x33EF4444);        // 20% alpha red
-  static const Color modified = Color(0xFFF59E0B);         // Amber
-  static const Color modifiedBg = Color(0x33F59E0B);       // 20% alpha amber
-  static const Color info = Color(0xFF3B82F6);             // Blue
-  static const Color warning = Color(0xFFF59E0B);          // Amber
-  static const Color error = Color(0xFFEF4444);            // Red
-  static const Color success = Color(0xFF22C55E);          // Green
+  static const Color added = Color(0xFF22C55E); // Green
+  static const Color addedBg = Color(0x3322C55E); // 20% alpha green
+  static const Color removed = Color(0xFFEF4444); // Red
+  static const Color removedBg = Color(0x33EF4444); // 20% alpha red
+  static const Color modified = Color(0xFFF59E0B); // Amber
+  static const Color modifiedBg = Color(0x33F59E0B); // 20% alpha amber
+  static const Color info = Color(0xFF3B82F6); // Blue
+  static const Color warning = Color(0xFFF59E0B); // Amber
+  static const Color error = Color(0xFFEF4444); // Red
+  static const Color success = Color(0xFF22C55E); // Green
 
   // Additional M3 Accent Colors
-  static const Color outline = Color(0xFF6B7280);          // Gray
+  static const Color outline = Color(0xFF6B7280); // Gray
   static const Color outlineVariant = Color(0xFF4B5563);
 
   // Text Colors - Dark
@@ -69,11 +68,17 @@ class AppThemeV2 {
 
   static ThemeData createDarkTheme(Color accentColor) {
     final primary = accentColor;
-    final primaryDark = HSLColor.fromColor(accentColor).withLightness(0.5).toColor(); // Slightly darker
-    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor(); // Analogous
-    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor(); // Complementary
-    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
-
+    final primaryDark = HSLColor.fromColor(accentColor)
+        .withLightness(0.5)
+        .toColor(); // Slightly darker
+    final secondary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
+        .toColor(); // Analogous
+    final tertiary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
+        .toColor(); // Complementary
+    final tertiaryContainer =
+        HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
 
     return ThemeData(
       useMaterial3: true,
@@ -100,31 +105,42 @@ class AppThemeV2 {
       textTheme: _buildTextTheme(isDark: true),
       cardTheme: _buildCardTheme(isDark: true, isAmoled: false),
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
-      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
+      outlinedButtonTheme:
+          _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
-      iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
+      iconButtonTheme:
+          _buildIconButtonTheme(isDark: true, primaryColor: primary),
       filledButtonTheme: _buildFilledButtonTheme(primary),
-      inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      inputDecorationTheme: _buildInputTheme(
+          isDark: true, isAmoled: false, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: darkBorder,
         thickness: 1,
       ),
-      navigationRailTheme: _buildNavRailTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      navigationRailTheme: _buildNavRailTheme(
+          isDark: true, isAmoled: false, primaryColor: primary),
       chipTheme: _buildChipTheme(isDark: true, primaryColor: primary),
       snackBarTheme: _buildSnackBarTheme(isDark: true),
       dialogTheme: _buildDialogTheme(isDark: true, isAmoled: false),
       tooltipTheme: _buildTooltipTheme(isDark: true),
-      scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      scrollbarTheme: _buildScrollbarTheme(
+          isDark: true, isAmoled: false, primaryColor: primary),
     );
   }
 
   /// Mica-enabled dark theme with transparent backgrounds for Windows 11
   static ThemeData createMicaTheme(Color accentColor) {
     final primary = accentColor;
-    final primaryDark = HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
-    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor();
-    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor();
-    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
+    final primaryDark =
+        HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
+    final secondary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
+        .toColor();
+    final tertiary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
+        .toColor();
+    final tertiaryContainer =
+        HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
 
     // Semi-transparent colors for Mica effect
     // Higher alpha values for darker overlays that still show Mica blur but are readable
@@ -170,11 +186,14 @@ class AppThemeV2 {
         ),
       ),
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
-      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
+      outlinedButtonTheme:
+          _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
-      iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
+      iconButtonTheme:
+          _buildIconButtonTheme(isDark: true, primaryColor: primary),
       filledButtonTheme: _buildFilledButtonTheme(primary),
-      inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      inputDecorationTheme: _buildInputTheme(
+          isDark: true, isAmoled: false, primaryColor: primary),
       dividerTheme: DividerThemeData(
         color: darkBorder.withAlpha(150),
         thickness: 1,
@@ -202,18 +221,24 @@ class AppThemeV2 {
         ),
       ),
       tooltipTheme: _buildTooltipTheme(isDark: true),
-      scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: false, primaryColor: primary),
+      scrollbarTheme: _buildScrollbarTheme(
+          isDark: true, isAmoled: false, primaryColor: primary),
     );
   }
 
   /// AMOLED theme with pure black backgrounds for OLED displays
   static ThemeData createAmoledTheme(Color accentColor) {
     final primary = accentColor;
-    final primaryDark = HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
-    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor();
-    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor();
-    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
-
+    final primaryDark =
+        HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
+    final secondary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
+        .toColor();
+    final tertiary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
+        .toColor();
+    final tertiaryContainer =
+        HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
 
     return ThemeData(
       useMaterial3: true,
@@ -240,32 +265,42 @@ class AppThemeV2 {
       textTheme: _buildTextTheme(isDark: true),
       cardTheme: _buildCardTheme(isDark: true, isAmoled: true),
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
-      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
+      outlinedButtonTheme:
+          _buildOutlinedButtonTheme(isDark: true, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
-      iconButtonTheme: _buildIconButtonTheme(isDark: true, primaryColor: primary),
+      iconButtonTheme:
+          _buildIconButtonTheme(isDark: true, primaryColor: primary),
       filledButtonTheme: _buildFilledButtonTheme(primary),
-      inputDecorationTheme: _buildInputTheme(isDark: true, isAmoled: true, primaryColor: primary),
+      inputDecorationTheme:
+          _buildInputTheme(isDark: true, isAmoled: true, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: amoledBorder,
         thickness: 1,
       ),
-      navigationRailTheme: _buildNavRailTheme(isDark: true, isAmoled: true, primaryColor: primary),
+      navigationRailTheme: _buildNavRailTheme(
+          isDark: true, isAmoled: true, primaryColor: primary),
       chipTheme: _buildChipTheme(isDark: true, primaryColor: primary),
       snackBarTheme: _buildSnackBarTheme(isDark: true),
       dialogTheme: _buildDialogTheme(isDark: true, isAmoled: true),
       tooltipTheme: _buildTooltipTheme(isDark: true),
-      scrollbarTheme: _buildScrollbarTheme(isDark: true, isAmoled: true, primaryColor: primary),
+      scrollbarTheme: _buildScrollbarTheme(
+          isDark: true, isAmoled: true, primaryColor: primary),
     );
   }
 
   static ThemeData createLightTheme(Color accentColor) {
     final primary = accentColor;
-    final primaryLight = HSLColor.fromColor(accentColor).withLightness(0.7).toColor();
-    final secondary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 30) % 360).toColor();
-    final tertiary = HSLColor.fromColor(accentColor).withHue((HSLColor.fromColor(accentColor).hue + 180) % 360).toColor();
-    final tertiaryContainer = HSLColor.fromColor(tertiary).withLightness(0.8).toColor();
+    final primaryLight =
+        HSLColor.fromColor(accentColor).withLightness(0.7).toColor();
+    final secondary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
+        .toColor();
+    final tertiary = HSLColor.fromColor(accentColor)
+        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
+        .toColor();
+    final tertiaryContainer =
+        HSLColor.fromColor(tertiary).withLightness(0.8).toColor();
 
-    
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -291,21 +326,26 @@ class AppThemeV2 {
       textTheme: _buildTextTheme(isDark: false),
       cardTheme: _buildCardTheme(isDark: false),
       elevatedButtonTheme: _buildElevatedButtonTheme(primary),
-      outlinedButtonTheme: _buildOutlinedButtonTheme(isDark: false, primaryColor: primary),
+      outlinedButtonTheme:
+          _buildOutlinedButtonTheme(isDark: false, primaryColor: primary),
       textButtonTheme: _buildTextButtonTheme(primary),
-      iconButtonTheme: _buildIconButtonTheme(isDark: false, primaryColor: primary),
+      iconButtonTheme:
+          _buildIconButtonTheme(isDark: false, primaryColor: primary),
       filledButtonTheme: _buildFilledButtonTheme(primary),
-      inputDecorationTheme: _buildInputTheme(isDark: false, primaryColor: primary),
+      inputDecorationTheme:
+          _buildInputTheme(isDark: false, primaryColor: primary),
       dividerTheme: const DividerThemeData(
         color: lightBorder,
         thickness: 1,
       ),
-      navigationRailTheme: _buildNavRailTheme(isDark: false, primaryColor: primary),
+      navigationRailTheme:
+          _buildNavRailTheme(isDark: false, primaryColor: primary),
       chipTheme: _buildChipTheme(isDark: false, primaryColor: primary),
       snackBarTheme: _buildSnackBarTheme(isDark: false),
       dialogTheme: _buildDialogTheme(isDark: false),
       tooltipTheme: _buildTooltipTheme(isDark: false),
-      scrollbarTheme: _buildScrollbarTheme(isDark: false, primaryColor: primary),
+      scrollbarTheme:
+          _buildScrollbarTheme(isDark: false, primaryColor: primary),
     );
   }
 
@@ -394,9 +434,11 @@ class AppThemeV2 {
     );
   }
 
-  static CardThemeData _buildCardTheme({required bool isDark, bool isAmoled = false}) {
+  static CardThemeData _buildCardTheme(
+      {required bool isDark, bool isAmoled = false}) {
     final cardColor = isAmoled ? amoledCard : (isDark ? darkCard : lightCard);
-    final borderColor = isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder);
+    final borderColor =
+        isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder);
     return CardThemeData(
       color: cardColor,
       elevation: 0,
@@ -419,14 +461,20 @@ class AppThemeV2 {
             return primaryColor.withAlpha(100);
           }
           if (states.contains(WidgetState.hovered)) {
-            return HSLColor.fromColor(primaryColor).withLightness(
-              (HSLColor.fromColor(primaryColor).lightness * 1.1).clamp(0.0, 1.0),
-            ).toColor();
+            return HSLColor.fromColor(primaryColor)
+                .withLightness(
+                  (HSLColor.fromColor(primaryColor).lightness * 1.1)
+                      .clamp(0.0, 1.0),
+                )
+                .toColor();
           }
           if (states.contains(WidgetState.pressed)) {
-            return HSLColor.fromColor(primaryColor).withLightness(
-              (HSLColor.fromColor(primaryColor).lightness * 0.9).clamp(0.0, 1.0),
-            ).toColor();
+            return HSLColor.fromColor(primaryColor)
+                .withLightness(
+                  (HSLColor.fromColor(primaryColor).lightness * 0.9)
+                      .clamp(0.0, 1.0),
+                )
+                .toColor();
           }
           return primaryColor;
         }),
@@ -458,17 +506,19 @@ class AppThemeV2 {
     );
   }
 
-  static OutlinedButtonThemeData _buildOutlinedButtonTheme({required bool isDark, required Color primaryColor}) {
+  static OutlinedButtonThemeData _buildOutlinedButtonTheme(
+      {required bool isDark, required Color primaryColor}) {
     final borderColor = isDark ? darkBorder : lightBorder;
     final textColor = isDark ? darkTextPrimary : lightTextPrimary;
-    
+
     return OutlinedButtonThemeData(
       style: ButtonStyle(
         foregroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.disabled)) {
             return textColor.withAlpha(100);
           }
-          if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) {
+          if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.focused)) {
             return primaryColor;
           }
           return textColor;
@@ -492,7 +542,8 @@ class AppThemeV2 {
           if (states.contains(WidgetState.disabled)) {
             return BorderSide(color: borderColor.withAlpha(80), width: 1.5);
           }
-          if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) {
+          if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.focused)) {
             return BorderSide(color: primaryColor.withAlpha(180), width: 1.5);
           }
           return BorderSide(color: borderColor, width: 1.5);
@@ -520,9 +571,12 @@ class AppThemeV2 {
             return primaryColor.withAlpha(100);
           }
           if (states.contains(WidgetState.hovered)) {
-            return HSLColor.fromColor(primaryColor).withLightness(
-              (HSLColor.fromColor(primaryColor).lightness * 1.1).clamp(0.0, 1.0),
-            ).toColor();
+            return HSLColor.fromColor(primaryColor)
+                .withLightness(
+                  (HSLColor.fromColor(primaryColor).lightness * 1.1)
+                      .clamp(0.0, 1.0),
+                )
+                .toColor();
           }
           return primaryColor;
         }),
@@ -556,9 +610,10 @@ class AppThemeV2 {
     );
   }
 
-  static IconButtonThemeData _buildIconButtonTheme({required bool isDark, required Color primaryColor}) {
+  static IconButtonThemeData _buildIconButtonTheme(
+      {required bool isDark, required Color primaryColor}) {
     final iconColor = isDark ? darkTextSecondary : lightTextSecondary;
-    
+
     return IconButtonThemeData(
       style: ButtonStyle(
         foregroundColor: WidgetStateProperty.resolveWith((states) {
@@ -603,14 +658,20 @@ class AppThemeV2 {
             return primaryColor.withAlpha(100);
           }
           if (states.contains(WidgetState.hovered)) {
-            return HSLColor.fromColor(primaryColor).withLightness(
-              (HSLColor.fromColor(primaryColor).lightness * 1.1).clamp(0.0, 1.0),
-            ).toColor();
+            return HSLColor.fromColor(primaryColor)
+                .withLightness(
+                  (HSLColor.fromColor(primaryColor).lightness * 1.1)
+                      .clamp(0.0, 1.0),
+                )
+                .toColor();
           }
           if (states.contains(WidgetState.pressed)) {
-            return HSLColor.fromColor(primaryColor).withLightness(
-              (HSLColor.fromColor(primaryColor).lightness * 0.9).clamp(0.0, 1.0),
-            ).toColor();
+            return HSLColor.fromColor(primaryColor)
+                .withLightness(
+                  (HSLColor.fromColor(primaryColor).lightness * 0.9)
+                      .clamp(0.0, 1.0),
+                )
+                .toColor();
           }
           return primaryColor;
         }),
@@ -642,9 +703,14 @@ class AppThemeV2 {
     );
   }
 
-  static InputDecorationTheme _buildInputTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
-    final borderColor = isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder);
-    final fillColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);
+  static InputDecorationTheme _buildInputTheme(
+      {required bool isDark,
+      bool isAmoled = false,
+      required Color primaryColor}) {
+    final borderColor =
+        isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder);
+    final fillColor =
+        isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);
     final textColor = isDark ? darkTextPrimary : lightTextPrimary;
     final hintColor = isDark ? darkTextMuted : lightTextMuted;
 
@@ -679,8 +745,12 @@ class AppThemeV2 {
     );
   }
 
-  static NavigationRailThemeData _buildNavRailTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
-    final bgColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);
+  static NavigationRailThemeData _buildNavRailTheme(
+      {required bool isDark,
+      bool isAmoled = false,
+      required Color primaryColor}) {
+    final bgColor =
+        isAmoled ? amoledSurface : (isDark ? darkSurface : lightSurface);
     return NavigationRailThemeData(
       backgroundColor: bgColor,
       elevation: 0,
@@ -706,7 +776,8 @@ class AppThemeV2 {
     );
   }
 
-  static ChipThemeData _buildChipTheme({required bool isDark, required Color primaryColor}) {
+  static ChipThemeData _buildChipTheme(
+      {required bool isDark, required Color primaryColor}) {
     return ChipThemeData(
       backgroundColor: isDark ? darkCard : lightCard,
       selectedColor: primaryColor.withAlpha(30),
@@ -745,7 +816,8 @@ class AppThemeV2 {
     );
   }
 
-  static DialogThemeData _buildDialogTheme({required bool isDark, bool isAmoled = false}) {
+  static DialogThemeData _buildDialogTheme(
+      {required bool isDark, bool isAmoled = false}) {
     final bgColor = isAmoled ? amoledCard : (isDark ? darkCard : lightCard);
     return DialogThemeData(
       backgroundColor: bgColor,
@@ -767,7 +839,8 @@ class AppThemeV2 {
 
   static TooltipThemeData _buildTooltipTheme({required bool isDark}) {
     return TooltipThemeData(
-      waitDuration: const Duration(milliseconds: 500), // Faster for desktop hover
+      waitDuration:
+          const Duration(milliseconds: 500), // Faster for desktop hover
       decoration: BoxDecoration(
         color: isDark ? darkCard : lightTextPrimary,
         borderRadius: BorderRadius.circular(8),
@@ -780,15 +853,20 @@ class AppThemeV2 {
     );
   }
 
-  static ScrollbarThemeData _buildScrollbarTheme({required bool isDark, bool isAmoled = false, required Color primaryColor}) {
+  static ScrollbarThemeData _buildScrollbarTheme(
+      {required bool isDark,
+      bool isAmoled = false,
+      required Color primaryColor}) {
     final thumbColor = isDark ? darkTextMuted : lightTextMuted;
-    final trackColor = isAmoled ? amoledSurface : (isDark ? darkSurface : lightBackground);
+    final trackColor =
+        isAmoled ? amoledSurface : (isDark ? darkSurface : lightBackground);
     return ScrollbarThemeData(
       thumbVisibility: WidgetStateProperty.all(true),
       thickness: WidgetStateProperty.all(8.0),
       radius: const Radius.circular(4),
       thumbColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.hovered) || states.contains(WidgetState.dragged)) {
+        if (states.contains(WidgetState.hovered) ||
+            states.contains(WidgetState.dragged)) {
           return primaryColor.withAlpha(200);
         }
         return thumbColor.withAlpha(150);
@@ -798,7 +876,6 @@ class AppThemeV2 {
     );
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 // THEME EXTENSION FOR CUSTOM COLORS

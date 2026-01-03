@@ -19,7 +19,7 @@ class AboutSettingsCard extends StatelessWidget {
   final SystemInfo? systemInfo;
   final bool isDark;
   final bool isAmoled;
-  
+
   // Callbacks
   final VoidCallback onCheckForUpdates;
   final VoidCallback onShowChangelog;
@@ -77,12 +77,14 @@ class AboutSettingsCard extends StatelessWidget {
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
-            _buildInfoRow(context, 'Version', packageInfo?.version ?? 'Loading...'),
-            _buildInfoRow(context, 'Build', packageInfo?.buildNumber ?? 'Loading...'),
-            _buildInfoRow(context, 'Platform', Platform.operatingSystem, showDivider: false), // Simplified platform info
+            _buildInfoRow(
+                context, 'Version', packageInfo?.version ?? 'Loading...'),
+            _buildInfoRow(
+                context, 'Build', packageInfo?.buildNumber ?? 'Loading...'),
+            _buildInfoRow(context, 'Platform', Platform.operatingSystem,
+                showDivider: false), // Simplified platform info
           ],
         ),
-
         SettingsCardContainer(
           title: 'Update Information',
           isDark: isDark,
@@ -93,17 +95,26 @@ class AboutSettingsCard extends StatelessWidget {
               control: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(packageInfo?.version ?? 'Loading...', style: theme.textTheme.bodyMedium?.copyWith(color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted)),
+                  Text(packageInfo?.version ?? 'Loading...',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted)),
                   if (updateCheckResult?.updateAvailable == true) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppThemeV2.success.withAlpha(25),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppThemeV2.success.withAlpha(100)),
+                        border: Border.all(
+                            color: AppThemeV2.success.withAlpha(100)),
                       ),
-                      child: Text('Update Available!', style: theme.textTheme.labelSmall?.copyWith(color: AppThemeV2.success, fontWeight: FontWeight.w600)),
+                      child: Text('Update Available!',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppThemeV2.success,
+                              fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ],
@@ -117,8 +128,14 @@ class AboutSettingsCard extends StatelessWidget {
                 control: Text(
                   updateCheckResult!.latestVersion,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: updateCheckResult!.updateAvailable ? AppThemeV2.success : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
-                    fontWeight: updateCheckResult!.updateAvailable ? FontWeight.w600 : FontWeight.normal,
+                    color: updateCheckResult!.updateAvailable
+                        ? AppThemeV2.success
+                        : (isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted),
+                    fontWeight: updateCheckResult!.updateAvailable
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                 ),
                 isDark: isDark,
@@ -126,7 +143,11 @@ class AboutSettingsCard extends StatelessWidget {
               ),
             SettingsRow(
               label: 'Last Checked',
-              control: Text(_formatLastChecked(settings.lastUpdateCheckTime), style: theme.textTheme.bodyMedium?.copyWith(color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted)),
+              control: Text(_formatLastChecked(settings.lastUpdateCheckTime),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isDark
+                          ? AppThemeV2.darkTextMuted
+                          : AppThemeV2.lightTextMuted)),
               isDark: isDark,
               isAmoled: isAmoled,
             ),
@@ -136,11 +157,18 @@ class AboutSettingsCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: isCheckingForUpdates ? null : onCheckForUpdates,
+                      onPressed:
+                          isCheckingForUpdates ? null : onCheckForUpdates,
                       icon: isCheckingForUpdates
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
                           : const Icon(LucideIcons.refreshCcw, size: 18),
-                      label: Text(isCheckingForUpdates ? 'Checking...' : 'Check for Updates'),
+                      label: Text(isCheckingForUpdates
+                          ? 'Checking...'
+                          : 'Check for Updates'),
                     ),
                   ),
                   if (updateCheckResult?.changelog?.isNotEmpty == true) ...[
@@ -151,13 +179,16 @@ class AboutSettingsCard extends StatelessWidget {
                       label: const Text("What's New"),
                     ),
                   ],
-                  if (updateCheckResult?.updateAvailable == true && updateCheckResult?.downloadUrl != null) ...[
+                  if (updateCheckResult?.updateAvailable == true &&
+                      updateCheckResult?.downloadUrl != null) ...[
                     const SizedBox(width: 12),
                     FilledButton.icon(
-                      onPressed: () => onLaunchUrl(updateCheckResult!.downloadUrl!),
+                      onPressed: () =>
+                          onLaunchUrl(updateCheckResult!.downloadUrl!),
                       icon: const Icon(LucideIcons.download, size: 18),
                       label: const Text('Download'),
-                      style: FilledButton.styleFrom(backgroundColor: AppThemeV2.success),
+                      style: FilledButton.styleFrom(
+                          backgroundColor: AppThemeV2.success),
                     ),
                   ],
                 ],
@@ -178,19 +209,25 @@ class AboutSettingsCard extends StatelessWidget {
             ),
           ],
         ),
-
         SettingsCardContainer(
           title: 'System Information',
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
-            _buildInfoRow(context, 'Dart Version', systemInfo?.dartVersion ?? 'Loading...'),
-            _buildInfoRow(context, 'Available Disk Space', systemInfo?.availableDiskSpace ?? 'Loading...'),
+            _buildInfoRow(context, 'Dart Version',
+                systemInfo?.dartVersion ?? 'Loading...'),
+            _buildInfoRow(context, 'Available Disk Space',
+                systemInfo?.availableDiskSpace ?? 'Loading...'),
             SettingsRow(
               label: 'Memory Usage',
               control: Text(
-                systemInfo != null ? '${systemInfo!.memoryUsage} / ${systemInfo!.totalMemory}' : 'Loading...',
-                style: theme.textTheme.bodyMedium?.copyWith(color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                systemInfo != null
+                    ? '${systemInfo!.memoryUsage} / ${systemInfo!.totalMemory}'
+                    : 'Loading...',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isDark
+                        ? AppThemeV2.darkTextMuted
+                        : AppThemeV2.lightTextMuted),
               ),
               isDark: isDark,
               isAmoled: isAmoled,
@@ -206,7 +243,6 @@ class AboutSettingsCard extends StatelessWidget {
             ),
           ],
         ),
-
         SettingsCardContainer(
           title: 'Privacy & Telemetry',
           isDark: isDark,
@@ -214,17 +250,20 @@ class AboutSettingsCard extends StatelessWidget {
           children: [
             SettingsRow(
               label: 'Anonymous Usage Statistics',
-              description: 'Help improve the app by sending anonymous usage data',
+              description:
+                  'Help improve the app by sending anonymous usage data',
               control: Switch(
                 value: settings.enableAnonymousUsageStatistics,
-                onChanged: (val) => bloc.add(UpdateEnableAnonymousUsageStatistics(val)),
+                onChanged: (val) =>
+                    bloc.add(UpdateEnableAnonymousUsageStatistics(val)),
               ),
               isDark: isDark,
               isAmoled: isAmoled,
             ),
             SettingsRow(
               label: 'Crash Reporting',
-              description: 'Automatically send crash reports to help fix issues',
+              description:
+                  'Automatically send crash reports to help fix issues',
               control: Switch(
                 value: settings.enableCrashReporting,
                 onChanged: (val) => bloc.add(UpdateEnableCrashReporting(val)),
@@ -232,12 +271,15 @@ class AboutSettingsCard extends StatelessWidget {
               isDark: isDark,
               isAmoled: isAmoled,
             ),
-            _buildLinkRow(context, 'Privacy Policy', LucideIcons.shieldAlert, 
-                () => onLaunchUrl('https://github.com/KhazP/LocalizerAppMain/blob/main/PRIVACY.md'), 
+            _buildLinkRow(
+                context,
+                'Privacy Policy',
+                LucideIcons.shieldAlert,
+                () => onLaunchUrl(
+                    'https://github.com/KhazP/LocalizerAppMain/blob/main/PRIVACY.md'),
                 showDivider: false),
           ],
         ),
-
         SettingsCardContainer(
           title: 'Settings Management',
           isDark: isDark,
@@ -250,7 +292,10 @@ class AboutSettingsCard extends StatelessWidget {
                 children: [
                   Text(
                     'Export your settings to a file to back them up or share with other machines.',
-                    style: theme.textTheme.bodySmall?.copyWith(color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -277,7 +322,8 @@ class AboutSettingsCard extends StatelessWidget {
                           label: const Text('Reset All'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppThemeV2.error,
-                            side: BorderSide(color: AppThemeV2.error.withAlpha(100)),
+                            side: BorderSide(
+                                color: AppThemeV2.error.withAlpha(100)),
                           ),
                           onPressed: onResetAllSettings,
                         ),
@@ -289,30 +335,37 @@ class AboutSettingsCard extends StatelessWidget {
             ),
           ],
         ),
-
         SettingsCardContainer(
           title: 'Links',
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
-            _buildLinkRow(context, 'GitHub Repository', LucideIcons.github, 
+            _buildLinkRow(context, 'GitHub Repository', LucideIcons.github,
                 () => onLaunchUrl('https://github.com/KhazP/LocalizerAppMain')),
-            _buildLinkRow(context, 'Report Issue', LucideIcons.bug, 
-                () => onLaunchUrl('https://github.com/KhazP/LocalizerAppMain/issues')),
-            _buildLinkRow(context, 'Licenses', LucideIcons.fileText, onShowLicenses, showDivider: false),
+            _buildLinkRow(
+                context,
+                'Report Issue',
+                LucideIcons.bug,
+                () => onLaunchUrl(
+                    'https://github.com/KhazP/LocalizerAppMain/issues')),
+            _buildLinkRow(
+                context, 'Licenses', LucideIcons.fileText, onShowLicenses,
+                showDivider: false),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value, {bool showDivider = true}) {
+  Widget _buildInfoRow(BuildContext context, String label, String value,
+      {bool showDivider = true}) {
     return SettingsRow(
       label: label,
       control: Text(
         value,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+              color:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),
       ),
       isDark: isDark,
@@ -321,7 +374,9 @@ class AboutSettingsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLinkRow(BuildContext context, String label, IconData icon, VoidCallback onTap, {bool showDivider = true}) {
+  Widget _buildLinkRow(
+      BuildContext context, String label, IconData icon, VoidCallback onTap,
+      {bool showDivider = true}) {
     return Column(
       children: [
         InkWell(
@@ -330,18 +385,29 @@ class AboutSettingsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+                Icon(icon,
+                    size: 20, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
-                Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium)),
-                Icon(LucideIcons.chevronRight, size: 16, color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                Expanded(
+                    child: Text(label,
+                        style: Theme.of(context).textTheme.bodyMedium)),
+                Icon(LucideIcons.chevronRight,
+                    size: 16,
+                    color: isDark
+                        ? AppThemeV2.darkTextMuted
+                        : AppThemeV2.lightTextMuted),
               ],
             ),
           ),
         ),
         if (showDivider)
           Divider(
-            color: isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
-            height: 1, indent: 16, endIndent: 16,
+            color: isAmoled
+                ? AppThemeV2.amoledBorder
+                : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
+            height: 1,
+            indent: 16,
+            endIndent: 16,
           ),
       ],
     );

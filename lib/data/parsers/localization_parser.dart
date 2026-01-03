@@ -28,7 +28,7 @@ class InvalidBilingualFileException implements Exception {
 /// Base contract for localization parsers.
 abstract class LocalizationParser {
   /// Parses a localization file into key/value pairs.
-  /// 
+  ///
   /// [onProgress] is an optional callback for reporting parsing progress.
   /// Parsers may call this periodically during file reading and parsing
   /// to provide real-time feedback to the UI.

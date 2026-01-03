@@ -5,7 +5,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 
 /// A custom title bar widget that replaces the native window title bar.
-/// 
+///
 /// This provides:
 /// - Consistent look across Windows and macOS
 /// - App branding with logo and title
@@ -26,7 +26,8 @@ class CustomTitleBar extends StatelessWidget {
     return BlocBuilder<ThemeBloc, AppThemeState>(
       builder: (context, themeState) {
         final accentColor = themeState.accentColor;
-        final isDark = ThemeData.estimateBrightnessForColor(accentColor) == Brightness.dark;
+        final isDark = ThemeData.estimateBrightnessForColor(accentColor) ==
+            Brightness.dark;
         final foregroundColor = isDark ? Colors.white : Colors.black;
 
         return Container(

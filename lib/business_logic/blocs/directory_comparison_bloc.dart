@@ -3,10 +3,13 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/core/services/file_discovery_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/models/file_pair.dart';
+
+part 'directory_comparison_bloc.freezed.dart';
 
 // Events
 abstract class DirectoryComparisonEvent extends Equatable {
@@ -20,7 +23,8 @@ class CompareDirectoriesRequested extends DirectoryComparisonEvent {
   final String sourceDirectoryPath;
   final String targetDirectoryPath;
 
-  const CompareDirectoriesRequested(this.sourceDirectoryPath, this.targetDirectoryPath);
+  const CompareDirectoriesRequested(
+      this.sourceDirectoryPath, this.targetDirectoryPath);
 
   @override
   List<Object> get props => [sourceDirectoryPath, targetDirectoryPath];
@@ -45,53 +49,25 @@ class ComparePairedFilesRequested extends DirectoryComparisonEvent {
 }
 
 // States
-abstract class DirectoryComparisonState extends Equatable {
-  const DirectoryComparisonState();
-
-  @override
-  List<Object> get props => [];
-}
-
-class DirectoryComparisonInitial extends DirectoryComparisonState {}
-
-class DirectoryComparisonLoading extends DirectoryComparisonState {}
-
-class DirectoryComparisonSuccess extends DirectoryComparisonState {
-  final List<FilePair> pairedFiles;
-  final List<File> unmatchedSourceFiles;
-  final List<File> unmatchedTargetFiles;
-  final Map<FilePair, ComparisonResult> comparisonResults;
-  final Map<FilePair, String> comparisonErrors;
-
-  const DirectoryComparisonSuccess({
-    this.pairedFiles = const [],
-    this.unmatchedSourceFiles = const [],
-    this.unmatchedTargetFiles = const [],
-    this.comparisonResults = const {},
-    this.comparisonErrors = const {},
-  });
-
-  @override
-  List<Object> get props => [
-        pairedFiles,
-        unmatchedSourceFiles,
-        unmatchedTargetFiles,
-        comparisonResults,
-        comparisonErrors,
-      ];
-}
-
-class DirectoryComparisonFailure extends DirectoryComparisonState {
-  final String error;
-
-  const DirectoryComparisonFailure(this.error);
-
-  @override
-  List<Object> get props => [error];
+@freezed
+class DirectoryComparisonState with _$DirectoryComparisonState {
+  const factory DirectoryComparisonState.initial() = DirectoryComparisonInitial;
+  const factory DirectoryComparisonState.loading() = DirectoryComparisonLoading;
+  const factory DirectoryComparisonState.success({
+    @Default(<FilePair>[]) List<FilePair> pairedFiles,
+    @Default(<File>[]) List<File> unmatchedSourceFiles,
+    @Default(<File>[]) List<File> unmatchedTargetFiles,
+    @Default(<FilePair, ComparisonResult>{})
+    Map<FilePair, ComparisonResult> comparisonResults,
+    @Default(<FilePair, String>{}) Map<FilePair, String> comparisonErrors,
+  }) = DirectoryComparisonSuccess;
+  const factory DirectoryComparisonState.failure(String error) =
+      DirectoryComparisonFailure;
 }
 
 // BLoC
-class DirectoryComparisonBloc extends Bloc<DirectoryComparisonEvent, DirectoryComparisonState> {
+class DirectoryComparisonBloc
+    extends Bloc<DirectoryComparisonEvent, DirectoryComparisonState> {
   final FileDiscoveryService _fileDiscoveryService;
   final ComparisonEngine _comparisonEngine;
 
@@ -134,17 +110,22 @@ class DirectoryComparisonBloc extends Bloc<DirectoryComparisonEvent, DirectoryCo
       final currentState = state as DirectoryComparisonSuccess;
 
       // Create the new pair
-      final newPair = FilePair(sourceFile: event.sourceFile, targetFile: event.targetFile);
+      final newPair =
+          FilePair(sourceFile: event.sourceFile, targetFile: event.targetFile);
 
       // Create new lists by filtering out the manually paired files
-      final newPairedFiles = List<FilePair>.from(currentState.pairedFiles)..add(newPair);
-      final newUnmatchedSource = List<File>.from(currentState.unmatchedSourceFiles)
-        ..remove(event.sourceFile);
-      final newUnmatchedTarget = List<File>.from(currentState.unmatchedTargetFiles)
-        ..remove(event.targetFile);
-      
+      final newPairedFiles = List<FilePair>.from(currentState.pairedFiles)
+        ..add(newPair);
+      final newUnmatchedSource =
+          List<File>.from(currentState.unmatchedSourceFiles)
+            ..remove(event.sourceFile);
+      final newUnmatchedTarget =
+          List<File>.from(currentState.unmatchedTargetFiles)
+            ..remove(event.targetFile);
+
       // Sort the paired list alphabetically for consistency
-      newPairedFiles.sort((a, b) => a.sourceFile.path.compareTo(b.sourceFile.path));
+      newPairedFiles
+          .sort((a, b) => a.sourceFile.path.compareTo(b.sourceFile.path));
 
       emit(DirectoryComparisonSuccess(
         pairedFiles: newPairedFiles,
@@ -166,7 +147,7 @@ class DirectoryComparisonBloc extends Bloc<DirectoryComparisonEvent, DirectoryCo
     if (currentState.pairedFiles.isEmpty) return;
 
     emit(DirectoryComparisonLoading());
-    
+
     final newResults = <FilePair, ComparisonResult>{};
     final newErrors = <FilePair, String>{};
 

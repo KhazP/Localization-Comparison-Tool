@@ -68,7 +68,6 @@ class VersionControlSettingsCard extends StatelessWidget {
             ),
           ],
         ),
-        
         SettingsCardContainer(
           title: 'Git User',
           isDark: isDark,
@@ -82,7 +81,6 @@ class VersionControlSettingsCard extends StatelessWidget {
             }, showDivider: false),
           ],
         ),
-
         SettingsCardContainer(
           title: 'Git Defaults',
           isDark: isDark,
@@ -94,12 +92,14 @@ class VersionControlSettingsCard extends StatelessWidget {
               control: SizedBox(
                 width: 150,
                 child: TextField(
-                  controller: TextEditingController(text: settings.defaultBranch),
+                  controller:
+                      TextEditingController(text: settings.defaultBranch),
                   onChanged: (val) => bloc.add(UpdateDefaultBranch(val)),
                   decoration: const InputDecoration(
                     hintText: 'main',
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                 ),
               ),
@@ -112,12 +112,14 @@ class VersionControlSettingsCard extends StatelessWidget {
               control: SizedBox(
                 width: 150,
                 child: TextField(
-                  controller: TextEditingController(text: settings.defaultRemote),
+                  controller:
+                      TextEditingController(text: settings.defaultRemote),
                   onChanged: (val) => bloc.add(UpdateDefaultRemote(val)),
                   decoration: const InputDecoration(
                     hintText: 'origin',
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                 ),
               ),
@@ -127,7 +129,6 @@ class VersionControlSettingsCard extends StatelessWidget {
             ),
           ],
         ),
-
         SettingsCardContainer(
           title: 'Commit Templates',
           isDark: isDark,
@@ -140,14 +141,18 @@ class VersionControlSettingsCard extends StatelessWidget {
                 children: [
                   TextField(
                     maxLines: 2,
-                    controller: TextEditingController(text: settings.commitMessageTemplate),
-                    onChanged: (val) => bloc.add(UpdateCommitMessageTemplate(val)),
+                    controller: TextEditingController(
+                        text: settings.commitMessageTemplate),
+                    onChanged: (val) =>
+                        bloc.add(UpdateCommitMessageTemplate(val)),
                     decoration: InputDecoration(
                       labelText: 'Commit Message Template',
                       hintText: 'Update localization: {files}',
-                      helperText: 'Variables: {date}, {files}, {added}, {removed}, {modified}',
+                      helperText:
+                          'Variables: {date}, {files}, {added}, {removed}, {modified}',
                       helperMaxLines: 2,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -163,9 +168,12 @@ class VersionControlSettingsCard extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildPresetChip(context, 'Simple', 'Update localization: {files}'),
-                      _buildPresetChip(context, 'Detailed', '[{date}] Localization update\n\nModified: {modified}\nAdded: {added}\nRemoved: {removed}'),
-                      _buildPresetChip(context, 'Conventional', 'chore(i18n): update translations\n\nFiles: {files}'),
+                      _buildPresetChip(
+                          context, 'Simple', 'Update localization: {files}'),
+                      _buildPresetChip(context, 'Detailed',
+                          '[{date}] Localization update\n\nModified: {modified}\nAdded: {added}\nRemoved: {removed}'),
+                      _buildPresetChip(context, 'Conventional',
+                          'chore(i18n): update translations\n\nFiles: {files}'),
                     ],
                   ),
                 ],
@@ -173,7 +181,6 @@ class VersionControlSettingsCard extends StatelessWidget {
             ),
           ],
         ),
-
         SettingsCardContainer(
           title: 'SSH Configuration',
           isDark: isDark,
@@ -188,13 +195,18 @@ class VersionControlSettingsCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: TextField(
-                          controller: TextEditingController(text: settings.sshKeyPath),
+                          controller:
+                              TextEditingController(text: settings.sshKeyPath),
                           onChanged: (val) => bloc.add(UpdateSshKeyPath(val)),
                           decoration: InputDecoration(
                             labelText: 'SSH Key Path',
-                            hintText: Platform.isWindows ? r'C:\Users\....\.ssh\id_rsa' : '~/.ssh/id_rsa',
-                            helperText: 'Path to your private SSH key for Git operations',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            hintText: Platform.isWindows
+                                ? r'C:\Users\....\.ssh\id_rsa'
+                                : '~/.ssh/id_rsa',
+                            helperText:
+                                'Path to your private SSH key for Git operations',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8)),
                           ),
                         ),
                       ),
@@ -221,27 +233,37 @@ class VersionControlSettingsCard extends StatelessWidget {
                       OutlinedButton.icon(
                         icon: const Icon(LucideIcons.copy, size: 18),
                         label: const Text('Copy Public Key'),
-                        onPressed: settings.sshKeyPath.isEmpty ? null : () async {
-                          final pubKeyPath = '${settings.sshKeyPath}.pub';
-                          try {
-                            final file = File(pubKeyPath);
-                            if (await file.exists()) {
-                              final content = await file.readAsString();
-                              await Clipboard.setData(ClipboardData(text: content.trim()));
-                              if (context.mounted) ToastService.showSuccess(context, 'Public key copied to clipboard!');
-                            } else {
-                              if (context.mounted) ToastService.showError(context, 'Public key not found: $pubKeyPath');
-                            }
-                          } catch (e) {
-                            if (context.mounted) ToastService.showError(context, 'Error reading public key: $e');
-                          }
-                        },
+                        onPressed: settings.sshKeyPath.isEmpty
+                            ? null
+                            : () async {
+                                final pubKeyPath = '${settings.sshKeyPath}.pub';
+                                try {
+                                  final file = File(pubKeyPath);
+                                  if (await file.exists()) {
+                                    final content = await file.readAsString();
+                                    await Clipboard.setData(
+                                        ClipboardData(text: content.trim()));
+                                    if (context.mounted)
+                                      ToastService.showSuccess(context,
+                                          'Public key copied to clipboard!');
+                                  } else {
+                                    if (context.mounted)
+                                      ToastService.showError(context,
+                                          'Public key not found: $pubKeyPath');
+                                  }
+                                } catch (e) {
+                                  if (context.mounted)
+                                    ToastService.showError(context,
+                                        'Error reading public key: $e');
+                                }
+                              },
                       ),
                       const SizedBox(width: 12),
                       Text(
                         'Copies {key}.pub to clipboard',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDark ? Colors.grey[500] : Colors.grey[600],
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[600],
                             ),
                       ),
                     ],
@@ -255,7 +277,9 @@ class VersionControlSettingsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTextFieldRow(BuildContext context, String label, String value, ValueChanged<String> onChanged, {bool showDivider = true}) {
+  Widget _buildTextFieldRow(BuildContext context, String label, String value,
+      ValueChanged<String> onChanged,
+      {bool showDivider = true}) {
     return SettingsRow(
       label: label,
       control: SizedBox(
@@ -266,7 +290,8 @@ class VersionControlSettingsCard extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'Enter $label',
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -280,7 +305,9 @@ class VersionControlSettingsCard extends StatelessWidget {
   Widget _buildPresetChip(BuildContext context, String label, String template) {
     return ActionChip(
       label: Text(label),
-      onPressed: () => context.read<SettingsBloc>().add(UpdateCommitMessageTemplate(template)),
+      onPressed: () => context
+          .read<SettingsBloc>()
+          .add(UpdateCommitMessageTemplate(template)),
       backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
       side: BorderSide.none,
     );

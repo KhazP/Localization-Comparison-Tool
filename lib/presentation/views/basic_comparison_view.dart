@@ -99,9 +99,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       return;
     }
 
-    final hasUnsupported = picked
-        .map((file) => file.path!)
-        .any((path) => !_isValidFileType(path));
+    final hasUnsupported =
+        picked.map((file) => file.path!).any((path) => !_isValidFileType(path));
     if (hasUnsupported) {
       ToastService.showError(
         context,
@@ -183,7 +182,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   bool _hasAutoLoadedLastProject = false;
   // Flag to show loading state while we determine if we should auto-load
   bool _isCheckingAutoLoad = true;
-  
+
   @override
   void initState() {
     super.initState();
@@ -320,7 +319,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       }
       _updateFileWatcher();
     } else {
-      ToastService.showWarning(context, 'Please select a bilingual file to compare.');
+      ToastService.showWarning(
+          context, 'Please select a bilingual file to compare.');
     }
   }
 
@@ -406,13 +406,15 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         ),
       );
     } else {
-      ToastService.showInfo(context, 'Please perform a comparison first to see advanced details.');
+      ToastService.showInfo(context,
+          'Please perform a comparison first to see advanced details.');
     }
   }
 
-  Widget _buildAnimatedProgressOverlay(BuildContext context, ProgressLoading state) {
+  Widget _buildAnimatedProgressOverlay(
+      BuildContext context, ProgressLoading state) {
     final progress = state.percentage / 100.0;
-    
+
     // Build ETA text
     String timeEstimate = '';
     final eta = state.estimatedTimeRemaining;
@@ -424,10 +426,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         timeEstimate = '$minutes min remaining';
       }
     }
-    
+
     // Build bytes progress text
     final bytesText = state.formattedBytesProgress;
-  
+
     return Center(
       child: Container(
         width: 400,
@@ -436,7 +438,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+            color: Theme.of(context)
+                .colorScheme
+                .outlineVariant
+                .withValues(alpha: 0.5),
           ),
           boxShadow: [
             BoxShadow(
@@ -456,8 +461,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 Text(
                   'Processing...',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 Text(
                   '${state.percentage}%',
@@ -477,7 +482,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   LinearProgressIndicator(
                     value: progress,
                     minHeight: 12,
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       Theme.of(context).colorScheme.primary,
                     ),
@@ -494,7 +500,10 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation(
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -503,13 +512,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                   child: Text(
                     state.stage,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (bytesText != null) 
+                if (bytesText != null)
                   Text(
                     bytesText,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -526,9 +535,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 child: Text(
                   timeEstimate,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
               ),
             ],
@@ -567,7 +576,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 if (_latestComparisonResult != null) {
                   _exportResult();
                 } else {
-                  ToastService.showInfo(context, 'Perform a comparison first to save/export results.');
+                  ToastService.showInfo(context,
+                      'Perform a comparison first to save/export results.');
                 }
                 return null;
               },
@@ -577,7 +587,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 if (_latestComparisonResult != null) {
                   _exportResult();
                 } else {
-                  ToastService.showInfo(context, 'Perform a comparison first to export results.');
+                  ToastService.showInfo(
+                      context, 'Perform a comparison first to export results.');
                 }
                 return null;
               },
@@ -591,558 +602,586 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           },
           child: MultiBlocListener(
             listeners: [
-            // Auto-load last project on startup if setting is enabled
-            BlocListener<HistoryBloc, HistoryState>(
-              listenWhen: (previous, current) =>
-                  !_hasAutoLoadedLastProject && current is HistoryLoaded,
-              listener: (context, historyState) {
-                _tryAutoLoadLastProject();
-              },
-            ),
-            // Also try auto-load when settings first load (in case history loaded first)
-            BlocListener<SettingsBloc, SettingsState>(
-              listenWhen: (previous, current) =>
-                  !_hasAutoLoadedLastProject &&
-                  previous.status != SettingsStatus.loaded &&
-                  current.status == SettingsStatus.loaded,
-              listener: (context, state) {
-                _tryAutoLoadLastProject();
-              },
-            ),
-            BlocListener<SettingsBloc, SettingsState>(
-              listenWhen: (previous, current) =>
-                  previous.status == SettingsStatus.loaded &&
-                  current.status == SettingsStatus.loaded &&
-                  previous.appSettings.autoReloadOnChange !=
-                      current.appSettings.autoReloadOnChange,
-              listener: (context, state) {
-                _updateFileWatcher();
-              },
-            ),
-            BlocListener<FileWatcherBloc, FileWatcherState>(
-              listener: (context, state) {
-                if (state is FileChangedDetected) {
-                  // Show a toast notification about file change
-                  ToastService.showInfo(
-                    context, 
-                    'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...'
-                  );
+              // Auto-load last project on startup if setting is enabled
+              BlocListener<HistoryBloc, HistoryState>(
+                listenWhen: (previous, current) =>
+                    !_hasAutoLoadedLastProject && current is HistoryLoaded,
+                listener: (context, historyState) {
+                  _tryAutoLoadLastProject();
+                },
+              ),
+              // Also try auto-load when settings first load (in case history loaded first)
+              BlocListener<SettingsBloc, SettingsState>(
+                listenWhen: (previous, current) =>
+                    !_hasAutoLoadedLastProject &&
+                    previous.status != SettingsStatus.loaded &&
+                    current.status == SettingsStatus.loaded,
+                listener: (context, state) {
+                  _tryAutoLoadLastProject();
+                },
+              ),
+              BlocListener<SettingsBloc, SettingsState>(
+                listenWhen: (previous, current) =>
+                    previous.status == SettingsStatus.loaded &&
+                    current.status == SettingsStatus.loaded &&
+                    previous.appSettings.autoReloadOnChange !=
+                        current.appSettings.autoReloadOnChange,
+                listener: (context, state) {
+                  _updateFileWatcher();
+                },
+              ),
+              BlocListener<FileWatcherBloc, FileWatcherState>(
+                listener: (context, state) {
+                  if (state is FileChangedDetected) {
+                    // Show a toast notification about file change
+                    ToastService.showInfo(context,
+                        'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...');
 
-                  // Trigger automatic recomparison
-                  final settingsStateForReload =
-                      context.read<SettingsBloc>().state;
-                  if (settingsStateForReload.status == SettingsStatus.loaded) {
-                    if (_isBilingualMode) {
-                      context.read<ComparisonBloc>().add(
-                            CompareBilingualFileRequested(
-                              file: File(state.file1Path),
-                              settings: settingsStateForReload.appSettings,
-                            ),
-                          );
-                    } else {
-                      context.read<ComparisonBloc>().add(
-                            CompareFilesRequested(
-                              file1: File(state.file1Path),
-                              file2: File(state.file2Path),
-                              settings: settingsStateForReload.appSettings,
-                            ),
-                          );
+                    // Trigger automatic recomparison
+                    final settingsStateForReload =
+                        context.read<SettingsBloc>().state;
+                    if (settingsStateForReload.status ==
+                        SettingsStatus.loaded) {
+                      if (_isBilingualMode) {
+                        context.read<ComparisonBloc>().add(
+                              CompareBilingualFileRequested(
+                                file: File(state.file1Path),
+                                settings: settingsStateForReload.appSettings,
+                              ),
+                            );
+                      } else {
+                        context.read<ComparisonBloc>().add(
+                              CompareFilesRequested(
+                                file1: File(state.file1Path),
+                                file2: File(state.file2Path),
+                                settings: settingsStateForReload.appSettings,
+                              ),
+                            );
+                      }
                     }
                   }
-                }
-              },
-            ),
-          ],
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                // File Selection Section
-                Card(
-                  color: isAmoled ? Colors.black : Theme.of(context).cardColor,
-                  elevation: isAmoled ? 0.3 : 1.0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    side: BorderSide(
-                      color: isAmoled
-                          ? Colors.grey[850]!
-                          : Theme.of(context)
-                              .dividerColor
-                              .withValues(alpha: 0.5),
+                },
+              ),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  // File Selection Section
+                  Card(
+                    color:
+                        isAmoled ? Colors.black : Theme.of(context).cardColor,
+                    elevation: isAmoled ? 0.3 : 1.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side: BorderSide(
+                        color: isAmoled
+                            ? Colors.grey[850]!
+                            : Theme.of(context)
+                                .dividerColor
+                                .withValues(alpha: 0.5),
+                      ),
                     ),
-                  ),
-                  margin: const EdgeInsets.only(bottom: 12.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      children: [
-                        if (_isBilingualMode)
+                    margin: const EdgeInsets.only(bottom: 12.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        children: [
+                          if (_isBilingualMode)
+                            Row(
+                              children: [
+                                _buildFilePicker(
+                                  context: context,
+                                  title: 'Bilingual File',
+                                  file: _bilingualFile,
+                                  fileNumber: 3,
+                                  onPressed: () => _pickFile(3),
+                                  isDraggingOver: _isDraggingOverBilingualFile,
+                                  isAmoled: isAmoled,
+                                  shortcutHint: 'Ctrl+O',
+                                ),
+                              ],
+                            )
+                          else
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                _buildFilePicker(
+                                  context: context,
+                                  title: 'Source File',
+                                  file: _file1,
+                                  fileNumber: 1,
+                                  onPressed: () => _pickFile(1),
+                                  isDraggingOver: _isDraggingOverFile1,
+                                  isAmoled: isAmoled,
+                                  shortcutHint: 'Ctrl+O',
+                                ),
+                                const SizedBox(width: 12),
+                                _buildFilePicker(
+                                  context: context,
+                                  title: 'Target File',
+                                  file: _file2,
+                                  fileNumber: 2,
+                                  onPressed: () => _pickFile(2),
+                                  isDraggingOver: _isDraggingOverFile2,
+                                  isAmoled: isAmoled,
+                                ),
+                              ],
+                            ),
+                          const SizedBox(height: 12),
                           Row(
                             children: [
-                              _buildFilePicker(
-                                context: context,
-                                title: 'Bilingual File',
-                                file: _bilingualFile,
-                                fileNumber: 3,
-                                onPressed: () => _pickFile(3),
-                                isDraggingOver: _isDraggingOverBilingualFile,
-                                isAmoled: isAmoled,
-                                shortcutHint: 'Ctrl+O',
-                              ),
-                            ],
-                          )
-                        else
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                                _buildFilePicker(
-                                context: context,
-                                title: 'Source File',
-                                file: _file1,
-                                fileNumber: 1,
-                                onPressed: () => _pickFile(1),
-                                isDraggingOver: _isDraggingOverFile1,
-                                isAmoled: isAmoled,
-                                shortcutHint: 'Ctrl+O',
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(LucideIcons.arrowRightLeft,
+                                      size: 18),
+                                  label: Text(_isBilingualMode
+                                      ? 'Compare File'
+                                      : 'Compare Files'),
+                                  onPressed: _isBilingualMode
+                                      ? (_bilingualFile != null
+                                          ? _startComparison
+                                          : null)
+                                      : (_file1 != null && _file2 != null
+                                          ? _startComparison
+                                          : null),
+                                ),
                               ),
                               const SizedBox(width: 12),
-                              _buildFilePicker(
-                                context: context,
-                                title: 'Target File',
-                                file: _file2,
-                                fileNumber: 2,
-                                onPressed: () => _pickFile(2),
-                                isDraggingOver: _isDraggingOverFile2,
-                                isAmoled: isAmoled,
+                              OutlinedButton.icon(
+                                icon:
+                                    const Icon(LucideIcons.languages, size: 18),
+                                label: Text(_isBilingualMode
+                                    ? 'Two Files'
+                                    : 'Bilingual Mode'),
+                                onPressed: _toggleComparisonMode,
                               ),
                             ],
                           ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: const Icon(LucideIcons.arrowRightLeft,
-                                    size: 18),
-                                label: Text(_isBilingualMode
-                                    ? 'Compare File'
-                                    : 'Compare Files'),
-                                onPressed: _isBilingualMode
-                                    ? (_bilingualFile != null
-                                        ? _startComparison
-                                        : null)
-                                    : (_file1 != null && _file2 != null
-                                        ? _startComparison
-                                        : null),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            OutlinedButton.icon(
-                              icon: const Icon(LucideIcons.languages,
-                                  size: 18),
-                              label: Text(_isBilingualMode
-                                  ? 'Two Files'
-                                  : 'Bilingual Mode'),
-                              onPressed: _toggleComparisonMode,
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Analytics and Actions Bar - Modified Layout
-                _buildAnalyticsAndActionsBar(),
-                const SizedBox(height: 16.0), // Reduced bottom margin
-                BlocBuilder<ProgressBloc, ProgressState>(
-                  builder: (context, state) {
-                    if (state is ProgressLoading) {
-                      return _buildAnimatedProgressOverlay(context, state);
-                    }
-                    if (state is ProgressFailure) {
-                      return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(LucideIcons.alertCircle, color: Theme.of(context).colorScheme.error, size: 20),
-                              const SizedBox(width: 8),
-                              Text('Error during processing: ${state.error}',
-                                  style: TextStyle(
-                                      color: Theme.of(context).colorScheme.error)),
-                            ],
-                          ));
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                Expanded(
-                  child: BlocConsumer<ComparisonBloc, ComparisonState>(
-                    listener: (context, state) {
-                      // When comparison state changes, we are definitely no longer checking auto load
-                      if (state is ComparisonLoading ||
-                          state is ComparisonSuccess ||
-                          state is ComparisonFailure) {
-                        if (_isCheckingAutoLoad) {
-                          setState(() => _isCheckingAutoLoad = false);
-                        }
-                      }
-
-                      if (state is ComparisonLargeFileWarning) {
-                        context.read<ProgressBloc>().add(ComparisonCompleted());
-                        _showLargeFileWarningDialog(context, state);
-                      }
-
-                      if (state is ComparisonSuccess) {
-                        context.read<ProgressBloc>().add(ComparisonCompleted());
-                        // Update file references in the UI
-                        final isBilingualResult =
-                            state.file1.path == state.file2.path;
-                        setState(() {
-                          _isBilingualMode = isBilingualResult;
-                          _file1 = state.file1;
-                          _file2 = state.file2;
-                          if (isBilingualResult) {
-                            _bilingualFile = state.file1;
-                          }
-                          _latestComparisonResult = state.result;
-                          _currentPage = 0; // Reset pagination
-                        });
-                        _updateFileWatcher();
-                        
-                        // Announce result for screen readers
-                        final changeCount = state.result.diff.values
-                            .where((d) => d.status != StringComparisonStatus.identical)
-                            .length;
-                        SemanticsService.announce(
-                          'Comparison complete. Found $changeCount changes.',
-                          TextDirection.ltr,
-                        );
-
-                        // Only add to history if it wasn't loaded from history
-                        if (!state.wasLoadedFromHistory) {
-                          final result = state.result;
-                          int added = 0,
-                              removed = 0,
-                              modified = 0,
-                              identical = 0;
-                          result.diff.forEach((key, statusDetail) {
-                            switch (statusDetail.status) {
-                              case StringComparisonStatus.added:
-                                added++;
-                                break;
-                              case StringComparisonStatus.removed:
-                                removed++;
-                                break;
-                              case StringComparisonStatus.modified:
-                                modified++;
-                                break;
-                              case StringComparisonStatus.identical:
-                                identical++;
-                                break;
-                            }
-                          });
-                          // Ensure file paths from the state are used for history
-                          final coverageMetrics =
-                              _qualityMetricsService.calculateCoverageFromMaps(
-                            sourceData: result.file1Data,
-                            targetData: result.file2Data,
-                            settings: settingsState.appSettings,
-                          );
-                          final session = ComparisonSession(
-                            id: const Uuid().v4(),
-                            timestamp: DateTime.now(),
-                            file1Path: state.file1.path, // Use path from state
-                            file2Path: state.file2.path, // Use path from state
-                            stringsAdded: added,
-                            stringsRemoved: removed,
-                            stringsModified: modified,
-                            stringsIdentical: identical,
-                            sourceKeyCount: coverageMetrics.sourceKeyCount,
-                            translatedKeyCount:
-                                coverageMetrics.translatedKeyCount,
-                            sourceWordCount: coverageMetrics.sourceWordCount,
-                            translatedWordCount:
-                                coverageMetrics.translatedWordCount,
-                            projectId: context.read<ProjectBloc>().state.status == ProjectStatus.loaded
-                                ? context.read<ProjectBloc>().state.currentProject?.id
-                                : null,
-                          );
-                          context
-                              .read<HistoryBloc>()
-                              .add(AddToHistory(session));
-                        }
-                      } else if (state is ComparisonFailure) {
-                        context
-                            .read<ProgressBloc>()
-                            .add(ComparisonError(state.error));
-                        // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
-                        // Or just show the error via ProgressBloc/Snackbar
-                        ToastService.showError(context, 'Comparison failed: ${state.error}');
-                      }
-                    },
+                  // Analytics and Actions Bar - Modified Layout
+                  _buildAnalyticsAndActionsBar(),
+                  const SizedBox(height: 16.0), // Reduced bottom margin
+                  BlocBuilder<ProgressBloc, ProgressState>(
                     builder: (context, state) {
-                      final theme = Theme.of(context);
-
-                      Widget content;
-                      if (_isCheckingAutoLoad) {
-                        content = const Center(
-                            key: ValueKey('checking'),
-                            child: CircularProgressIndicator());
-                      } else if (state is ComparisonLoading) {
-                        content = const Center(
-                            key: ValueKey('loading'),
-                            child: Text('Comparison in progress...'));
-                      } else if (state is ComparisonSuccess) {
-                        var diffEntries = state.result.diff.entries.toList();
-
-                        // Apply filter
-
-                        if (_currentFilter != BasicDiffFilter.all) {
-                          diffEntries = diffEntries.where((entry) {
-                            switch (_currentFilter) {
-                              case BasicDiffFilter.added:
-                                return entry.value.status ==
-                                    StringComparisonStatus.added;
-                              case BasicDiffFilter.removed:
-                                return entry.value.status ==
-                                    StringComparisonStatus.removed;
-                              case BasicDiffFilter.modified:
-                                return entry.value.status ==
-                                    StringComparisonStatus.modified;
-                              case BasicDiffFilter.problems:
-                                final key = entry.key;
-                                final value1 =
-                                    state.result.file1Data[key] ?? '';
-                                final value2 = state.result.file2Data[key];
-                                return _detectProblem(value1, value2);
-                              default:
-                                return true;
-                            }
-                          }).toList();
-                        }
-
-                        // Hide identical entries if setting is disabled and we are in 'All' filter
-                        final showIdentical =
-                            settingsState.appSettings.showIdenticalEntries;
-                        int hiddenIdenticalCount = 0;
-                        if (!showIdentical &&
-                            _currentFilter == BasicDiffFilter.all) {
-                          final identicals = diffEntries
-                              .where((entry) =>
-                                  entry.value.status ==
-                                  StringComparisonStatus.identical)
-                              .toList();
-                          hiddenIdenticalCount = identicals.length;
-                          if (hiddenIdenticalCount > 0) {
-                            diffEntries = diffEntries
-                                .where((entry) =>
-                                    entry.value.status !=
-                                    StringComparisonStatus.identical)
-                                .toList();
-                          }
-                        }
-
-                        // Apply text search filter
-                        final int totalBeforeSearch = diffEntries.length;
-                        if (_searchQuery.isNotEmpty) {
-                          final query = _isRegexEnabled
-                              ? _searchQuery
-                              : _searchQuery.toLowerCase();
-                          diffEntries = diffEntries.where((entry) {
-                            final key = entry
-                                .key; // Keys are case-sensitive usually, but let's be generous
-                            final value1 =
-                                (state.result.file1Data[entry.key] ?? '');
-                            final value2 =
-                                (state.result.file2Data[entry.key] ?? '');
-
-                            // Regex Search
-                            if (_isRegexEnabled) {
-                              try {
-                                final regex =
-                                    RegExp(query, caseSensitive: false);
-                                return regex.hasMatch(key) ||
-                                    regex.hasMatch(value1) ||
-                                    regex.hasMatch(value2);
-                              } catch (e) {
-                                return false; // Invalid regex
-                              }
-                            }
-
-                            // Fuzzy Search
-                            if (_isFuzzyEnabled) {
-                              // Check key normally
-                              if (key.toLowerCase().contains(query))
-                                return true;
-
-                              if (value1.toLowerCase().contains(query) ||
-                                  value2.toLowerCase().contains(query))
-                                return true;
-
-                              // If not found by contains, try similarity
-                              if (value1.similarityTo(query) > 0.4 ||
-                                  value2.similarityTo(query) > 0.4) return true;
-
-                              return false;
-                            }
-
-                            // Standard Search
-                            return key.toLowerCase().contains(query) ||
-                                value1.toLowerCase().contains(query) ||
-                                value2.toLowerCase().contains(query);
-                          }).toList();
-                        }
-
-                        if (diffEntries.isEmpty) {
-                          if (_searchQuery.isNotEmpty) {
-                            content = Center(
-                              key: const ValueKey('empty_search'),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(LucideIcons.searchX,
-                                      size: 48,
-                                      color: theme.colorScheme.onSurface
-                                          .withAlpha(100)),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'No matches found for "$_searchQuery"',
-                                    style: TextStyle(
-                                        color: theme.colorScheme.onSurface
-                                            .withAlpha(150)),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Showing 0 of $totalBeforeSearch entries',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.colorScheme.onSurface
-                                            .withAlpha(100)),
-                                  ),
-                                ],
-                              ),
-                            );
-                          } else if (_searchQuery.isEmpty &&
-                              !state.result.diff.values.any((e) =>
-                                  e.status !=
-                                  StringComparisonStatus.identical)) {
-                            content = const Center(
-                                key: ValueKey('identical'),
-                                child: Text('Files are identical.'));
-                          } else if (diffEntries.isEmpty &&
-                              hiddenIdenticalCount > 0) {
-                            // If we hid everything (e.g. only identicals existed and we hid them)
-                            content = Column(
-                              key: const ValueKey('hidden_identical'),
+                      if (state is ProgressLoading) {
+                        return _buildAnimatedProgressOverlay(context, state);
+                      }
+                      if (state is ProgressFailure) {
+                        return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                    '$hiddenIdenticalCount identical entries hidden',
+                                Icon(LucideIcons.alertCircle,
+                                    color: Theme.of(context).colorScheme.error,
+                                    size: 20),
+                                const SizedBox(width: 8),
+                                Text('Error during processing: ${state.error}',
                                     style: TextStyle(
-                                        color: theme.colorScheme.onSurface
-                                            .withAlpha(150))),
-                                const SizedBox(height: 8),
-                                TextButton(
-                                  onPressed: () {
-                                    context.read<SettingsBloc>().add(
-                                        const UpdateShowIdenticalEntries(true));
-                                  },
-                                  child: const Text('Show Identical Entries'),
-                                )
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .error)),
                               ],
-                            );
-                          } else {
-                            content = const Center(
-                                key: ValueKey('no_diff'),
-                                child: Text(
-                                    'No differences found based on keys.'));
+                            ));
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  Expanded(
+                    child: BlocConsumer<ComparisonBloc, ComparisonState>(
+                      listener: (context, state) {
+                        // When comparison state changes, we are definitely no longer checking auto load
+                        if (state is ComparisonLoading ||
+                            state is ComparisonSuccess ||
+                            state is ComparisonFailure) {
+                          if (_isCheckingAutoLoad) {
+                            setState(() => _isCheckingAutoLoad = false);
                           }
-                        } else {
-                          content = Column(
-                            key: const ValueKey('results'),
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Hidden entries summary
-                              if (hiddenIdenticalCount > 0)
-                                Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 16),
-                                  decoration: BoxDecoration(
-                                    color: theme
-                                        .colorScheme.surfaceContainerHighest
-                                        .withValues(alpha: 0.5),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                        color: theme.dividerColor
-                                            .withValues(alpha: 0.2)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(LucideIcons.eyeOff,
-                                          size: 16,
-                                          color: theme
-                                              .colorScheme.onSurfaceVariant),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '$hiddenIdenticalCount identical entries hidden',
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          fontStyle: FontStyle.italic,
-                                          color: theme
-                                              .colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      TextButton(
-                                        style: TextButton.styleFrom(
-                                          padding: EdgeInsets.zero,
-                                          minimumSize: const Size(60, 24),
-                                          tapTargetSize:
-                                              MaterialTapTargetSize.shrinkWrap,
-                                        ),
-                                        onPressed: () {
-                                          context.read<SettingsBloc>().add(
-                                              const UpdateShowIdenticalEntries(
-                                                  true));
-                                        },
-                                        child: const Text('Show'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                        }
 
-                              // Result count header when search is active
-                              if (_searchQuery.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 4, vertical: 8),
+                        if (state is ComparisonLargeFileWarning) {
+                          context
+                              .read<ProgressBloc>()
+                              .add(ComparisonCompleted());
+                          _showLargeFileWarningDialog(context, state);
+                        }
+
+                        if (state is ComparisonSuccess) {
+                          context
+                              .read<ProgressBloc>()
+                              .add(ComparisonCompleted());
+                          // Update file references in the UI
+                          final isBilingualResult =
+                              state.file1.path == state.file2.path;
+                          setState(() {
+                            _isBilingualMode = isBilingualResult;
+                            _file1 = state.file1;
+                            _file2 = state.file2;
+                            if (isBilingualResult) {
+                              _bilingualFile = state.file1;
+                            }
+                            _latestComparisonResult = state.result;
+                            _currentPage = 0; // Reset pagination
+                          });
+                          _updateFileWatcher();
+
+                          // Announce result for screen readers
+                          final changeCount = state.result.diff.values
+                              .where((d) =>
+                                  d.status != StringComparisonStatus.identical)
+                              .length;
+                          SemanticsService.announce(
+                            'Comparison complete. Found $changeCount changes.',
+                            TextDirection.ltr,
+                          );
+
+                          // Only add to history if it wasn't loaded from history
+                          if (!state.wasLoadedFromHistory) {
+                            final result = state.result;
+                            int added = 0,
+                                removed = 0,
+                                modified = 0,
+                                identical = 0;
+                            result.diff.forEach((key, statusDetail) {
+                              switch (statusDetail.status) {
+                                case StringComparisonStatus.added:
+                                  added++;
+                                  break;
+                                case StringComparisonStatus.removed:
+                                  removed++;
+                                  break;
+                                case StringComparisonStatus.modified:
+                                  modified++;
+                                  break;
+                                case StringComparisonStatus.identical:
+                                  identical++;
+                                  break;
+                              }
+                            });
+                            // Ensure file paths from the state are used for history
+                            final coverageMetrics = _qualityMetricsService
+                                .calculateCoverageFromMaps(
+                              sourceData: result.file1Data,
+                              targetData: result.file2Data,
+                              settings: settingsState.appSettings,
+                            );
+                            final session = ComparisonSession(
+                              id: const Uuid().v4(),
+                              timestamp: DateTime.now(),
+                              file1Path:
+                                  state.file1.path, // Use path from state
+                              file2Path:
+                                  state.file2.path, // Use path from state
+                              stringsAdded: added,
+                              stringsRemoved: removed,
+                              stringsModified: modified,
+                              stringsIdentical: identical,
+                              sourceKeyCount: coverageMetrics.sourceKeyCount,
+                              translatedKeyCount:
+                                  coverageMetrics.translatedKeyCount,
+                              sourceWordCount: coverageMetrics.sourceWordCount,
+                              translatedWordCount:
+                                  coverageMetrics.translatedWordCount,
+                              projectId:
+                                  context.read<ProjectBloc>().state.status ==
+                                          ProjectStatus.loaded
+                                      ? context
+                                          .read<ProjectBloc>()
+                                          .state
+                                          .currentProject
+                                          ?.id
+                                      : null,
+                            );
+                            context
+                                .read<HistoryBloc>()
+                                .add(AddToHistory(session));
+                          }
+                        } else if (state is ComparisonFailure) {
+                          context
+                              .read<ProgressBloc>()
+                              .add(ComparisonError(state.error));
+                          // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
+                          // Or just show the error via ProgressBloc/Snackbar
+                          ToastService.showError(
+                              context, 'Comparison failed: ${state.error}');
+                        }
+                      },
+                      builder: (context, state) {
+                        final theme = Theme.of(context);
+
+                        Widget content;
+                        if (_isCheckingAutoLoad) {
+                          content = const Center(
+                              key: ValueKey('checking'),
+                              child: CircularProgressIndicator());
+                        } else if (state is ComparisonLoading) {
+                          content = const Center(
+                              key: ValueKey('loading'),
+                              child: Text('Comparison in progress...'));
+                        } else if (state is ComparisonSuccess) {
+                          var diffEntries = state.result.diff.entries.toList();
+
+                          // Apply filter
+
+                          if (_currentFilter != BasicDiffFilter.all) {
+                            diffEntries = diffEntries.where((entry) {
+                              switch (_currentFilter) {
+                                case BasicDiffFilter.added:
+                                  return entry.value.status ==
+                                      StringComparisonStatus.added;
+                                case BasicDiffFilter.removed:
+                                  return entry.value.status ==
+                                      StringComparisonStatus.removed;
+                                case BasicDiffFilter.modified:
+                                  return entry.value.status ==
+                                      StringComparisonStatus.modified;
+                                case BasicDiffFilter.problems:
+                                  final key = entry.key;
+                                  final value1 =
+                                      state.result.file1Data[key] ?? '';
+                                  final value2 = state.result.file2Data[key];
+                                  return _detectProblem(value1, value2);
+                                default:
+                                  return true;
+                              }
+                            }).toList();
+                          }
+
+                          // Hide identical entries if setting is disabled and we are in 'All' filter
+                          final showIdentical =
+                              settingsState.appSettings.showIdenticalEntries;
+                          int hiddenIdenticalCount = 0;
+                          if (!showIdentical &&
+                              _currentFilter == BasicDiffFilter.all) {
+                            final identicals = diffEntries
+                                .where((entry) =>
+                                    entry.value.status ==
+                                    StringComparisonStatus.identical)
+                                .toList();
+                            hiddenIdenticalCount = identicals.length;
+                            if (hiddenIdenticalCount > 0) {
+                              diffEntries = diffEntries
+                                  .where((entry) =>
+                                      entry.value.status !=
+                                      StringComparisonStatus.identical)
+                                  .toList();
+                            }
+                          }
+
+                          // Apply text search filter
+                          final int totalBeforeSearch = diffEntries.length;
+                          if (_searchQuery.isNotEmpty) {
+                            final query = _isRegexEnabled
+                                ? _searchQuery
+                                : _searchQuery.toLowerCase();
+                            diffEntries = diffEntries.where((entry) {
+                              final key = entry
+                                  .key; // Keys are case-sensitive usually, but let's be generous
+                              final value1 =
+                                  (state.result.file1Data[entry.key] ?? '');
+                              final value2 =
+                                  (state.result.file2Data[entry.key] ?? '');
+
+                              // Regex Search
+                              if (_isRegexEnabled) {
+                                try {
+                                  final regex =
+                                      RegExp(query, caseSensitive: false);
+                                  return regex.hasMatch(key) ||
+                                      regex.hasMatch(value1) ||
+                                      regex.hasMatch(value2);
+                                } catch (e) {
+                                  return false; // Invalid regex
+                                }
+                              }
+
+                              // Fuzzy Search
+                              if (_isFuzzyEnabled) {
+                                // Check key normally
+                                if (key.toLowerCase().contains(query))
+                                  return true;
+
+                                if (value1.toLowerCase().contains(query) ||
+                                    value2.toLowerCase().contains(query))
+                                  return true;
+
+                                // If not found by contains, try similarity
+                                if (value1.similarityTo(query) > 0.4 ||
+                                    value2.similarityTo(query) > 0.4)
+                                  return true;
+
+                                return false;
+                              }
+
+                              // Standard Search
+                              return key.toLowerCase().contains(query) ||
+                                  value1.toLowerCase().contains(query) ||
+                                  value2.toLowerCase().contains(query);
+                            }).toList();
+                          }
+
+                          if (diffEntries.isEmpty) {
+                            if (_searchQuery.isNotEmpty) {
+                              content = Center(
+                                key: const ValueKey('empty_search'),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(LucideIcons.searchX,
+                                        size: 48,
+                                        color: theme.colorScheme.onSurface
+                                            .withAlpha(100)),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'No matches found for "$_searchQuery"',
+                                      style: TextStyle(
+                                          color: theme.colorScheme.onSurface
+                                              .withAlpha(150)),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Showing 0 of $totalBeforeSearch entries',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme.colorScheme.onSurface
+                                              .withAlpha(100)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            } else if (_searchQuery.isEmpty &&
+                                !state.result.diff.values.any((e) =>
+                                    e.status !=
+                                    StringComparisonStatus.identical)) {
+                              content = const Center(
+                                  key: ValueKey('identical'),
+                                  child: Text('Files are identical.'));
+                            } else if (diffEntries.isEmpty &&
+                                hiddenIdenticalCount > 0) {
+                              // If we hid everything (e.g. only identicals existed and we hid them)
+                              content = Column(
+                                key: const ValueKey('hidden_identical'),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                      '$hiddenIdenticalCount identical entries hidden',
+                                      style: TextStyle(
+                                          color: theme.colorScheme.onSurface
+                                              .withAlpha(150))),
+                                  const SizedBox(height: 8),
+                                  TextButton(
+                                    onPressed: () {
+                                      context.read<SettingsBloc>().add(
+                                          const UpdateShowIdenticalEntries(
+                                              true));
+                                    },
+                                    child: const Text('Show Identical Entries'),
+                                  )
+                                ],
+                              );
+                            } else {
+                              content = const Center(
+                                  key: ValueKey('no_diff'),
                                   child: Text(
-                                    'Showing ${diffEntries.length} of $totalBeforeSearch entries',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: theme.colorScheme.onSurface
-                                          .withAlpha(150),
+                                      'No differences found based on keys.'));
+                            }
+                          } else {
+                            content = Column(
+                              key: const ValueKey('results'),
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Hidden entries summary
+                                if (hiddenIdenticalCount > 0)
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      color: theme
+                                          .colorScheme.surfaceContainerHighest
+                                          .withValues(alpha: 0.5),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: theme.dividerColor
+                                              .withValues(alpha: 0.2)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(LucideIcons.eyeOff,
+                                            size: 16,
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '$hiddenIdenticalCount identical entries hidden',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            fontStyle: FontStyle.italic,
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        TextButton(
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(60, 24),
+                                            tapTargetSize: MaterialTapTargetSize
+                                                .shrinkWrap,
+                                          ),
+                                          onPressed: () {
+                                            context.read<SettingsBloc>().add(
+                                                const UpdateShowIdenticalEntries(
+                                                    true));
+                                          },
+                                          child: const Text('Show'),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              Expanded(
-                                child: Builder(
-                                  builder: (context) {
+
+                                // Result count header when search is active
+                                if (_searchQuery.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4, vertical: 8),
+                                    child: Text(
+                                      'Showing ${diffEntries.length} of $totalBeforeSearch entries',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: theme.colorScheme.onSurface
+                                            .withAlpha(150),
+                                      ),
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: Builder(builder: (context) {
                                     final filteredCount = diffEntries.length;
-                                    
+
                                     // Handle "All" selection (-1)
-                                    final effectiveItemsPerPage = _itemsPerPage == -1 ? math.max(1, filteredCount) : _itemsPerPage;
-                                    
-                                    final startIndex = _currentPage * effectiveItemsPerPage;
-                                    final endIndex = math.min(startIndex + effectiveItemsPerPage, filteredCount);
-                                    final visibleEntries = (startIndex < filteredCount) 
-                                        ? diffEntries.sublist(startIndex, endIndex) 
-                                        : <MapEntry<String, ComparisonStatusDetail>>[];
+                                    final effectiveItemsPerPage =
+                                        _itemsPerPage == -1
+                                            ? math.max(1, filteredCount)
+                                            : _itemsPerPage;
+
+                                    final startIndex =
+                                        _currentPage * effectiveItemsPerPage;
+                                    final endIndex = math.min(
+                                        startIndex + effectiveItemsPerPage,
+                                        filteredCount);
+                                    final visibleEntries =
+                                        (startIndex < filteredCount)
+                                            ? diffEntries.sublist(
+                                                startIndex, endIndex)
+                                            : <MapEntry<String,
+                                                ComparisonStatusDetail>>[];
 
                                     return Column(
                                       children: [
@@ -1152,52 +1191,86 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                             thumbVisibility: true,
                                             child: ListView.builder(
                                               controller: _scrollController,
-                                              padding: const EdgeInsets.symmetric(vertical: 8),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 8),
                                               itemCount: visibleEntries.length,
                                               addAutomaticKeepAlives: false,
                                               addRepaintBoundaries: false,
                                               itemBuilder: (context, index) {
-                                                final entry = visibleEntries[index];
-                                                final globalIndex = startIndex + index;
+                                                final entry =
+                                                    visibleEntries[index];
+                                                final globalIndex =
+                                                    startIndex + index;
                                                 final key = entry.key;
-                                                final statusDetail = entry.value;
-                                                final status = statusDetail.status;
-                                                final value1 = state.result.file1Data[key];
-                                                final value2 = state.result.file2Data[key];
+                                                final statusDetail =
+                                                    entry.value;
+                                                final status =
+                                                    statusDetail.status;
+                                                final value1 =
+                                                    state.result.file1Data[key];
+                                                final value2 =
+                                                    state.result.file2Data[key];
 
-                                                final lineNumber = (globalIndex + 1).toString().padLeft(3, '0');
+                                                final lineNumber =
+                                                    (globalIndex + 1)
+                                                        .toString()
+                                                        .padLeft(3, '0');
 
-                                                final lineSettingsState = context.watch<SettingsBloc>().state;
-                                                String lineFontFamily = 'Consolas, Monaco, monospace';
+                                                final lineSettingsState =
+                                                    context
+                                                        .watch<SettingsBloc>()
+                                                        .state;
+                                                String lineFontFamily =
+                                                    'Consolas, Monaco, monospace';
                                                 double lineFontSize = 12.0;
-                                                if (lineSettingsState.status == SettingsStatus.loaded) {
+                                                if (lineSettingsState.status ==
+                                                    SettingsStatus.loaded) {
                                                   try {
-                                                    final ff = lineSettingsState.appSettings.diffFontFamily;
-                                                    if (ff.isNotEmpty && ff != 'System Default') lineFontFamily = ff;
-                                                    lineFontSize = lineSettingsState.appSettings.diffFontSize;
+                                                    final ff = lineSettingsState
+                                                        .appSettings
+                                                        .diffFontFamily;
+                                                    if (ff.isNotEmpty &&
+                                                        ff != 'System Default')
+                                                      lineFontFamily = ff;
+                                                    lineFontSize =
+                                                        lineSettingsState
+                                                            .appSettings
+                                                            .diffFontSize;
                                                   } catch (_) {}
                                                 }
 
                                                 return RepaintBoundary(
                                                   child: Row(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
                                                       Container(
                                                         width: 48,
-                                                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .fromLTRB(
+                                                                8, 4, 8, 4),
                                                         child: Text(
                                                           lineNumber,
                                                           style: TextStyle(
-                                                            color: theme.colorScheme.outline,
-                                                            fontFamily: lineFontFamily,
-                                                            fontSize: lineFontSize,
+                                                            color: theme
+                                                                .colorScheme
+                                                                .outline,
+                                                            fontFamily:
+                                                                lineFontFamily,
+                                                            fontSize:
+                                                                lineFontSize,
                                                             height: 1.4,
                                                           ),
-                                                          textAlign: TextAlign.end,
+                                                          textAlign:
+                                                              TextAlign.end,
                                                         ),
                                                       ),
                                                       Expanded(
-                                                        child: _buildDiffListItem(
+                                                        child:
+                                                            _buildDiffListItem(
                                                           key: key,
                                                           status: status,
                                                           value1: value1,
@@ -1216,104 +1289,148 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                           height: 48,
                                           decoration: BoxDecoration(
                                             color: theme.cardColor,
-                                            border: Border(top: BorderSide(color: theme.dividerColor)),
+                                            border: Border(
+                                                top: BorderSide(
+                                                    color: theme.dividerColor)),
                                           ),
-                                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16),
                                           child: Row(
                                             children: [
-                                                Text('Show: ', style: theme.textTheme.bodySmall),
-                                                DropdownButton<int>(
-                                                    value: _itemsPerPage,
-                                                    underline: const SizedBox(),
-                                                    style: theme.textTheme.bodySmall,
-                                                    items: _availablePageSizes.map((e) {
-                                                      final text = e == -1 ? 'All' : '$e';
-                                                      return DropdownMenuItem(value: e, child: Text(text));
-                                                    }).toList(),   
-                                                    onChanged: (v) {
-                                                        if(v!=null && v != _itemsPerPage) {
-                                                            setState(() {
-                                                                _itemsPerPage = v;
-                                                                _currentPage = 0;
-                                                            });
-                                                        }
-                                                    },
-                                                ),
-                                                const Spacer(),
-                                                Text('${startIndex + 1}-$endIndex of $filteredCount', style: theme.textTheme.bodySmall),
-                                                const SizedBox(width: 8),
-                                                IconButton(
-                                                    icon: const Icon(LucideIcons.chevronsLeft),
-                                                    splashRadius: 20,
-                                                    onPressed: _currentPage > 0 ? () {
-                                                      setState(() => _currentPage = 0);
-                                                      _scrollController.jumpTo(0);
-                                                    } : null,
-                                                ),
-                                                IconButton(
-                                                    icon: const Icon(LucideIcons.chevronLeft),
-                                                    splashRadius: 20,
-                                                    onPressed: _currentPage > 0 ? () {
-                                                      setState(() => _currentPage--);
-                                                      _scrollController.jumpTo(0);
-                                                    } : null,
-                                                ),
-                                                Text(' ${_currentPage + 1} / ${(filteredCount / effectiveItemsPerPage).ceil()} ', style: theme.textTheme.bodySmall),
-                                                IconButton(
-                                                    icon: const Icon(LucideIcons.chevronRight),
-                                                    splashRadius: 20,
-                                                    onPressed: endIndex < filteredCount ? () {
-                                                      setState(() => _currentPage++);
-                                                      _scrollController.jumpTo(0);
-                                                    } : null,
-                                                ),
-                                                IconButton(
-                                                    icon: const Icon(LucideIcons.chevronsRight),
-                                                    splashRadius: 20,
-                                                    onPressed: endIndex < filteredCount ? () {
-                                                      final lastPage = (filteredCount / effectiveItemsPerPage).ceil() - 1;
-                                                      setState(() => _currentPage = lastPage);
-                                                      _scrollController.jumpTo(0);
-                                                    } : null,
-                                                ),
+                                              Text('Show: ',
+                                                  style: theme
+                                                      .textTheme.bodySmall),
+                                              DropdownButton<int>(
+                                                value: _itemsPerPage,
+                                                underline: const SizedBox(),
+                                                style:
+                                                    theme.textTheme.bodySmall,
+                                                items: _availablePageSizes
+                                                    .map((e) {
+                                                  final text =
+                                                      e == -1 ? 'All' : '$e';
+                                                  return DropdownMenuItem(
+                                                      value: e,
+                                                      child: Text(text));
+                                                }).toList(),
+                                                onChanged: (v) {
+                                                  if (v != null &&
+                                                      v != _itemsPerPage) {
+                                                    setState(() {
+                                                      _itemsPerPage = v;
+                                                      _currentPage = 0;
+                                                    });
+                                                  }
+                                                },
+                                              ),
+                                              const Spacer(),
+                                              Text(
+                                                  '${startIndex + 1}-$endIndex of $filteredCount',
+                                                  style: theme
+                                                      .textTheme.bodySmall),
+                                              const SizedBox(width: 8),
+                                              IconButton(
+                                                icon: const Icon(
+                                                    LucideIcons.chevronsLeft),
+                                                splashRadius: 20,
+                                                onPressed: _currentPage > 0
+                                                    ? () {
+                                                        setState(() =>
+                                                            _currentPage = 0);
+                                                        _scrollController
+                                                            .jumpTo(0);
+                                                      }
+                                                    : null,
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                    LucideIcons.chevronLeft),
+                                                splashRadius: 20,
+                                                onPressed: _currentPage > 0
+                                                    ? () {
+                                                        setState(() =>
+                                                            _currentPage--);
+                                                        _scrollController
+                                                            .jumpTo(0);
+                                                      }
+                                                    : null,
+                                              ),
+                                              Text(
+                                                  ' ${_currentPage + 1} / ${(filteredCount / effectiveItemsPerPage).ceil()} ',
+                                                  style: theme
+                                                      .textTheme.bodySmall),
+                                              IconButton(
+                                                icon: const Icon(
+                                                    LucideIcons.chevronRight),
+                                                splashRadius: 20,
+                                                onPressed:
+                                                    endIndex < filteredCount
+                                                        ? () {
+                                                            setState(() =>
+                                                                _currentPage++);
+                                                            _scrollController
+                                                                .jumpTo(0);
+                                                          }
+                                                        : null,
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                    LucideIcons.chevronsRight),
+                                                splashRadius: 20,
+                                                onPressed:
+                                                    endIndex < filteredCount
+                                                        ? () {
+                                                            final lastPage =
+                                                                (filteredCount /
+                                                                            effectiveItemsPerPage)
+                                                                        .ceil() -
+                                                                    1;
+                                                            setState(() =>
+                                                                _currentPage =
+                                                                    lastPage);
+                                                            _scrollController
+                                                                .jumpTo(0);
+                                                          }
+                                                        : null,
+                                              ),
                                             ],
                                           ),
                                         ),
                                       ],
                                     );
-                                  }
+                                  }),
                                 ),
-                              ),
-                            ],
-                          );
+                              ],
+                            );
+                          }
+                        } else if (state is ComparisonFailure) {
+                          content = Center(
+                              key: const ValueKey('failure'),
+                              child: Text('Comparison Failed: ${state.error}',
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .error)));
+                        } else {
+                          content = _buildEmptyState(context, isAmoled);
                         }
-                      } else if (state is ComparisonFailure) {
-                        content = Center(
-                            key: const ValueKey('failure'),
-                            child: Text('Comparison Failed: ${state.error}',
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.error)));
-                      } else {
-                        content = _buildEmptyState(context, isAmoled);
-                      }
 
-                      return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        child: content,
-                      );
-                    },
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: content,
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   String _exportFileName(String format) {
@@ -1377,9 +1494,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           : status == StringComparisonStatus.removed
               ? 'MISSING'
               : 'CHANGED';
-      final simText = similarity != null
-          ? '${(similarity * 100).toStringAsFixed(1)}%'
-          : '';
+      final simText =
+          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
 
       sheetObject.appendRow([
         TextCellValue(statusText),
@@ -1455,9 +1571,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           : status == StringComparisonStatus.removed
               ? 'MISSING'
               : 'CHANGED';
-      final simText = similarity != null
-          ? '${(similarity * 100).toStringAsFixed(1)}%'
-          : '';
+      final simText =
+          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
 
       csvData.add([
         statusText,
@@ -1497,9 +1612,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       suggestedName: fileName,
     );
 
-    if (!item.virtualFileSupported &&
-        format != 'JSON' &&
-        format != 'CSV') {
+    if (!item.virtualFileSupported && format != 'JSON' && format != 'CSV') {
       return null;
     }
 
@@ -1553,7 +1666,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         if (Platform.isWindows) {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
         }
-        
+
         final settings = context.read<SettingsBloc>().state.appSettings;
         await BackupService().createBackupIfNeeded(
           targetPath: outputPath,
@@ -1579,7 +1692,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         } else if (mounted) {
           ToastService.showError(context, 'Failed to save Excel file.');
         }
-        
+
         // Clear taskbar progress on success
         if (Platform.isWindows) {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
@@ -1594,7 +1707,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
           });
         }
-        
+
         if (mounted) {
           ToastService.showError(context, 'Failed to save Excel: $e');
         }
@@ -1618,7 +1731,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         if (Platform.isWindows) {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
         }
-        
+
         final settings = context.read<SettingsBloc>().state.appSettings;
         await BackupService().createBackupIfNeeded(
           targetPath: outputPath,
@@ -1636,7 +1749,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             onAction: () => OpenFile.open(outputPath),
           );
         }
-        
+
         // Clear taskbar progress on success
         if (Platform.isWindows) {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
@@ -1650,7 +1763,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
           });
         }
-        
+
         if (mounted) {
           ToastService.showError(context, 'Failed to save JSON: $e');
         }
@@ -1675,7 +1788,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         if (Platform.isWindows) {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
         }
-        
+
         await BackupService().createBackupIfNeeded(
           targetPath: outputPath,
           settings: settings,
@@ -1692,7 +1805,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             onAction: () => OpenFile.open(outputPath),
           );
         }
-        
+
         // Clear taskbar progress on success
         if (Platform.isWindows) {
           WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
@@ -1706,14 +1819,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
           });
         }
-        
+
         if (mounted) {
           ToastService.showError(context, 'Failed to save CSV: $e');
         }
       }
     }
   }
-
 
   Widget _buildFilePicker({
     required BuildContext context,
@@ -1857,107 +1969,111 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             ),
             child: Material(
               type: MaterialType.transparency,
-               borderRadius: BorderRadius.circular(10.0),
-               child: InkWell(
+              borderRadius: BorderRadius.circular(10.0),
+              child: InkWell(
                 onTap: onPressed,
                 borderRadius: BorderRadius.circular(10.0),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
                       horizontal: horizontalPadding, vertical: verticalPadding),
                   child: Row(
-                children: [
-                  // Icon
-                  Icon(
-                    hasFile
-                        ? LucideIcons.fileText
-                        : LucideIcons.upload,
-                    color: isDraggingOver
-                        ? theme.colorScheme.primary
-                        : (hasFile
+                    children: [
+                      // Icon
+                      Icon(
+                        hasFile ? LucideIcons.fileText : LucideIcons.upload,
+                        color: isDraggingOver
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.primary.withValues(alpha: 0.5)),
-                    size: hasFile ? 20 : 24,
-                    semanticLabel: hasFile ? 'File selected' : 'Upload file',
-                  ),
-                  const SizedBox(width: 12),
-                  // Text content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Title label (small, muted)
-                        Text(
-                          title,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        // Filename or placeholder
-                        Tooltip(
-                          message: hasFile ? tooltipPath : (shortcutHint ?? ''),
-                          waitDuration: const Duration(milliseconds: 400),
-                          child: Text(
-                            displayText,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight:
-                                  hasFile ? FontWeight.w600 : FontWeight.w400,
-                              color: hasFile
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
+                            : (hasFile
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.primary
+                                    .withValues(alpha: 0.5)),
+                        size: hasFile ? 20 : 24,
+                        semanticLabel:
+                            hasFile ? 'File selected' : 'Upload file',
+                      ),
+                      const SizedBox(width: 12),
+                      // Text content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Title label (small, muted)
+                            Text(
+                              title,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.3,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            const SizedBox(height: 2),
+                            // Filename or placeholder
+                            Tooltip(
+                              message:
+                                  hasFile ? tooltipPath : (shortcutHint ?? ''),
+                              waitDuration: const Duration(milliseconds: 400),
+                              child: Text(
+                                displayText,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: hasFile
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: hasFile
+                                      ? theme.colorScheme.onSurface
+                                      : theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.6),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // File extension badge (when file is loaded)
+                      if (hasFile && fileExtension != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            fileExtension,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  // File extension badge (when file is loaded)
-                  if (hasFile && fileExtension != null) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        fileExtension,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.primary,
-                          letterSpacing: 0.5,
+                      // Change button (when file is loaded)
+                      if (hasFile) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          LucideIcons.arrowRightLeft,
+                          size: 18,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.4),
+                          semanticLabel: 'Change file',
                         ),
-                      ),
-                    ),
-                  ],
-                  // Change button (when file is loaded)
-                  if (hasFile) ...[
-                    const SizedBox(width: 8),
-                    Icon(
-                      LucideIcons.arrowRightLeft,
-                      size: 18,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                      semanticLabel: 'Change file',
-                    ),
-                  ],
-                ],
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _wrapWithFileDrag(File? file, Widget child) {
@@ -2214,12 +2330,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                         !settingsState.appSettings.showIdenticalEntries));
                   },
                 ),
-                 // Show All reset
+                // Show All reset
                 IconButton(
                   icon: const Icon(LucideIcons.filterX, size: 20),
                   tooltip: 'Show All',
                   onPressed: _currentFilter != BasicDiffFilter.all
-                      ? () => setState(() => _currentFilter = BasicDiffFilter.all)
+                      ? () =>
+                          setState(() => _currentFilter = BasicDiffFilter.all)
                       : null,
                 ),
               ],
@@ -2383,25 +2500,25 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   ) {
     final bool isActive = _currentFilter == filter;
     final theme = Theme.of(context);
-    
+
     return Tooltip(
       message: tooltip,
       child: FilterChip(
         label: Text(label),
         selected: isActive,
         onSelected: (bool value) {
-            if (value) {
-                setState(() => _currentFilter = filter);
-            } else {
-                 setState(() => _currentFilter = BasicDiffFilter.all);
-            }
+          if (value) {
+            setState(() => _currentFilter = filter);
+          } else {
+            setState(() => _currentFilter = BasicDiffFilter.all);
+          }
         },
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         labelStyle: TextStyle(
-            fontSize: 12,
-            color: isActive ? color : theme.colorScheme.onSurface.withAlpha(180),
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+          color: isActive ? color : theme.colorScheme.onSurface.withAlpha(180),
+          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
         ),
         backgroundColor: Colors.transparent,
         selectedColor: color.withOpacity(0.15),
@@ -2592,265 +2709,269 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         hoverColor: theme.colorScheme.onSurface.withOpacity(0.05),
         borderRadius: BorderRadius.circular(8),
         child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: borderColor.withAlpha(isDark ? 60 : 80)),
-        ),
-        child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Status indicator bar (thin 3px)
-            Container(
-              width: 3,
-              decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  bottomLeft: Radius.circular(8),
+          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderColor.withAlpha(isDark ? 60 : 80)),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Status indicator bar (thin 3px)
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            // Content
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Key row with compact status chip
-                    Row(
+                // Content
+                Expanded(
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Text(
-                            key,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 13,
+                        // Key row with compact status chip
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                key,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                            const SizedBox(width: 8),
+                            // Compact status chip (just dot + label)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: statusColor.withAlpha(isDark ? 35 : 25),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: statusColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    statusLabel,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: statusColor,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        // Compact status chip (just dot + label)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: statusColor.withAlpha(isDark ? 35 : 25),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                        const SizedBox(height: 4),
+                        // Values section - different layouts based on status
+                        if (status == StringComparisonStatus.modified) ...[
+                          // Side-by-side layout for modified items
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: statusColor,
-                                  shape: BoxShape.circle,
+                              // Source (left column)
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: themeState.diffRemovedColor
+                                        .withAlpha(isDark ? 20 : 15),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: themeState.diffRemovedColor
+                                          .withAlpha(isDark ? 40 : 30),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Source',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: textMuted,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        value1 ?? '--',
+                                        style: monoStyle.copyWith(
+                                          color: theme.colorScheme.onSurface
+                                              .withAlpha(220),
+                                          decoration:
+                                              TextDecoration.lineThrough,
+                                          decorationColor: themeState
+                                              .diffRemovedColor
+                                              .withAlpha(150),
+                                        ),
+                                        maxLines: 4,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                statusLabel,
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  color: statusColor,
-                                  letterSpacing: 0.3,
+                              const SizedBox(width: 8),
+                              // Arrow indicator
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Icon(
+                                  LucideIcons.arrowRight,
+                                  size: 14,
+                                  color: textMuted,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Target (right column)
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: themeState.diffAddedColor
+                                        .withAlpha(isDark ? 20 : 15),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: themeState.diffAddedColor
+                                          .withAlpha(isDark ? 40 : 30),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Target',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: textMuted,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        value2 ?? '--',
+                                        style: monoStyle.copyWith(
+                                          color: theme.colorScheme.onSurface
+                                              .withAlpha(220),
+                                        ),
+                                        maxLines: 4,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
+                        ] else if (status ==
+                            StringComparisonStatus.removed) ...[
+                          // Single row for removed items
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Source: ',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: textMuted,
+                                      fontWeight: FontWeight.w500)),
+                              Expanded(
+                                child: Text(
+                                  value1 ?? '--',
+                                  style: monoStyle.copyWith(
+                                    color: statusColor.withAlpha(220),
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else if (status == StringComparisonStatus.added) ...[
+                          // Single row for added items
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Value: ',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: textMuted,
+                                      fontWeight: FontWeight.w500)),
+                              Expanded(
+                                child: Text(
+                                  value2 ?? '--',
+                                  style: monoStyle.copyWith(
+                                    color: statusColor.withAlpha(220),
+                                  ),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          // Single row for identical items
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Value: ',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: textMuted,
+                                      fontWeight: FontWeight.w500)),
+                              Expanded(
+                                child: Text(
+                                  value1 ?? '--',
+                                  style: monoStyle.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha(180),
+                                  ),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    // Values section - different layouts based on status
-                    if (status == StringComparisonStatus.modified) ...[
-                      // Side-by-side layout for modified items
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Source (left column)
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: themeState.diffRemovedColor
-                                    .withAlpha(isDark ? 20 : 15),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: themeState.diffRemovedColor
-                                      .withAlpha(isDark ? 40 : 30),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Source',
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
-                                      color: textMuted,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    value1 ?? '--',
-                                    style: monoStyle.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withAlpha(220),
-                                      decoration: TextDecoration.lineThrough,
-                                      decorationColor: themeState
-                                          .diffRemovedColor
-                                          .withAlpha(150),
-                                    ),
-                                    maxLines: 4,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Arrow indicator
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: Icon(
-                              LucideIcons.arrowRight,
-                              size: 14,
-                              color: textMuted,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Target (right column)
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: themeState.diffAddedColor
-                                    .withAlpha(isDark ? 20 : 15),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: themeState.diffAddedColor
-                                      .withAlpha(isDark ? 40 : 30),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Target',
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
-                                      color: textMuted,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    value2 ?? '--',
-                                    style: monoStyle.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withAlpha(220),
-                                    ),
-                                    maxLines: 4,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else if (status == StringComparisonStatus.removed) ...[
-                      // Single row for removed items
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Source: ',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: textMuted,
-                                  fontWeight: FontWeight.w500)),
-                          Expanded(
-                            child: Text(
-                              value1 ?? '--',
-                              style: monoStyle.copyWith(
-                                color: statusColor.withAlpha(220),
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else if (status == StringComparisonStatus.added) ...[
-                      // Single row for added items
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Value: ',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: textMuted,
-                                  fontWeight: FontWeight.w500)),
-                          Expanded(
-                            child: Text(
-                              value2 ?? '--',
-                              style: monoStyle.copyWith(
-                                color: statusColor.withAlpha(220),
-                              ),
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else ...[
-                      // Single row for identical items
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Value: ',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: textMuted,
-                                  fontWeight: FontWeight.w500)),
-                          Expanded(
-                            child: Text(
-                              value1 ?? '--',
-                              style: monoStyle.copyWith(
-                                color:
-                                    theme.colorScheme.onSurface.withAlpha(180),
-                              ),
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-      ),
       ),
     );
   }
@@ -2988,7 +3109,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
     final shouldCheckBoth = !isBilingualSession;
     if (!file1.existsSync() || (shouldCheckBoth && !file2.existsSync())) {
-      ToastService.showError(context, 'One or both files from this session no longer exist.');
+      ToastService.showError(
+          context, 'One or both files from this session no longer exist.');
       return;
     }
 
@@ -3024,7 +3146,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   void _showQuickTutorialDialog(BuildContext context) {
     final theme = Theme.of(context);
     final isAmoled = theme.brightness == Brightness.dark &&
-        context.read<SettingsBloc>().state.appSettings.appThemeMode.toLowerCase() == 'amoled';
+        context
+                .read<SettingsBloc>()
+                .state
+                .appSettings
+                .appThemeMode
+                .toLowerCase() ==
+            'amoled';
 
     showDialog(
       context: context,
@@ -3032,7 +3160,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         backgroundColor: isAmoled ? Colors.black : theme.dialogBackgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: isAmoled ? BorderSide(color: theme.dividerColor.withValues(alpha: 0.2)) : BorderSide.none,
+          side: isAmoled
+              ? BorderSide(color: theme.dividerColor.withValues(alpha: 0.2))
+              : BorderSide.none,
         ),
         title: Row(
           children: [
@@ -3042,7 +3172,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 color: theme.colorScheme.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(LucideIcons.lightbulb, color: theme.colorScheme.secondary, size: 24),
+              child: Icon(LucideIcons.lightbulb,
+                  color: theme.colorScheme.secondary, size: 24),
             ),
             const SizedBox(width: 12),
             const Text('Quick Tutorial'),
@@ -3057,35 +3188,40 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 theme: theme,
                 icon: LucideIcons.upload,
                 title: 'Import & Sync',
-                description: 'Drag & drop two files, or use "Bilingual Mode" for a single file containing both languages.',
+                description:
+                    'Drag & drop two files, or use "Bilingual Mode" for a single file containing both languages.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
                 icon: LucideIcons.arrowRightLeft,
                 title: 'Smart Comparison',
-                description: 'See additions, removals, and modifications immediately with smart key-based matching.',
+                description:
+                    'See additions, removals, and modifications immediately with smart key-based matching.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
                 icon: LucideIcons.sparkles,
                 title: 'Quality & AI',
-                description: 'Spot translation issues automatically and use AI suggestions to fix missing keys.',
+                description:
+                    'Spot translation issues automatically and use AI suggestions to fix missing keys.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
                 icon: LucideIcons.folders,
                 title: 'Version Control',
-                description: 'Use the Git tab to compare branches, view diffs, and resolve conflicts directly.',
+                description:
+                    'Use the Git tab to compare branches, view diffs, and resolve conflicts directly.',
               ),
               const SizedBox(height: 16),
               _buildTutorialStep(
                 theme: theme,
                 icon: LucideIcons.barChart2,
                 title: 'Deep Insights',
-                description: 'Switch to "Advanced View" for detailed metrics, charts, and complex diff analysis.',
+                description:
+                    'Switch to "Advanced View" for detailed metrics, charts, and complex diff analysis.',
               ),
             ],
           ),
@@ -3097,7 +3233,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 45),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Get Started'),
             ),
@@ -3116,7 +3253,8 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: theme.colorScheme.primary.withValues(alpha: 0.8), size: 28),
+        Icon(icon,
+            color: theme.colorScheme.primary.withValues(alpha: 0.8), size: 28),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -3183,9 +3321,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       );
     }).toList();
   }
-  Future<void> _showLargeFileWarningDialog(BuildContext context, ComparisonLargeFileWarning state) async {
+
+  Future<void> _showLargeFileWarningDialog(
+      BuildContext context, ComparisonLargeFileWarning state) async {
     bool dontShowAgain = false;
-    
+
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -3231,20 +3371,17 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 FilledButton(
                   onPressed: () {
                     Navigator.of(dialogContext).pop();
-                    
+
                     // If "Don't show again" is checked, suppress the warning for this file
                     if (dontShowAgain) {
                       context.read<ComparisonBloc>().add(
-                        SuppressLargeFileWarning(state.file1.path),
-                      );
+                            SuppressLargeFileWarning(state.file1.path),
+                          );
                     }
-                    
+
                     context.read<ComparisonBloc>().add(ProceedWithComparison(
-                      state.result, 
-                      state.file1, 
-                      state.file2, 
-                      wasLoadedFromHistory: state.wasLoadedFromHistory
-                    ));
+                        state.result, state.file1, state.file2,
+                        wasLoadedFromHistory: state.wasLoadedFromHistory));
                   },
                   child: const Text('Proceed'),
                 ),
@@ -3255,7 +3392,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
       },
     );
   }
-
 }
 
 class _PulsingIndicator extends StatefulWidget {
@@ -3372,7 +3508,8 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: primaryColor.withValues(alpha: 0.2 * (2 - _pulseAnimation.value)),
+                        color: primaryColor.withValues(
+                            alpha: 0.2 * (2 - _pulseAnimation.value)),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -3398,7 +3535,4 @@ class _AnimatedEmptyStateIconState extends State<_AnimatedEmptyStateIcon>
       },
     );
   }
-
-
-
 }

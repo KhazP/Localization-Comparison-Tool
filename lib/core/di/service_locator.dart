@@ -24,7 +24,7 @@ import 'package:localizer_app_main/data/services/'
 final GetIt sl = GetIt.instance;
 
 /// Initialize all services and dependencies
-/// 
+///
 /// Call this once at app startup, before runApp()
 Future<void> setupServiceLocator() async {
   // Talker - register first so other services can use it for logging
@@ -47,7 +47,8 @@ Future<void> setupServiceLocator() async {
   );
 
   // Translation services
-  sl.registerLazySingleton<LocalTranslationCache>(() => LocalTranslationCache());
+  sl.registerLazySingleton<LocalTranslationCache>(
+      () => LocalTranslationCache());
   sl.registerLazySingleton<TranslationMemoryService>(
     () => TranslationMemoryService(),
   );
@@ -66,16 +67,16 @@ Future<void> setupServiceLocator() async {
 
   // Git service
   sl.registerLazySingleton<GitService>(() => LibGit2DartService());
-  
+
   // Repositories - require async initialization
   final settingsRepository = SettingsRepository();
   await settingsRepository.init();
   sl.registerSingleton<SettingsRepository>(settingsRepository);
-  
+
   final historyRepository = LocalHistoryRepository();
   await historyRepository.init();
   sl.registerSingleton<LocalHistoryRepository>(historyRepository);
-  
+
   // Project repository (no async init needed)
   sl.registerLazySingleton<ProjectRepository>(
     () => ProjectRepository(secureStorageService: sl<SecureStorageService>()),
@@ -84,7 +85,8 @@ Future<void> setupServiceLocator() async {
   // Warning suppressions repository (async init needed)
   final warningSuppressionsRepository = WarningSuppressionsRepository();
   await warningSuppressionsRepository.init();
-  sl.registerSingleton<WarningSuppressionsRepository>(warningSuppressionsRepository);
+  sl.registerSingleton<WarningSuppressionsRepository>(
+      warningSuppressionsRepository);
 }
 
 /// Reset service locator - useful for testing

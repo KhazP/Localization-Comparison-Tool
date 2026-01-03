@@ -63,6 +63,8 @@
 
 ## Code Generation
 - Use `build_runner` for generated code and keep outputs consistent.
+- Use Freezed for immutable model and state classes where Hive annotations are
+  not required.
 
 ## Logging and Errors
 - Avoid `print`. Use structured logging (such as `dart:developer` log) or add

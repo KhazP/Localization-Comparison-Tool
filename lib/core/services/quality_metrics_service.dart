@@ -178,11 +178,11 @@ class QualityMetricsService {
     for (final entry in duplicateEntries) {
       final keys = [...entry.value.keys]..sort();
       duplicateCount += keys.length;
-      
+
       final relatedSources = <String, String>{};
       for (final key in keys) {
         if (sourceData.containsKey(key)) {
-           relatedSources[key] = sourceData[key]!;
+          relatedSources[key] = sourceData[key]!;
         }
       }
 
@@ -280,27 +280,27 @@ class QualityMetricsService {
     final points = history
         .where((session) => session.translatedWordCount != null)
         .map((session) {
-          double coverage = 0;
-          if (session.sourceKeyCount != null &&
-              session.sourceKeyCount! > 0 &&
-              session.translatedKeyCount != null) {
-            coverage =
-                (session.translatedKeyCount! / session.sourceKeyCount!) * 100;
-          }
+      double coverage = 0;
+      if (session.sourceKeyCount != null &&
+          session.sourceKeyCount! > 0 &&
+          session.translatedKeyCount != null) {
+        coverage =
+            (session.translatedKeyCount! / session.sourceKeyCount!) * 100;
+      }
 
-          return WordTrendPoint(
-            timestamp: session.timestamp,
-            words: session.translatedWordCount ?? 0,
-            coveragePercent: coverage,
-          );
-        })
-        .toList();
+      return WordTrendPoint(
+        timestamp: session.timestamp,
+        words: session.translatedWordCount ?? 0,
+        coveragePercent: coverage,
+      );
+    }).toList();
 
     points.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return points;
   }
 
-  List<ActivityTrendPoint> _buildActivityTrend(List<ComparisonSession> history) {
+  List<ActivityTrendPoint> _buildActivityTrend(
+      List<ComparisonSession> history) {
     final points = history.map((session) {
       return ActivityTrendPoint(
         timestamp: session.timestamp,
@@ -317,7 +317,8 @@ class QualityMetricsService {
   List<BurnUpPoint> _buildBurnUpTrend(List<ComparisonSession> history) {
     final points = <BurnUpPoint>[];
     for (final session in history) {
-      if (session.sourceKeyCount != null && session.translatedKeyCount != null) {
+      if (session.sourceKeyCount != null &&
+          session.translatedKeyCount != null) {
         points.add(
           BurnUpPoint(
             timestamp: session.timestamp,
@@ -517,13 +518,13 @@ class QualityMetricsService {
     final targetLength = target.trim().length;
     final sourceLabel = _formatCharCount(sourceLength);
     final targetLabel = _formatCharCount(targetLength);
-    
+
     if (sourceLength == 0) return 'Source is empty';
 
     final diff = targetLength - sourceLength;
     final percent = (diff / sourceLength * 100).round();
     final sign = diff > 0 ? '+' : '';
-    
+
     return 'Target is $targetLabel ($sign$percent%) vs source $sourceLabel';
   }
 

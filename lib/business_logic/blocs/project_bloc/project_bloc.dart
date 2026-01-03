@@ -6,7 +6,7 @@ import 'package:localizer_app_main/core/services/project_import_service.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
 
 /// BLoC for managing project state.
-/// 
+///
 /// Handles project creation, opening, closing, and validation.
 /// Only one project can be open at a time.
 class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
@@ -63,7 +63,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
 
     try {
       final project = await _projectRepository.openProject(event.folderPath);
-      
+
       if (project != null) {
         emit(ProjectState.loaded(project));
         debugPrint('ProjectBloc: Opened project "${project.name}"');
@@ -103,7 +103,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     if (project == null) return;
 
     final isValid = await _projectRepository.validateProject(project);
-    
+
     if (!isValid) {
       emit(ProjectState.error(
         'The project folder has been moved or deleted. '
@@ -124,19 +124,18 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     try {
       // Create updated project with new settings
       final updatedProject = project.copyWith(settings: event.settings);
-      
+
       // Save to disk
-      await _projectRepository.saveProject(updatedProject);
-      
+      final savedProject = await _projectRepository.saveProject(updatedProject);
+
       // Update state
-      emit(state.copyWith(currentProject: updatedProject));
+      emit(state.copyWith(currentProject: savedProject));
       debugPrint('ProjectBloc: Saved settings for "${project.name}"');
     } catch (e) {
       debugPrint('ProjectBloc: Error saving project settings: $e');
       // The settings were already applied in memory
     }
   }
-
 
   /// Updates project glossary and saves to disk.
   Future<void> _onUpdateProjectGlossary(
@@ -148,8 +147,8 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
 
     try {
       final updatedProject = project.copyWith(glossary: event.glossary);
-      await _projectRepository.saveProject(updatedProject);
-      emit(state.copyWith(currentProject: updatedProject));
+      final savedProject = await _projectRepository.saveProject(updatedProject);
+      emit(state.copyWith(currentProject: savedProject));
       debugPrint('ProjectBloc: Saved glossary for "${project.name}"');
     } catch (e) {
       debugPrint('ProjectBloc: Error saving project glossary: $e');
@@ -165,9 +164,10 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     if (project == null) return;
 
     try {
-      final updatedProject = project.copyWith(translationMemories: event.translationMemories);
-      await _projectRepository.saveProject(updatedProject);
-      emit(state.copyWith(currentProject: updatedProject));
+      final updatedProject =
+          project.copyWith(translationMemories: event.translationMemories);
+      final savedProject = await _projectRepository.saveProject(updatedProject);
+      emit(state.copyWith(currentProject: savedProject));
       debugPrint('ProjectBloc: Saved TMs for "${project.name}"');
     } catch (e) {
       debugPrint('ProjectBloc: Error saving project TMs: $e');
@@ -260,8 +260,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
       );
     }
 
-    final message =
-        parts.isEmpty ? 'No files were imported.' : parts.join(' ');
+    final message = parts.isEmpty ? 'No files were imported.' : parts.join(' ');
 
     final skippedCount = result.skippedUnsupportedCount +
         result.skippedMissingCount +

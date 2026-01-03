@@ -99,7 +99,9 @@ class AppearanceSettingsCard extends StatelessWidget {
               label: 'Diff Font Family',
               description: 'Font for comparison view',
               control: SettingsDropdown(
-                value: settings.diffFontFamily.isEmpty ? 'System Default' : settings.diffFontFamily,
+                value: settings.diffFontFamily.isEmpty
+                    ? 'System Default'
+                    : settings.diffFontFamily,
                 items: fontFamilies,
                 onChanged: (val) {
                   if (val != null) {
@@ -123,7 +125,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                       color: Color(settings.accentColorValue),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled).borderColor,
+                        color: SettingsThemeHelper(
+                                isDark: isDark, isAmoled: isAmoled)
+                            .borderColor,
                       ),
                     ),
                   ),
@@ -132,7 +136,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                     onPressed: () => AppearanceSettingsCard.showColorPicker(
                       context,
                       Color(settings.accentColorValue),
-                      (color) => context.read<SettingsBloc>().add(UpdateAccentColor(color.toARGB32())),
+                      (color) => context
+                          .read<SettingsBloc>()
+                          .add(UpdateAccentColor(color.toARGB32())),
                       title: 'Pick Accent Color',
                     ),
                     child: const Text('Change'),
@@ -192,7 +198,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(10),
+                    color: isDark
+                        ? Colors.white.withAlpha(10)
+                        : Colors.black.withAlpha(10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -203,7 +211,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                             Text(
                               'Original',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                color: isDark
+                                    ? AppThemeV2.darkTextMuted
+                                    : AppThemeV2.lightTextMuted,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -213,7 +223,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                                 color: initialColor,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                                  color: isDark
+                                      ? AppThemeV2.darkBorder
+                                      : AppThemeV2.lightBorder,
                                 ),
                               ),
                             ),
@@ -224,7 +236,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Icon(
                           LucideIcons.arrowRight,
-                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
                         ),
                       ),
                       Expanded(
@@ -258,7 +272,8 @@ class AppearanceSettingsCard extends StatelessWidget {
                 const SizedBox(height: 16),
                 ColorPicker(
                   pickerColor: pickerColor,
-                  onColorChanged: (color) => setState(() => pickerColor = color),
+                  onColorChanged: (color) =>
+                      setState(() => pickerColor = color),
                   enableAlpha: false,
                   displayThumbColor: true,
                   hexInputBar: true,
@@ -324,22 +339,35 @@ class DiffColorsSettingsCard extends StatelessWidget {
           child: _buildPresetButtons(context),
         ),
         Divider(
-          color: SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled).borderColor,
+          color: SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled)
+              .borderColor,
           height: 1,
           indent: 16,
           endIndent: 16,
         ),
-        _buildColorRow(context, 'Added', Color(settings.diffAddedColor), (color) {
-          context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.toARGB32()));
+        _buildColorRow(context, 'Added', Color(settings.diffAddedColor),
+            (color) {
+          context
+              .read<SettingsBloc>()
+              .add(UpdateDiffAddedColor(color.toARGB32()));
         }),
-        _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor), (color) {
-          context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.toARGB32()));
+        _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor),
+            (color) {
+          context
+              .read<SettingsBloc>()
+              .add(UpdateDiffRemovedColor(color.toARGB32()));
         }),
-        _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor), (color) {
-          context.read<SettingsBloc>().add(UpdateDiffModifiedColor(color.toARGB32()));
+        _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor),
+            (color) {
+          context
+              .read<SettingsBloc>()
+              .add(UpdateDiffModifiedColor(color.toARGB32()));
         }),
-        _buildColorRow(context, 'Identical', Color(settings.diffIdenticalColor), (color) {
-          context.read<SettingsBloc>().add(UpdateDiffIdenticalColor(color.toARGB32()));
+        _buildColorRow(context, 'Identical', Color(settings.diffIdenticalColor),
+            (color) {
+          context
+              .read<SettingsBloc>()
+              .add(UpdateDiffIdenticalColor(color.toARGB32()));
         }, showDivider: false),
       ],
     );
@@ -388,7 +416,8 @@ class DiffColorsSettingsCard extends StatelessWidget {
               color: color,
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled).borderColor,
+                color: SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled)
+                    .borderColor,
               ),
             ),
           ),
@@ -467,8 +496,12 @@ class LifePreviewPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String fontFamily = settings.diffFontFamily.isEmpty ? 'System Default' : settings.diffFontFamily;
-    final String actualFontFamily = fontFamily == 'System Default' ? 'Consolas, Monaco, monospace' : fontFamily;
+    String fontFamily = settings.diffFontFamily.isEmpty
+        ? 'System Default'
+        : settings.diffFontFamily;
+    final String actualFontFamily = fontFamily == 'System Default'
+        ? 'Consolas, Monaco, monospace'
+        : fontFamily;
     final double fontSize = settings.diffFontSize;
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
 
@@ -611,7 +644,8 @@ class _AnimatedPreviewEntry extends StatelessWidget {
               decoration: BoxDecoration(
                 color: effectiveColor.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: effectiveColor.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: effectiveColor.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -621,7 +655,9 @@ class _AnimatedPreviewEntry extends StatelessWidget {
                     child: Text(
                       '$lineNumber',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                            color: isDark
+                                ? AppThemeV2.darkTextMuted
+                                : AppThemeV2.lightTextMuted,
                             fontFamily: fontFamily,
                             fontSize: 11,
                           ),
@@ -631,7 +667,8 @@ class _AnimatedPreviewEntry extends StatelessWidget {
                   AnimatedContainer(
                     duration: duration,
                     curve: curve,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: effectiveColor,
                       borderRadius: BorderRadius.circular(4),
@@ -666,13 +703,17 @@ class _AnimatedPreviewEntry extends StatelessWidget {
                           TextSpan(
                             text: ': ',
                             style: TextStyle(
-                              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                              color: isDark
+                                  ? AppThemeV2.darkTextMuted
+                                  : AppThemeV2.lightTextMuted,
                             ),
                           ),
                           TextSpan(
                             text: value,
                             style: TextStyle(
-                              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                              color: isDark
+                                  ? AppThemeV2.darkTextSecondary
+                                  : AppThemeV2.lightTextSecondary,
                             ),
                           ),
                         ],

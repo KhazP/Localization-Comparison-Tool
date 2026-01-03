@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 
 /// Repository for managing Localizer projects stored in `.localizer/` folders.
-/// 
+///
 /// Projects are identified by a `.localizer/project.json` marker file within
 /// their root directory. This repository handles:
 /// - Creating new projects
@@ -17,9 +17,7 @@ import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 class ProjectRepository {
   static const String _configFolderName = '.localizer';
   static const String _projectFileName = 'project.json';
-  
 
-  
   final SecureStorageService _secureStorageService;
   final Uuid _uuid = const Uuid();
 
@@ -28,10 +26,10 @@ class ProjectRepository {
   }) : _secureStorageService = secureStorageService;
 
   /// Creates a new project in the specified folder.
-  /// 
+  ///
   /// Creates the `.localizer/` folder and `project.json` file.
   /// Returns the created Project.
-  /// 
+  ///
   /// Throws [ProjectCreationException] if the folder already contains a project
   /// or if file operations fail.
   Future<Project> createProject({
@@ -39,7 +37,8 @@ class ProjectRepository {
     required String projectName,
   }) async {
     final configFolder = Directory('$folderPath/$_configFolderName');
-    final projectFile = File('$folderPath/$_configFolderName/$_projectFileName');
+    final projectFile =
+        File('$folderPath/$_configFolderName/$_projectFileName');
 
     // Check if project already exists
     if (await projectFile.exists()) {
@@ -85,18 +84,20 @@ class ProjectRepository {
       );
     }
 
-    debugPrint('ProjectRepository: Created project "${project.name}" at $folderPath');
+    debugPrint(
+        'ProjectRepository: Created project "${project.name}" at $folderPath');
     await _addToRecentProjects(folderPath);
     await _secureStorageService.storeLastProject(folderPath);
     return project;
   }
 
   /// Loads a project from the specified folder.
-  /// 
+  ///
   /// Returns null if no project exists at the path.
   /// Throws [ProjectLoadException] if the project file is corrupted.
   Future<Project?> loadProject(String folderPath) async {
-    final projectFile = File('$folderPath/$_configFolderName/$_projectFileName');
+    final projectFile =
+        File('$folderPath/$_configFolderName/$_projectFileName');
 
     if (!await projectFile.exists()) {
       return null;
@@ -106,8 +107,9 @@ class ProjectRepository {
       final contents = await projectFile.readAsString();
       final json = jsonDecode(contents) as Map<String, dynamic>;
       final project = Project.fromJson(json, folderPath);
-      
-      debugPrint('ProjectRepository: Loaded project "${project.name}" from $folderPath');
+
+      debugPrint(
+          'ProjectRepository: Loaded project "${project.name}" from $folderPath');
       return project;
     } catch (e) {
       throw ProjectLoadException(
@@ -118,17 +120,21 @@ class ProjectRepository {
   }
 
   /// Saves updates to an existing project.
-  /// 
-  /// Updates the lastOpenedAt timestamp automatically.
-  Future<void> saveProject(Project project) async {
+  ///
+  /// Updates the lastOpenedAt timestamp automatically and returns the updated
+  /// project instance.
+  Future<Project> saveProject(Project project) async {
     final projectFile = File(project.projectFilePath);
-    
-    // Update last opened time
-    project.lastOpenedAt = DateTime.now();
+
+    // Update last opened time.
+    final updatedProject = project.copyWith(lastOpenedAt: DateTime.now());
 
     try {
-      await projectFile.writeAsString(project.toJsonString());
-      debugPrint('ProjectRepository: Saved project "${project.name}"');
+      await projectFile.writeAsString(updatedProject.toJsonString());
+      debugPrint(
+        'ProjectRepository: Saved project "${updatedProject.name}"',
+      );
+      return updatedProject;
     } catch (e) {
       throw ProjectSaveException(
         'Could not save project changes. '
@@ -139,28 +145,30 @@ class ProjectRepository {
 
   /// Checks if the given folder contains a Localizer project.
   Future<bool> isProjectFolder(String folderPath) async {
-    final projectFile = File('$folderPath/$_configFolderName/$_projectFileName');
+    final projectFile =
+        File('$folderPath/$_configFolderName/$_projectFileName');
     return await projectFile.exists();
   }
 
   /// Opens a project and updates its lastOpenedAt timestamp.
-  /// 
+  ///
   /// Returns the updated project, or null if no project found.
   Future<Project?> openProject(String folderPath) async {
     final project = await loadProject(folderPath);
     if (project != null) {
-      await saveProject(project); // Updates lastOpenedAt
+      final savedProject = await saveProject(project);
       await _addToRecentProjects(folderPath);
       await _secureStorageService.storeLastProject(folderPath);
+      return savedProject;
     }
-    return project;
+    return null;
   }
 
   /// Gets the path of the last opened project, if any.
   Future<String?> getLastProjectPath() async {
     final path = await _secureStorageService.getLastProject();
     if (path == null) return null;
-    
+
     // Validate path still exists
     if (!await Directory(path).exists()) {
       await _secureStorageService.clearLastProject();
@@ -170,15 +178,14 @@ class ProjectRepository {
   }
 
   /// Validates that a project still exists at its stored path.
-  /// 
+  ///
   /// Returns true if the project folder and marker file exist.
   Future<bool> validateProject(Project project) async {
     return await isProjectFolder(project.rootPath);
   }
 
-
   /// Loads valid recent projects.
-  /// 
+  ///
   /// Filters out paths that no longer exist or are invalid projects.
   /// Updates the stored list to remove invalid entries.
   Future<List<Project>> getRecentProjects() async {
@@ -195,7 +202,8 @@ class ProjectRepository {
         }
       } catch (e) {
         // Skip invalid/corrupted projects
-        debugPrint('ProjectRepository: Skipping invalid recent project at $path: $e');
+        debugPrint(
+            'ProjectRepository: Skipping invalid recent project at $path: $e');
       }
     }
 
@@ -206,24 +214,24 @@ class ProjectRepository {
 
     // Sort by last opened (newest first)
     validProjects.sort((a, b) => b.lastOpenedAt.compareTo(a.lastOpenedAt));
-    
+
     return validProjects;
   }
 
   Future<void> _addToRecentProjects(String path) async {
     final paths = await _secureStorageService.getRecentProjectPaths();
-    
+
     // Remove if already exists (to move to top)
     paths.remove(path);
-    
+
     // Add to top
     paths.insert(0, path);
-    
+
     // Limit to 10 recent projects
     if (paths.length > 10) {
       paths.removeRange(10, paths.length);
     }
-    
+
     await _secureStorageService.storeRecentProjectPaths(paths);
   }
 }
@@ -232,7 +240,7 @@ class ProjectRepository {
 class ProjectCreationException implements Exception {
   final String message;
   ProjectCreationException(this.message);
-  
+
   @override
   String toString() => message;
 }
@@ -241,7 +249,7 @@ class ProjectCreationException implements Exception {
 class ProjectLoadException implements Exception {
   final String message;
   ProjectLoadException(this.message);
-  
+
   @override
   String toString() => message;
 }
@@ -250,7 +258,7 @@ class ProjectLoadException implements Exception {
 class ProjectSaveException implements Exception {
   final String message;
   ProjectSaveException(this.message);
-  
+
   @override
   String toString() => message;
 }

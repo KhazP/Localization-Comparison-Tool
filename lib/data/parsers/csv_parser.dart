@@ -24,7 +24,7 @@ class CsvParser extends LocalizationParser {
       // Note: BOM handling is often automatic with Dart's File.readAsString,
       // but being explicit can be safer if issues arise.
       final String content = await file.readAsString(encoding: encoding);
-      
+
       // Use the CsvToListConverter from the csv package, configured with settings
       final converter = CsvToListConverter(
         fieldDelimiter: settings.csvDelimiter,
@@ -36,7 +36,8 @@ class CsvParser extends LocalizationParser {
       final List<List<dynamic>> rowsAsListOfValues = converter.convert(content);
 
       if (rowsAsListOfValues.isEmpty) {
-        debugPrint('Warning: CSV file is empty or could not be parsed: ${file.path}');
+        debugPrint(
+            'Warning: CSV file is empty or could not be parsed: ${file.path}');
         return translations;
       }
 
@@ -52,18 +53,22 @@ class CsvParser extends LocalizationParser {
 
           if (key.isNotEmpty) {
             if (translations.containsKey(key)) {
-              debugPrint('Warning: Duplicate key "$key" found in CSV file ${file.path} (row ${i+1}). Overwriting previous value.');
+              debugPrint(
+                  'Warning: Duplicate key "$key" found in CSV file ${file.path} (row ${i + 1}). Overwriting previous value.');
             }
             translations[key] = value;
           } else {
-            debugPrint('Warning: Empty key found in CSV file ${file.path} (row ${i+1}). Skipping entry.');
+            debugPrint(
+                'Warning: Empty key found in CSV file ${file.path} (row ${i + 1}). Skipping entry.');
           }
         } else {
-          debugPrint('Warning: Row ${i+1} in CSV file ${file.path} does not have at least two columns. Skipping row.');
+          debugPrint(
+              'Warning: Row ${i + 1} in CSV file ${file.path} does not have at least two columns. Skipping row.');
         }
       }
-       if (translations.isEmpty && rowsAsListOfValues.isNotEmpty) {
-          debugPrint('Warning: Parsed CSV file ${file.path} but no valid key-value pairs were extracted (check header or column count).');
+      if (translations.isEmpty && rowsAsListOfValues.isNotEmpty) {
+        debugPrint(
+            'Warning: Parsed CSV file ${file.path} but no valid key-value pairs were extracted (check header or column count).');
       }
     } catch (e) {
       debugPrint('Error parsing CSV file ${file.path}: $e');
@@ -77,4 +82,4 @@ class CsvParser extends LocalizationParser {
   List<String> getSupportedExtensions() {
     return ['.csv'];
   }
-} 
+}

@@ -29,9 +29,8 @@ class PremiumToast extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final targetWidth = isCompact ? 360.0 : 480.0;
-    final availableWidth = screenWidth > 32.0
-        ? screenWidth - 32.0
-        : screenWidth;
+    final availableWidth =
+        screenWidth > 32.0 ? screenWidth - 32.0 : screenWidth;
     final maxWidth =
         availableWidth < targetWidth ? availableWidth : targetWidth;
 
@@ -105,9 +104,8 @@ class PremiumToast extends StatelessWidget {
                     child: Text(
                       message,
                       style: TextStyle(
-                        color: isDark
-                            ? AppThemeV2.darkTextPrimary
-                            : Colors.white,
+                        color:
+                            isDark ? AppThemeV2.darkTextPrimary : Colors.white,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -115,7 +113,8 @@ class PremiumToast extends StatelessWidget {
                       overflow: isCompact ? TextOverflow.ellipsis : null,
                     ),
                   ),
-                  if (!isCompact || (actionLabel != null || onUndo != null)) ...[
+                  if (!isCompact ||
+                      (actionLabel != null || onUndo != null)) ...[
                     const SizedBox(width: 12),
                     if (actionLabel != null && onAction != null)
                       _ActionButton(
@@ -184,7 +183,9 @@ class _ActionButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        backgroundColor: isDark ? foregroundColor.withOpacity(0.1) : Colors.white.withOpacity(0.2),
+        backgroundColor: isDark
+            ? foregroundColor.withOpacity(0.1)
+            : Colors.white.withOpacity(0.2),
       ),
       child: Text(
         label,

@@ -41,7 +41,7 @@ class GitView extends StatelessWidget {
                   // Auto-reload after success.
                   context.read<GitBloc>().add(LoadBranches());
                 } else if (state is GitError) {
-                   ToastService.showError(context, state.message);
+                  ToastService.showError(context, state.message);
                   // Attempt to recover state if possible, or stay in Error if it's fatal.
                   // If it was a transient error (like Pull failed), we might want to go back to Loaded?
                   // For now, let's try to reload branches to see if we can recover the view.
@@ -53,11 +53,12 @@ class GitView extends StatelessWidget {
                   // Don't rebuild basic UI for transient states if we want to keep the view visible behind the toast
                   // But our states ARE mutually exclusive in this Bloc.
                   // So we DO need to handle building.
-                  return current is! GitOperationSuccess; 
+                  return current is! GitOperationSuccess;
                 },
                 builder: (context, state) {
                   if (state is GitInitial) {
-                    return const Center(child: Text('Select a repository to begin.'));
+                    return const Center(
+                        child: Text('Select a repository to begin.'));
                   } else if (state is GitLoading) {
                     return const Center(child: CircularProgressIndicator());
                   } else if (state is GitError) {
@@ -69,56 +70,77 @@ class GitView extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(LucideIcons.alertCircle, color: Theme.of(context).colorScheme.error, size: 48),
+                          Icon(LucideIcons.alertCircle,
+                              color: Theme.of(context).colorScheme.error,
+                              size: 48),
                           const SizedBox(height: 16),
-                          Text('Error: ${state.message}', style: TextStyle(color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center),
+                          Text('Error: ${state.message}',
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error),
+                              textAlign: TextAlign.center),
                           const SizedBox(height: 16),
-                          FilledButton(onPressed: () => context.read<GitBloc>().add(LoadBranches()), child: const Text('Retry'))
+                          FilledButton(
+                              onPressed: () =>
+                                  context.read<GitBloc>().add(LoadBranches()),
+                              child: const Text('Retry'))
                         ],
                       ),
                     );
                   } else if (state is GitRepositorySelected) {
-                    return const Center(child: CircularProgressIndicator()); 
+                    return const Center(child: CircularProgressIndicator());
                   } else if (state is GitBranchesLoaded) {
-                  return Column(
-                    children: [
-                      // Action Bar (New)
-                      _RepoActionsToolbar(
-                        repoPath: state.repoPath,
-                        currentBranch: state.branches.firstWhere((b) => b.name == state.branches.first.name, orElse: () => GitBranch('Unknown', '')).name, // Logic improved below
-                        branches: state.branches,
-                      ),
-                      const Divider(),
-                      Expanded(
-                        child: _ComparisonControls(
-                          state: state,
+                    return Column(
+                      children: [
+                        // Action Bar (New)
+                        _RepoActionsToolbar(
                           repoPath: state.repoPath,
+                          currentBranch: state.branches
+                              .firstWhere(
+                                  (b) => b.name == state.branches.first.name,
+                                  orElse: () => GitBranch('Unknown', ''))
+                              .name, // Logic improved below
+                          branches: state.branches,
                         ),
-                      ),
-                    ],
-                  );
-                } else if (state is GitComparisonInProgress) {
-                   return const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Comparing...')]));
-                } else if (state is GitConflictsDetected) {
-                  return ConflictResolutionView(
-                    repoPath: state.repoPath,
-                    conflictedFiles: state.conflictedFiles,
-                  );
-                } else if (state is GitComparisonResult) {
-                  return _ComparisonResultList(
-                    diffFiles: state.diffFiles, 
-                    repoPath: state.repoPath, 
-                    base: state.base,
-                    target: state.target,
-                    mode: state.mode,
-                    onBack: () => context.read<GitBloc>().add(LoadBranches()), // Will load from cache
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+                        const Divider(),
+                        Expanded(
+                          child: _ComparisonControls(
+                            state: state,
+                            repoPath: state.repoPath,
+                          ),
+                        ),
+                      ],
+                    );
+                  } else if (state is GitComparisonInProgress) {
+                    return const Center(
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Comparing...')
+                        ]));
+                  } else if (state is GitConflictsDetected) {
+                    return ConflictResolutionView(
+                      repoPath: state.repoPath,
+                      conflictedFiles: state.conflictedFiles,
+                    );
+                  } else if (state is GitComparisonResult) {
+                    return _ComparisonResultList(
+                      diffFiles: state.diffFiles,
+                      repoPath: state.repoPath,
+                      base: state.base,
+                      target: state.target,
+                      mode: state.mode,
+                      onBack: () => context
+                          .read<GitBloc>()
+                          .add(LoadBranches()), // Will load from cache
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
           ),
-        ),
         ],
       ),
     );
@@ -129,7 +151,7 @@ class _RepositorySelector extends StatelessWidget {
   const _RepositorySelector();
 
   Future<void> _pickRepository(BuildContext context) async {
-    String? result = await FilePicker.platform.getDirectoryPath(); 
+    String? result = await FilePicker.platform.getDirectoryPath();
     if (result != null && context.mounted) {
       context.read<GitBloc>().add(SelectRepository(result));
     }
@@ -140,7 +162,7 @@ class _RepositorySelector extends StatelessWidget {
     return BlocBuilder<GitBloc, GitState>(
       builder: (context, state) {
         String currentPath = state.repoPath ?? 'No repository selected';
-        
+
         return Row(
           children: [
             ElevatedButton.icon(
@@ -189,20 +211,20 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
     _initializeDefaults();
   }
 
-
   void _initializeDefaults() {
     if (widget.state.branches.isNotEmpty) {
       // Find main/master
       final mainBranch = widget.state.branches.firstWhere(
-        (b) => b.name == 'main' || b.name == 'master', 
-        orElse: () => widget.state.branches.first
-      );
-      
+          (b) => b.name == 'main' || b.name == 'master',
+          orElse: () => widget.state.branches.first);
+
       // Branch defaults
       _baseBranch = mainBranch.name;
       if (widget.state.branches.length > 1) {
-         final other = widget.state.branches.firstWhere((b) => b.name != _baseBranch, orElse: () => widget.state.branches.last);
-         _targetBranch = other.name;
+        final other = widget.state.branches.firstWhere(
+            (b) => b.name != _baseBranch,
+            orElse: () => widget.state.branches.last);
+        _targetBranch = other.name;
       } else {
         _targetBranch = _baseBranch;
       }
@@ -219,59 +241,63 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
     return Card(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       elevation: 0,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Mode Toggle
-            Center(
-              child: SegmentedButton<ComparisonMode>(
-                segments: const [
-                  ButtonSegment(
-                    value: ComparisonMode.branch,
-                    label: Text('Branch Comparison'),
-                    icon: Icon(LucideIcons.gitBranch),
-                  ),
-                  ButtonSegment(
-                    value: ComparisonMode.commit,
-                    label: Text('Commit Comparison'),
-                    icon: Icon(LucideIcons.history),
-                  ),
-                ],
-                selected: {mode},
-                onSelectionChanged: (newSelection) {
-                  context
-                      .read<GitBloc>()
-                      .add(SwitchComparisonMode(newSelection.first));
-                },
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mode Toggle
+          Center(
+            child: SegmentedButton<ComparisonMode>(
+              segments: const [
+                ButtonSegment(
+                  value: ComparisonMode.branch,
+                  label: Text('Branch Comparison'),
+                  icon: Icon(LucideIcons.gitBranch),
+                ),
+                ButtonSegment(
+                  value: ComparisonMode.commit,
+                  label: Text('Commit Comparison'),
+                  icon: Icon(LucideIcons.history),
+                ),
+              ],
+              selected: {mode},
+              onSelectionChanged: (newSelection) {
+                context
+                    .read<GitBloc>()
+                    .add(SwitchComparisonMode(newSelection.first));
+              },
             ),
-            const SizedBox(height: 24),
-            if (mode == ComparisonMode.branch)
-              _buildBranchControls(context)
-            else
-              _buildCommitControls(context),
+          ),
+          const SizedBox(height: 24),
+          if (mode == ComparisonMode.branch)
+            _buildBranchControls(context)
+          else
+            _buildCommitControls(context),
 
-            const SizedBox(height: 24),
-            // Compare Action Button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton.icon(
-                onPressed: _canCompare() ? _performCompare : null,
-                icon: const Icon(LucideIcons.arrowRightLeft),
-                label: const Text('Compare', style: TextStyle(fontSize: 16)),
-              ),
+          const SizedBox(height: 24),
+          // Compare Action Button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: _canCompare() ? _performCompare : null,
+              icon: const Icon(LucideIcons.arrowRightLeft),
+              label: const Text('Compare', style: TextStyle(fontSize: 16)),
             ),
-          ],
+          ),
+        ],
       ),
     );
   }
 
   bool _canCompare() {
     if (widget.state.mode == ComparisonMode.branch) {
-      return _baseBranch != null && _targetBranch != null && _baseBranch != _targetBranch;
+      return _baseBranch != null &&
+          _targetBranch != null &&
+          _baseBranch != _targetBranch;
     } else {
-      return _baseCommitSha != null && _targetCommitSha != null && _baseCommitSha != _targetCommitSha;
+      return _baseCommitSha != null &&
+          _targetCommitSha != null &&
+          _baseCommitSha != _targetCommitSha;
     }
   }
 
@@ -389,7 +415,7 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
           ],
         ),
         const SizedBox(height: 16),
-        
+
         if (commits.isEmpty && !isLoading)
           const Text(
             'No commits found or loaded. '
@@ -408,22 +434,24 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                     border: OutlineInputBorder(),
                   ),
                   items: _buildCommitItems(context, commits),
-                  selectedItemBuilder: (ctx) => _buildSelectedCommitItems(ctx, commits),
+                  selectedItemBuilder: (ctx) =>
+                      _buildSelectedCommitItems(ctx, commits),
                   onChanged: (val) {
                     setState(() => _baseCommitSha = val);
                   },
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: IconButton(
-                  onPressed: (_baseCommitSha != null && _targetCommitSha != null) ? _swapCommits : null,
+                  onPressed:
+                      (_baseCommitSha != null && _targetCommitSha != null)
+                          ? _swapCommits
+                          : null,
                   icon: const Icon(LucideIcons.arrowRightLeft),
                   tooltip: 'Swap commits',
                 ),
               ),
-
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: _targetCommitSha,
@@ -433,7 +461,8 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                     border: OutlineInputBorder(),
                   ),
                   items: _buildCommitItems(context, commits),
-                  selectedItemBuilder: (ctx) => _buildSelectedCommitItems(ctx, commits),
+                  selectedItemBuilder: (ctx) =>
+                      _buildSelectedCommitItems(ctx, commits),
                   onChanged: (val) {
                     setState(() => _targetCommitSha = val);
                   },
@@ -521,8 +550,6 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
   }
 }
 
-
-
 class _RepoActionsToolbar extends StatelessWidget {
   final String repoPath;
   final String currentBranch; // In a real app we'd identify HEAD properly
@@ -555,21 +582,27 @@ class _RepoActionsToolbar extends StatelessWidget {
         branches: branches,
         excludeBranch: currentBranch, // Can't merge self
         onSelected: (branchName) {
-           // Confirm merge
-           showDialog(context: context, builder: (c) => AlertDialog(
-             title: Text('Merge $branchName?'),
-             content: const Text('This will merge changes into your current working branch. Conflicts may occur.'),
-             actions: [
-               TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-               FilledButton(
-                 onPressed: () {
-                   Navigator.pop(c);
-                   context.read<GitBloc>().add(MergeBranch(branchName));
-                 }, 
-                 child: const Text('Merge')
-               ),
-             ],
-           ));
+          // Confirm merge
+          showDialog(
+              context: context,
+              builder: (c) => AlertDialog(
+                    title: Text('Merge $branchName?'),
+                    content: const Text(
+                        'This will merge changes into your current working branch. Conflicts may occur.'),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(c),
+                          child: const Text('Cancel')),
+                      FilledButton(
+                          onPressed: () {
+                            Navigator.pop(c);
+                            context
+                                .read<GitBloc>()
+                                .add(MergeBranch(branchName));
+                          },
+                          child: const Text('Merge')),
+                    ],
+                  ));
         },
       ),
     );
@@ -577,20 +610,26 @@ class _RepoActionsToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Note: 'currentBranch' passed here is just the first one or logic from parent. 
-    // Ideally GitBloc should tell us which one is HEAD. 
+    // Note: 'currentBranch' passed here is just the first one or logic from parent.
+    // Ideally GitBloc should tell us which one is HEAD.
     // For now we will assume the user knows or we add a specific "HEAD" field to state later.
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withValues(alpha: 0.3),
       child: Row(
         children: [
           const Icon(LucideIcons.gitBranch, size: 20),
           const SizedBox(width: 8),
-          Text('Actions:', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
+          Text('Actions:',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary)),
           const SizedBox(width: 16),
-          
+
           // Checkout
           OutlinedButton.icon(
             onPressed: () => _showCheckoutDialog(context),
@@ -601,9 +640,9 @@ class _RepoActionsToolbar extends StatelessWidget {
 
           // Merge
           OutlinedButton.icon(
-             onPressed: () => _showMergeDialog(context),
-             icon: const Icon(LucideIcons.merge, size: 18),
-             label: const Text('Merge'),
+            onPressed: () => _showMergeDialog(context),
+            icon: const Icon(LucideIcons.merge, size: 18),
+            label: const Text('Merge'),
           ),
           const SizedBox(width: 8),
 
@@ -635,7 +674,7 @@ class _BranchSelectionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filtered = branches.where((b) => b.name != excludeBranch).toList();
-    
+
     return AlertDialog(
       title: Text(title),
       content: SizedBox(
@@ -657,7 +696,9 @@ class _BranchSelectionDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel')),
       ],
     );
   }
@@ -671,14 +712,13 @@ class _ComparisonResultList extends StatelessWidget {
   final ComparisonMode mode;
   final VoidCallback onBack;
 
-  const _ComparisonResultList({
-    required this.diffFiles, 
-    required this.repoPath, 
-    required this.base,
-    required this.target,
-    required this.mode,
-    required this.onBack
-  });
+  const _ComparisonResultList(
+      {required this.diffFiles,
+      required this.repoPath,
+      required this.base,
+      required this.target,
+      required this.mode,
+      required this.onBack});
 
   void _showDiffDialog(BuildContext context, String filePath) {
     showDialog(
@@ -697,63 +737,66 @@ class _ComparisonResultList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-         Row(
-           children: [
-             IconButton(onPressed: onBack, icon: const Icon(LucideIcons.arrowLeft)),
-             const Text('Comparison Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-           ],
-         ),
-         Padding(
-           padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-            child: Text(
-              "Comparing ${mode == ComparisonMode.commit ? 'Commit' : 'Branch'} "
-              "$base → $target",
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-         ),
-         const SizedBox(height: 8),
-         Expanded(
-           child: diffFiles.isEmpty 
-             ? const Center(child: Text('No changes found between selected branches.'))
-             : ListView.builder(
-                 itemCount: diffFiles.length,
-                 itemBuilder: (context, index) {
-                   final file = diffFiles[index];
-                   Color statusColor;
-                   IconData statusIcon;
-                   
-                   final themeState = context.watch<ThemeBloc>().state;
-                   
-                   switch (file.status) {
-                     case 'added':
-                       statusColor = themeState.diffAddedColor;
-                       statusIcon = LucideIcons.plusCircle;
-                       break;
-                     case 'deleted':
-                       statusColor = themeState.diffRemovedColor;
-                       statusIcon = LucideIcons.minusCircle;
-                       break;
-                     case 'modified':
-                       statusColor = themeState.diffModifiedColor;
-                       statusIcon = LucideIcons.pencil;
-                       break;
-                     default:
-                       statusColor = Colors.grey;
-                       statusIcon = LucideIcons.helpCircle;
-                   }
+        Row(
+          children: [
+            IconButton(
+                onPressed: onBack, icon: const Icon(LucideIcons.arrowLeft)),
+            const Text('Comparison Results',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+          child: Text(
+            "Comparing ${mode == ComparisonMode.commit ? 'Commit' : 'Branch'} "
+            "$base → $target",
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: diffFiles.isEmpty
+              ? const Center(
+                  child: Text('No changes found between selected branches.'))
+              : ListView.builder(
+                  itemCount: diffFiles.length,
+                  itemBuilder: (context, index) {
+                    final file = diffFiles[index];
+                    Color statusColor;
+                    IconData statusIcon;
 
-                   return Card(
-                     margin: const EdgeInsets.symmetric(vertical: 4),
-                     child: ListTile(
-                       leading: Icon(statusIcon, color: statusColor),
-                       title: Text(file.path),
-                       subtitle: Text('Status: ${file.status}'),
-                       onTap: () => _showDiffDialog(context, file.path),
-                     ),
-                   );
-                 },
-               ),
-         ),
+                    final themeState = context.watch<ThemeBloc>().state;
+
+                    switch (file.status) {
+                      case 'added':
+                        statusColor = themeState.diffAddedColor;
+                        statusIcon = LucideIcons.plusCircle;
+                        break;
+                      case 'deleted':
+                        statusColor = themeState.diffRemovedColor;
+                        statusIcon = LucideIcons.minusCircle;
+                        break;
+                      case 'modified':
+                        statusColor = themeState.diffModifiedColor;
+                        statusIcon = LucideIcons.pencil;
+                        break;
+                      default:
+                        statusColor = Colors.grey;
+                        statusIcon = LucideIcons.helpCircle;
+                    }
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        leading: Icon(statusIcon, color: statusColor),
+                        title: Text(file.path),
+                        subtitle: Text('Status: ${file.status}'),
+                        onTap: () => _showDiffDialog(context, file.path),
+                      ),
+                    );
+                  },
+                ),
+        ),
       ],
     );
   }
@@ -779,17 +822,17 @@ class _GitFileDiffDialog extends StatefulWidget {
 class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   late String _baseFilePath;
   late String _targetFilePath;
-  
+
   // File lists for picker
   List<String> _baseFiles = [];
   List<String> _targetFiles = [];
   bool _isLoadingFileList = true;
-  
+
   // Content cache for diff
   String? _baseContent;
   String? _targetContent;
   bool _isLoadingContent = false;
-  
+
   // Scroll controllers for synchronized scrolling
   final ScrollController _baseScrollController = ScrollController();
   final ScrollController _targetScrollController = ScrollController();
@@ -800,14 +843,14 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
     super.initState();
     _baseFilePath = widget.filePath;
     _targetFilePath = widget.filePath;
-    
+
     // Setup scroll sync listeners
     _baseScrollController.addListener(_onBaseScroll);
     _targetScrollController.addListener(_onTargetScroll);
-    
+
     _loadFileLists();
   }
-  
+
   @override
   void dispose() {
     _baseScrollController.removeListener(_onBaseScroll);
@@ -816,7 +859,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
     _targetScrollController.dispose();
     super.dispose();
   }
-  
+
   void _onBaseScroll() {
     if (_isSyncingScroll) return;
     _isSyncingScroll = true;
@@ -825,7 +868,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
     }
     _isSyncingScroll = false;
   }
-  
+
   void _onTargetScroll() {
     if (_isSyncingScroll) return;
     _isSyncingScroll = true;
@@ -842,7 +885,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
         gitService.getFilesInCommit(widget.repoPath, widget.baseRef),
         gitService.getFilesInCommit(widget.repoPath, widget.targetRef),
       ]);
-      
+
       if (mounted) {
         setState(() {
           _baseFiles = results[0]..sort();
@@ -862,14 +905,16 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   Future<void> _loadContent() async {
     if (_isLoadingContent) return;
     setState(() => _isLoadingContent = true);
-    
+
     final gitService = context.read<GitBloc>().gitService;
     try {
       final results = await Future.wait([
-        gitService.getFileContentAtBranch(widget.repoPath, widget.baseRef, _baseFilePath),
-        gitService.getFileContentAtBranch(widget.repoPath, widget.targetRef, _targetFilePath),
+        gitService.getFileContentAtBranch(
+            widget.repoPath, widget.baseRef, _baseFilePath),
+        gitService.getFileContentAtBranch(
+            widget.repoPath, widget.targetRef, _targetFilePath),
       ]);
-      
+
       if (mounted) {
         setState(() {
           _baseContent = results[0];
@@ -888,7 +933,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   void _showSearchableFilePicker(BuildContext context, {required bool isBase}) {
     final files = isBase ? _baseFiles : _targetFiles;
     final currentFile = isBase ? _baseFilePath : _targetFilePath;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => _SearchableFilePickerDialog(
@@ -932,44 +977,56 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                     children: [
                       Text('Diff Viewer', style: theme.textTheme.titleLarge),
                       const SizedBox(height: 4),
-                       Text('${widget.baseRef.substring(0, 7)} (Base)  →  ${widget.targetRef.substring(0, 7)} (Target)', 
-                         style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+                      Text(
+                          '${widget.baseRef.substring(0, 7)} (Base)  →  ${widget.targetRef.substring(0, 7)} (Target)',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6))),
                     ],
                   ),
-                  IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close)),
+                  IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close)),
                 ],
               ),
             ),
             const Divider(height: 1),
-            
+
             // Content
             Expanded(
               child: _isLoadingFileList || _isLoadingContent
-                ? const Center(child: CircularProgressIndicator())
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Base Side
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _buildFileSelectorButton(context, isBase: true),
-                            Expanded(child: _buildDiffPane(_baseContent ?? '', true, themeBloc, _baseScrollController)),
-                          ],
+                  ? const Center(child: CircularProgressIndicator())
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Base Side
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _buildFileSelectorButton(context, isBase: true),
+                              Expanded(
+                                  child: _buildDiffPane(_baseContent ?? '',
+                                      true, themeBloc, _baseScrollController)),
+                            ],
+                          ),
                         ),
-                      ),
-                      Container(width: 1, color: theme.dividerColor),
-                      // Target Side
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _buildFileSelectorButton(context, isBase: false),
-                            Expanded(child: _buildDiffPane(_targetContent ?? '', false, themeBloc, _targetScrollController)),
-                          ],
+                        Container(width: 1, color: theme.dividerColor),
+                        // Target Side
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _buildFileSelectorButton(context, isBase: false),
+                              Expanded(
+                                  child: _buildDiffPane(
+                                      _targetContent ?? '',
+                                      false,
+                                      themeBloc,
+                                      _targetScrollController)),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
             ),
           ],
         ),
@@ -977,12 +1034,13 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
     );
   }
 
-  Widget _buildFileSelectorButton(BuildContext context, {required bool isBase}) {
+  Widget _buildFileSelectorButton(BuildContext context,
+      {required bool isBase}) {
     final theme = Theme.of(context);
     final files = isBase ? _baseFiles : _targetFiles;
     final path = isBase ? _baseFilePath : _targetFilePath;
     final fileExists = files.contains(path);
-    
+
     return Material(
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: InkWell(
@@ -991,24 +1049,35 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(isBase ? Icons.file_copy_outlined : Icons.file_present_outlined, size: 18),
+              Icon(
+                  isBase
+                      ? Icons.file_copy_outlined
+                      : Icons.file_present_outlined,
+                  size: 18),
               const SizedBox(width: 8),
-              Text(isBase ? 'BASE' : 'TARGET', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 0.5)),
+              Text(isBase ? 'BASE' : 'TARGET',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      letterSpacing: 0.5)),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   path,
                   style: TextStyle(
-                    fontFamily: 'monospace', 
+                    fontFamily: 'monospace',
                     fontSize: 12,
-                    color: fileExists ? theme.colorScheme.onSurface : theme.colorScheme.error,
+                    color: fileExists
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.error,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.arrow_drop_down, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+              Icon(Icons.arrow_drop_down,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
             ],
           ),
         ),
@@ -1016,9 +1085,10 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
     );
   }
 
-  Widget _buildDiffPane(String content, bool isBase, ThemeBloc themeBloc, ScrollController scrollController) {
+  Widget _buildDiffPane(String content, bool isBase, ThemeBloc themeBloc,
+      ScrollController scrollController) {
     final otherContent = isBase ? (_targetContent ?? '') : (_baseContent ?? '');
-    
+
     // Get font settings
     final settingsState = context.watch<SettingsBloc>().state;
     String fontFamily = 'Consolas, Monaco, monospace';
@@ -1030,37 +1100,41 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
         fontSize = settingsState.appSettings.diffFontSize;
       } catch (_) {}
     }
-    
+
     if (content.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.insert_drive_file_outlined, size: 48, color: Colors.grey.withValues(alpha: 0.5)),
+            Icon(Icons.insert_drive_file_outlined,
+                size: 48, color: Colors.grey.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
-              isBase ? 'File does not exist in Base version' : 'File does not exist in Target version',
+              isBase
+                  ? 'File does not exist in Base version'
+                  : 'File does not exist in Target version',
               style: const TextStyle(color: Colors.grey),
             ),
           ],
         ),
       );
     }
-    
+
     // Split content into lines
     final lines = content.split('\n');
     final otherLines = otherContent.split('\n');
-    
+
     // Get theme colors
     final addedColor = themeBloc.state.diffAddedColor;
     final removedColor = themeBloc.state.diffRemovedColor;
     final addedBgColor = addedColor.withValues(alpha: 0.25);
     final removedBgColor = removedColor.withValues(alpha: 0.25);
-    
+
     // Build a set of changed line indices for accurate highlighting
     final Set<int> changedLines = {};
-    final maxLines = lines.length > otherLines.length ? lines.length : otherLines.length;
-    
+    final maxLines =
+        lines.length > otherLines.length ? lines.length : otherLines.length;
+
     for (int i = 0; i < maxLines; i++) {
       final thisLine = i < lines.length ? lines[i] : '';
       final otherLine = i < otherLines.length ? otherLines[i] : '';
@@ -1068,7 +1142,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
         changedLines.add(i);
       }
     }
-    
+
     return Row(
       children: [
         // Main content ListView
@@ -1079,13 +1153,13 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
             itemCount: lines.length,
             itemBuilder: (context, index) {
               final line = lines[index];
-              
+
               // Only highlight if this line is in the changed set
               Color? bgColor;
               if (changedLines.contains(index)) {
                 bgColor = isBase ? removedBgColor : addedBgColor;
               }
-              
+
               return Container(
                 color: bgColor,
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1099,14 +1173,18 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                         style: TextStyle(
                           fontFamily: fontFamily,
                           fontSize: fontSize,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.4),
                         ),
                       ),
                     ),
                     Expanded(
                       child: SelectableText(
                         line.isEmpty ? ' ' : line,
-                        style: TextStyle(fontFamily: fontFamily, fontSize: fontSize),
+                        style: TextStyle(
+                            fontFamily: fontFamily, fontSize: fontSize),
                       ),
                     ),
                   ],
@@ -1123,9 +1201,9 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
             builder: (context, constraints) {
               final totalHeight = constraints.maxHeight;
               final totalLines = lines.length;
-              
+
               if (totalLines == 0) return const SizedBox.shrink();
-              
+
               return CustomPaint(
                 size: Size(12, totalHeight),
                 painter: _MinimapPainter(
@@ -1157,20 +1235,20 @@ class _MinimapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (totalLines == 0) return;
-    
+
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    
+
     final lineHeight = size.height / totalLines;
     final minHeight = 2.0; // Minimum height for visibility
-    
+
     for (final lineIndex in changedLines) {
       if (lineIndex >= totalLines) continue;
-      
+
       final y = (lineIndex / totalLines) * size.height;
       final h = lineHeight < minHeight ? minHeight : lineHeight;
-      
+
       canvas.drawRect(
         Rect.fromLTWH(0, y, size.width, h),
         paint,
@@ -1181,8 +1259,8 @@ class _MinimapPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MinimapPainter oldDelegate) {
     return changedLines != oldDelegate.changedLines ||
-           totalLines != oldDelegate.totalLines ||
-           color != oldDelegate.color;
+        totalLines != oldDelegate.totalLines ||
+        color != oldDelegate.color;
   }
 }
 
@@ -1201,10 +1279,12 @@ class _SearchableFilePickerDialog extends StatefulWidget {
   });
 
   @override
-  State<_SearchableFilePickerDialog> createState() => _SearchableFilePickerDialogState();
+  State<_SearchableFilePickerDialog> createState() =>
+      _SearchableFilePickerDialogState();
 }
 
-class _SearchableFilePickerDialogState extends State<_SearchableFilePickerDialog> {
+class _SearchableFilePickerDialogState
+    extends State<_SearchableFilePickerDialog> {
   late TextEditingController _searchController;
   late List<String> _filteredFiles;
   String? _selectedFile;
@@ -1229,7 +1309,9 @@ class _SearchableFilePickerDialogState extends State<_SearchableFilePickerDialog
         _filteredFiles = widget.files;
       } else {
         final lowerQuery = query.toLowerCase();
-        _filteredFiles = widget.files.where((f) => f.toLowerCase().contains(lowerQuery)).toList();
+        _filteredFiles = widget.files
+            .where((f) => f.toLowerCase().contains(lowerQuery))
+            .toList();
       }
     });
   }
@@ -1237,7 +1319,7 @@ class _SearchableFilePickerDialogState extends State<_SearchableFilePickerDialog
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Dialog(
       child: SizedBox(
         width: 600,
@@ -1258,9 +1340,11 @@ class _SearchableFilePickerDialogState extends State<_SearchableFilePickerDialog
                     decoration: InputDecoration(
                       hintText: 'Search files...',
                       prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                     ),
                     onChanged: _filterFiles,
                   ),
@@ -1271,26 +1355,36 @@ class _SearchableFilePickerDialogState extends State<_SearchableFilePickerDialog
             // File List
             Expanded(
               child: _filteredFiles.isEmpty
-                ? Center(child: Text('No files match "$_searchController.text"', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))))
-                : ListView.builder(
-                    itemCount: _filteredFiles.length,
-                    itemBuilder: (context, index) {
-                      final file = _filteredFiles[index];
-                      final isSelected = file == _selectedFile;
-                      
-                      return ListTile(
-                        dense: true,
-                        selected: isSelected,
-                        selectedTileColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                        leading: Icon(Icons.insert_drive_file_outlined, size: 18, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
-                        title: Text(file, style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
-                        onTap: () {
-                          widget.onSelected(file);
-                          Navigator.of(context).pop();
-                        },
-                      );
-                    },
-                  ),
+                  ? Center(
+                      child: Text('No files match "$_searchController.text"',
+                          style: TextStyle(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6))))
+                  : ListView.builder(
+                      itemCount: _filteredFiles.length,
+                      itemBuilder: (context, index) {
+                        final file = _filteredFiles[index];
+                        final isSelected = file == _selectedFile;
+
+                        return ListTile(
+                          dense: true,
+                          selected: isSelected,
+                          selectedTileColor: theme.colorScheme.primaryContainer
+                              .withValues(alpha: 0.3),
+                          leading: Icon(Icons.insert_drive_file_outlined,
+                              size: 18,
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6)),
+                          title: Text(file,
+                              style: const TextStyle(
+                                  fontFamily: 'monospace', fontSize: 12)),
+                          onTap: () {
+                            widget.onSelected(file);
+                            Navigator.of(context).pop();
+                          },
+                        );
+                      },
+                    ),
             ),
             // Footer
             const Divider(height: 1),
@@ -1299,8 +1393,11 @@ class _SearchableFilePickerDialogState extends State<_SearchableFilePickerDialog
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${_filteredFiles.length} files', style: theme.textTheme.bodySmall),
-                  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+                  Text('${_filteredFiles.length} files',
+                      style: theme.textTheme.bodySmall),
+                  TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel')),
                 ],
               ),
             ),
@@ -1310,4 +1407,3 @@ class _SearchableFilePickerDialogState extends State<_SearchableFilePickerDialog
     );
   }
 }
-

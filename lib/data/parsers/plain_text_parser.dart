@@ -22,7 +22,7 @@ class PlainTextParser extends LocalizationParser {
     try {
       final encoding = resolveEncoding(settings, extractionMode);
       final String content = await file.readAsString(encoding: encoding);
-      
+
       // Check if this is an XML-style .lang file
       if (_xmlStringPattern.hasMatch(content)) {
         // Parse as XML-style localization file
@@ -34,7 +34,8 @@ class PlainTextParser extends LocalizationParser {
           }
         }
         if (translations.isEmpty) {
-          debugPrint('Warning: Detected XML-style .lang file ${file.path} but no valid <string name="key">value</string> entries found.');
+          debugPrint(
+              'Warning: Detected XML-style .lang file ${file.path} but no valid <string name="key">value</string> entries found.');
         }
       } else {
         // Fall back to plain text parsing (key=value or list-of-phrases format)
@@ -42,7 +43,9 @@ class PlainTextParser extends LocalizationParser {
         for (final line in lines) {
           final trimmedLine = line.trim();
           // Skip empty lines and comments (lines starting with // or #)
-          if (trimmedLine.isEmpty || trimmedLine.startsWith('//') || trimmedLine.startsWith('#')) {
+          if (trimmedLine.isEmpty ||
+              trimmedLine.startsWith('//') ||
+              trimmedLine.startsWith('#')) {
             continue;
           }
           // Check for key=value format (common in .lang and .properties files)
@@ -59,7 +62,8 @@ class PlainTextParser extends LocalizationParser {
           }
         }
         if (translations.isEmpty && content.trim().isNotEmpty) {
-          debugPrint('Warning: Parsed ${file.path} but no valid phrases extracted (all lines might be empty or comments).');
+          debugPrint(
+              'Warning: Parsed ${file.path} but no valid phrases extracted (all lines might be empty or comments).');
         }
       }
     } catch (e) {

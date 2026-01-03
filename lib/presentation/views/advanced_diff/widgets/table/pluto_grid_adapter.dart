@@ -106,29 +106,36 @@ class PlutoGridAdapter {
       ),
       // Target column (editable - inline or dialog based on setting)
       PlutoColumn(
-        title: useInlineEditing ? 'TARGET (click to edit)' : 'TARGET (click for dialog)',
+        title: useInlineEditing
+            ? 'TARGET (click to edit)'
+            : 'TARGET (click for dialog)',
         field: 'target',
         type: PlutoColumnType.text(),
         width: 400,
         minWidth: 200,
-        frozen: PlutoColumnFrozen.end, // Freeze to end so it stays connected to ACTIONS
+        frozen: PlutoColumnFrozen
+            .end, // Freeze to end so it stays connected to ACTIONS
         readOnly: !useInlineEditing, // Only editable if inline mode
         enableSorting: false,
-        enableEditingMode: useInlineEditing, // Enable editing mode only for inline
+        enableEditingMode:
+            useInlineEditing, // Enable editing mode only for inline
         renderer: (rendererContext) {
           final text = rendererContext.cell.value?.toString() ?? '';
-          final isModified = rendererContext.row.cells['_isModified']?.value == true;
+          final isModified =
+              rendererContext.row.cells['_isModified']?.value == true;
           final rowKey = rendererContext.row.cells['key']?.value as String?;
-          
+
           Widget content = Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
-              color: isModified 
-                  ? theme.colorScheme.primary.withValues(alpha: 0.1) 
+              color: isModified
+                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
                   : null,
-              border: isModified 
-                  ? Border(left: BorderSide(color: theme.colorScheme.primary, width: 3))
+              border: isModified
+                  ? Border(
+                      left: BorderSide(
+                          color: theme.colorScheme.primary, width: 3))
                   : null,
             ),
             child: Text(
@@ -136,8 +143,8 @@ class PlutoGridAdapter {
               style: TextStyle(
                 fontSize: 12,
                 fontFamily: 'RobotoMono',
-                color: text.isEmpty 
-                    ? theme.disabledColor 
+                color: text.isEmpty
+                    ? theme.disabledColor
                     : theme.textTheme.bodyMedium?.color,
                 fontWeight: isModified ? FontWeight.w500 : FontWeight.normal,
                 fontStyle: text.isEmpty ? FontStyle.italic : FontStyle.normal,
@@ -146,7 +153,7 @@ class PlutoGridAdapter {
               maxLines: 3,
             ),
           );
-          
+
           // Wrap with GestureDetector for dialog mode
           if (!useInlineEditing && rowKey != null) {
             content = MouseRegion(
@@ -157,7 +164,7 @@ class PlutoGridAdapter {
               ),
             );
           }
-          
+
           return Tooltip(
             message: text.isEmpty ? '(empty - click to edit)' : text,
             waitDuration: const Duration(milliseconds: 500),
@@ -192,7 +199,9 @@ class PlutoGridAdapter {
                 onPressed: () => onAddToTM(rowKey),
               ),
               _ActionIconButton(
-                icon: isReviewed ? Icons.visibility_off : Icons.check_circle_outline,
+                icon: isReviewed
+                    ? Icons.visibility_off
+                    : Icons.check_circle_outline,
                 tooltip: isReviewed ? 'Unmark Reviewed' : 'Mark Reviewed',
                 onPressed: () => onMarkReviewed(rowKey),
               ),

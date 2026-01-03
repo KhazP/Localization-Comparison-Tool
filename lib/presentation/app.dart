@@ -110,8 +110,9 @@ class MyApp extends StatelessWidget {
             ),
           ),
           BlocProvider<HistoryBloc>(
-            create: (context) => HistoryBloc(historyRepository: historyRepository)
-              ..add(LoadHistory()),
+            create: (context) =>
+                HistoryBloc(historyRepository: historyRepository)
+                  ..add(LoadHistory()),
           ),
           BlocProvider<TranslationBloc>(
             create: (context) => TranslationBloc(
@@ -217,7 +218,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
       },
       listener: (context, projectState) {
         final settingsBloc = context.read<SettingsBloc>();
-        
+
         if (projectState.hasProject) {
           // Project opened - load its settings into SettingsBloc
           final project = projectState.currentProject!;
@@ -236,15 +237,15 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
         listenWhen: (previous, current) {
           // Only listen when in project scope and project settings actually changed
           return current.scope == SettingsScope.project &&
-                 current.hasProject &&
-                 previous.projectSettings != current.projectSettings;
+              current.hasProject &&
+              previous.projectSettings != current.projectSettings;
         },
         listener: (context, settingsState) {
           // Persist project settings changes back to ProjectBloc
           if (settingsState.projectSettings != null) {
             context.read<ProjectBloc>().add(
-              UpdateProjectSettings(settingsState.projectSettings!),
-            );
+                  UpdateProjectSettings(settingsState.projectSettings!),
+                );
           }
         },
         child: BlocListener<HistoryBloc, HistoryState>(
@@ -263,7 +264,9 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
           child: BlocListener<SettingsBloc, SettingsState>(
             listener: (context, settingsState) {
               if (settingsState.status == SettingsStatus.loaded) {
-                context.read<ThemeBloc>().add(UpdateThemeSettings(settingsState.appSettings));
+                context
+                    .read<ThemeBloc>()
+                    .add(UpdateThemeSettings(settingsState.appSettings));
               }
             },
             child: BlocBuilder<ThemeBloc, AppThemeState>(
@@ -272,18 +275,24 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                 bool useAmoled = false;
                 bool useMica = false;
                 if (settingsState.status == SettingsStatus.loaded) {
-                  useAmoled = settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-                  useMica = Platform.isWindows && settingsState.appSettings.useMicaEffect;
+                  useAmoled =
+                      settingsState.appSettings.appThemeMode.toLowerCase() ==
+                          'amoled';
+                  useMica = Platform.isWindows &&
+                      settingsState.appSettings.useMicaEffect;
                 }
 
                 // Determine dark theme: Mica > Amoled > Standard Dark
                 ThemeData darkTheme;
                 if (useMica) {
-                  darkTheme = AppThemeV2.createMicaTheme(themeState.accentColor);
+                  darkTheme =
+                      AppThemeV2.createMicaTheme(themeState.accentColor);
                 } else if (useAmoled) {
-                  darkTheme = AppThemeV2.createAmoledTheme(themeState.accentColor);
+                  darkTheme =
+                      AppThemeV2.createAmoledTheme(themeState.accentColor);
                 } else {
-                  darkTheme = AppThemeV2.createDarkTheme(themeState.accentColor);
+                  darkTheme =
+                      AppThemeV2.createDarkTheme(themeState.accentColor);
                 }
 
                 Widget app = Shortcuts(
@@ -382,14 +391,16 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
         menus: [
           PlatformMenuItem(
             label: 'Open Files...',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyO, meta: true),
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyO, meta: true),
             onSelected: () {
               Actions.invoke(context, const OpenFileIntent());
             },
           ),
           PlatformMenuItem(
             label: 'Open Folder...',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyO, meta: true, shift: true),
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyO,
+                meta: true, shift: true),
             onSelected: () {
               Actions.invoke(context, const OpenFolderIntent());
             },
@@ -397,7 +408,8 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
           const PlatformMenuItemGroup(members: []),
           PlatformMenuItem(
             label: 'Export Results...',
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyE, meta: true),
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyE, meta: true),
             onSelected: () {
               Actions.invoke(context, const ExportIntent());
             },
@@ -417,7 +429,8 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
           ),
           const PlatformMenuItem(
             label: 'Redo',
-            shortcut: SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyZ,
+                meta: true, shift: true),
             onSelected: null,
           ),
           const PlatformMenuItemGroup(members: []),
@@ -453,21 +466,24 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
             ),
           PlatformMenuItem(
             label: 'Zoom In',
-            shortcut: const SingleActivator(LogicalKeyboardKey.equal, meta: true),
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.equal, meta: true),
             onSelected: () {
               Actions.invoke(context, const ZoomInIntent());
             },
           ),
           PlatformMenuItem(
             label: 'Zoom Out',
-            shortcut: const SingleActivator(LogicalKeyboardKey.minus, meta: true),
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.minus, meta: true),
             onSelected: () {
               Actions.invoke(context, const ZoomOutIntent());
             },
           ),
           PlatformMenuItem(
             label: 'Reset Zoom',
-            shortcut: const SingleActivator(LogicalKeyboardKey.digit0, meta: true),
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.digit0, meta: true),
             onSelected: () {
               Actions.invoke(context, const ResetZoomIntent());
             },

@@ -29,16 +29,22 @@ class GitDiffFile {
 abstract class GitService {
   Future<bool> isValidRepository(String path);
   Future<List<GitBranch>> getBranches(String repoPath);
-  Future<List<GitCommit>> getCommits(String repoPath, {String? branchName, int? limit});
-  Future<List<GitDiffFile>> compareBranches(String repoPath, String baseBranch, String targetBranch);
-  Future<List<GitDiffFile>> compareCommits(String repoPath, String baseSha, String targetSha);
-  Future<String> getFileContentAtBranch(String repoPath, String branchName, String filePath);
+  Future<List<GitCommit>> getCommits(String repoPath,
+      {String? branchName, int? limit});
+  Future<List<GitDiffFile>> compareBranches(
+      String repoPath, String baseBranch, String targetBranch);
+  Future<List<GitDiffFile>> compareCommits(
+      String repoPath, String baseSha, String targetSha);
+  Future<String> getFileContentAtBranch(
+      String repoPath, String branchName, String filePath);
   Future<List<String>> getFilesInCommit(String repoPath, String ref);
-  
+
   // Conflict Management
   Future<List<String>> getConflictedFiles(String repoPath);
-  Future<void> resolveConflict(String repoPath, String filePath, ResolutionStrategy strategy);
-  Future<void> resolveSingleConflict(String repoPath, String filePath, ConflictMarker marker, ResolutionStrategy strategy);
+  Future<void> resolveConflict(
+      String repoPath, String filePath, ResolutionStrategy strategy);
+  Future<void> resolveSingleConflict(String repoPath, String filePath,
+      ConflictMarker marker, ResolutionStrategy strategy);
   Future<void> markFileResolved(String repoPath, String filePath);
   Future<void> abortMerge(String repoPath);
   Future<List<ConflictMarker>> parseConflictMarkers(String filePath);
@@ -57,7 +63,7 @@ class LibGit2DartService implements GitService {
       // libgit2dart 1.x: Repository.open throws if not found/valid
       Repository.open(path);
       // If we opened it, it's valid.
-      return true; 
+      return true;
     } catch (e) {
       return false;
     }
@@ -68,83 +74,85 @@ class LibGit2DartService implements GitService {
     try {
       final repo = Repository.open(repoPath);
       final branches = <GitBranch>[];
-      
+
       // Get local branches
       try {
         for (final branch in repo.branches) {
-           try {
-             // branch is a Branch object, get the name and target
-             final target = branch.target;
-             branches.add(GitBranch(branch.name, target.sha));
-           } catch (e) {
-             developer.log('Error resolving branch ${branch.name}: $e', name: 'GitService');
-           }
+          try {
+            // branch is a Branch object, get the name and target
+            final target = branch.target;
+            branches.add(GitBranch(branch.name, target.sha));
+          } catch (e) {
+            developer.log('Error resolving branch ${branch.name}: $e',
+                name: 'GitService');
+          }
         }
       } catch (e) {
-         developer.log('Error accessing repo.branches: $e', name: 'GitService');
+        developer.log('Error accessing repo.branches: $e', name: 'GitService');
       }
       return branches;
     } catch (e) {
       developer.log('Error opening repo for branches: $e', name: 'GitService');
-      return []; 
+      return [];
     }
   }
 
   @override
-  Future<List<GitCommit>> getCommits(String repoPath, {String? branchName, int? limit}) async {
+  Future<List<GitCommit>> getCommits(String repoPath,
+      {String? branchName, int? limit}) async {
     try {
-       final repo = Repository.open(repoPath);
-       final commits = <GitCommit>[];
-       final maxCount = limit ?? 20;
+      final repo = Repository.open(repoPath);
+      final commits = <GitCommit>[];
+      final maxCount = limit ?? 20;
 
-       Oid? currentOid;
-       
-       if (branchName != null) {
-         try {
-           // Find the branch by name
-           for (final branch in repo.branches) {
-             if (branch.name == branchName) {
-               currentOid = branch.target;
-               break;
-             }
-           }
-         } catch (_) {
-           developer.log('Could not find branch $branchName', name: 'GitService');
-         }
-       } else {
-         try {
-           final head = repo.head;
-           currentOid = head.target;
-         } catch (_) {
-            developer.log('Could not find HEAD', name: 'GitService');
-         }
-       }
+      Oid? currentOid;
 
-       // Manual linear walk - simple approach without RevWalk since API varies
-       if (currentOid != null) {
-         try {
-           int count = 0;
-           Oid? walkOid = currentOid;
-           
-           while (walkOid != null && count < maxCount) {
-             final commit = Commit.lookup(repo: repo, oid: walkOid);
-             commits.add(GitCommit(
-               commit.oid.sha, 
-               commit.message, 
-               DateTime.fromMillisecondsSinceEpoch(commit.time * 1000), 
-               commit.author.name
-             ));
-             
-             // Move to parent
-             walkOid = commit.parents.isNotEmpty ? commit.parents.first : null;
-             count++;
-           }
-         } catch (e) {
-           developer.log('Error walking commits: $e', name: 'GitService');
-         }
-       }
-       
-       return commits;
+      if (branchName != null) {
+        try {
+          // Find the branch by name
+          for (final branch in repo.branches) {
+            if (branch.name == branchName) {
+              currentOid = branch.target;
+              break;
+            }
+          }
+        } catch (_) {
+          developer.log('Could not find branch $branchName',
+              name: 'GitService');
+        }
+      } else {
+        try {
+          final head = repo.head;
+          currentOid = head.target;
+        } catch (_) {
+          developer.log('Could not find HEAD', name: 'GitService');
+        }
+      }
+
+      // Manual linear walk - simple approach without RevWalk since API varies
+      if (currentOid != null) {
+        try {
+          int count = 0;
+          Oid? walkOid = currentOid;
+
+          while (walkOid != null && count < maxCount) {
+            final commit = Commit.lookup(repo: repo, oid: walkOid);
+            commits.add(GitCommit(
+                commit.oid.sha,
+                commit.message,
+                DateTime.fromMillisecondsSinceEpoch(commit.time * 1000),
+                commit.author.name));
+
+            // Move to parent
+            walkOid = commit.parents.isNotEmpty ? commit.parents.first : null;
+            count++;
+          }
+        } catch (e) {
+          developer.log('Error walking commits: $e', name: 'GitService');
+        }
+      }
+
+      return commits;
     } catch (e) {
       developer.log('Error getting commits: $e', name: 'GitService');
       return [];
@@ -152,45 +160,48 @@ class LibGit2DartService implements GitService {
   }
 
   @override
-  Future<List<GitDiffFile>> compareBranches(String repoPath, String baseBranch, String targetBranch) async {
+  Future<List<GitDiffFile>> compareBranches(
+      String repoPath, String baseBranch, String targetBranch) async {
     try {
       final repo = Repository.open(repoPath);
-      
+
       // 1. Find branches by name
       Branch? baseB;
       Branch? targetB;
-      
+
       for (final branch in repo.branches) {
         if (branch.name == baseBranch) baseB = branch;
         if (branch.name == targetBranch) targetB = branch;
       }
-      
+
       if (baseB == null || targetB == null) {
-        developer.log('Could not find one or both branches', name: 'GitService');
+        developer.log('Could not find one or both branches',
+            name: 'GitService');
         return [];
       }
-      
+
       // 2. Get commits and trees
       final baseCommit = Commit.lookup(repo: repo, oid: baseB.target);
       final targetCommit = Commit.lookup(repo: repo, oid: targetB.target);
-      
+
       final baseTree = baseCommit.tree;
       final targetTree = targetCommit.tree;
 
       // 3. Perform diff
-      final diff = Diff.treeToTree(repo: repo, oldTree: baseTree, newTree: targetTree);
-      
+      final diff =
+          Diff.treeToTree(repo: repo, oldTree: baseTree, newTree: targetTree);
+
       final diffFiles = <GitDiffFile>[];
-      
+
       // 4. Parse diff
       for (final delta in diff.deltas) {
         final path = delta.newFile.path;
-        final statusStr = delta.status.toString().split('.').last; // 'added', 'modified'
+        final statusStr =
+            delta.status.toString().split('.').last; // 'added', 'modified'
         diffFiles.add(GitDiffFile(path, statusStr));
       }
-      
-      return diffFiles;
 
+      return diffFiles;
     } catch (e) {
       developer.log('Error comparing branches: $e', name: 'GitService');
       return [];
@@ -198,30 +209,35 @@ class LibGit2DartService implements GitService {
   }
 
   @override
-  Future<List<GitDiffFile>> compareCommits(String repoPath, String baseSha, String targetSha) async {
+  Future<List<GitDiffFile>> compareCommits(
+      String repoPath, String baseSha, String targetSha) async {
     try {
       final repo = Repository.open(repoPath);
 
       // 1. Lookup commits by SHA or Ref
-      final baseCommit = Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: baseSha));
-      final targetCommit = Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: targetSha));
+      final baseCommit =
+          Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: baseSha));
+      final targetCommit = Commit.lookup(
+          repo: repo, oid: Oid.fromSHA(repo: repo, sha: targetSha));
 
       // 2. Get trees
       final baseTree = baseCommit.tree;
       final targetTree = targetCommit.tree;
 
       // 3. Perform diff
-      final diff = Diff.treeToTree(repo: repo, oldTree: baseTree, newTree: targetTree);
-      
+      final diff =
+          Diff.treeToTree(repo: repo, oldTree: baseTree, newTree: targetTree);
+
       final diffFiles = <GitDiffFile>[];
-      
+
       // 4. Parse diff
       for (final delta in diff.deltas) {
         final path = delta.newFile.path;
-        final statusStr = delta.status.toString().split('.').last; // 'added', 'modified'
+        final statusStr =
+            delta.status.toString().split('.').last; // 'added', 'modified'
         diffFiles.add(GitDiffFile(path, statusStr));
       }
-      
+
       return diffFiles;
     } catch (e) {
       developer.log('Error comparing commits: $e', name: 'GitService');
@@ -230,30 +246,32 @@ class LibGit2DartService implements GitService {
   }
 
   @override
-  Future<String> getFileContentAtBranch(String repoPath, String branchName, String filePath) async {
+  Future<String> getFileContentAtBranch(
+      String repoPath, String branchName, String filePath) async {
     try {
       final repo = Repository.open(repoPath);
 
       // 1. Resolve Ref (Branch Name OR Commit SHA)
       Commit? commit;
-      
+
       if (RegExp(r'^[0-9a-fA-F]{40}$').hasMatch(branchName)) {
-         try {
-           commit = Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: branchName));
-         } catch (_) {}
+        try {
+          commit = Commit.lookup(
+              repo: repo, oid: Oid.fromSHA(repo: repo, sha: branchName));
+        } catch (_) {}
       }
-      
+
       if (commit == null) {
-         for (final branch in repo.branches) {
-           if (branch.name == branchName) {
-              commit = Commit.lookup(repo: repo, oid: branch.target);
-              break;
-           }
-         }
+        for (final branch in repo.branches) {
+          if (branch.name == branchName) {
+            commit = Commit.lookup(repo: repo, oid: branch.target);
+            break;
+          }
+        }
       }
-      
+
       if (commit == null) {
-         return 'Error: Reference "$branchName" not found or is not a commit.';
+        return 'Error: Reference "$branchName" not found or is not a commit.';
       }
 
       // 2. Resolve to tree
@@ -272,20 +290,34 @@ class LibGit2DartService implements GitService {
 
       // Check for binary extensions
       final ext = filePath.split('.').last.toLowerCase();
-      const binaryExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'ico', 'pdf', 'zip', 'exe', 'dll', 'so', 'dylib', 'bin', 'webp'];
+      const binaryExtensions = [
+        'png',
+        'jpg',
+        'jpeg',
+        'gif',
+        'bmp',
+        'ico',
+        'pdf',
+        'zip',
+        'exe',
+        'dll',
+        'so',
+        'dylib',
+        'bin',
+        'webp'
+      ];
       if (binaryExtensions.contains(ext)) {
         return '[Binary File - Content Preview Unavailable]';
       }
 
       // 4. Get the blob and content
       final blob = Blob.lookup(repo: repo, oid: entry.oid);
-      
-      try {
-          return blob.content;
-      } catch (e) {
-          return '[Error: Could not decode file content. It might be binary.]';
-      }
 
+      try {
+        return blob.content;
+      } catch (e) {
+        return '[Error: Could not decode file content. It might be binary.]';
+      }
     } catch (e) {
       developer.log('Error retrieving file content: $e', name: 'GitService');
       return 'Error retrieving content: $e';
@@ -296,22 +328,23 @@ class LibGit2DartService implements GitService {
   Future<List<String>> getFilesInCommit(String repoPath, String ref) async {
     try {
       final repo = Repository.open(repoPath);
-      
+
       // Resolve reference to commit
       Commit? commit;
       if (RegExp(r'^[0-9a-fA-F]{40}$').hasMatch(ref)) {
-         try {
-           commit = Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: ref));
-         } catch (_) {}
+        try {
+          commit =
+              Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: ref));
+        } catch (_) {}
       }
-      
+
       if (commit == null) {
-         for (final branch in repo.branches) {
-           if (branch.name == ref) {
-              commit = Commit.lookup(repo: repo, oid: branch.target);
-              break;
-           }
-         }
+        for (final branch in repo.branches) {
+          if (branch.name == ref) {
+            commit = Commit.lookup(repo: repo, oid: branch.target);
+            break;
+          }
+        }
       }
 
       if (commit == null) return [];
@@ -322,8 +355,9 @@ class LibGit2DartService implements GitService {
       // Recursive tree walker helper using libgit2dart API
       void walkTree(Tree t, String parentPath) {
         for (final entry in t.entries) {
-          final fullPath = parentPath.isEmpty ? entry.name : '$parentPath/${entry.name}';
-          
+          final fullPath =
+              parentPath.isEmpty ? entry.name : '$parentPath/${entry.name}';
+
           // Check filemode: GitFilemode.tree = directory, otherwise = file
           if (entry.filemode == GitFilemode.tree) {
             // It's a directory, recurse
@@ -331,7 +365,8 @@ class LibGit2DartService implements GitService {
               final subtree = Tree.lookup(repo: repo, oid: entry.oid);
               walkTree(subtree, fullPath);
             } catch (e) {
-              developer.log('Error looking up subtree $fullPath: $e', name: 'GitService');
+              developer.log('Error looking up subtree $fullPath: $e',
+                  name: 'GitService');
             }
           } else {
             // It's a file (blob, blobExecutable, or link)
@@ -339,11 +374,10 @@ class LibGit2DartService implements GitService {
           }
         }
       }
-      
+
       walkTree(tree, '');
       developer.log('Found ${files.length} files in $ref', name: 'GitService');
       return files;
-
     } catch (e) {
       developer.log('Error getting files in commit: $e', name: 'GitService');
       return [];
@@ -358,7 +392,7 @@ class LibGit2DartService implements GitService {
         'git',
         args,
         workingDirectory: repoPath,
-        runInShell: true, 
+        runInShell: true,
       );
 
       if (process.exitCode != 0) {
@@ -368,17 +402,17 @@ class LibGit2DartService implements GitService {
     } catch (e) {
       if (e.toString().contains('No such file or directory')) {
         // Try 'cmd /c git ...' for Windows if direct call fails
-         try {
-            final process = await Process.run(
-              'cmd',
-              ['/c', 'git', ...args],
-              workingDirectory: repoPath,
-            );
-            if (process.exitCode != 0) throw Exception(process.stderr);
-            return process.stdout.toString();
-         } catch (inner) {
-            throw Exception('Git CL failed: $inner');
-         }
+        try {
+          final process = await Process.run(
+            'cmd',
+            ['/c', 'git', ...args],
+            workingDirectory: repoPath,
+          );
+          if (process.exitCode != 0) throw Exception(process.stderr);
+          return process.stdout.toString();
+        } catch (inner) {
+          throw Exception('Git CL failed: $inner');
+        }
       }
       rethrow;
     }
@@ -419,7 +453,8 @@ class LibGit2DartService implements GitService {
   }
 
   @override
-  Future<void> resolveConflict(String repoPath, String filePath, ResolutionStrategy strategy) async {
+  Future<void> resolveConflict(
+      String repoPath, String filePath, ResolutionStrategy strategy) async {
     try {
       switch (strategy) {
         case ResolutionStrategy.ours:
@@ -438,7 +473,8 @@ class LibGit2DartService implements GitService {
           break;
       }
     } catch (e) {
-      developer.log('Error resolving conflict for $filePath: $e', name: 'GitService');
+      developer.log('Error resolving conflict for $filePath: $e',
+          name: 'GitService');
       throw Exception('Failed to resolve conflict: $e');
     }
   }
@@ -448,8 +484,8 @@ class LibGit2DartService implements GitService {
     try {
       await _runGitCommand(repoPath, ['merge', '--abort']);
     } catch (e) {
-       developer.log('Error aborting merge: $e', name: 'GitService');
-       throw Exception('Failed to abort merge: $e');
+      developer.log('Error aborting merge: $e', name: 'GitService');
+      throw Exception('Failed to abort merge: $e');
     }
   }
 
@@ -469,14 +505,14 @@ class LibGit2DartService implements GitService {
       );
 
       final matches = markerRegex.allMatches(content);
-      
+
       for (final match in matches) {
-          markers.add(ConflictMarker(
-            ours: match.group(1) ?? '',
-            theirs: match.group(2) ?? '',
-            start: match.start,
-            end: match.end,
-          ));
+        markers.add(ConflictMarker(
+          ours: match.group(1) ?? '',
+          theirs: match.group(2) ?? '',
+          start: match.start,
+          end: match.end,
+        ));
       }
 
       return markers;
@@ -503,12 +539,14 @@ class LibGit2DartService implements GitService {
 
       // Validate marker still exists at the expected position
       if (marker.start >= content.length || marker.end > content.length) {
-        throw Exception('Conflict marker position is invalid. File may have changed.');
+        throw Exception(
+            'Conflict marker position is invalid. File may have changed.');
       }
 
       final conflictBlock = content.substring(marker.start, marker.end);
       if (!conflictBlock.startsWith('<<<<<<<')) {
-        throw Exception('Conflict marker not found at expected position. File may have changed.');
+        throw Exception(
+            'Conflict marker not found at expected position. File may have changed.');
       }
 
       // Determine replacement content
@@ -521,7 +559,8 @@ class LibGit2DartService implements GitService {
           replacement = marker.theirs;
           break;
         case ResolutionStrategy.manual:
-          throw Exception('Manual resolution requires editing the file directly.');
+          throw Exception(
+              'Manual resolution requires editing the file directly.');
       }
 
       // Replace the conflict block with the chosen content
@@ -530,7 +569,8 @@ class LibGit2DartService implements GitService {
           content.substring(marker.end);
 
       await file.writeAsString(newContent);
-      developer.log('Resolved single conflict in $filePath', name: 'GitService');
+      developer.log('Resolved single conflict in $filePath',
+          name: 'GitService');
     } catch (e) {
       developer.log('Error resolving single conflict: $e', name: 'GitService');
       throw Exception('Failed to resolve conflict: $e');
@@ -555,7 +595,8 @@ class LibGit2DartService implements GitService {
     try {
       await _runGitCommand(repoPath, ['checkout', branchName]);
     } catch (e) {
-      developer.log('Error checking out branch $branchName: $e', name: 'GitService');
+      developer.log('Error checking out branch $branchName: $e',
+          name: 'GitService');
       throw Exception('Failed to checkout branch: $e');
     }
   }
@@ -567,11 +608,11 @@ class LibGit2DartService implements GitService {
       await _runGitCommand(repoPath, ['merge', branchName]);
     } catch (e) {
       developer.log('Error merging branch $branchName: $e', name: 'GitService');
-      // If it's a conflict, git merge exits with non-zero. 
+      // If it's a conflict, git merge exits with non-zero.
       // check status to see if we satisfy "conflicted" state.
       final conflicts = await getConflictedFiles(repoPath);
       if (conflicts.isNotEmpty) {
-        // This is expected for conflicts, so we don't strictly throw "Failed", 
+        // This is expected for conflicts, so we don't strictly throw "Failed",
         // but the caller (Bloc) needs to know we are in conflict.
         // We can just return normally (void) and let the bloc check status.
         return;
@@ -596,7 +637,7 @@ class LibGit2DartService implements GitService {
       await _runGitCommand(repoPath, ['pull']);
     } catch (e) {
       developer.log('Error pulling: $e', name: 'GitService');
-      
+
       // Check for conflicts
       final conflicts = await getConflictedFiles(repoPath);
       if (conflicts.isNotEmpty) return;

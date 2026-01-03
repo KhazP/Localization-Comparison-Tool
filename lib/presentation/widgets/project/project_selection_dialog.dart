@@ -51,7 +51,8 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
   }
 
   Future<void> _pickAndOpenProject() async {
-    final String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+    final String? selectedDirectory =
+        await FilePicker.platform.getDirectoryPath(
       dialogTitle: 'Select Project Folder',
       lockParentWindow: true,
     );
@@ -69,7 +70,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
       allowedExtensions: ['zip'],
       dialogTitle: 'Select Project Archive',
     );
-    
+
     if (result == null || result.files.single.path == null) return;
     final zipPath = result.files.single.path!;
 
@@ -80,7 +81,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
       dialogTitle: 'Select Destination Folder for Import',
       lockParentWindow: true,
     );
-    
+
     if (destDir == null) return;
     if (!mounted) return;
 
@@ -109,15 +110,17 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
       if (accepted == true && mounted) {
         // 5. Import History
         if (importResult.history.isNotEmpty) {
-           context.read<HistoryBloc>().add(ImportHistory(importResult.history));
+          context.read<HistoryBloc>().add(ImportHistory(importResult.history));
         }
 
         // 6. Open Project
-        context.read<ProjectBloc>().add(OpenProject(importResult.project.rootPath));
-        
+        context
+            .read<ProjectBloc>()
+            .add(OpenProject(importResult.project.rootPath));
+
         if (mounted) {
-           Navigator.pop(context); // Close selection dialog
-           ToastService.showSuccess(context, 'Project imported successfully');
+          Navigator.pop(context); // Close selection dialog
+          ToastService.showSuccess(context, 'Project imported successfully');
         }
       }
     } catch (e) {
@@ -131,7 +134,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return AlertDialog(
       title: const Text('Open Project'),
       content: SizedBox(
@@ -141,57 +144,58 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_isLoading)
-              const Center(child: Padding(
+              const Center(
+                  child: Padding(
                 padding: EdgeInsets.all(20.0),
                 child: CircularProgressIndicator(),
               ))
-            else if (_recentProjects != null && _recentProjects!.isNotEmpty)
-              ...[
-                Text(
-                  'Recent Projects',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+            else if (_recentProjects != null &&
+                _recentProjects!.isNotEmpty) ...[
+              Text(
+                'Recent Projects',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 300),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _recentProjects!.length,
-                    itemBuilder: (context, index) {
-                      final project = _recentProjects![index];
-                      return ListTile(
-                        leading: const Icon(Icons.folder_outlined),
-                        title: Text(project.name),
-                        subtitle: Text(
-                          project.rootPath,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () {
-                          context.read<ProjectBloc>().add(OpenProject(project.rootPath));
-                          Navigator.pop(context);
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                      );
-                    },
-                  ),
+              ),
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 300),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _recentProjects!.length,
+                  itemBuilder: (context, index) {
+                    final project = _recentProjects![index];
+                    return ListTile(
+                      leading: const Icon(Icons.folder_outlined),
+                      title: Text(project.name),
+                      subtitle: Text(
+                        project.rootPath,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () {
+                        context
+                            .read<ProjectBloc>()
+                            .add(OpenProject(project.rootPath));
+                        Navigator.pop(context);
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    );
+                  },
                 ),
-                const Divider(height: 24),
-              ]
-            else
+              ),
+              const Divider(height: 24),
+            ] else
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 20.0),
                 child: Center(
                   child: Text('No recent projects found'),
                 ),
               ),
-              
             Row(
               children: [
                 Expanded(

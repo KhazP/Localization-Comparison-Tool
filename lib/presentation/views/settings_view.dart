@@ -33,8 +33,8 @@ import 'package:localizer_app_main/presentation/widgets/project/project_memory_c
 import 'package:localizer_app_main/presentation/widgets/project/project_conflict_banner.dart';
 
 // Re-export SettingsCategory for external use
-export 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart' show SettingsCategory;
-
+export 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart'
+    show SettingsCategory;
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -73,8 +73,6 @@ class _SettingsViewState extends State<SettingsView>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-
-
   @override
   void initState() {
     super.initState();
@@ -95,7 +93,7 @@ class _SettingsViewState extends State<SettingsView>
       curve: Curves.easeOut,
     );
     _animationController.forward();
-    
+
     // Delay initialization flag to suppress save toast during startup
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
@@ -103,7 +101,6 @@ class _SettingsViewState extends State<SettingsView>
       }
     });
   }
-
 
   @override
   void dispose() {
@@ -174,8 +171,6 @@ class _SettingsViewState extends State<SettingsView>
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -195,10 +190,11 @@ class _SettingsViewState extends State<SettingsView>
               return;
             }
             // Exclude window position fields from comparison to avoid toast on resize/move
-            if (state.status == SettingsStatus.loaded && _previousSettings != null) {
+            if (state.status == SettingsStatus.loaded &&
+                _previousSettings != null) {
               final current = state.appSettings;
               final previous = _previousSettings!;
-              
+
               // Helper to get comparable map without window bounds
               Map<String, dynamic> getComparableMap(AppSettings settings) {
                 final map = settings.toJson();
@@ -213,11 +209,13 @@ class _SettingsViewState extends State<SettingsView>
               final previousMap = getComparableMap(previous);
 
               // Use jsonEncode to compare maps deeply (handles lists and nested objects)
-              final hasUserSettingChanged = jsonEncode(currentMap) != jsonEncode(previousMap);
+              final hasUserSettingChanged =
+                  jsonEncode(currentMap) != jsonEncode(previousMap);
 
               if (hasUserSettingChanged) {
                 _saveConfirmationTimer?.cancel();
-                _saveConfirmationTimer = Timer(const Duration(milliseconds: 800), () {
+                _saveConfirmationTimer =
+                    Timer(const Duration(milliseconds: 800), () {
                   if (mounted) {
                     ToastService.showSuccess(context, 'Settings saved');
                   }
@@ -287,7 +285,6 @@ class _SettingsViewState extends State<SettingsView>
   // SETTINGS SEARCH DATA
   // ═══════════════════════════════════════════════════════════════════════════
 
-
   /// Search settings and return matching categories with their matching terms
   Map<SettingsCategory, List<String>> _getSearchResults() {
     if (_searchQuery.isEmpty) {
@@ -311,7 +308,6 @@ class _SettingsViewState extends State<SettingsView>
   List<SettingsCategory> _getFilteredCategories() {
     // Get the settings to check developer options
     final settings = context.read<SettingsBloc>().state.appSettings;
-
 
     // Start with all categories
     var categories = SettingsCategory.values.toList();
@@ -609,7 +605,6 @@ class _SettingsViewState extends State<SettingsView>
     );
   }
 
-
   Widget _buildSettingsContent(
     BuildContext context,
     SettingsState state,
@@ -617,7 +612,6 @@ class _SettingsViewState extends State<SettingsView>
     bool isAmoled,
   ) {
     final theme = Theme.of(context);
-
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -707,7 +701,7 @@ class _SettingsViewState extends State<SettingsView>
     bool isAmoled,
   ) {
     final settings = state.appSettings;
-    
+
     switch (_selectedCategory) {
       case SettingsCategory.general:
         return GeneralSettingsCard(
@@ -759,13 +753,13 @@ class _SettingsViewState extends State<SettingsView>
           isAmoled: isAmoled,
         );
       case SettingsCategory.projectResources:
-         return Column(
-           children: [
-             ProjectGlossaryCard(),
-             const SizedBox(height: 16),
-             ProjectTranslationMemoryCard(),
-           ],
-         );
+        return Column(
+          children: [
+            ProjectGlossaryCard(),
+            const SizedBox(height: 16),
+            ProjectTranslationMemoryCard(),
+          ],
+        );
       case SettingsCategory.about:
         return AboutSettingsCard(
           settings: settings,
@@ -790,15 +784,9 @@ class _SettingsViewState extends State<SettingsView>
     }
   }
 
-
-
-
   // ═══════════════════════════════════════════════════════════════════════════
   // GENERAL SETTINGS
   // ═══════════════════════════════════════════════════════════════════════════
-
-
-
 
   void _showAddPatternDialog(BuildContext context, bool isDark) {
     _newPatternController.clear();
@@ -922,12 +910,14 @@ class _SettingsViewState extends State<SettingsView>
 
     if (confirmed == true && context.mounted) {
       switch (category) {
-      case SettingsCategory.projectResources:
-        context.read<SettingsBloc>().add(ResetCategoryToGlobal('project_resources'));
-        break;
-      case SettingsCategory.about:
-        // No reset for about
-        break;
+        case SettingsCategory.projectResources:
+          context
+              .read<SettingsBloc>()
+              .add(ResetCategoryToGlobal('project_resources'));
+          break;
+        case SettingsCategory.about:
+          // No reset for about
+          break;
         case SettingsCategory.general:
           context.read<SettingsBloc>().add(ResetGeneralSettings());
           break;
@@ -954,8 +944,8 @@ class _SettingsViewState extends State<SettingsView>
         case SettingsCategory.about:
           break;
       }
-      ToastService.showSuccess(
-          context, '${SettingsConstants.getCategoryTitle(category)} reset to defaults');
+      ToastService.showSuccess(context,
+          '${SettingsConstants.getCategoryTitle(category)} reset to defaults');
     }
   }
 
@@ -996,10 +986,12 @@ class _SettingsViewState extends State<SettingsView>
             );
 
         if (result.error != null) {
-          final friendlyError = FriendlyErrorService.getFriendlyMessage(result.error);
+          final friendlyError =
+              FriendlyErrorService.getFriendlyMessage(result.error);
           ToastService.showError(context, friendlyError.toString());
         } else if (result.updateAvailable) {
-          ToastService.showSuccess(context, 'Update available: v${result.latestVersion}');
+          ToastService.showSuccess(
+              context, 'Update available: v${result.latestVersion}');
         } else {
           ToastService.showInfo(context, 'You are using the latest version');
         }
@@ -1095,7 +1087,8 @@ class _SettingsViewState extends State<SettingsView>
     } catch (e) {
       developer.log('Error exporting settings: $e');
       if (context.mounted) {
-        ToastService.showError(context, 'Failed to export settings: ${e.toString()}');
+        ToastService.showError(
+            context, 'Failed to export settings: ${e.toString()}');
       }
     }
   }
@@ -1164,18 +1157,19 @@ class _SettingsViewState extends State<SettingsView>
               .add(ReplaceAllSettings(importedSettings));
 
           if (context.mounted) {
-            ToastService.showSuccess(context, 'Settings imported successfully!');
+            ToastService.showSuccess(
+                context, 'Settings imported successfully!');
           }
         }
       }
     } catch (e) {
       developer.log('Error importing settings: $e');
       if (context.mounted) {
-        ToastService.showError(context, 'Failed to import settings: ${e.toString()}');
+        ToastService.showError(
+            context, 'Failed to import settings: ${e.toString()}');
       }
     }
   }
-
 
   void _showLicensesDialog(BuildContext context, bool isDark) {
     showLicensePage(
@@ -1192,4 +1186,3 @@ class _SettingsViewState extends State<SettingsView>
     }
   }
 }
-

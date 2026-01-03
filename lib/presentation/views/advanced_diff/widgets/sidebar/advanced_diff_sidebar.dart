@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/sidebar_section.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/status_section.dart';
@@ -47,7 +46,9 @@ class AdvancedDiffSidebar extends StatelessWidget {
               children: const [
                 SidebarSection(title: 'Status', child: StatusSection()),
                 SizedBox(height: 16),
-                SidebarSection(title: 'Translation Memory', child: TranslationMemorySection()),
+                SidebarSection(
+                    title: 'Translation Memory',
+                    child: TranslationMemorySection()),
                 SizedBox(height: 16),
                 SidebarSection(title: 'Filters', child: FiltersSection()),
                 SizedBox(height: 16),
@@ -62,5 +63,3 @@ class AdvancedDiffSidebar extends StatelessWidget {
     );
   }
 }
-
-

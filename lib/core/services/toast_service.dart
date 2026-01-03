@@ -18,7 +18,7 @@ class ToastService {
       final box = Hive.box<AppSettings>('settings');
       // If box is not open or empty, return default
       if (!box.isOpen || box.isEmpty) return Alignment.bottomRight;
-      
+
       final settings = box.getAt(0);
       return switch (settings?.toastPosition) {
         'TopLeft' => Alignment.topLeft,
@@ -35,9 +35,9 @@ class ToastService {
   static bool _isCompact() {
     try {
       final box = Hive.box<AppSettings>('settings');
-       // If box is not open or empty, return default
+      // If box is not open or empty, return default
       if (!box.isOpen || box.isEmpty) return true;
-      
+
       final settings = box.getAt(0);
       return settings?.toastStyle == 'Compact';
     } catch (_) {
@@ -87,9 +87,8 @@ class ToastService {
     String? recoverySuggestion,
     Duration duration = const Duration(seconds: 6),
   }) {
-    final fullMessage = recoverySuggestion != null
-        ? '$message\n$recoverySuggestion'
-        : message;
+    final fullMessage =
+        recoverySuggestion != null ? '$message\n$recoverySuggestion' : message;
     _show(
       context,
       message: fullMessage,

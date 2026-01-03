@@ -20,7 +20,7 @@ class FileWatcherService {
     final fileName = file.uri.pathSegments.last;
 
     final watcher = DirectoryWatcher(directory.path);
-    
+
     _subscriptions[filePath] = watcher.events.listen(
       (event) {
         // Only trigger callback for the specific file we're watching

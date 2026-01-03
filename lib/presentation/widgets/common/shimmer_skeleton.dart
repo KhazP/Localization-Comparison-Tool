@@ -9,13 +9,13 @@ import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 class ShimmerSkeleton extends StatelessWidget {
   /// The child widget to apply the shimmer effect to.
   final Widget child;
-  
+
   /// Base color for the shimmer effect.
   final Color? baseColor;
-  
+
   /// Highlight color for the shimmer effect.
   final Color? highlightColor;
-  
+
   /// Whether the shimmer is enabled (animating).
   final bool enabled;
 
@@ -93,9 +93,11 @@ class ProjectStatsSkeleton extends StatelessWidget {
     return ShimmerSkeleton(
       child: Row(
         children: [
-          SkeletonBox(width: 12, height: 12, borderRadius: BorderRadius.circular(2)),
+          SkeletonBox(
+              width: 12, height: 12, borderRadius: BorderRadius.circular(2)),
           const SizedBox(width: 4),
-          SkeletonBox(width: 100, height: 14, borderRadius: BorderRadius.circular(4)),
+          SkeletonBox(
+              width: 100, height: 14, borderRadius: BorderRadius.circular(4)),
         ],
       ),
     );

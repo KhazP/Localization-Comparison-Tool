@@ -29,7 +29,6 @@ class GeneralSettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final projectState = context.watch<ProjectBloc>().state;
     final isProjectLoaded = projectState.status == ProjectStatus.loaded;
 
@@ -51,15 +50,24 @@ class GeneralSettingsCard extends StatelessWidget {
                         children: [
                           Text(
                             'Export Project',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Create a portable zip file containing source files, configuration, and history.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.6),
                                 ),
                           ),
                         ],
@@ -187,7 +195,8 @@ class GeneralSettingsCard extends StatelessWidget {
     );
   }
 
-  Future<void> _handleExport(BuildContext context, ProjectState projectState) async {
+  Future<void> _handleExport(
+      BuildContext context, ProjectState projectState) async {
     final project = projectState.currentProject;
     if (project == null) return;
 
@@ -210,17 +219,17 @@ class GeneralSettingsCard extends StatelessWidget {
     // We assume the history is loaded in HistoryBloc.
     // Ideally we should filter by projectId.
     final historyState = context.read<HistoryBloc>().state;
-    var projectHistory = <dynamic>[]; // Using dynamic to avoid deep coupling, or better:
+    var projectHistory =
+        <dynamic>[]; // Using dynamic to avoid deep coupling, or better:
     // Actually we need the list.
     if (historyState is HistoryLoaded) {
-      projectHistory = historyState.history
-          .where((s) => s.projectId == project.id)
-          .toList();
+      projectHistory =
+          historyState.history.where((s) => s.projectId == project.id).toList();
     }
 
     try {
       ToastService.showInfo(context, 'Exporting project...');
-      
+
       final sharingService = ProjectSharingService();
       await sharingService.exportProject(
         project: project,

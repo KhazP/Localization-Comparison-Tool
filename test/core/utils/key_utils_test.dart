@@ -102,7 +102,8 @@ void main() {
       });
 
       test('detects CONSTANT_CASE', () {
-        expect(KeyUtils.detectFormat('HELLO_WORLD'), KeyCaseFormat.constantCase);
+        expect(
+            KeyUtils.detectFormat('HELLO_WORLD'), KeyCaseFormat.constantCase);
       });
 
       test('detects param-case', () {

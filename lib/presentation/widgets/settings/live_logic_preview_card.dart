@@ -4,7 +4,6 @@ import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 
-
 class LiveLogicPreviewCard extends StatefulWidget {
   final AppSettings settings;
   final bool isDark;
@@ -22,8 +21,10 @@ class LiveLogicPreviewCard extends StatefulWidget {
 }
 
 class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
-  final TextEditingController _controllerA = TextEditingController(text: 'Example Key');
-  final TextEditingController _controllerB = TextEditingController(text: 'example key');
+  final TextEditingController _controllerA =
+      TextEditingController(text: 'Example Key');
+  final TextEditingController _controllerB =
+      TextEditingController(text: 'example key');
 
   @override
   void dispose() {
@@ -34,7 +35,8 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = SettingsThemeHelper(isDark: widget.isDark, isAmoled: widget.isAmoled);
+    final theme =
+        SettingsThemeHelper(isDark: widget.isDark, isAmoled: widget.isAmoled);
     final result = _calculateResult();
 
     return SettingsCardContainer(
@@ -50,18 +52,20 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
               Text(
                 'Test how your current settings affect matching logic.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: theme.textMutedColor,
-                ),
+                      color: theme.textMutedColor,
+                    ),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: _buildInput(context, 'String A', _controllerA, theme),
+                    child:
+                        _buildInput(context, 'String A', _controllerA, theme),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildInput(context, 'String B', _controllerB, theme),
+                    child:
+                        _buildInput(context, 'String B', _controllerB, theme),
                   ),
                 ],
               ),
@@ -86,9 +90,9 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
         Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: theme.textSecondaryColor,
-            fontWeight: FontWeight.bold,
-          ),
+                color: theme.textSecondaryColor,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -121,7 +125,7 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
     SettingsThemeHelper theme,
   ) {
     final statusColor = _getStatusColor(result.status);
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -152,16 +156,16 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
                 Text(
                   result.status,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   result.description,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: theme.textSecondaryColor,
-                  ),
+                        color: theme.textSecondaryColor,
+                      ),
                 ),
               ],
             ),
@@ -173,15 +177,15 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
                 Text(
                   '${(result.similarity * 100).toStringAsFixed(1)}%',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
                 ),
                 Text(
                   'Similarity',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: theme.textMutedColor,
-                  ),
+                        color: theme.textMutedColor,
+                      ),
                 ),
               ],
             ),
@@ -193,10 +197,11 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
   _MatchResult _calculateResult() {
     final rawA = _controllerA.text;
     final rawB = _controllerB.text;
-    
+
     // 1. Check Ignore Patterns (Treating inputs as Keys for this check)
     final ignorePatterns = widget.settings.ignorePatterns;
-    if (_matchesPattern(rawA, ignorePatterns) || _matchesPattern(rawB, ignorePatterns)) {
+    if (_matchesPattern(rawA, ignorePatterns) ||
+        _matchesPattern(rawB, ignorePatterns)) {
       return _MatchResult(
         status: 'Ignored',
         description: 'Input matches an ignore pattern.',
@@ -228,9 +233,9 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
     }
 
     if (valA.isEmpty || valB.isEmpty) {
-       // If one is empty and other isn't (since we checked equality above), it's New/Removed
-       // For this preview, let's just say "Different" or "New"
-       return _MatchResult(
+      // If one is empty and other isn't (since we checked equality above), it's New/Removed
+      // For this preview, let's just say "Different" or "New"
+      return _MatchResult(
         status: 'Different',
         description: 'One value is empty.',
         similarity: 0.0,
@@ -243,13 +248,15 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
     if (similarity >= threshold) {
       return _MatchResult(
         status: 'Similar / Modified',
-        description: 'Match score is above threshold (${(threshold * 100).round()}%).',
+        description:
+            'Match score is above threshold (${(threshold * 100).round()}%).',
         similarity: similarity,
       );
     } else {
       return _MatchResult(
         status: 'New / Different',
-        description: 'Match score is below threshold (${(threshold * 100).round()}%).',
+        description:
+            'Match score is below threshold (${(threshold * 100).round()}%).',
         similarity: similarity,
       );
     }

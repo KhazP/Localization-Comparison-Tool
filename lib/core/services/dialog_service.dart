@@ -4,7 +4,7 @@ import 'package:file_picker/file_picker.dart';
 
 class DialogService {
   /// Shows a standardized confirmation dialog.
-  /// 
+  ///
   /// Returns `true` if the user confirms, `false` otherwise.
   static Future<bool> showConfirmation({
     required BuildContext context,
@@ -24,8 +24,10 @@ class DialogService {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        titlePadding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 0),
-        contentPadding: const EdgeInsets.only(top: 16, left: 24, right: 24, bottom: 24),
+        titlePadding:
+            const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 0),
+        contentPadding:
+            const EdgeInsets.only(top: 16, left: 24, right: 24, bottom: 24),
         actionsPadding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
         backgroundColor: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
         surfaceTintColor: Colors.transparent, // Disable material 3 tint
@@ -34,7 +36,9 @@ class DialogService {
             if (icon != null) ...[
               Icon(
                 icon,
-                color: isDestructive ? AppThemeV2.error : theme.colorScheme.primary,
+                color: isDestructive
+                    ? AppThemeV2.error
+                    : theme.colorScheme.primary,
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -53,7 +57,9 @@ class DialogService {
         content: Text(
           content,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+            color: isDark
+                ? AppThemeV2.darkTextSecondary
+                : AppThemeV2.lightTextSecondary,
             height: 1.5,
           ),
         ),
@@ -61,7 +67,8 @@ class DialogService {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             style: TextButton.styleFrom(
-              foregroundColor: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+              foregroundColor:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
               textStyle: const TextStyle(fontWeight: FontWeight.w600),
             ),
             child: Text(cancelText),
@@ -70,7 +77,8 @@ class DialogService {
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
-              backgroundColor: isDestructive ? AppThemeV2.error : theme.colorScheme.primary,
+              backgroundColor:
+                  isDestructive ? AppThemeV2.error : theme.colorScheme.primary,
               foregroundColor: Colors.white,
               textStyle: const TextStyle(fontWeight: FontWeight.w600),
               elevation: 0,
@@ -115,7 +123,9 @@ class DialogService {
         content: Text(
           content,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+            color: isDark
+                ? AppThemeV2.darkTextSecondary
+                : AppThemeV2.lightTextSecondary,
             height: 1.5,
           ),
         ),

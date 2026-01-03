@@ -29,9 +29,8 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
           'Select Translation Memory (TM) files to reuse past translations.',
         ),
         const SizedBox(height: 16),
-        
         if (project.translationMemories.isEmpty)
-           Padding(
+          Padding(
             padding: const EdgeInsets.all(16.0),
             child: Center(
               child: Text(
@@ -58,7 +57,6 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
               );
             },
           ),
-          
         const SizedBox(height: 16),
         Center(
           child: FilledButton.icon(
@@ -76,36 +74,41 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
       allowedExtensions: ['tmx', 'json', 'xml'],
       dialogTitle: 'Select Translation Memory',
     );
-    
-    if (file != null && file.files.isNotEmpty && file.files.single.path != null && context.mounted) {
-       final path = file.files.single.path!;
-       final name = path.split(Platform.pathSeparator).last;
-       final extension = file.files.single.extension ?? '';
-       final newTM = TranslationMemoryReference(
-         id: const Uuid().v4(),
-         name: name,
-         path: path,
-         type: extension.toLowerCase().replaceAll('.', ''),
-       );
-       
-       final projectBloc = context.read<ProjectBloc>();
-       final currentProject = projectBloc.state.currentProject;
-       if (currentProject != null) {
-         final updatedTMs = List<TranslationMemoryReference>.from(currentProject.translationMemories)
-           ..add(newTM);
-         projectBloc.add(UpdateProjectTMs(updatedTMs));
-       }
+
+    if (file != null &&
+        file.files.isNotEmpty &&
+        file.files.single.path != null &&
+        context.mounted) {
+      final path = file.files.single.path!;
+      final name = path.split(Platform.pathSeparator).last;
+      final extension = file.files.single.extension ?? '';
+      final newTM = TranslationMemoryReference(
+        id: const Uuid().v4(),
+        name: name,
+        path: path,
+        type: extension.toLowerCase().replaceAll('.', ''),
+      );
+
+      final projectBloc = context.read<ProjectBloc>();
+      final currentProject = projectBloc.state.currentProject;
+      if (currentProject != null) {
+        final updatedTMs = List<TranslationMemoryReference>.from(
+            currentProject.translationMemories)
+          ..add(newTM);
+        projectBloc.add(UpdateProjectTMs(updatedTMs));
+      }
     }
   }
 
-  void _toggleTM(BuildContext context, TranslationMemoryReference tm, bool isEnabled) {
-     final projectBloc = context.read<ProjectBloc>();
-     final currentProject = projectBloc.state.currentProject;
-     if (currentProject != null) {
-       final updatedTMs = currentProject.translationMemories.map((t) {
-         return t.id == tm.id ? t.copyWith(isEnabled: isEnabled) : t;
-       }).toList();
-       projectBloc.add(UpdateProjectTMs(updatedTMs));
-     }
+  void _toggleTM(
+      BuildContext context, TranslationMemoryReference tm, bool isEnabled) {
+    final projectBloc = context.read<ProjectBloc>();
+    final currentProject = projectBloc.state.currentProject;
+    if (currentProject != null) {
+      final updatedTMs = currentProject.translationMemories.map((t) {
+        return t.id == tm.id ? t.copyWith(isEnabled: isEnabled) : t;
+      }).toList();
+      projectBloc.add(UpdateProjectTMs(updatedTMs));
+    }
   }
 }

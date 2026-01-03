@@ -7,7 +7,7 @@ import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_sta
 import 'package:localizer_app_main/core/services/toast_service.dart';
 
 /// Dialog for creating a new Localizer project.
-/// 
+///
 /// Allows the user to select a folder and enter a project name.
 class CreateProjectDialog extends StatefulWidget {
   const CreateProjectDialog({super.key});
@@ -40,7 +40,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     final result = await FilePicker.platform.getDirectoryPath(
       dialogTitle: 'Select Project Folder',
     );
-    
+
     if (result != null) {
       setState(() {
         _selectedFolderPath = result;
@@ -63,15 +63,15 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     setState(() => _isCreating = true);
 
     context.read<ProjectBloc>().add(CreateProject(
-      folderPath: _selectedFolderPath!,
-      projectName: _nameController.text.trim(),
-    ));
+          folderPath: _selectedFolderPath!,
+          projectName: _nameController.text.trim(),
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return BlocListener<ProjectBloc, ProjectState>(
       listener: (context, state) {
         if (state.status == ProjectStatus.loaded) {
@@ -82,7 +82,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           );
         } else if (state.status == ProjectStatus.error) {
           setState(() => _isCreating = false);
-          ToastService.showError(context, state.errorMessage ?? 'Failed to create project.');
+          ToastService.showError(
+              context, state.errorMessage ?? 'Failed to create project.');
         }
       },
       child: AlertDialog(
@@ -105,11 +106,11 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                   'A project lets you save custom settings for a specific folder. '
                   'A ".localizer" folder will be created to store your project configuration.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Folder Selection
                 Text(
                   'Project Folder',
@@ -120,7 +121,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                   onTap: _isCreating ? null : _pickFolder,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 14),
                     decoration: BoxDecoration(
                       border: Border.all(color: colorScheme.outline),
                       borderRadius: BorderRadius.circular(8),
@@ -128,11 +130,11 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                     child: Row(
                       children: [
                         Icon(
-                          _selectedFolderPath != null 
-                              ? Icons.folder 
+                          _selectedFolderPath != null
+                              ? Icons.folder
                               : Icons.folder_outlined,
-                          color: _selectedFolderPath != null 
-                              ? colorScheme.primary 
+                          color: _selectedFolderPath != null
+                              ? colorScheme.primary
                               : colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 12),
@@ -140,8 +142,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                           child: Text(
                             _selectedFolderPath ?? 'Click to select folder...',
                             style: TextStyle(
-                              color: _selectedFolderPath != null 
-                                  ? colorScheme.onSurface 
+                              color: _selectedFolderPath != null
+                                  ? colorScheme.onSurface
                                   : colorScheme.onSurfaceVariant,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -156,7 +158,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Project Name
                 Text(
                   'Project Name',
@@ -192,7 +194,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           ),
           FilledButton.icon(
             onPressed: _isCreating ? null : _createProject,
-            icon: _isCreating 
+            icon: _isCreating
                 ? SizedBox(
                     width: 16,
                     height: 16,

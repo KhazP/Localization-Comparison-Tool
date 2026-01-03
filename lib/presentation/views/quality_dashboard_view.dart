@@ -81,9 +81,10 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
     }
 
     // Filter history based on project toggle
-    final filteredHistory = (_showOnlyCurrentProject && currentProjectId != null)
-        ? _history.where((s) => s.projectId == currentProjectId).toList()
-        : _history;
+    final filteredHistory =
+        (_showOnlyCurrentProject && currentProjectId != null)
+            ? _history.where((s) => s.projectId == currentProjectId).toList()
+            : _history;
 
     setState(() {
       _dashboardFuture = _metricsService.buildDashboardData(
@@ -189,8 +190,8 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
                 _DashboardHeader(
                   onRefresh: () => _refreshDashboard(reloadHistory: true),
                   onExport: _exportReport,
-                  isProjectLoaded:
-                      context.watch<ProjectBloc>().state.status == ProjectStatus.loaded,
+                  isProjectLoaded: context.watch<ProjectBloc>().state.status ==
+                      ProjectStatus.loaded,
                   showProjectFilter: _showOnlyCurrentProject,
                   onToggleProjectFilter: () {
                     setState(() {
@@ -375,9 +376,7 @@ class _DashboardHeader extends StatelessWidget {
             child: IconButton(
               onPressed: onToggleProjectFilter,
               icon: Icon(
-                showProjectFilter
-                    ? LucideIcons.filter
-                    : LucideIcons.filterX,
+                showProjectFilter ? LucideIcons.filter : LucideIcons.filterX,
                 color: showProjectFilter
                     ? theme.colorScheme.primary
                     : theme.colorScheme.onSurface.withOpacity(0.6),
@@ -621,10 +620,10 @@ class _MainChartSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If we are in burnUp mode, we don't use WordTrend points for the chart, 
+    // If we are in burnUp mode, we don't use WordTrend points for the chart,
     // but the summary row logic is currently tied to WordTrend points.
-    // For simplicity, we hide the summary row for BurnUp for now, 
-    // or we could show a summary of Total Keys? 
+    // For simplicity, we hide the summary row for BurnUp for now,
+    // or we could show a summary of Total Keys?
     // Let's hide it for BurnUp to prevent confusion until we build a specific summary.
     // UPDATE: We now show summary for all modes.
     const showSummary = true;
@@ -664,13 +663,15 @@ class _MainChartSection extends StatelessWidget {
           Row(
             children: [
               if (mode == DashboardChartMode.burnUp)
-                 Text(
+                Text(
                   'Scope vs Progress',
                   style: theme.textTheme.bodySmall,
                 )
               else
-                 Text(
-                  mode == DashboardChartMode.coverage ? 'Coverage %' : 'Words Added',
+                Text(
+                  mode == DashboardChartMode.coverage
+                      ? 'Coverage %'
+                      : 'Words Added',
                   style: theme.textTheme.bodySmall,
                 ),
               const Spacer(),
@@ -693,7 +694,8 @@ class _MainChartSection extends StatelessWidget {
                   ),
                 ],
                 selected: {mode},
-                onSelectionChanged: (newSelection) => onModeChanged(newSelection.first),
+                onSelectionChanged: (newSelection) =>
+                    onModeChanged(newSelection.first),
                 style: const ButtonStyle(
                   visualDensity: VisualDensity.compact,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -756,7 +758,7 @@ class _TrendSummaryRow extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
-    
+
     // Extract values based on mode
     double latestValue = 0;
     double earliestValue = 0;
@@ -774,8 +776,8 @@ class _TrendSummaryRow extends StatelessWidget {
     } else {
       final points = wordPoints!;
       final isCoverage = mode == DashboardChartMode.coverage;
-      latestValue = isCoverage 
-          ? points.last.coveragePercent 
+      latestValue = isCoverage
+          ? points.last.coveragePercent
           : points.last.words.toDouble();
       earliestValue = isCoverage
           ? points.first.coveragePercent
@@ -786,12 +788,12 @@ class _TrendSummaryRow extends StatelessWidget {
     }
 
     final delta = latestValue - earliestValue;
-    
+
     // Format labels
     String latestLabel;
     String deltaLabel;
     IconData icon;
-    
+
     switch (mode) {
       case DashboardChartMode.coverage:
         latestLabel = '${latestValue.toStringAsFixed(1)}%';
@@ -815,19 +817,18 @@ class _TrendSummaryRow extends StatelessWidget {
             ' – ${DateFormat('MMM d').format(latestDate)}'
         : DateFormat('MMM d').format(latestDate);
 
-    final deltaColor = delta >= 0
-        ? theme.colorScheme.primary
-        : theme.colorScheme.error;
+    final deltaColor =
+        delta >= 0 ? theme.colorScheme.primary : theme.colorScheme.error;
 
     // For Coverage, negative delta is bad (red).
-    // For Word/Scope, positive delta (growth) might be neutral or green, 
-    // but usually "change" is colored by direction. 
+    // For Word/Scope, positive delta (growth) might be neutral or green,
+    // but usually "change" is colored by direction.
     // Let's keep logic simple: Up = Primary (Greenish), Down = Error (Red).
-    
+
     // Special labels
     String mainLabel;
     String changeLabel;
-    
+
     switch (mode) {
       case DashboardChartMode.words:
         mainLabel = 'Latest';
@@ -856,9 +857,8 @@ class _TrendSummaryRow extends StatelessWidget {
             label: changeLabel,
             value: deltaLabel,
             valueColor: deltaColor,
-            icon: delta >= 0
-                ? LucideIcons.trendingUp
-                : LucideIcons.trendingDown,
+            icon:
+                delta >= 0 ? LucideIcons.trendingUp : LucideIcons.trendingDown,
           ),
           _TrendStatChip(
             label: 'Range',
@@ -941,8 +941,7 @@ class _TrendStatChip extends StatelessWidget {
                 Text(
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color:
-                        theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1014,7 +1013,8 @@ class _WordTrendChart extends StatelessWidget {
         maxX: (points.length - 1).toDouble(),
         minY: 0,
         maxY: adjustedMaxY,
-        clipData: const FlClipData.all(), // Ensure lines don't bleed out of grid area
+        clipData:
+            const FlClipData.all(), // Ensure lines don't bleed out of grid area
         gridData: FlGridData(
           show: true,
           drawVerticalLine: true,
@@ -1044,7 +1044,8 @@ class _WordTrendChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               // Only show first and last labels to avoid repetition when many points are on same day
-              interval: points.length > 1 ? (points.length - 1).toDouble() : 1.0,
+              interval:
+                  points.length > 1 ? (points.length - 1).toDouble() : 1.0,
               reservedSize: 40, // Increased to prevent label cutoff
               getTitlesWidget: (value, meta) {
                 final index = value.round();
@@ -1071,7 +1072,8 @@ class _WordTrendChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 54, // Increased from 44 to fit large numbers like 2.3M
+              reservedSize:
+                  54, // Increased from 44 to fit large numbers like 2.3M
               interval: adjustedMaxY / 4,
               getTitlesWidget: (value, meta) {
                 return SideTitleWidget(
@@ -1106,8 +1108,7 @@ class _WordTrendChart extends StatelessWidget {
                   return null;
                 }
                 final point = points[index];
-                final dateLabel =
-                    tooltipDateFormat.format(point.timestamp);
+                final dateLabel = tooltipDateFormat.format(point.timestamp);
                 final valueLabel = showCoverage
                     ? '${point.coveragePercent.toStringAsFixed(1)}%'
                     : '${_formatCompactNumber(point.words)} words';
@@ -1640,19 +1641,19 @@ class _ActivityTrendChart extends StatelessWidget {
 
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d');
-    
+
     // Calculate max Y for scaling
     double maxY = 0;
     for (final point in points) {
-      // For stacked chart, max Y is the sum of positive bars (added + modified) 
-      // Removed is typically shown below or just stacked. 
-      // Let's stack them all positively for "Total Activity Volume" 
-      // OR stack Added/Modified up and Removed down? 
+      // For stacked chart, max Y is the sum of positive bars (added + modified)
+      // Removed is typically shown below or just stacked.
+      // Let's stack them all positively for "Total Activity Volume"
+      // OR stack Added/Modified up and Removed down?
       // A simple positive stack is usually easier to read for "Activity Volume".
       final total = point.added + point.modified + point.removed;
       if (total > maxY) maxY = total.toDouble();
     }
-    
+
     final adjustedMaxY = maxY == 0 ? 10.0 : maxY * 1.2;
     final interval = adjustedMaxY / 4;
 
@@ -1689,15 +1690,18 @@ class _ActivityTrendChart extends StatelessWidget {
               }
               return BarTooltipItem(
                 '$label: $value',
-                theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.bold),
+                theme.textTheme.bodySmall!
+                    .copyWith(fontWeight: FontWeight.bold),
               );
             },
           ),
         ),
         titlesData: FlTitlesData(
           show: true,
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -1708,10 +1712,12 @@ class _ActivityTrendChart extends StatelessWidget {
                   return const SizedBox.shrink();
                 }
                 // Only show first and last labels for clean look
-                if (points.length > 5 && index != 0 && index != points.length - 1) {
-                   return const SizedBox.shrink();
+                if (points.length > 5 &&
+                    index != 0 &&
+                    index != points.length - 1) {
+                  return const SizedBox.shrink();
                 }
-                
+
                 return SideTitleWidget(
                   axisSide: meta.axisSide,
                   child: Text(
@@ -1729,10 +1735,11 @@ class _ActivityTrendChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               interval: interval, // Match grid interval to prevent overcrowding
-              reservedSize: 42, // Slightly increased for 6-char strings like "100.5k"
+              reservedSize:
+                  42, // Slightly increased for 6-char strings like "100.5k"
               getTitlesWidget: (value, meta) {
-                 if (value == 0) return const SizedBox.shrink();
-                 return SideTitleWidget(
+                if (value == 0) return const SizedBox.shrink();
+                return SideTitleWidget(
                   axisSide: meta.axisSide,
                   child: Text(
                     _formatCompactNumber(value),
@@ -1759,34 +1766,35 @@ class _ActivityTrendChart extends StatelessWidget {
         barGroups: points.asMap().entries.map((entry) {
           final index = entry.key;
           final point = entry.value;
-          
+
           return BarChartGroupData(
             x: index,
             barRods: [
               // We want a stacked bar. fl_chart BarRodStackItem doesn't exist directly in simple API?
               // Actually BarChartGroupData has 'groupVertically' but usually we just use fromY/toY in BarRodStackItem?
-              // Or just BarChartGroupData with multiple rods if we want grouped. 
+              // Or just BarChartGroupData with multiple rods if we want grouped.
               // Stacked is supported by BarChartGroupData(barRods: [BarChartRodData(rodStackItems: ...)])
-              
+
               BarChartRodData(
                 toY: (point.added + point.modified + point.removed).toDouble(),
                 width: 16,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(4)),
                 color: Colors.transparent, // Only stack items have color
                 rodStackItems: [
                   BarChartRodStackItem(
-                    0, 
-                    point.added.toDouble(), 
+                    0,
+                    point.added.toDouble(),
                     const Color(0xFF4ADE80),
                   ),
                   BarChartRodStackItem(
-                    point.added.toDouble(), 
-                    (point.added + point.modified).toDouble(), 
+                    point.added.toDouble(),
+                    (point.added + point.modified).toDouble(),
                     Colors.amber,
                   ),
                   BarChartRodStackItem(
-                    (point.added + point.modified).toDouble(), 
-                    (point.added + point.modified + point.removed).toDouble(), 
+                    (point.added + point.modified).toDouble(),
+                    (point.added + point.modified + point.removed).toDouble(),
                     Colors.redAccent,
                   ),
                 ],
@@ -1799,8 +1807,6 @@ class _ActivityTrendChart extends StatelessWidget {
   }
 }
 
-
-
 class _BurnUpChart extends StatelessWidget {
   const _BurnUpChart({required this.points});
 
@@ -1812,13 +1818,13 @@ class _BurnUpChart extends StatelessWidget {
 
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d');
-    
+
     // Calculate max Y
     double maxY = 0;
     for (final point in points) {
       if (point.totalKeys > maxY) maxY = point.totalKeys.toDouble();
     }
-    
+
     final adjustedMaxY = maxY == 0 ? 10.0 : maxY * 1.2;
     final interval = adjustedMaxY / 4;
 
@@ -1840,8 +1846,10 @@ class _BurnUpChart extends StatelessWidget {
         ),
         titlesData: FlTitlesData(
           show: true,
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -1851,10 +1859,12 @@ class _BurnUpChart extends StatelessWidget {
                 if (index < 0 || index >= points.length) {
                   return const SizedBox.shrink();
                 }
-                if (points.length > 5 && index != 0 && index != points.length - 1) {
-                   return const SizedBox.shrink();
+                if (points.length > 5 &&
+                    index != 0 &&
+                    index != points.length - 1) {
+                  return const SizedBox.shrink();
                 }
-                
+
                 return SideTitleWidget(
                   axisSide: meta.axisSide,
                   child: Text(
@@ -1874,8 +1884,8 @@ class _BurnUpChart extends StatelessWidget {
               interval: interval,
               reservedSize: 42,
               getTitlesWidget: (value, meta) {
-                 if (value == 0) return const SizedBox.shrink();
-                 return SideTitleWidget(
+                if (value == 0) return const SizedBox.shrink();
+                return SideTitleWidget(
                   axisSide: meta.axisSide,
                   child: Text(
                     _formatCompactNumber(value),
@@ -1893,30 +1903,28 @@ class _BurnUpChart extends StatelessWidget {
         lineTouchData: LineTouchData(
           handleBuiltInTouches: true,
           touchTooltipData: LineTouchTooltipData(
-            tooltipRoundedRadius: 8,
-            tooltipPadding: const EdgeInsets.all(8),
-            getTooltipColor: (_) => theme.cardColor,
-            tooltipBorder: BorderSide(color: theme.dividerColor),
-             getTooltipItems: (touchedSpots) {
-              return touchedSpots.map((spot) {
-                 final index = spot.x.round();
-                 if (index < 0 || index >= points.length) return null;
-                 final point = points[index];
-                 
-                 final isTarget = spot.barIndex == 0;
-                 final label = isTarget ? 'Total' : 'Translated';
-                 final color = isTarget ? Colors.blueAccent : const Color(0xFF4ADE80);
-                 
-                 return LineTooltipItem(
-                   '$label: ${isTarget ? point.totalKeys : point.translatedKeys}',
-                   theme.textTheme.bodySmall!.copyWith(
-                     color: color, 
-                     fontWeight: FontWeight.bold
-                   ),
-                 );
-              }).toList();
-             }
-          ),
+              tooltipRoundedRadius: 8,
+              tooltipPadding: const EdgeInsets.all(8),
+              getTooltipColor: (_) => theme.cardColor,
+              tooltipBorder: BorderSide(color: theme.dividerColor),
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  final index = spot.x.round();
+                  if (index < 0 || index >= points.length) return null;
+                  final point = points[index];
+
+                  final isTarget = spot.barIndex == 0;
+                  final label = isTarget ? 'Total' : 'Translated';
+                  final color =
+                      isTarget ? Colors.blueAccent : const Color(0xFF4ADE80);
+
+                  return LineTooltipItem(
+                    '$label: ${isTarget ? point.totalKeys : point.translatedKeys}',
+                    theme.textTheme.bodySmall!
+                        .copyWith(color: color, fontWeight: FontWeight.bold),
+                  );
+                }).toList();
+              }),
         ),
         lineBarsData: [
           // Total Keys (Scope)
@@ -1932,7 +1940,8 @@ class _BurnUpChart extends StatelessWidget {
           // Translated Keys (Progress)
           LineChartBarData(
             spots: points.asMap().entries.map((e) {
-              return FlSpot(e.key.toDouble(), e.value.translatedKeys.toDouble());
+              return FlSpot(
+                  e.key.toDouble(), e.value.translatedKeys.toDouble());
             }).toList(),
             isCurved: true,
             color: const Color(0xFF4ADE80),

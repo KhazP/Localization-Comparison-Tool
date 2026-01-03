@@ -16,7 +16,7 @@ class DiffHighlighter {
   /// Gets or computes diffs between two texts
   static List<Diff> _getDiffs(String oldText, String newText) {
     final cacheKey = '$oldText\n---\n$newText';
-    
+
     if (_diffCache.containsKey(cacheKey)) {
       return _diffCache[cacheKey]!;
     }

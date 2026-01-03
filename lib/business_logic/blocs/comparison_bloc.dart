@@ -1,11 +1,14 @@
 import 'dart:io';
-import 'package:equatable/equatable.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
+
+part 'comparison_bloc.freezed.dart';
 
 // Events
 abstract class ComparisonEvent {}
@@ -16,9 +19,9 @@ class CompareFilesRequested extends ComparisonEvent {
   final File file1;
   final File file2;
   final AppSettings settings;
-  
+
   CompareFilesRequested({
-    required this.file1, 
+    required this.file1,
     required this.file2,
     required this.settings,
   });
@@ -43,9 +46,9 @@ class CompareFilesFromHistoryRequested extends ComparisonEvent {
   final String file2Path;
   final AppSettings settings;
   final bool isFromHistory;
-  
+
   CompareFilesFromHistoryRequested({
-    required this.file1Path, 
+    required this.file1Path,
     required this.file2Path,
     required this.settings,
     this.isFromHistory = true,
@@ -67,7 +70,8 @@ class ProceedWithComparison extends ComparisonEvent {
   final File file2;
   final bool wasLoadedFromHistory;
 
-  ProceedWithComparison(this.result, this.file1, this.file2, {this.wasLoadedFromHistory = false});
+  ProceedWithComparison(this.result, this.file1, this.file2,
+      {this.wasLoadedFromHistory = false});
 }
 
 /// Event to suppress the large file warning for a specific file path.
@@ -79,67 +83,37 @@ class SuppressLargeFileWarning extends ComparisonEvent {
 }
 
 // States
-abstract class ComparisonState extends Equatable {
-  const ComparisonState();
+@freezed
+class ComparisonState with _$ComparisonState {
+  const factory ComparisonState.initial() = ComparisonInitial;
 
-  @override
-  List<Object?> get props => [];
-}
+  const factory ComparisonState.loading({
+    String? message,
+  }) = ComparisonLoading;
 
-class ComparisonInitial extends ComparisonState {}
+  const factory ComparisonState.success(
+    ComparisonResult result,
+    File file1,
+    File file2, {
+    @Default(false) bool wasLoadedFromHistory,
+  }) = ComparisonSuccess;
 
-class ComparisonLoading extends ComparisonState {
-  final String? message;
-  const ComparisonLoading({this.message});
+  const factory ComparisonState.largeFileWarning(
+    ComparisonResult result,
+    File file1,
+    File file2,
+    int count, {
+    @Default(false) bool wasLoadedFromHistory,
+  }) = ComparisonLargeFileWarning;
 
-  @override
-  List<Object?> get props => [message];
-}
-
-class ComparisonSuccess extends ComparisonState {
-  final ComparisonResult result;
-  final File file1;
-  final File file2;
-  final bool wasLoadedFromHistory;
-
-  const ComparisonSuccess(this.result, this.file1, this.file2, {this.wasLoadedFromHistory = false});
-
-  @override
-  List<Object?> get props => [result, file1.path, file2.path, wasLoadedFromHistory];
-}
-
-class ComparisonLargeFileWarning extends ComparisonState {
-  final ComparisonResult result;
-  final File file1;
-  final File file2;
-  final bool wasLoadedFromHistory;
-  final int count;
-
-  const ComparisonLargeFileWarning(
-    this.result, 
-    this.file1, 
-    this.file2, 
-    this.count, 
-    {this.wasLoadedFromHistory = false}
-  );
-
-  @override
-  List<Object?> get props => [result, file1.path, file2.path, count, wasLoadedFromHistory];
-}
-
-class ComparisonFailure extends ComparisonState {
-  final String error;
-  const ComparisonFailure(this.error);
-
-  @override
-  List<Object?> get props => [error];
+  const factory ComparisonState.failure(String error) = ComparisonFailure;
 }
 
 // BLoC - Decoupled from SettingsBloc and ProgressBloc
 class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
   final ComparisonEngine comparisonEngine;
   final WarningSuppressionsRepository? warningSuppressionsRepository;
-  
+
   /// Optional progress callback for external progress tracking (percentage-based)
   final ProgressCallback? onProgress;
 
@@ -164,19 +138,17 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
   ) {
     // Check if the warning is suppressed for either file
     final isSuppressed = warningSuppressionsRepository != null &&
-        (warningSuppressionsRepository!.isLargeFileWarningSuppressed(file1.path) ||
-         warningSuppressionsRepository!.isLargeFileWarningSuppressed(file2.path));
+        (warningSuppressionsRepository!
+                .isLargeFileWarningSuppressed(file1.path) ||
+            warningSuppressionsRepository!
+                .isLargeFileWarningSuppressed(file2.path));
 
     if (result.diff.length > 50000 && !isSuppressed) {
-      emit(ComparisonLargeFileWarning(
-        result, 
-        file1, 
-        file2, 
-        result.diff.length, 
-        wasLoadedFromHistory: wasLoadedFromHistory
-      ));
+      emit(ComparisonLargeFileWarning(result, file1, file2, result.diff.length,
+          wasLoadedFromHistory: wasLoadedFromHistory));
     } else {
-      emit(ComparisonSuccess(result, file1, file2, wasLoadedFromHistory: wasLoadedFromHistory));
+      emit(ComparisonSuccess(result, file1, file2,
+          wasLoadedFromHistory: wasLoadedFromHistory));
     }
   }
 
@@ -184,23 +156,20 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     ProceedWithComparison event,
     Emitter<ComparisonState> emit,
   ) {
-    emit(ComparisonSuccess(
-      event.result, 
-      event.file1, 
-      event.file2, 
-      wasLoadedFromHistory: event.wasLoadedFromHistory
-    ));
+    emit(ComparisonSuccess(event.result, event.file1, event.file2,
+        wasLoadedFromHistory: event.wasLoadedFromHistory));
   }
 
   Future<void> _onSuppressLargeFileWarning(
     SuppressLargeFileWarning event,
     Emitter<ComparisonState> emit,
   ) async {
-    await warningSuppressionsRepository?.suppressLargeFileWarning(event.filePath);
+    await warningSuppressionsRepository
+        ?.suppressLargeFileWarning(event.filePath);
   }
 
   Future<void> _onCompareFilesRequested(
-    CompareFilesRequested event, 
+    CompareFilesRequested event,
     Emitter<ComparisonState> emit,
   ) async {
     emit(const ComparisonLoading(message: 'Starting comparison...'));
@@ -208,21 +177,21 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
 
     try {
       final result = await comparisonEngine.compareFiles(
-        event.file1, 
-        event.file2, 
+        event.file1,
+        event.file2,
         event.settings,
-        onProgress: onProgress != null 
-          ? (percentage, stage, {bytesProcessed, totalBytes}) {
-              onProgress?.call(
-                percentage, 
-                stage, 
-                bytesProcessed: bytesProcessed, 
-                totalBytes: totalBytes,
-              );
-            }
-          : null,
+        onProgress: onProgress != null
+            ? (percentage, stage, {bytesProcessed, totalBytes}) {
+                onProgress?.call(
+                  percentage,
+                  stage,
+                  bytesProcessed: bytesProcessed,
+                  totalBytes: totalBytes,
+                );
+              }
+            : null,
       );
-      
+
       onProgress?.call(100, 'Comparison complete');
       _handleComparisonResult(emit, result, event.file1, event.file2, false);
     } catch (e) {
@@ -232,7 +201,7 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
   }
 
   Future<void> _onCompareFilesFromHistoryRequested(
-    CompareFilesFromHistoryRequested event, 
+    CompareFilesFromHistoryRequested event,
     Emitter<ComparisonState> emit,
   ) async {
     emit(const ComparisonLoading(message: 'Loading files from history...'));
@@ -243,27 +212,28 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       final File file2 = File(event.file2Path);
 
       if (!await file1.exists() || !await file2.exists()) {
-        const errorMessage = 'One or both files from history not found at original paths.';
+        const errorMessage =
+            'One or both files from history not found at original paths.';
         emit(const ComparisonFailure(errorMessage));
         return;
       }
 
       final result = await comparisonEngine.compareFiles(
-        file1, 
-        file2, 
+        file1,
+        file2,
         event.settings,
-        onProgress: onProgress != null 
-          ? (percentage, stage, {bytesProcessed, totalBytes}) {
-              onProgress?.call(
-                percentage, 
-                stage, 
-                bytesProcessed: bytesProcessed, 
-                totalBytes: totalBytes,
-              );
-            }
-          : null,
+        onProgress: onProgress != null
+            ? (percentage, stage, {bytesProcessed, totalBytes}) {
+                onProgress?.call(
+                  percentage,
+                  stage,
+                  bytesProcessed: bytesProcessed,
+                  totalBytes: totalBytes,
+                );
+              }
+            : null,
       );
-      
+
       onProgress?.call(100, 'Comparison complete');
       _handleComparisonResult(emit, result, file1, file2, event.isFromHistory);
     } catch (e) {
@@ -283,20 +253,21 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       final result = await comparisonEngine.compareBilingualFile(
         event.file,
         event.settings,
-        onProgress: onProgress != null 
-          ? (percentage, stage, {bytesProcessed, totalBytes}) {
-              onProgress?.call(
-                percentage, 
-                stage, 
-                bytesProcessed: bytesProcessed, 
-                totalBytes: totalBytes,
-              );
-            }
-          : null,
+        onProgress: onProgress != null
+            ? (percentage, stage, {bytesProcessed, totalBytes}) {
+                onProgress?.call(
+                  percentage,
+                  stage,
+                  bytesProcessed: bytesProcessed,
+                  totalBytes: totalBytes,
+                );
+              }
+            : null,
       );
 
       onProgress?.call(100, 'Comparison complete');
-      _handleComparisonResult(emit, result, event.file, event.file, event.isFromHistory);
+      _handleComparisonResult(
+          emit, result, event.file, event.file, event.isFromHistory);
     } on InvalidBilingualFileException catch (e) {
       emit(ComparisonFailure(e.message));
     } catch (e) {

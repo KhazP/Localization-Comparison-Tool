@@ -1,0 +1,94 @@
+# Pre-commit hooks for LocalizerAppMain Flutter Project
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+        name: Fix end of file
+      - id: check-yaml
+        name: Validate YAML syntax
+      - id: check-json
+        name: Validate JSON syntax
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=1024']
+      - id: mixed-line-ending
+        name: Fix mixed line endings
+        args: ['--fix=lf']
+      - id: check-case-conflict
+        name: Check for filename case conflicts
+
+  # Dart/Flutter-specific hooks (using local hooks)
+  - repo: local
+    hooks:
+      # Dart formatting
+      - id: dart-format
+        name: Dart Format
+        description: Formats Dart code according to dart format
+        entry: dart format --set-exit-if-changed
+        language: system
+        types: [dart]
+        pass_filenames: true
+
+      # Flutter analyze (static analysis)
+      - id: flutter-analyze
+        name: Flutter Analyze
+        description: Runs Flutter static analysis
+        entry: flutter analyze --no-pub --no-fatal-warnings --no-fatal-infos
+        language: system
+        types: [dart]
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+      # Check pubspec.yaml is valid
+      - id: pubspec-check
+        name: Pubspec Check
+        description: Validates pubspec.yaml syntax
+        entry: flutter pub get --dry-run
+        language: system
+        files: pubspec\.yaml$
+        pass_filenames: false
+
+      # Check for generated files consistency
+      - id: check-build-runner
+        name: Check Generated Files
+        description: Ensures generated files are up to date
+        entry: 'cmd /c ".\\scripts\\check_build_runner.bat"'
+        language: system
+        files: \.(dart)$
+        pass_filenames: false
+        stages: [pre-commit]
+        always_run: false
+
+      # Run Flutter tests
+      - id: flutter-test
+        name: Flutter Tests
+        description: Runs Flutter unit tests
+        entry: flutter test --no-pub
+        language: system
+        types: [dart]
+        pass_filenames: false
+        stages: [pre-push]
+
+  # Commit message linting
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        name: Validate commit message
+        stages: [commit-msg]
+
+# Hook stages configuration:
+# - pre-commit: dart-format, pubspec-check, check-build-runner
+# - pre-push: flutter-analyze, flutter-test
+# - commit-msg: commitizen (validates conventional commits)

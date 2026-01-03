@@ -19,7 +19,7 @@ class MacOSIntegrationService {
 
   /// Initialize macOS window styling with vibrancy/translucency effects.
   /// This is the macOS equivalent of Windows Mica effect.
-  /// 
+  ///
   /// Call this during app initialization on macOS.
   static Future<void> initializeWindowStyling() async {
     if (!isMacOS) return;
@@ -28,10 +28,10 @@ class MacOSIntegrationService {
       await WindowManipulator.initialize();
       await WindowManipulator.makeTitlebarTransparent();
       await WindowManipulator.enableFullSizeContentView();
-      
+
       // Set default material
       await WindowManipulator.setMaterial(NSVisualEffectViewMaterial.sidebar);
-      
+
       debugPrint('macOS window styling initialized');
     } catch (e) {
       debugPrint('Failed to initialize macOS window styling: $e');
@@ -40,7 +40,8 @@ class MacOSIntegrationService {
 
   /// Set the window's vibrancy effect material.
   /// Common materials: sidebar, headerView, menu, popover, sheet, etc.
-  static Future<void> setWindowMaterial(NSVisualEffectViewMaterial material) async {
+  static Future<void> setWindowMaterial(
+      NSVisualEffectViewMaterial material) async {
     if (!isMacOS) return;
 
     try {
@@ -60,7 +61,8 @@ class MacOSIntegrationService {
 
     try {
       await _dockProgress.setProgress(progress);
-      debugPrint('macOS dock progress set to: ${(progress * 100).toStringAsFixed(0)}%');
+      debugPrint(
+          'macOS dock progress set to: ${(progress * 100).toStringAsFixed(0)}%');
     } catch (e) {
       debugPrint('Failed to set dock progress: $e');
     }
@@ -104,7 +106,7 @@ class MacOSIntegrationService {
       await trayManager.setIcon(
         Platform.isWindows ? 'assets/logo/logo.ico' : 'assets/logo/logo.png',
       );
-      
+
       final Menu menu = Menu(
         items: [
           MenuItem(

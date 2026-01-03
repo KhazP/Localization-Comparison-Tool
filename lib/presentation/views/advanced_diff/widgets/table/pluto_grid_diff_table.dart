@@ -7,7 +7,7 @@ import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/dial
 import 'package:localizer_app_main/core/services/toast_service.dart';
 
 /// Excel-like data grid for the Advanced Diff View using PlutoGrid.
-/// 
+///
 /// Features:
 /// - Frozen Key and Source columns
 /// - Toggle between inline and dialog editing
@@ -98,7 +98,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
       final controller = context.read<AdvancedDiffController>();
       final key = event.row.cells['key']?.value as String?;
       final newValue = event.value?.toString() ?? '';
-      
+
       if (key != null && key.isNotEmpty) {
         controller.updateEntry(key, newValue);
         // Mark the row as modified visually
@@ -108,7 +108,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   }
 
   /// Shows the edit dialog for dialog mode editing
-  Future<void> _showEditDialog(AdvancedDiffController controller, String key) async {
+  Future<void> _showEditDialog(
+      AdvancedDiffController controller, String key) async {
     final source = controller.getSourceValue(key);
     final target = controller.getTargetValue(key);
 
@@ -121,12 +122,12 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         targetValue: target,
         fileExtension: controller.targetFileExtension,
         onSave: (newValue) {
-           // Basic update
-           if (newValue != target) {
-             controller.updateEntry(key, newValue);
-             controller.addToTM(key, source, newValue);
-             _refreshGrid(controller);
-           }
+          // Basic update
+          if (newValue != target) {
+            controller.updateEntry(key, newValue);
+            controller.addToTM(key, source, newValue);
+            _refreshGrid(controller);
+          }
         },
       ),
     );
@@ -135,9 +136,10 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   void _handleBulkMarkReviewed() {
     final controller = context.read<AdvancedDiffController>();
     final selectedRows = _stateManager?.currentSelectingRows ?? [];
-    
+
     if (selectedRows.isEmpty) {
-      ToastService.showInfo(context, 'Select rows first (Shift+Click or Ctrl+Click)');
+      ToastService.showInfo(
+          context, 'Select rows first (Shift+Click or Ctrl+Click)');
       return;
     }
 
@@ -147,17 +149,19 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         controller.toggleReviewed(key);
       }
     }
-    
+
     _refreshGrid(controller);
-    ToastService.showSuccess(context, 'Marked ${selectedRows.length} rows as reviewed');
+    ToastService.showSuccess(
+        context, 'Marked ${selectedRows.length} rows as reviewed');
   }
 
   void _handleBulkRevert() {
     final controller = context.read<AdvancedDiffController>();
     final selectedRows = _stateManager?.currentSelectingRows ?? [];
-    
+
     if (selectedRows.isEmpty) {
-      ToastService.showInfo(context, 'Select rows first (Shift+Click or Ctrl+Click)');
+      ToastService.showInfo(
+          context, 'Select rows first (Shift+Click or Ctrl+Click)');
       return;
     }
 
@@ -167,7 +171,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         controller.revertEntry(key);
       }
     }
-    
+
     _refreshGrid(controller);
     ToastService.showSuccess(context, 'Reverted ${selectedRows.length} rows');
   }
@@ -175,7 +179,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Consumer<AdvancedDiffController>(
       builder: (context, controller, _) {
         // Rebuild columns and rows when controller changes
@@ -189,7 +193,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
           useInlineEditing: controller.useInlineEditing,
           onEditCell: (key) => _showEditDialog(controller, key),
         );
-        
+
         _rows = PlutoGridAdapter.createRows(
           entries: controller.processedEntries,
           sourceData: controller.file1Data,
@@ -259,13 +263,15 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
                     )
                   : PlutoGrid(
                       // Key forces rebuild when edit mode changes
-                      key: ValueKey('pluto_grid_inline_${controller.useInlineEditing}'),
+                      key: ValueKey(
+                          'pluto_grid_inline_${controller.useInlineEditing}'),
                       columns: _columns,
                       rows: _rows,
                       onLoaded: (PlutoGridOnLoadedEvent event) {
                         _stateManager = event.stateManager;
                         // Enable row selection for bulk actions
-                        _stateManager?.setSelectingMode(PlutoGridSelectingMode.row);
+                        _stateManager
+                            ?.setSelectingMode(PlutoGridSelectingMode.row);
                       },
                       onChanged: _handleCellChanged,
                       mode: PlutoGridMode.normal,
@@ -274,8 +280,10 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
                         style: PlutoGridStyleConfig(
                           gridBackgroundColor: theme.scaffoldBackgroundColor,
                           rowColor: theme.cardColor,
-                          activatedColor: theme.colorScheme.primary.withValues(alpha: 0.05),
-                          activatedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                          activatedColor:
+                              theme.colorScheme.primary.withValues(alpha: 0.05),
+                          activatedBorderColor:
+                              theme.colorScheme.primary.withValues(alpha: 0.3),
                           gridBorderColor: theme.dividerColor,
                           borderColor: theme.dividerColor,
                           // Make edit cell seamless - same as row background
@@ -287,7 +295,9 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
                             fontFamily: 'RobotoMono',
                             color: theme.textTheme.bodyMedium?.color,
                           ),
-                          columnTextStyle: (theme.textTheme.titleSmall ?? const TextStyle()).copyWith(
+                          columnTextStyle:
+                              (theme.textTheme.titleSmall ?? const TextStyle())
+                                  .copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                           iconColor: theme.iconTheme.color ?? Colors.grey,
@@ -300,7 +310,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
                           // Taller rows for multi-line text
                           rowHeight: 72,
                           columnHeight: 48,
-                          defaultCellPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          defaultCellPadding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                         ),
                         // Column settings - auto expand to fill width
                         columnSize: const PlutoGridColumnSizeConfig(
@@ -308,7 +319,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
                           resizeMode: PlutoResizeMode.normal,
                         ),
                         // Editing - enable on single tap/click
-                        enterKeyAction: PlutoGridEnterKeyAction.editingAndMoveDown,
+                        enterKeyAction:
+                            PlutoGridEnterKeyAction.editingAndMoveDown,
                         // Scrollbar
                         scrollbar: const PlutoGridScrollbarConfig(
                           isAlwaysShown: true,

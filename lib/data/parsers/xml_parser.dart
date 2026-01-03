@@ -21,7 +21,8 @@ class XmlParser extends LocalizationParser {
         debugPrint('Info: XML file ${file.path} is empty.');
         return translations;
       }
-      final xml_package.XmlDocument document = xml_package.XmlDocument.parse(content);
+      final xml_package.XmlDocument document =
+          xml_package.XmlDocument.parse(content);
 
       // Attempt 1: Android strings.xml style: <string name="key">value</string>
       document.findAllElements('string').forEach((element) {
@@ -33,17 +34,21 @@ class XmlParser extends LocalizationParser {
 
       // Attempt 2: If first attempt yielded nothing, try simple <key>value</key>
       if (translations.isEmpty && document.rootElement.children.isNotEmpty) {
-        debugPrint('Info: No <string name="key"> elements found in ${file.path}. Attempting <key>value</key> structure.');
+        debugPrint(
+            'Info: No <string name="key"> elements found in ${file.path}. Attempting <key>value</key> structure.');
         for (var node in document.rootElement.children) {
           if (node is xml_package.XmlElement) {
             // Ensure the element has exactly one child and that child is text
             // Also check that the element itself doesn't have attributes that might signify a more complex structure
-            if (node.children.length == 1 && node.children.first is xml_package.XmlText && node.attributes.isEmpty) {
+            if (node.children.length == 1 &&
+                node.children.first is xml_package.XmlText &&
+                node.attributes.isEmpty) {
               final String key = node.name.local;
               final String value = node.innerText.trim();
               if (key.isNotEmpty) {
                 if (translations.containsKey(key)) {
-                     debugPrint('Warning: Duplicate key "$key" found in XML file ${file.path} (generic structure). Overwriting.');
+                  debugPrint(
+                      'Warning: Duplicate key "$key" found in XML file ${file.path} (generic structure). Overwriting.');
                 }
                 translations[key] = value;
               }
@@ -51,11 +56,11 @@ class XmlParser extends LocalizationParser {
           }
         }
       }
-      
-      if (translations.isEmpty) {
-        debugPrint("Warning: XML file ${file.path} could not be parsed into key-value pairs with common generic structures.");
-      }
 
+      if (translations.isEmpty) {
+        debugPrint(
+            "Warning: XML file ${file.path} could not be parsed into key-value pairs with common generic structures.");
+      }
     } catch (e) {
       debugPrint('Error parsing generic XML file ${file.path}: $e');
       return {};
@@ -67,4 +72,4 @@ class XmlParser extends LocalizationParser {
   List<String> getSupportedExtensions() {
     return ['.xml'];
   }
-} 
+}

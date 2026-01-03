@@ -1,17 +1,19 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/data/models/project.dart';
+
+part 'project_state.freezed.dart';
 
 /// Status of the project state.
 enum ProjectStatus {
   /// No project operations in progress.
   initial,
-  
+
   /// Project is being loaded or created.
   loading,
-  
+
   /// A project is currently open.
   loaded,
-  
+
   /// An error occurred during project operations.
   error,
 }
@@ -20,85 +22,58 @@ enum ProjectStatus {
 enum ProjectImportStatus { success, warning, error }
 
 /// One-time feedback message for project imports.
-class ProjectImportFeedback extends Equatable {
-  final int id;
-  final ProjectImportStatus status;
-  final String message;
-
-  const ProjectImportFeedback({
-    required this.id,
-    required this.status,
-    required this.message,
-  });
-
-  @override
-  List<Object?> get props => [id, status, message];
+@freezed
+class ProjectImportFeedback with _$ProjectImportFeedback {
+  /// Creates a feedback message for project import.
+  const factory ProjectImportFeedback({
+    required int id,
+    required ProjectImportStatus status,
+    required String message,
+  }) = _ProjectImportFeedback;
 }
 
 /// State for project management.
-class ProjectState extends Equatable {
-  /// Current status of the project state.
-  final ProjectStatus status;
-  
-  /// The currently open project, if any.
-  final Project? currentProject;
-  
-  /// Error message, if status is error.
-  final String? errorMessage;
+@freezed
+class ProjectState with _$ProjectState {
+  const ProjectState._();
 
-  /// Latest import feedback message, if any.
-  final ProjectImportFeedback? importFeedback;
+  /// Creates a project state.
+  const factory ProjectState({
+    /// Current status of the project state.
+    @Default(ProjectStatus.initial) ProjectStatus status,
 
-  const ProjectState({
-    this.status = ProjectStatus.initial,
-    this.currentProject,
-    this.errorMessage,
-    this.importFeedback,
-  });
+    /// The currently open project, if any.
+    Project? currentProject,
+
+    /// Error message, if status is error.
+    String? errorMessage,
+
+    /// Latest import feedback message, if any.
+    ProjectImportFeedback? importFeedback,
+  }) = _ProjectState;
 
   /// Initial state with no project.
   factory ProjectState.initial() => const ProjectState();
 
   /// Loading state.
-  factory ProjectState.loading() => const ProjectState(status: ProjectStatus.loading);
+  factory ProjectState.loading() =>
+      const ProjectState(status: ProjectStatus.loading);
 
   /// State with a loaded project.
   factory ProjectState.loaded(Project project) => ProjectState(
-    status: ProjectStatus.loaded,
-    currentProject: project,
-  );
+        status: ProjectStatus.loaded,
+        currentProject: project,
+      );
 
   /// Error state with a message.
   factory ProjectState.error(String message) => ProjectState(
-    status: ProjectStatus.error,
-    errorMessage: message,
-  );
+        status: ProjectStatus.error,
+        errorMessage: message,
+      );
 
   /// Whether a project is currently open.
   bool get hasProject => currentProject != null;
 
   /// Convenience getter for project name.
   String? get projectName => currentProject?.name;
-
-  ProjectState copyWith({
-    ProjectStatus? status,
-    Project? currentProject,
-    String? errorMessage,
-    ProjectImportFeedback? importFeedback,
-    bool clearProject = false,
-    bool clearError = false,
-    bool clearImportFeedback = false,
-  }) {
-    return ProjectState(
-      status: status ?? this.status,
-      currentProject: clearProject ? null : (currentProject ?? this.currentProject),
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      importFeedback:
-          clearImportFeedback ? null : (importFeedback ?? this.importFeedback),
-    );
-  }
-
-  @override
-  List<Object?> get props =>
-      [status, currentProject, errorMessage, importFeedback];
 }

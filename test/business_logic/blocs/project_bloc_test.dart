@@ -9,6 +9,7 @@ import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockProjectRepository extends Mock implements ProjectRepository {}
+
 class MockProjectImportService extends Mock implements ProjectImportService {}
 
 void main() {
@@ -54,9 +55,9 @@ void main() {
         'emits [loading, loaded] when project creation succeeds',
         build: () {
           when(() => mockRepository.createProject(
-            folderPath: any(named: 'folderPath'),
-            projectName: any(named: 'projectName'),
-          )).thenAnswer((_) async => testProject);
+                folderPath: any(named: 'folderPath'),
+                projectName: any(named: 'projectName'),
+              )).thenAnswer((_) async => testProject);
           return projectBloc;
         },
         act: (bloc) => bloc.add(const CreateProject(
@@ -77,9 +78,9 @@ void main() {
         'emits [loading, error] when project creation fails',
         build: () {
           when(() => mockRepository.createProject(
-            folderPath: any(named: 'folderPath'),
-            projectName: any(named: 'projectName'),
-          )).thenThrow(ProjectCreationException('Already exists'));
+                folderPath: any(named: 'folderPath'),
+                projectName: any(named: 'projectName'),
+              )).thenThrow(ProjectCreationException('Already exists'));
           return projectBloc;
         },
         act: (bloc) => bloc.add(const CreateProject(
@@ -127,7 +128,8 @@ void main() {
               .having((s) => s.status, 'status', ProjectStatus.loading),
           isA<ProjectState>()
               .having((s) => s.status, 'status', ProjectStatus.error)
-              .having((s) => s.errorMessage, 'message', contains('No project found')),
+              .having((s) => s.errorMessage, 'message',
+                  contains('No project found')),
         ],
       );
     });
@@ -166,7 +168,8 @@ void main() {
         expect: () => [
           isA<ProjectState>()
               .having((s) => s.status, 'status', ProjectStatus.error)
-              .having((s) => s.errorMessage, 'message', contains('moved or deleted')),
+              .having((s) => s.errorMessage, 'message',
+                  contains('moved or deleted')),
         ],
       );
 

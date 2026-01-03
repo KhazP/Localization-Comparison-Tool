@@ -1,7 +1,7 @@
 import 'package:recase/recase.dart';
 
 /// Utility class for transforming localization key formats.
-/// 
+///
 /// Provides conversions between common naming conventions used in
 /// localization files: camelCase, snake_case, PascalCase, Title Case, etc.
 class KeyUtils {

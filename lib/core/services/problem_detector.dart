@@ -63,8 +63,8 @@ class ProblemDetector {
     // Microcopy check: if source has 1-2 words, afford simpler 2x rule
     final wordCount = sourceTrimmed.split(RegExp(r'\s+')).length;
     final effectiveMax = wordCount <= 2 ? 2.0 : maxRatio;
-    
-    // For very short text (e.g. "Ok"), 30% is just 1 char. 
+
+    // For very short text (e.g. "Ok"), 30% is just 1 char.
     // Let's enforce the ratio strictness only if length > 5 or so?
     // User credentials -> "minSourceLength" handles extremely short stuff.
     // Let's stick to the requested ratios.

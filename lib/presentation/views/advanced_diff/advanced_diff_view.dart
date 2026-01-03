@@ -1,4 +1,3 @@
-
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
@@ -39,7 +38,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     super.dispose();
   }
 
-  void _handleSaveChanges(BuildContext context, AdvancedDiffController controller) async {
+  void _handleSaveChanges(
+      BuildContext context, AdvancedDiffController controller) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -68,7 +68,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     }
   }
 
-  Future<void> _handleExport(BuildContext context, AdvancedDiffController controller) async {
+  Future<void> _handleExport(
+      BuildContext context, AdvancedDiffController controller) async {
     final path = await controller.exportData();
     if (path != null && context.mounted) {
       ToastService.showSuccessWithAction(
@@ -116,11 +117,13 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
             },
             child: CallbackShortcuts(
               bindings: {
-                const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): () {
+                const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true):
+                    () {
                   controller.previousPage();
                   // ToastService.showInfo(context, 'Previous Page');
                 },
-                const SingleActivator(LogicalKeyboardKey.arrowDown, alt: true): () {
+                const SingleActivator(LogicalKeyboardKey.arrowDown, alt: true):
+                    () {
                   controller.nextPage();
                   // ToastService.showInfo(context, 'Next Page');
                 },
@@ -138,9 +141,12 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                           focusNode: _searchFocusNode,
                           decoration: InputDecoration(
                             hintText: 'Search keys & values... (Ctrl+F)',
-                            prefixIcon: const Icon(LucideIcons.search, size: 18),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                            prefixIcon:
+                                const Icon(LucideIcons.search, size: 18),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
                             suffixIcon: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -153,11 +159,14 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: controller.isFuzzyEnabled
-                                            ? Theme.of(context).colorScheme.primary
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
                                             : Theme.of(context).hintColor,
                                       ),
                                     ),
-                                    onPressed: () => controller.toggleFuzzy(!controller.isFuzzyEnabled),
+                                    onPressed: () => controller.toggleFuzzy(
+                                        !controller.isFuzzyEnabled),
                                   ),
                                 ),
                                 Tooltip(
@@ -169,11 +178,14 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: controller.isRegexEnabled
-                                            ? Theme.of(context).colorScheme.primary
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
                                             : Theme.of(context).hintColor,
                                       ),
                                     ),
-                                    onPressed: () => controller.toggleRegex(!controller.isRegexEnabled),
+                                    onPressed: () => controller.toggleRegex(
+                                        !controller.isRegexEnabled),
                                   ),
                                 ),
                               ],
@@ -204,17 +216,17 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                           Tooltip(
                             message: 'Save Changes (Ctrl+S)',
                             child: FilledButton(
-                                onPressed: () => _handleSaveChanges(context, controller), 
-                                child: const Text('Save Changes')
-                            ),
+                                onPressed: () =>
+                                    _handleSaveChanges(context, controller),
+                                child: const Text('Save Changes')),
                           ),
                           const SizedBox(width: 8),
                           Tooltip(
                             message: 'Export Data (Ctrl+E)',
                             child: OutlinedButton(
-                                onPressed: () => _handleExport(context, controller), 
-                                child: const Text('Export')
-                            ),
+                                onPressed: () =>
+                                    _handleExport(context, controller),
+                                child: const Text('Export')),
                           ),
                         ],
                       ),
@@ -224,7 +236,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                       child: Row(
                         children: [
                           const AdvancedDiffSidebar(),
-                          VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
+                          VerticalDivider(
+                              width: 1, color: Theme.of(context).dividerColor),
                           const Expanded(
                             child: PlutoGridDiffTable(),
                           ),

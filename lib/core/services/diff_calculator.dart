@@ -11,7 +11,7 @@ class DiffCalculator {
   /// - `Key-based`: Matches entries by key name (traditional approach).
   /// - `Order-based`: Matches entries by position in file (index-based).
   /// - `Smart Match`: Key-based first, then attempts to detect renamed keys.
-  /// 
+  ///
   /// [onProgress] is an optional callback for reporting progress during calculation.
   static Map<String, ComparisonStatusDetail> calculateDiff({
     required Map<String, String> data1,
@@ -87,9 +87,9 @@ class DiffCalculator {
       value2 = _normalizeValue(value2, ignoreCase, ignoreWhitespace);
 
       diff[key] = _compareValues(value1, value2, similarityThreshold);
-      
+
       processedKeys++;
-      
+
       // Report progress every 1% to avoid too many callbacks
       if (onProgress != null && totalKeys > 0) {
         final currentPercent = (processedKeys * 100 / totalKeys).floor();
@@ -99,7 +99,7 @@ class DiffCalculator {
         }
       }
     }
-    
+
     // Final progress report
     onProgress?.call(totalKeys, totalKeys);
     return diff;
@@ -116,8 +116,10 @@ class DiffCalculator {
     DiffProgressCallback? onProgress,
   }) {
     final diff = <String, ComparisonStatusDetail>{};
-    final keys1 = data1.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
-    final keys2 = data2.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
+    final keys1 =
+        data1.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
+    final keys2 =
+        data2.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
 
     final maxLength = keys1.length > keys2.length ? keys1.length : keys2.length;
     int lastReportedPercent = 0;
@@ -136,7 +138,7 @@ class DiffCalculator {
       value2 = _normalizeValue(value2, ignoreCase, ignoreWhitespace);
 
       diff[displayKey] = _compareValues(value1, value2, similarityThreshold);
-      
+
       // Report progress every 1%
       if (onProgress != null && maxLength > 0) {
         final currentPercent = ((i + 1) * 100 / maxLength).floor();
@@ -146,7 +148,7 @@ class DiffCalculator {
         }
       }
     }
-    
+
     onProgress?.call(maxLength, maxLength);
     return diff;
   }
@@ -164,12 +166,12 @@ class DiffCalculator {
     final diff = <String, ComparisonStatusDetail>{};
     final matchedKeys1 = <String>{};
     final matchedKeys2 = <String>{};
-    
+
     // Calculate total work: phase1 + phase2 + phase3 + phase4
     final totalKeys = data1.length + data2.length;
     int processedKeys = 0;
     int lastReportedPercent = 0;
-    
+
     void reportProgress() {
       if (onProgress != null && totalKeys > 0) {
         final currentPercent = (processedKeys * 100 / totalKeys).floor();
@@ -188,8 +190,10 @@ class DiffCalculator {
       }
 
       if (data2.containsKey(key)) {
-        String? value1 = _normalizeValue(data1[key], ignoreCase, ignoreWhitespace);
-        String? value2 = _normalizeValue(data2[key], ignoreCase, ignoreWhitespace);
+        String? value1 =
+            _normalizeValue(data1[key], ignoreCase, ignoreWhitespace);
+        String? value2 =
+            _normalizeValue(data2[key], ignoreCase, ignoreWhitespace);
         diff[key] = _compareValues(value1, value2, similarityThreshold);
         matchedKeys1.add(key);
         matchedKeys2.add(key);
@@ -199,23 +203,32 @@ class DiffCalculator {
     }
 
     // Phase 2: Find unmatched keys
-    final unmatchedKeys1 = data1.keys.where((k) => !matchedKeys1.contains(k) && !_shouldIgnoreKey(k, ignorePatterns)).toList();
-    final unmatchedKeys2 = data2.keys.where((k) => !matchedKeys2.contains(k) && !_shouldIgnoreKey(k, ignorePatterns)).toList();
+    final unmatchedKeys1 = data1.keys
+        .where((k) =>
+            !matchedKeys1.contains(k) && !_shouldIgnoreKey(k, ignorePatterns))
+        .toList();
+    final unmatchedKeys2 = data2.keys
+        .where((k) =>
+            !matchedKeys2.contains(k) && !_shouldIgnoreKey(k, ignorePatterns))
+        .toList();
 
     // Phase 3: Try to match by value similarity (detect renames)
     final usedKeys2 = <String>{};
     for (final key1 in unmatchedKeys1) {
-      String? value1 = _normalizeValue(data1[key1], ignoreCase, ignoreWhitespace);
+      String? value1 =
+          _normalizeValue(data1[key1], ignoreCase, ignoreWhitespace);
       String? bestMatch;
       double bestSimilarity = 0.0;
 
       for (final key2 in unmatchedKeys2) {
         if (usedKeys2.contains(key2)) continue;
-        String? value2 = _normalizeValue(data2[key2], ignoreCase, ignoreWhitespace);
+        String? value2 =
+            _normalizeValue(data2[key2], ignoreCase, ignoreWhitespace);
 
         if (value1 != null && value2 != null) {
           final similarity = value1.similarityTo(value2);
-          if (similarity >= similarityThreshold && similarity > bestSimilarity) {
+          if (similarity >= similarityThreshold &&
+              similarity > bestSimilarity) {
             bestSimilarity = similarity;
             bestMatch = key2;
           }
@@ -258,7 +271,8 @@ class DiffCalculator {
     return false;
   }
 
-  static String? _normalizeValue(String? value, bool ignoreCase, bool ignoreWhitespace) {
+  static String? _normalizeValue(
+      String? value, bool ignoreCase, bool ignoreWhitespace) {
     if (value == null) return null;
     var result = value;
     if (ignoreWhitespace) {
@@ -270,7 +284,8 @@ class DiffCalculator {
     return result;
   }
 
-  static ComparisonStatusDetail _compareValues(String? value1, String? value2, double similarityThreshold) {
+  static ComparisonStatusDetail _compareValues(
+      String? value1, String? value2, double similarityThreshold) {
     if (value1 == null && value2 != null) {
       return ComparisonStatusDetail.added();
     } else if (value1 != null && value2 == null) {

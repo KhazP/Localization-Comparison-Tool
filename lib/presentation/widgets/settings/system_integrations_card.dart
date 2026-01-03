@@ -127,8 +127,8 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                       ToastService.showSuccess(
                                           context, 'Context menu added!');
                                     } else {
-                                      ToastService.showError(
-                                          context, 'Failed to add context menu');
+                                      ToastService.showError(context,
+                                          'Failed to add context menu');
                                     }
                                   }
                                 }
@@ -227,8 +227,11 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                       .unregisterFileExtension(ext);
                               if (context.mounted) {
                                 if (success) {
-                                  ToastService.showSuccess(context,
-                                      val ? '$ext registered!' : '$ext unregistered!');
+                                  ToastService.showSuccess(
+                                      context,
+                                      val
+                                          ? '$ext registered!'
+                                          : '$ext unregistered!');
                                 } else {
                                   ToastService.showError(context,
                                       'Failed to ${val ? 'register' : 'unregister'} $ext');
@@ -272,8 +275,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                               }
                             }
                           : null,
-                      icon: const Icon(LucideIcons.checkCircle,
-                          size: 18),
+                      icon: const Icon(LucideIcons.checkCircle, size: 18),
                       label: const Text('Register All'),
                     ),
                   ),
@@ -298,8 +300,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                               }
                             }
                           : null,
-                      icon: const Icon(LucideIcons.minusCircle,
-                          size: 18),
+                      icon: const Icon(LucideIcons.minusCircle, size: 18),
                       label: const Text('Unregister All'),
                     ),
                   ),
@@ -361,8 +362,8 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                           .unregisterProtocolHandler();
                                   if (context.mounted) {
                                     if (success) {
-                                      ToastService.showSuccess(context,
-                                          'Protocol handler removed!');
+                                      ToastService.showSuccess(
+                                          context, 'Protocol handler removed!');
                                     } else {
                                       ToastService.showError(
                                           context, 'Failed to remove');

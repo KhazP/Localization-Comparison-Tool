@@ -11,8 +11,11 @@ import 'package:localizer_app_main/data/models/project_settings.dart';
 
 // Mock classes using mocktail
 class MockSettingsRepository extends Mock implements SettingsRepository {}
+
 class MockSecureStorageService extends Mock implements SecureStorageService {}
-class MockApiKeyValidationService extends Mock implements ApiKeyValidationService {}
+
+class MockApiKeyValidationService extends Mock
+    implements ApiKeyValidationService {}
 
 void main() {
   late MockSettingsRepository mockSettingsRepository;
@@ -82,18 +85,24 @@ void main() {
       },
       act: (bloc) => bloc.add(LoadSettings()),
       verify: (_) {
-        verify(() => mockSecureStorageService.storeGoogleApiKey('hive_google_key')).called(1);
-        verify(() => mockSecureStorageService.storeDeepLApiKey('hive_deepl_key')).called(1);
+        verify(() =>
+                mockSecureStorageService.storeGoogleApiKey('hive_google_key'))
+            .called(1);
+        verify(() =>
+                mockSecureStorageService.storeDeepLApiKey('hive_deepl_key'))
+            .called(1);
         // Verify that settings are saved back to Hive WITHOUT keys
-        verify(() => mockSettingsRepository.saveSettings(any())).called(1); 
+        verify(() => mockSettingsRepository.saveSettings(any())).called(1);
       },
       expect: () => [
         isA<SettingsState>()
             .having((s) => s.status, 'status', SettingsStatus.loading),
         isA<SettingsState>()
             .having((s) => s.status, 'status', SettingsStatus.loaded)
-            .having((s) => s.appSettings.googleTranslateApiKey, 'googleKey', 'hive_google_key')
-            .having((s) => s.appSettings.deeplApiKey, 'deeplKey', 'hive_deepl_key'),
+            .having((s) => s.appSettings.googleTranslateApiKey, 'googleKey',
+                'hive_google_key')
+            .having(
+                (s) => s.appSettings.deeplApiKey, 'deeplKey', 'hive_deepl_key'),
       ],
     );
 
@@ -124,8 +133,10 @@ void main() {
         isA<SettingsState>()
             .having((s) => s.status, 'status', SettingsStatus.loading),
         isA<SettingsState>()
-            .having((s) => s.appSettings.googleTranslateApiKey, 'googleKey', 'secure_google_key')
-            .having((s) => s.appSettings.deeplApiKey, 'deeplKey', 'secure_deepl_key'),
+            .having((s) => s.appSettings.googleTranslateApiKey, 'googleKey',
+                'secure_google_key')
+            .having((s) => s.appSettings.deeplApiKey, 'deeplKey',
+                'secure_deepl_key'),
       ],
     );
 
@@ -160,10 +171,13 @@ void main() {
       },
       skip: 2, // Skip loading and first loaded state
       verify: (_) {
-        verify(() => mockSecureStorageService.storeGoogleApiKey('new_google_key')).called(1);
+        verify(() =>
+                mockSecureStorageService.storeGoogleApiKey('new_google_key'))
+            .called(1);
       },
       expect: () => [
-        isA<SettingsState>().having((s) => s.appSettings.googleTranslateApiKey, 'googleKey', 'new_google_key'),
+        isA<SettingsState>().having((s) => s.appSettings.googleTranslateApiKey,
+            'googleKey', 'new_google_key'),
       ],
     );
 
@@ -192,7 +206,8 @@ void main() {
         )),
         expect: () => [
           isA<SettingsState>()
-              .having((s) => s.projectSettings, 'projectSettings', projectSettings)
+              .having(
+                  (s) => s.projectSettings, 'projectSettings', projectSettings)
               .having((s) => s.currentProjectId, 'id', 'p1')
               .having((s) => s.scope, 'scope', SettingsScope.global),
         ],
@@ -209,9 +224,11 @@ void main() {
           projectSettings: projectSettings,
           currentProjectId: 'p1',
         ),
-        act: (bloc) => bloc.add(const SwitchSettingsScope(SettingsScope.project)),
+        act: (bloc) =>
+            bloc.add(const SwitchSettingsScope(SettingsScope.project)),
         expect: () => [
-          isA<SettingsState>().having((s) => s.scope, 'scope', SettingsScope.project),
+          isA<SettingsState>()
+              .having((s) => s.scope, 'scope', SettingsScope.project),
         ],
       );
 
@@ -222,7 +239,8 @@ void main() {
           secureStorageService: mockSecureStorageService,
           apiKeyValidationService: mockApiKeyValidationService,
         ),
-        act: (bloc) => bloc.add(const SwitchSettingsScope(SettingsScope.project)),
+        act: (bloc) =>
+            bloc.add(const SwitchSettingsScope(SettingsScope.project)),
         expect: () => [],
       );
 
@@ -234,7 +252,7 @@ void main() {
           apiKeyValidationService: mockApiKeyValidationService,
         ),
         seed: () => SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings.empty(),
+          projectSettings: const ProjectSettings(),
           scope: SettingsScope.project,
           currentProjectId: 'p1',
         ),
@@ -263,7 +281,7 @@ void main() {
           );
         },
         seed: () => SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings.empty(),
+          projectSettings: const ProjectSettings(),
           scope: SettingsScope.global,
         ),
         act: (bloc) => bloc.add(const UpdateProjectOverridableSetting(
@@ -272,8 +290,11 @@ void main() {
         )),
         verify: (_) {
           verify(() => mockSettingsRepository.saveSettings(
-                any(that: isA<AppSettings>().having(
-                    (s) => s.systemTranslationContext, 'ctx', 'Global Context')),
+                any(
+                    that: isA<AppSettings>().having(
+                        (s) => s.systemTranslationContext,
+                        'ctx',
+                        'Global Context')),
               )).called(1);
         },
         expect: () => [
@@ -296,17 +317,20 @@ void main() {
           projectSettings: projectSettings,
           scope: SettingsScope.project,
         ),
-        act: (bloc) => bloc.add(const ResetSettingToGlobal('systemTranslationContext')),
+        act: (bloc) =>
+            bloc.add(const ResetSettingToGlobal('systemTranslationContext')),
         expect: () => [
-          isA<SettingsState>().having(
-            (s) => s.projectSettings?.systemTranslationContext,
-            'cleared',
-            isNull,
-          ).having(
-            (s) => s.projectSettings?.aiTranslationService,
-            'kept',
-            'Gemini',
-          ),
+          isA<SettingsState>()
+              .having(
+                (s) => s.projectSettings?.systemTranslationContext,
+                'cleared',
+                isNull,
+              )
+              .having(
+                (s) => s.projectSettings?.aiTranslationService,
+                'kept',
+                'Gemini',
+              ),
         ],
       );
 

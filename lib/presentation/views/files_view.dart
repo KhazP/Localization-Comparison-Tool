@@ -27,7 +27,8 @@ class FilesView extends StatefulWidget {
   State<FilesView> createState() => _FilesViewState();
 }
 
-class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMixin {
+class _FilesViewState extends State<FilesView>
+    with SingleTickerProviderStateMixin {
   String? _sourceDirectory;
   String? _targetDirectory;
   bool _isDraggingSource = false;
@@ -36,7 +37,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
   late Animation<double> _fadeAnimation;
   StreamSubscription<AppCommand>? _appCommandSubscription;
   void Function(VoidCallback)? _exportDialogSetState;
-  
+
   // Export state
   bool _isExporting = false;
   int _exportedCount = 0;
@@ -85,7 +86,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             CompareDirectoriesRequested(_sourceDirectory!, _targetDirectory!),
           );
     } else {
-      ToastService.showWarning(context, 'Please select both a source and target directory.');
+      ToastService.showWarning(
+          context, 'Please select both a source and target directory.');
     }
   }
 
@@ -124,18 +126,26 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
-    
+
     // AMOLED detection
     final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = isDark && 
+    final bool isAmoled = isDark &&
         settingsState.status == SettingsStatus.loaded &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-    
+
     // AMOLED-aware color helpers
-    Color getCardColor() => isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
-    Color getSurfaceColor() => isAmoled ? AppThemeV2.amoledSurface : (isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface);
-    Color getBorderColor() => isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
-    Color getBorderSubtleColor() => isAmoled ? AppThemeV2.amoledBorderSubtle : (isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle);
+    Color getCardColor() => isAmoled
+        ? AppThemeV2.amoledCard
+        : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    Color getSurfaceColor() => isAmoled
+        ? AppThemeV2.amoledSurface
+        : (isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface);
+    Color getBorderColor() => isAmoled
+        ? AppThemeV2.amoledBorder
+        : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    Color getBorderSubtleColor() => isAmoled
+        ? AppThemeV2.amoledBorderSubtle
+        : (isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle);
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -164,7 +174,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 ],
               ),
             ),
-            
+
             // Directory Selection Cards
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +205,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                   child: Icon(
                     LucideIcons.arrowRight,
                     size: 32,
-                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    color: isDark
+                        ? AppThemeV2.darkTextMuted
+                        : AppThemeV2.lightTextMuted,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -220,9 +232,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Action Buttons
             BlocBuilder<DirectoryComparisonBloc, DirectoryComparisonState>(
               builder: (context, state) {
@@ -230,7 +242,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 bool canExport = false;
                 List<FilePair> pairedFiles = [];
                 Map<FilePair, ComparisonResult> comparisonResults = {};
-                
+
                 if (state is DirectoryComparisonSuccess) {
                   canCompare = state.pairedFiles.isNotEmpty;
                   pairedFiles = state.pairedFiles;
@@ -238,7 +250,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                   // Can export if at least one pair has comparison results
                   canExport = comparisonResults.isNotEmpty;
                 }
-                final hasDirectories = _sourceDirectory != null && _targetDirectory != null;
+                final hasDirectories =
+                    _sourceDirectory != null && _targetDirectory != null;
 
                 return Row(
                   children: [
@@ -246,7 +259,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       child: _ActionButton(
                         icon: LucideIcons.search,
                         label: 'Discover Files',
-                        onPressed: hasDirectories ? _startDirectoryComparison : null,
+                        onPressed:
+                            hasDirectories ? _startDirectoryComparison : null,
                         isPrimary: !canCompare,
                       ),
                     ),
@@ -257,12 +271,16 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                         label: 'Compare All',
                         onPressed: canCompare
                             ? () {
-                                final settingsState = context.read<SettingsBloc>().state;
-                                if (settingsState.status == SettingsStatus.loaded) {
+                                final settingsState =
+                                    context.read<SettingsBloc>().state;
+                                if (settingsState.status ==
+                                    SettingsStatus.loaded) {
                                   context.read<DirectoryComparisonBloc>().add(
-                                    ComparePairedFilesRequested(settingsState.appSettings),
-                                  );
-                                  ToastService.showInfo(context, 'Comparison started...');
+                                        ComparePairedFilesRequested(
+                                            settingsState.appSettings),
+                                      );
+                                  ToastService.showInfo(
+                                      context, 'Comparison started...');
                                 }
                               }
                             : null,
@@ -275,7 +293,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                         icon: LucideIcons.download,
                         label: 'Export All',
                         onPressed: canExport && !_isExporting
-                            ? () => _exportAllResults(pairedFiles, comparisonResults)
+                            ? () => _exportAllResults(
+                                pairedFiles, comparisonResults)
                             : null,
                         isPrimary: canExport,
                       ),
@@ -284,9 +303,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 );
               },
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Results Panel
             Expanded(
               child: Container(
@@ -299,7 +318,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: BlocBuilder<DirectoryComparisonBloc, DirectoryComparisonState>(
+                  child: BlocBuilder<DirectoryComparisonBloc,
+                      DirectoryComparisonState>(
                     builder: (context, state) {
                       if (state is DirectoryComparisonInitial) {
                         return _buildEmptyState(context);
@@ -317,7 +337,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                               Text(
                                 'Discovering files...',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                                  color: isDark
+                                      ? AppThemeV2.darkTextSecondary
+                                      : AppThemeV2.lightTextSecondary,
                                 ),
                               ),
                             ],
@@ -328,7 +350,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                         if (state.pairedFiles.isEmpty &&
                             state.unmatchedSourceFiles.isEmpty &&
                             state.unmatchedTargetFiles.isEmpty) {
-                          return _buildEmptyState(context, message: 'No files found in selected directories.');
+                          return _buildEmptyState(context,
+                              message:
+                                  'No files found in selected directories.');
                         }
                         return _buildResultsList(context, state);
                       }
@@ -364,12 +388,20 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final hasDirectory = directory != null;
-    
+
     // AMOLED-aware colors
-    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
-    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
-    final surfaceColor = isAmoled ? AppThemeV2.amoledSurface : (isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface);
-    final borderSubtleColor = isAmoled ? AppThemeV2.amoledBorderSubtle : (isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle);
+    final cardColor = isAmoled
+        ? AppThemeV2.amoledCard
+        : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final borderColor = isAmoled
+        ? AppThemeV2.amoledBorder
+        : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    final surfaceColor = isAmoled
+        ? AppThemeV2.amoledSurface
+        : (isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface);
+    final borderSubtleColor = isAmoled
+        ? AppThemeV2.amoledBorderSubtle
+        : (isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle);
 
     return DropRegion(
       formats: Formats.standardFormats,
@@ -386,7 +418,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         for (final item in event.session.items) {
           final reader = item.dataReader;
           if (reader == null) continue;
-          
+
           // Try to get file URI
           if (reader.canProvide(Formats.fileUri)) {
             reader.getValue<Uri>(Formats.fileUri, (uri) {
@@ -406,9 +438,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isDragging
-              ? accentColor.withOpacity(0.1)
-              : cardColor,
+          color: isDragging ? accentColor.withOpacity(0.1) : cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDragging
@@ -455,7 +485,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
                         ),
                       ),
                     ],
@@ -464,7 +496,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Directory path display
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -475,7 +507,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     : AppThemeV2.lightSurface.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle,
+                  color: isDark
+                      ? AppThemeV2.darkBorderSubtle
+                      : AppThemeV2.lightBorderSubtle,
                 ),
               ),
               child: Row(
@@ -484,17 +518,23 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     hasDirectory ? LucideIcons.folder : LucideIcons.folderOpen,
                     color: hasDirectory
                         ? accentColor
-                        : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                        : (isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted),
                     size: 18,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      hasDirectory ? _formatPath(directory) : 'Drop folder here or browse...',
+                      hasDirectory
+                          ? _formatPath(directory)
+                          : 'Drop folder here or browse...',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: hasDirectory
                             ? null
-                            : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                            : (isDark
+                                ? AppThemeV2.darkTextMuted
+                                : AppThemeV2.lightTextMuted),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -503,16 +543,18 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     Tooltip(
                       message: directory,
                       child: Icon(
-                          LucideIcons.info,
+                        LucideIcons.info,
                         size: 16,
-                        color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted,
                       ),
                     ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
-            
+
             // Browse button
             SizedBox(
               width: double.infinity,
@@ -555,20 +597,24 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
           Icon(
             LucideIcons.folders,
             size: 64,
-            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            color:
+                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
           ),
           const SizedBox(height: 16),
           Text(
             message ?? 'Select directories to start comparison',
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+              color: isDark
+                  ? AppThemeV2.darkTextSecondary
+                  : AppThemeV2.lightTextSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Drag & drop folders above or use the Browse buttons',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+              color:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),
           ),
         ],
@@ -607,14 +653,16 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildResultsList(BuildContext context, DirectoryComparisonSuccess state) {
+  Widget _buildResultsList(
+      BuildContext context, DirectoryComparisonSuccess state) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         if (state.pairedFiles.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: _buildSummaryBar(context, state.pairedFiles, state.comparisonResults),
+            child: _buildSummaryBar(
+                context, state.pairedFiles, state.comparisonResults),
           ),
         _buildPairedFilesSection(
           context,
@@ -676,25 +724,36 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle,
+          color: isDark
+              ? AppThemeV2.darkBorderSubtle
+              : AppThemeV2.lightBorderSubtle,
         ),
       ),
       child: Row(
         children: [
-          Icon(LucideIcons.activity, 
-               size: 20, 
-               color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary),
+          Icon(LucideIcons.activity,
+              size: 20,
+              color: isDark
+                  ? AppThemeV2.darkTextSecondary
+                  : AppThemeV2.lightTextSecondary),
           const SizedBox(width: 8),
           Text(
             '${pairs.length} file pairs',
             style: theme.textTheme.titleMedium,
           ),
           const Spacer(),
-          _StatChip(label: 'A', count: totalAdded, color: themeState.diffAddedColor),
+          _StatChip(
+              label: 'A', count: totalAdded, color: themeState.diffAddedColor),
           const SizedBox(width: 8),
-          _StatChip(label: 'R', count: totalRemoved, color: themeState.diffRemovedColor),
+          _StatChip(
+              label: 'R',
+              count: totalRemoved,
+              color: themeState.diffRemovedColor),
           const SizedBox(width: 8),
-          _StatChip(label: 'M', count: totalModified, color: themeState.diffModifiedColor),
+          _StatChip(
+              label: 'M',
+              count: totalModified,
+              color: themeState.diffModifiedColor),
         ],
       ),
     );
@@ -731,10 +790,19 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
           final result = results[pair];
           final errorMessage = errors[pair];
           final hasResult = result != null;
-          final added = result?.diff.values.where((d) => d.status == StringComparisonStatus.added).length ?? 0;
-          final removed = result?.diff.values.where((d) => d.status == StringComparisonStatus.removed).length ?? 0;
-          final modified = result?.diff.values.where((d) => d.status == StringComparisonStatus.modified).length ?? 0;
-          
+          final added = result?.diff.values
+                  .where((d) => d.status == StringComparisonStatus.added)
+                  .length ??
+              0;
+          final removed = result?.diff.values
+                  .where((d) => d.status == StringComparisonStatus.removed)
+                  .length ??
+              0;
+          final modified = result?.diff.values
+                  .where((d) => d.status == StringComparisonStatus.modified)
+                  .length ??
+              0;
+
           final themeState = context.watch<ThemeBloc>().state;
           final statusColor = errorMessage != null
               ? AppThemeV2.error
@@ -749,7 +817,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
               color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle,
+                color: isDark
+                    ? AppThemeV2.darkBorderSubtle
+                    : AppThemeV2.lightBorderSubtle,
               ),
             ),
             child: Row(
@@ -776,18 +846,29 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       Text(
                         '→ ${p.basename(pair.targetFile.path)}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
                         ),
                       ),
                     ],
                   ),
                 ),
                 if (result != null) ...[
-                  _StatChip(label: 'A', count: added, color: themeState.diffAddedColor),
+                  _StatChip(
+                      label: 'A',
+                      count: added,
+                      color: themeState.diffAddedColor),
                   const SizedBox(width: 4),
-                  _StatChip(label: 'R', count: removed, color: themeState.diffRemovedColor),
+                  _StatChip(
+                      label: 'R',
+                      count: removed,
+                      color: themeState.diffRemovedColor),
                   const SizedBox(width: 4),
-                  _StatChip(label: 'M', count: modified, color: themeState.diffModifiedColor),
+                  _StatChip(
+                      label: 'M',
+                      count: modified,
+                      color: themeState.diffModifiedColor),
                   const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: () {
@@ -799,7 +880,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     icon: const Icon(LucideIcons.eye, size: 16),
                     label: const Text('View'),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                     ),
                   ),
                 ] else if (errorMessage != null) ...[
@@ -828,7 +910,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                   Icon(
                     Icons.hourglass_empty_rounded,
                     size: 20,
-                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                    color: isDark
+                        ? AppThemeV2.darkTextMuted
+                        : AppThemeV2.lightTextMuted,
                   ),
               ],
             ),
@@ -875,7 +959,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
               color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isDark ? AppThemeV2.darkBorderSubtle : AppThemeV2.lightBorderSubtle,
+                color: isDark
+                    ? AppThemeV2.darkBorderSubtle
+                    : AppThemeV2.lightBorderSubtle,
               ),
             ),
             child: Row(
@@ -897,9 +983,11 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 ),
                 if (availableToPair != null)
                   OutlinedButton(
-                    onPressed: () => _showPairingDialog(context, file, availableToPair),
+                    onPressed: () =>
+                        _showPairingDialog(context, file, availableToPair),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                     ),
                     child: const Text('Pair...'),
                   ),
@@ -936,7 +1024,9 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                      color: isDark
+                          ? AppThemeV2.darkBorder
+                          : AppThemeV2.lightBorder,
                     ),
                   ),
                   child: ListTile(
@@ -947,7 +1037,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                     trailing: const Icon(Icons.add_link_rounded),
                     onTap: () {
                       context.read<DirectoryComparisonBloc>().add(
-                            ManuallyPairFile(sourceFile: sourceFile, targetFile: targetFile),
+                            ManuallyPairFile(
+                                sourceFile: sourceFile, targetFile: targetFile),
                           );
                       Navigator.of(dialogContext).pop();
                     },
@@ -973,13 +1064,13 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     Map<FilePair, ComparisonResult> results,
   ) async {
     // Filter pairs that have comparison results
-    final pairsWithResults = pairedFiles
-        .where((pair) => results.containsKey(pair))
-        .toList();
+    final pairsWithResults =
+        pairedFiles.where((pair) => results.containsKey(pair)).toList();
 
     if (pairsWithResults.isEmpty) {
       if (mounted) {
-        ToastService.showWarning(context, 'No comparison results to export. Run "Compare All" first.');
+        ToastService.showWarning(context,
+            'No comparison results to export. Run "Compare All" first.');
       }
       return;
     }
@@ -994,7 +1085,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
     // Create timestamped subfolder
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final exportDir = Directory('$exportPath/export_$timestamp');
-    
+
     try {
       await exportDir.create(recursive: true);
     } catch (e) {
@@ -1035,7 +1126,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
 
         // Generate CSV content for this pair
         final csvContent = _generateCsvForPair(pair, result);
-        
+
         // Write to file
         final csvFile = File('${exportDir.path}/${fileName}_comparison.csv');
         await csvFile.writeAsString(csvContent);
@@ -1050,7 +1141,7 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
         final modified = result.diff.values
             .where((d) => d.status == StringComparisonStatus.modified)
             .length;
-        
+
         summaryData.add({
           'filename': fileName,
           'added': added,
@@ -1096,7 +1187,13 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
 
   String _generateCsvForPair(FilePair pair, ComparisonResult result) {
     final csvData = <List<dynamic>>[
-      ['Status', 'String Key', 'Old Value (Source)', 'New Value (Target)', 'Similarity'],
+      [
+        'Status',
+        'String Key',
+        'Old Value (Source)',
+        'New Value (Target)',
+        'Similarity'
+      ],
     ];
 
     for (final entry in result.diff.entries) {
@@ -1122,9 +1219,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
           break;
       }
 
-      String simText = similarity != null 
-          ? '${(similarity * 100).toStringAsFixed(1)}%' 
-          : '';
+      String simText =
+          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
 
       csvData.add([
         statusText,
@@ -1187,7 +1283,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.download_rounded, color: Theme.of(context).colorScheme.primary),
+                  Icon(Icons.download_rounded,
+                      color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 12),
                   const Text('Exporting Results'),
                 ],
@@ -1206,22 +1303,25 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       ),
                     const SizedBox(height: 16),
                     LinearProgressIndicator(
-                      value: _totalToExport > 0 
-                          ? _exportedCount / _totalToExport 
+                      value: _totalToExport > 0
+                          ? _exportedCount / _totalToExport
                           : null,
-                      backgroundColor: Theme.of(context).brightness == Brightness.dark
-                          ? AppThemeV2.darkBorder
-                          : AppThemeV2.lightBorder,
-                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                      backgroundColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppThemeV2.darkBorder
+                              : AppThemeV2.lightBorder,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       '$_exportedCount of $_totalToExport files exported',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppThemeV2.darkTextMuted
-                            : AppThemeV2.lightTextMuted,
-                      ),
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? AppThemeV2.darkTextMuted
+                                    : AppThemeV2.lightTextMuted,
+                          ),
                     ),
                   ],
                 ),
@@ -1262,13 +1362,13 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark 
-                        ? AppThemeV2.darkSurface 
+                    color: isDark
+                        ? AppThemeV2.darkSurface
                         : AppThemeV2.lightSurface,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isDark 
-                          ? AppThemeV2.darkBorder 
+                      color: isDark
+                          ? AppThemeV2.darkBorder
                           : AppThemeV2.lightBorder,
                     ),
                   ),
@@ -1277,8 +1377,8 @@ class _FilesViewState extends State<FilesView> with SingleTickerProviderStateMix
                       Icon(
                         Icons.folder_rounded,
                         size: 20,
-                        color: isDark 
-                            ? AppThemeV2.darkTextMuted 
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
                             : AppThemeV2.lightTextMuted,
                       ),
                       const SizedBox(width: 8),

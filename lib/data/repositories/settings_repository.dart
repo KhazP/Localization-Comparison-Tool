@@ -35,12 +35,12 @@ class SettingsRepository {
   Future<AppSettings> loadSettings() async {
     await init(); // Ensure box is open
     final box = Hive.box<AppSettings>(_boxName);
-    
+
     try {
       AppSettings? settings = box.get('current_settings');
       if (settings == null) {
         settings = AppSettings.defaultSettings();
-        await saveSettings(settings); 
+        await saveSettings(settings);
       }
       final normalizedThemeMode = _normalizeThemeMode(settings.appThemeMode);
       if (settings.appThemeMode != normalizedThemeMode) {
@@ -49,7 +49,8 @@ class SettingsRepository {
       }
       return settings;
     } catch (e) {
-      debugPrint('SettingsRepository: Error loading settings (likely migration issue): $e');
+      debugPrint(
+          'SettingsRepository: Error loading settings (likely migration issue): $e');
       // Corrupted data - delete and reset
       await Hive.deleteBoxFromDisk(_boxName);
       await init(); // Re-open fresh
@@ -72,4 +73,4 @@ class SettingsRepository {
       await box.close();
     }
   }
-} 
+}

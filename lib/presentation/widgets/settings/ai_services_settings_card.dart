@@ -52,7 +52,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     return '${mb.toStringAsFixed(1)} MB';
   }
 
-  Future<void> _runTranslationMemoryAction(Future<void> Function() action) async {
+  Future<void> _runTranslationMemoryAction(
+      Future<void> Function() action) async {
     if (_translationMemoryBusy) return;
     setState(() => _translationMemoryBusy = true);
     try {
@@ -90,7 +91,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     await _runTranslationMemoryAction(() async {
       final stats = await service.getStats();
       if (stats.entryCount == 0) {
-        if (mounted) ToastService.showWarning(context, 'Nothing to export yet.');
+        if (mounted)
+          ToastService.showWarning(context, 'Nothing to export yet.');
         return;
       }
       final outputPath = await FilePicker.platform.saveFile(
@@ -118,7 +120,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     await _runTranslationMemoryAction(() async {
       final stats = await service.getStats();
       if (stats.entryCount == 0) {
-        if (mounted) ToastService.showWarning(context, 'Nothing to export yet.');
+        if (mounted)
+          ToastService.showWarning(context, 'Nothing to export yet.');
         return;
       }
       final outputPath = await FilePicker.platform.saveFile(
@@ -146,7 +149,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     final confirm = await DialogService.showConfirmation(
       context: context,
       title: 'Clear translation memory?',
-      content: 'This removes all saved translation pairs on this device. This action cannot be undone.',
+      content:
+          'This removes all saved translation pairs on this device. This action cannot be undone.',
       confirmText: 'Clear Memory',
       isDestructive: true,
       icon: LucideIcons.trash2,
@@ -158,9 +162,11 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
       try {
         await service.clearMemory();
         widget.onRefreshStats();
-        if (mounted) ToastService.showSuccess(context, 'Translation memory cleared.');
+        if (mounted)
+          ToastService.showSuccess(context, 'Translation memory cleared.');
       } catch (e, s) {
-        developer.log('Failed to clear translation memory.', name: 'translation_memory.clear', error: e, stackTrace: s);
+        developer.log('Failed to clear translation memory.',
+            name: 'translation_memory.clear', error: e, stackTrace: s);
         if (mounted) ToastService.showError(context, 'Could not clear memory.');
       }
     });
@@ -195,7 +201,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             ),
             SettingsRow(
               label: 'Enable AI Translation',
-              description: 'Allow the app to use AI for translation suggestions',
+              description:
+                  'Allow the app to use AI for translation suggestions',
               control: Switch(
                 value: widget.settings.enableAiTranslation,
                 onChanged: (val) => bloc.add(UpdateEnableAiTranslation(val)),
@@ -207,7 +214,6 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             ),
           ],
         ),
-
         if (widget.settings.translationStrategy == 'Generative AI (LLM)') ...[
           SettingsCardContainer(
             title: 'LLM Service Provider',
@@ -269,9 +275,12 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   value: widget.state.isProjectScope
                       ? widget.state.getEffectiveDefaultAiModel()
                       : widget.settings.defaultAiModel,
-                  items: widget.state.availableModels[widget.settings.aiTranslationService == 'Google Gemini' 
-                      ? ApiProvider.gemini 
-                      : ApiProvider.openAi] ?? (widget.settings.aiTranslationService == 'Google Gemini'
+                  items: widget.state.availableModels[
+                          widget.settings.aiTranslationService ==
+                                  'Google Gemini'
+                              ? ApiProvider.gemini
+                              : ApiProvider.openAi] ??
+                      (widget.settings.aiTranslationService == 'Google Gemini'
                           ? const ['gemini-1.5-flash', 'gemini-1.5-pro']
                           : const ['gpt-4o', 'gpt-4o-mini']),
                   onChanged: (val) {
@@ -292,24 +301,27 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               ),
             ],
           ),
-
           SettingsCardContainer(
             title: 'Advanced Parameters',
             isDark: widget.isDark,
             isAmoled: widget.isAmoled,
             children: [
               ListTile(
-               title: const Text('Parameters'),
-               subtitle: const Text('Temperature, Context, and more'),
-               trailing: IconButton(
-                 icon: Icon(_showAdvancedParameters ? LucideIcons.chevronUp : LucideIcons.chevronDown),
-                 onPressed: () => setState(() => _showAdvancedParameters = !_showAdvancedParameters),
-               ),
+                title: const Text('Parameters'),
+                subtitle: const Text('Temperature, Context, and more'),
+                trailing: IconButton(
+                  icon: Icon(_showAdvancedParameters
+                      ? LucideIcons.chevronUp
+                      : LucideIcons.chevronDown),
+                  onPressed: () => setState(
+                      () => _showAdvancedParameters = !_showAdvancedParameters),
+                ),
               ),
               if (_showAdvancedParameters) ...[
                 SettingsRow(
                   label: 'Temperature',
-                  description: 'Higher values make output more creative (${widget.settings.aiTemperature.toStringAsFixed(1)})',
+                  description:
+                      'Higher values make output more creative (${widget.settings.aiTemperature.toStringAsFixed(1)})',
                   control: SizedBox(
                     width: 200,
                     child: Slider(
@@ -352,15 +364,21 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                             children: [
                               Text(
                                 'System Context / Instructions',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
                               ),
                               const SizedBox(width: 8),
                               SettingOverrideIndicator(
-                                isOverridden: widget.state.isOverridden('systemTranslationContext'),
-                                onReset: widget.state.isOverridden('systemTranslationContext')
-                                    ? () => bloc.add(const ResetSettingToGlobal('systemTranslationContext'))
+                                isOverridden: widget.state
+                                    .isOverridden('systemTranslationContext'),
+                                onReset: widget.state.isOverridden(
+                                        'systemTranslationContext')
+                                    ? () => bloc.add(const ResetSettingToGlobal(
+                                        'systemTranslationContext'))
                                     : null,
                                 compact: true,
                               ),
@@ -371,7 +389,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                         maxLines: 4,
                         controller: TextEditingController(
                           text: widget.state.isProjectScope
-                              ? widget.state.getEffectiveSystemTranslationContext()
+                              ? widget.state
+                                  .getEffectiveSystemTranslationContext()
                               : widget.settings.systemTranslationContext,
                         ),
                         onChanged: (val) {
@@ -385,20 +404,27 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                           }
                         },
                         decoration: InputDecoration(
-                          labelText: widget.state.isProjectScope ? null : 'System Context / Instructions',
-                          hintText: 'You are a professional localizer. Maintain the tone and intent of the source string...',
-                          helperText: 'Provide specific instructions to the AI about your project\'s style and terminology.',
+                          labelText: widget.state.isProjectScope
+                              ? null
+                              : 'System Context / Instructions',
+                          hintText:
+                              'You are a professional localizer. Maintain the tone and intent of the source string...',
+                          helperText:
+                              'Provide specific instructions to the AI about your project\'s style and terminology.',
                           helperMaxLines: 2,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                       const SizedBox(height: 16),
                       SettingsRow(
                         label: 'Context Strings',
-                        description: 'Include surrounding strings for better context',
+                        description:
+                            'Include surrounding strings for better context',
                         control: Switch(
                           value: widget.settings.includeContextStrings,
-                          onChanged: (val) => bloc.add(UpdateIncludeContextStrings(val)),
+                          onChanged: (val) =>
+                              bloc.add(UpdateIncludeContextStrings(val)),
                         ),
                         isDark: widget.isDark,
                         isAmoled: widget.isAmoled,
@@ -407,12 +433,14 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                       if (widget.settings.includeContextStrings)
                         SettingsRow(
                           label: 'Context Count',
-                          description: 'Number of surrounding strings to include',
+                          description:
+                              'Number of surrounding strings to include',
                           control: SettingsDropdown<int>(
                             value: widget.settings.contextStringsCount,
                             items: const [1, 2, 3, 5, 10],
                             onChanged: (val) {
-                              if (val != null) bloc.add(UpdateContextStringsCount(val));
+                              if (val != null)
+                                bloc.add(UpdateContextStringsCount(val));
                             },
                             isDark: widget.isDark,
                             isAmoled: widget.isAmoled,
@@ -451,7 +479,6 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             ],
           ),
         ],
-
         SettingsCardContainer(
           title: 'Translation Memory',
           isDark: widget.isDark,
@@ -462,19 +489,22 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               description: 'Save translations to local memory for future reuse',
               control: Switch(
                 value: widget.settings.enableTranslationMemory,
-                onChanged: (val) => bloc.add(UpdateEnableTranslationMemory(val)),
+                onChanged: (val) =>
+                    bloc.add(UpdateEnableTranslationMemory(val)),
               ),
               isDark: widget.isDark,
               isAmoled: widget.isAmoled,
             ),
             SettingsRow(
               label: 'Confidence Threshold',
-              description: 'Minimum score to auto-apply (${(widget.settings.translationConfidenceThreshold * 100).toInt()}%)',
+              description:
+                  'Minimum score to auto-apply (${(widget.settings.translationConfidenceThreshold * 100).toInt()}%)',
               control: SizedBox(
                 width: 150,
                 child: Slider(
                   value: widget.settings.translationConfidenceThreshold,
-                  onChanged: (val) => bloc.add(UpdateTranslationConfidenceThreshold(val)),
+                  onChanged: (val) =>
+                      bloc.add(UpdateTranslationConfidenceThreshold(val)),
                 ),
               ),
               isDark: widget.isDark,
@@ -491,9 +521,15 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                     children: [
                       Row(
                         children: [
-                          _buildStatItem('Entries', stats?.entryCount.toString() ?? '...', context),
+                          _buildStatItem('Entries',
+                              stats?.entryCount.toString() ?? '...', context),
                           const SizedBox(width: 24),
-                          _buildStatItem('Size', stats != null ? 'Memory Size: ${_formatMemorySize(stats.storageBytes)}' : '...', context),
+                          _buildStatItem(
+                              'Size',
+                              stats != null
+                                  ? 'Memory Size: ${_formatMemorySize(stats.storageBytes)}'
+                                  : '...',
+                              context),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -502,25 +538,38 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                         runSpacing: 12,
                         children: [
                           FilledButton.icon(
-                            onPressed: _translationMemoryBusy ? null : () => _importTranslationMemory(context),
+                            onPressed: _translationMemoryBusy
+                                ? null
+                                : () => _importTranslationMemory(context),
                             icon: const Icon(LucideIcons.download, size: 18),
                             label: const Text('Import'),
                           ),
                           OutlinedButton.icon(
-                            onPressed: _translationMemoryBusy ? null : () => _exportTranslationMemoryTmx(context),
+                            onPressed: _translationMemoryBusy
+                                ? null
+                                : () => _exportTranslationMemoryTmx(context),
                             icon: const Icon(LucideIcons.upload, size: 18),
                             label: const Text('Export TMX'),
                           ),
                           OutlinedButton.icon(
-                            onPressed: _translationMemoryBusy ? null : () => _exportTranslationMemoryCsv(context),
+                            onPressed: _translationMemoryBusy
+                                ? null
+                                : () => _exportTranslationMemoryCsv(context),
                             icon: const Icon(LucideIcons.table, size: 18),
                             label: const Text('Export CSV'),
                           ),
                           OutlinedButton.icon(
-                            onPressed: _translationMemoryBusy ? null : () => _confirmClearTranslationMemory(context),
-                            icon: Icon(LucideIcons.trash2, size: 18, color: AppThemeV2.error),
-                            label: Text('Clear Memory', style: TextStyle(color: AppThemeV2.error)),
-                            style: OutlinedButton.styleFrom(side: BorderSide(color: AppThemeV2.error.withValues(alpha: 0.5))),
+                            onPressed: _translationMemoryBusy
+                                ? null
+                                : () => _confirmClearTranslationMemory(context),
+                            icon: Icon(LucideIcons.trash2,
+                                size: 18, color: AppThemeV2.error),
+                            label: Text('Clear Memory',
+                                style: TextStyle(color: AppThemeV2.error)),
+                            style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                    color: AppThemeV2.error
+                                        .withValues(alpha: 0.5))),
                           ),
                         ],
                       ),
@@ -543,7 +592,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     ValueChanged<String> onChanged, {
     bool showDivider = true,
   }) {
-    final testResult = widget.state.apiKeyTests[provider] ?? const ApiKeyTestResult.idle();
+    final testResult =
+        widget.state.apiKeyTests[provider] ?? ApiKeyTestResult.idle;
     final isTesting = testResult.status == ApiKeyTestStatus.testing;
 
     return Column(
@@ -557,7 +607,11 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                    Text(label,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     TextField(
                       controller: TextEditingController(text: value),
@@ -566,8 +620,10 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                       decoration: InputDecoration(
                         hintText: 'Enter API Key',
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
                     ),
                   ],
@@ -579,15 +635,23 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                 child: SizedBox(
                   height: 40,
                   child: FilledButton(
-                    onPressed: isTesting ? null : () {
-                      context.read<SettingsBloc>().add(TestApiKey(provider: provider, apiKey: value));
-                    },
+                    onPressed: isTesting
+                        ? null
+                        : () {
+                            context.read<SettingsBloc>().add(
+                                TestApiKey(provider: provider, apiKey: value));
+                          },
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                     child: isTesting
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
                         : const Text('Test'),
                   ),
                 ),
@@ -601,17 +665,26 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             child: Row(
               children: [
                 Icon(
-                  testResult.status == ApiKeyTestStatus.success ? LucideIcons.checkCircle : LucideIcons.alertCircle,
+                  testResult.status == ApiKeyTestStatus.success
+                      ? LucideIcons.checkCircle
+                      : LucideIcons.alertCircle,
                   size: 16,
-                  color: testResult.status == ApiKeyTestStatus.success ? Colors.green : Colors.red,
+                  color: testResult.status == ApiKeyTestStatus.success
+                      ? Colors.green
+                      : Colors.red,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    testResult.message + (testResult.usage != null ? ' (${testResult.usage})' : ''),
+                    testResult.message +
+                        (testResult.usage != null
+                            ? ' (${testResult.usage})'
+                            : ''),
                     style: TextStyle(
                       fontSize: 12,
-                      color: testResult.status == ApiKeyTestStatus.success ? Colors.green : Colors.red,
+                      color: testResult.status == ApiKeyTestStatus.success
+                          ? Colors.green
+                          : Colors.red,
                     ),
                   ),
                 ),
@@ -622,7 +695,11 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
           const SizedBox(height: 12),
         if (showDivider)
           Divider(
-            color: widget.isAmoled ? AppThemeV2.amoledBorder : (widget.isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
+            color: widget.isAmoled
+                ? AppThemeV2.amoledBorder
+                : (widget.isDark
+                    ? AppThemeV2.darkBorder
+                    : AppThemeV2.lightBorder),
             height: 1,
             indent: 16,
             endIndent: 16,
@@ -635,9 +712,17 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppThemeV2.darkTextMuted)),
+        Text(label,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: AppThemeV2.darkTextMuted)),
         const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        Text(value,
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -678,7 +763,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
   /// and there are any overrides in the AI Services category.
   Widget? _buildSectionResetButton(BuildContext context, SettingsBloc bloc) {
     if (!widget.state.isProjectScope) return null;
-    
+
     final hasAnyOverrides = widget.state.projectSettings?.hasOverrides ?? false;
     if (!hasAnyOverrides) return null;
 

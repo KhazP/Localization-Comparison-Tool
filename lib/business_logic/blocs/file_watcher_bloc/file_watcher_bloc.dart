@@ -7,14 +7,16 @@ import 'file_watcher_state.dart';
 class FileWatcherBloc extends Bloc<FileWatcherEvent, FileWatcherState> {
   final FileWatcherService _fileWatcherService;
 
-  FileWatcherBloc(this._fileWatcherService) : super(const FileWatcherInitial()) {
+  FileWatcherBloc(this._fileWatcherService)
+      : super(const FileWatcherInitial()) {
     on<StartWatchingFiles>(_onStartWatchingFiles);
     on<StopWatchingFiles>(_onStopWatchingFiles);
     on<FileChangedEvent>(_onFileChanged);
     on<UpdateWatchedFiles>(_onUpdateWatchedFiles);
   }
 
-  void _onStartWatchingFiles(StartWatchingFiles event, Emitter<FileWatcherState> emit) {
+  void _onStartWatchingFiles(
+      StartWatchingFiles event, Emitter<FileWatcherState> emit) {
     try {
       // Stop any existing watchers
       _fileWatcherService.unwatchAll();
@@ -47,7 +49,8 @@ class FileWatcherBloc extends Bloc<FileWatcherEvent, FileWatcherState> {
     }
   }
 
-  void _onStopWatchingFiles(StopWatchingFiles event, Emitter<FileWatcherState> emit) {
+  void _onStopWatchingFiles(
+      StopWatchingFiles event, Emitter<FileWatcherState> emit) {
     _fileWatcherService.unwatchAll();
     emit(const FileWatcherInactive());
   }
@@ -67,14 +70,16 @@ class FileWatcherBloc extends Bloc<FileWatcherEvent, FileWatcherState> {
     }
   }
 
-  void _onUpdateWatchedFiles(UpdateWatchedFiles event, Emitter<FileWatcherState> emit) {
+  void _onUpdateWatchedFiles(
+      UpdateWatchedFiles event, Emitter<FileWatcherState> emit) {
     final currentState = state;
     if (currentState is FileWatcherActive) {
       final newFile1Path = event.file1Path ?? currentState.file1Path;
       final newFile2Path = event.file2Path ?? currentState.file2Path;
 
       // If files changed, restart watching with new files
-      if (newFile1Path != currentState.file1Path || newFile2Path != currentState.file2Path) {
+      if (newFile1Path != currentState.file1Path ||
+          newFile2Path != currentState.file2Path) {
         add(StartWatchingFiles(newFile1Path, newFile2Path));
       }
     } else if (event.file1Path != null && event.file2Path != null) {

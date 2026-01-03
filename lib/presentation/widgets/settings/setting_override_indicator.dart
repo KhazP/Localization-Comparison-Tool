@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Shows whether a setting is inherited from global or customized for the project.
-/// 
+///
 /// Displays:
 /// - "Inherited" chip (subtle, gray) when using global default
 /// - "Custom" chip (accent color) when overridden for project
@@ -9,10 +9,10 @@ import 'package:flutter/material.dart';
 class SettingOverrideIndicator extends StatelessWidget {
   /// Whether this setting is overridden in the project.
   final bool isOverridden;
-  
+
   /// Callback when user wants to reset to global default.
   final VoidCallback? onReset;
-  
+
   /// Whether to show in compact mode (just icon, no text).
   final bool compact;
 
@@ -27,7 +27,7 @@ class SettingOverrideIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     if (isOverridden) {
       return _buildCustomIndicator(context, colorScheme);
     } else {
@@ -96,7 +96,8 @@ class SettingOverrideIndicator extends StatelessWidget {
     );
   }
 
-  Widget _buildInheritedIndicator(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildInheritedIndicator(
+      BuildContext context, ColorScheme colorScheme) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 6 : 8,
@@ -136,16 +137,16 @@ class SettingOverrideIndicator extends StatelessWidget {
 class OverridableSetting extends StatelessWidget {
   /// The setting control widget (e.g., dropdown, text field).
   final Widget child;
-  
+
   /// Whether this setting is overridden in the project.
   final bool isOverridden;
-  
+
   /// Whether to show the override indicator (only in project scope).
   final bool showIndicator;
-  
+
   /// Callback to reset to global default.
   final VoidCallback? onReset;
-  
+
   /// Label for the setting.
   final String? label;
 
@@ -173,8 +174,8 @@ class OverridableSetting extends StatelessWidget {
               Text(
                 label!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
               const SizedBox(width: 8),
               SettingOverrideIndicator(

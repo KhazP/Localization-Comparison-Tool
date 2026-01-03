@@ -34,7 +34,7 @@ class XliffParser extends LocalizationParser {
       // However, to be more robust, we can search for them anywhere if the structure is flatter
       // or if there are multiple <file> elements.
       // For now, let's assume a standard structure for XLIFF 2.0: xliff -> file -> unit
-      
+
       final fileElements = document.findAllElements('file');
       if (fileElements.isEmpty) {
         debugPrint('Warning: No <file> elements found in XLIFF: ${file.path}');
@@ -46,9 +46,8 @@ class XliffParser extends LocalizationParser {
           file.path,
           extractionMode: extractionMode,
         );
-
       } else {
-         for (final fileElement in fileElements) {
+        for (final fileElement in fileElements) {
           sourceLanguage ??= fileElement.getAttribute('srcLang') ??
               fileElement.getAttribute('source-language');
           targetLanguage ??= fileElement.getAttribute('trgLang') ??
@@ -61,15 +60,18 @@ class XliffParser extends LocalizationParser {
           );
         }
       }
-      
+
       if (translations.isEmpty && fileElements.isNotEmpty) {
         // If still no translations but <file> elements existed, maybe units are directly under <xliff>?
         // This is less common but could be a fallback.
-        final directUnits = xliffRoot.findElements('unit').where((unit) => 
-            !fileElements.any((fe) => fe.descendants.contains(unit))
-        ).toList();
+        final directUnits = xliffRoot
+            .findElements('unit')
+            .where((unit) =>
+                !fileElements.any((fe) => fe.descendants.contains(unit)))
+            .toList();
         if (directUnits.isNotEmpty) {
-           debugPrint('Info: Found <unit> elements directly under <xliff> in ${file.path}');
+          debugPrint(
+              'Info: Found <unit> elements directly under <xliff> in ${file.path}');
           _parseUnits(
             directUnits,
             translations,
@@ -97,14 +99,14 @@ class XliffParser extends LocalizationParser {
       }
 
       if (translations.isEmpty) {
-          debugPrint('Warning: No translation units found or parsed in XLIFF file: ${file.path}');
+        debugPrint(
+            'Warning: No translation units found or parsed in XLIFF file: ${file.path}');
       }
-
     } catch (e) {
       debugPrint('Error parsing XLIFF file ${file.path}: $e');
       // Return empty map or throw a more specific error
       // For now, returning empty allows comparison to proceed with other file if it's valid
-      return {}; 
+      return {};
     }
     return translations;
   }
@@ -122,64 +124,64 @@ class XliffParser extends LocalizationParser {
     required ExtractionMode extractionMode,
   }) {
     for (final unitElement in units) {
-        final String? id = unitElement.getAttribute('id');
-        if (id != null && id.isNotEmpty) {
-          // Find <segment> then <target>
-          final segments = unitElement.findElements('segment');
-          if (segments.isNotEmpty) {
-            // Typically, we process the first segment's target.
-            // Some complex XLIFFs might have multiple segments per unit.
-            // For this tool, we'll assume the first <segment> and its <target> is primary.
-            final segment = segments.first;
-            final sourceElement = segment.findElements('source').firstOrNull;
-            final targetElement = segment.findElements('target').firstOrNull;
-            if (extractionMode == ExtractionMode.source) {
-              translations[id] = sourceElement?.innerText.trim() ?? '';
-              if (sourceElement == null) {
-                debugPrint(
-                    'Warning: No <source> found for unit id "$id" in $filePath');
-              }
-            } else {
-              translations[id] = targetElement?.innerText.trim() ?? '';
-              if (targetElement == null) {
-                debugPrint(
-                    'Warning: No <target> found for unit id "$id" in $filePath');
-              }
+      final String? id = unitElement.getAttribute('id');
+      if (id != null && id.isNotEmpty) {
+        // Find <segment> then <target>
+        final segments = unitElement.findElements('segment');
+        if (segments.isNotEmpty) {
+          // Typically, we process the first segment's target.
+          // Some complex XLIFFs might have multiple segments per unit.
+          // For this tool, we'll assume the first <segment> and its <target> is primary.
+          final segment = segments.first;
+          final sourceElement = segment.findElements('source').firstOrNull;
+          final targetElement = segment.findElements('target').firstOrNull;
+          if (extractionMode == ExtractionMode.source) {
+            translations[id] = sourceElement?.innerText.trim() ?? '';
+            if (sourceElement == null) {
+              debugPrint(
+                  'Warning: No <source> found for unit id "$id" in $filePath');
             }
           } else {
-            // Fallback for XLIFF 1.2 style where <target> might be directly under <trans-unit> (equivalent of <unit>)
-            // This parser is primarily for XLIFF 2.0, but this adds a little flexibility.
-            // For XLIFF 2.0, <unit> contains <segment>, which contains <source> and <target>.
-            // If no <segment>, it implies a structural issue for XLIFF 2.0.
-             final directSourceElement =
-                 unitElement.findElements('source').firstOrNull;
-             final directTargetElement =
-                 unitElement.findElements('target').firstOrNull;
-             if (extractionMode == ExtractionMode.source) {
-               translations[id] = directSourceElement?.innerText.trim() ?? '';
-               if (directSourceElement != null) {
-                 debugPrint(
-                     'Info: Found direct <source> for unit id "$id" in $filePath');
-               } else {
-                 debugPrint(
-                     'Warning: No <segment> or direct <source> found for unit id "$id" in $filePath');
-               }
-             } else {
-               if (directTargetElement != null) {
-                 translations[id] = directTargetElement.innerText.trim();
-                 debugPrint(
-                     'Info: Found direct <target> for unit id "$id" in $filePath');
-               } else {
-                 translations[id] = '';
-                 debugPrint(
-                     'Warning: No <segment> or direct <target> found for unit id "$id" in $filePath');
-               }
-             }
+            translations[id] = targetElement?.innerText.trim() ?? '';
+            if (targetElement == null) {
+              debugPrint(
+                  'Warning: No <target> found for unit id "$id" in $filePath');
+            }
           }
         } else {
-          debugPrint('Warning: Found <unit> element without an id in $filePath');
+          // Fallback for XLIFF 1.2 style where <target> might be directly under <trans-unit> (equivalent of <unit>)
+          // This parser is primarily for XLIFF 2.0, but this adds a little flexibility.
+          // For XLIFF 2.0, <unit> contains <segment>, which contains <source> and <target>.
+          // If no <segment>, it implies a structural issue for XLIFF 2.0.
+          final directSourceElement =
+              unitElement.findElements('source').firstOrNull;
+          final directTargetElement =
+              unitElement.findElements('target').firstOrNull;
+          if (extractionMode == ExtractionMode.source) {
+            translations[id] = directSourceElement?.innerText.trim() ?? '';
+            if (directSourceElement != null) {
+              debugPrint(
+                  'Info: Found direct <source> for unit id "$id" in $filePath');
+            } else {
+              debugPrint(
+                  'Warning: No <segment> or direct <source> found for unit id "$id" in $filePath');
+            }
+          } else {
+            if (directTargetElement != null) {
+              translations[id] = directTargetElement.innerText.trim();
+              debugPrint(
+                  'Info: Found direct <target> for unit id "$id" in $filePath');
+            } else {
+              translations[id] = '';
+              debugPrint(
+                  'Warning: No <segment> or direct <target> found for unit id "$id" in $filePath');
+            }
+          }
         }
+      } else {
+        debugPrint('Warning: Found <unit> element without an id in $filePath');
       }
+    }
   }
 
   @override

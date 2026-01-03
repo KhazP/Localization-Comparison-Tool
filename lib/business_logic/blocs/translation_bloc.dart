@@ -1,11 +1,14 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/'
     'translation_memory_service.dart';
 import 'package:localizer_app_main/data/services/translation_service.dart';
+
+part 'translation_bloc.freezed.dart';
 
 // Events
 abstract class TranslationEvent {}
@@ -26,34 +29,32 @@ class TranslateText extends TranslationEvent {
 }
 
 class ClearTranslation extends TranslationEvent {
-  final String textKey; 
+  final String textKey;
   ClearTranslation({required this.textKey});
 }
 
 // States
-abstract class TranslationState {}
+@freezed
+class TranslationState with _$TranslationState {
+  const factory TranslationState.initial() = TranslationInitial;
 
-class TranslationInitial extends TranslationState {}
+  /// Using a map to store translations for multiple items if needed on a
+  /// screen.
+  const factory TranslationState.inProgress(
+    Map<String, String?> translations,
+  ) = TranslationInProgress;
 
-// Using a map to store translations for multiple items if needed on a screen
-class TranslationInProgress extends TranslationState {
-  // key: textKey, value: null (loading)
-  final Map<String, String?> translations;
-  TranslationInProgress(this.translations);
-}
+  /// key: textKey, value: translated text
+  const factory TranslationState.success(
+    Map<String, String?> translations,
+  ) = TranslationSuccess;
 
-class TranslationSuccess extends TranslationState {
-  // key: textKey, value: translated text
-  final Map<String, String?> translations;
-  TranslationSuccess(this.translations);
-}
-
-class TranslationFailure extends TranslationState {
-  // key: textKey, value: error message or previous value
-  final Map<String, String?> translations;
-  final String error;
-  final String errorTextKey; // Which key specifically failed
-  TranslationFailure(this.translations, this.error, this.errorTextKey);
+  /// key: textKey, value: error message or previous value
+  const factory TranslationState.failure(
+    Map<String, String?> translations,
+    String error,
+    String errorTextKey,
+  ) = TranslationFailure;
 }
 
 // BLoC
@@ -97,7 +98,7 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
       if (translatedText != null && _isPreviewTranslation(translatedText)) {
         translatedText = null;
       }
-      
+
       if (translatedText == null) {
         final settings = await settingsRepository.loadSettings();
         if (settings.enableTranslationMemory) {
@@ -169,10 +170,10 @@ class TranslationBloc extends Bloc<TranslationEvent, TranslationState> {
   ) {
     _currentTranslations.remove(event.textKey);
     if (_currentTranslations.isEmpty) {
-        emit(TranslationInitial());
+      emit(TranslationInitial());
     } else {
-        // Re-emit success with the item removed.
-        emit(TranslationSuccess(Map.from(_currentTranslations)));
+      // Re-emit success with the item removed.
+      emit(TranslationSuccess(Map.from(_currentTranslations)));
     }
   }
 

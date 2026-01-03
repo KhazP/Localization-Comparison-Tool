@@ -25,7 +25,7 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
   final TextEditingController _searchController = TextEditingController();
   List<QualityIssue> _filteredItems = [];
   int _displayLimit = 20;
-  
+
   @override
   void initState() {
     super.initState();
@@ -46,9 +46,11 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
         final lowerQuery = query.toLowerCase();
         _filteredItems = widget.items.where((issue) {
           return issue.key.toLowerCase().contains(lowerQuery) ||
-                 (issue.sourceValue?.toLowerCase().contains(lowerQuery) ?? false) ||
-                 (issue.targetValue?.toLowerCase().contains(lowerQuery) ?? false) ||
-                 issue.description.toLowerCase().contains(lowerQuery);
+              (issue.sourceValue?.toLowerCase().contains(lowerQuery) ??
+                  false) ||
+              (issue.targetValue?.toLowerCase().contains(lowerQuery) ??
+                  false) ||
+              issue.description.toLowerCase().contains(lowerQuery);
         }).toList();
       }
       _displayLimit = 20; // Reset limit on search
@@ -90,7 +92,8 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
                         Text(
                           'Showing ${visibleItems.length} of ${_filteredItems.length} issues',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -110,26 +113,29 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
                   hintText: 'Search by key, text, or error...',
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
-                  fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  fillColor: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.3),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
               const SizedBox(height: 16),
               if (visibleItems.isEmpty)
                 Expanded(
                   child: Center(
-                     child: Text(
-                       _searchController.text.isEmpty 
-                           ? 'No details available.' 
-                           : 'No matches found.',
-                       style: theme.textTheme.bodyMedium?.copyWith(
-                         color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                       ),
-                     ),
+                    child: Text(
+                      _searchController.text.isEmpty
+                          ? 'No details available.'
+                          : 'No matches found.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
                   ),
                 )
               else
@@ -184,7 +190,7 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
   void _copyIssue(BuildContext context, QualityIssue issue) {
     Clipboard.setData(ClipboardData(text: _formatIssue(issue)));
     ToastService.showSuccess(
-      context, 
+      context,
       'Copied to clipboard',
       duration: const Duration(seconds: 1),
     );
@@ -258,7 +264,8 @@ class _IssueCard extends StatelessWidget {
     } else if (issue.type == QualityIssueType.lengthOutlier) {
       content = _buildLengthOutlierContent(context, labelStyle, bodyStyle);
     } else {
-      content = _buildStandardContent(context, labelStyle, monoStyle, bodyStyle);
+      content =
+          _buildStandardContent(context, labelStyle, monoStyle, bodyStyle);
     }
 
     return Container(
@@ -322,7 +329,7 @@ class _IssueCard extends StatelessWidget {
     final theme = Theme.of(context);
     final relatedKeys = issue.relatedKeys ?? [issue.key];
     final relatedSources = issue.relatedSources ?? {};
-    
+
     // Check if distinct source texts exist
     final distinctSources = relatedSources.values.toSet();
     final hasContextMismatch = distinctSources.length > 1;
@@ -369,16 +376,15 @@ class _IssueCard extends StatelessWidget {
               ],
             ),
           ),
-        
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-             Text(
+            Text(
               'AFFECTED KEYS (${relatedKeys.length})',
               style: labelStyle,
             ),
             if (!hasContextMismatch && relatedSources.isNotEmpty)
-               Text(
+              Text(
                 'Identical Sources',
                 style: labelStyle?.copyWith(color: theme.colorScheme.primary),
               ),
@@ -387,7 +393,8 @@ class _IssueCard extends StatelessWidget {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+            border:
+                Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
@@ -409,15 +416,17 @@ class _IssueCard extends StatelessWidget {
                     children: [
                       Text(
                         k,
-                        style: monoStyle?.copyWith(fontSize: 11, fontWeight: FontWeight.bold),
+                        style: monoStyle?.copyWith(
+                            fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                       if (source != null) ...[
                         const SizedBox(height: 4),
                         Text(
                           '"$source"',
                           style: theme.textTheme.bodySmall?.copyWith(
-                             fontStyle: FontStyle.italic,
-                             color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontStyle: FontStyle.italic,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.7),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -431,13 +440,15 @@ class _IssueCard extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.3),
                   child: Center(
                     child: Text(
                       '+$remaining more keys',
                       style: monoStyle?.copyWith(
                         fontSize: 11,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
@@ -463,19 +474,19 @@ class _IssueCard extends StatelessWidget {
     // Calculate severity for color
     // Rules: > 40% diff = Critical (Red), > 30% = Warning (Orange)
     // Microcopy (<=2 words): > 100% diff (2x) = Critical
-    
+
     Color barColor = Theme.of(context).colorScheme.primary;
-    
+
     if (issue.sourceValue != null && sourceLen > 0) {
       final diffPercent = ((targetLen - sourceLen).abs() / sourceLen) * 100;
       final wordCount = issue.sourceValue!.split(RegExp(r'\s+')).length;
-      
+
       if (wordCount <= 2) {
         // Microcopy rule
         if (targetLen > sourceLen * 2) {
-           barColor = Theme.of(context).colorScheme.error; // Critical > 2x
+          barColor = Theme.of(context).colorScheme.error; // Critical > 2x
         } else if (diffPercent > 40) {
-           barColor = Colors.orange;
+          barColor = Colors.orange;
         }
       } else {
         // Standard rule
@@ -602,7 +613,8 @@ class _IssueCard extends StatelessWidget {
           label: 'ERROR DETAILS',
           value: issue.description,
           labelStyle: labelStyle,
-          valueStyle: bodyStyle?.copyWith(color: Theme.of(context).colorScheme.error),
+          valueStyle:
+              bodyStyle?.copyWith(color: Theme.of(context).colorScheme.error),
         ),
       ],
     );
@@ -708,7 +720,7 @@ class _LengthBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final safeText = text ?? '';
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

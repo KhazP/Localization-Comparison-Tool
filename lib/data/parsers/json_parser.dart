@@ -22,15 +22,16 @@ class JsonParser extends LocalizationParser {
         return translations;
       }
       final Map<String, dynamic> jsonData = json.decode(content);
-      
+
       _flattenJson(jsonData, '', translations, file.path);
 
       if (translations.isEmpty && jsonData.isNotEmpty) {
-          debugPrint('Warning: Parsed JSON file ${file.path} but no valid string translations were extracted (check structure).');
+        debugPrint(
+            'Warning: Parsed JSON file ${file.path} but no valid string translations were extracted (check structure).');
       } else if (jsonData.isEmpty) {
-          debugPrint('Info: JSON file ${file.path} is empty or contains no top-level entries.');
+        debugPrint(
+            'Info: JSON file ${file.path} is empty or contains no top-level entries.');
       }
-
     } catch (e) {
       debugPrint('Error parsing JSON file ${file.path}: $e');
       return {};
@@ -38,7 +39,8 @@ class JsonParser extends LocalizationParser {
     return translations;
   }
 
-  void _flattenJson(Map<String, dynamic> jsonMap, String prefix, Map<String, String> translations, String filePath) {
+  void _flattenJson(Map<String, dynamic> jsonMap, String prefix,
+      Map<String, String> translations, String filePath) {
     jsonMap.forEach((key, value) {
       final String newKey = prefix.isEmpty ? key : '$prefix.$key';
       if (value is String) {
@@ -47,20 +49,23 @@ class JsonParser extends LocalizationParser {
         _flattenJson(value, newKey, translations, filePath);
       } else if (value is num || value is bool) {
         translations[newKey] = value.toString();
-         debugPrint('Info: JSON value for key "$newKey" in $filePath is num/bool, converted to string.');
+        debugPrint(
+            'Info: JSON value for key "$newKey" in $filePath is num/bool, converted to string.');
       } else if (value == null) {
         translations[newKey] = ''; // Null value becomes empty string
-        debugPrint('Info: JSON value for key "$newKey" in $filePath is null, converted to empty string.');
+        debugPrint(
+            'Info: JSON value for key "$newKey" in $filePath is null, converted to empty string.');
       }
       // else if (value is List) {
       //   // Decide how to handle lists. For now, convert to string or ignore.
-      //   // translations[newKey] = value.toString(); 
+      //   // translations[newKey] = value.toString();
       //   // print('Warning: JSON List found for key "$newKey" in ${filePath}. Converted to string. Consider specific handling.');
-      // } 
+      // }
       else {
-         // For other types, including List for now, treat as non-translatable string or skip.
-         debugPrint('Warning: Unsupported JSON value type (${value.runtimeType}) for key "$newKey" in $filePath. Skipping or using toString(). Value: $value');
-         // translations[newKey] = value.toString(); // Optional: convert everything else to string
+        // For other types, including List for now, treat as non-translatable string or skip.
+        debugPrint(
+            'Warning: Unsupported JSON value type (${value.runtimeType}) for key "$newKey" in $filePath. Skipping or using toString(). Value: $value');
+        // translations[newKey] = value.toString(); // Optional: convert everything else to string
       }
     });
   }
@@ -69,4 +74,4 @@ class JsonParser extends LocalizationParser {
   List<String> getSupportedExtensions() {
     return ['.json'];
   }
-} 
+}

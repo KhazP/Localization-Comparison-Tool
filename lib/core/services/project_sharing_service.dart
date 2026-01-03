@@ -20,7 +20,7 @@ class ProjectSharingService {
   ];
 
   /// Exports a project to a zip file.
-  /// 
+  ///
   /// [project]: The project to export.
   /// [destinationZipPath]: The full path where the zip file should be created.
   /// [projectHistory]: List of history items belonging to this project.
@@ -31,7 +31,8 @@ class ProjectSharingService {
   }) async {
     final rootDir = Directory(project.rootPath);
     if (!await rootDir.exists()) {
-      throw Exception('Project root directory does not exist: ${project.rootPath}');
+      throw Exception(
+          'Project root directory does not exist: ${project.rootPath}');
     }
 
     final encoder = ZipFileEncoder();
@@ -42,7 +43,8 @@ class ProjectSharingService {
 
     // 2. Add history export
     if (projectHistory.isNotEmpty) {
-      final historyJson = jsonEncode(projectHistory.map((e) => _serializeSessionInternal(e)).toList());
+      final historyJson = jsonEncode(
+          projectHistory.map((e) => _serializeSessionInternal(e)).toList());
       encoder.addArchiveFile(
         ArchiveFile(
           '.localizer/history_export.json',
@@ -56,10 +58,10 @@ class ProjectSharingService {
   }
 
   /// Imports a project from a zip file.
-  /// 
+  ///
   /// [zipPath]: The path to the zip file.
   /// [extractToPath]: The folder where the project should be extracted.
-  /// 
+  ///
   /// Returns the imported Project object and any history items found.
   Future<({Project project, List<ComparisonSession> history})> importProject({
     required String zipPath,
@@ -73,7 +75,7 @@ class ProjectSharingService {
     // 1. Extract Zip
     final inputStream = InputFileStream(zipPath);
     final archive = ZipDecoder().decodeBuffer(inputStream);
-    
+
     final extractDir = Directory(extractToPath);
     if (!await extractDir.exists()) {
       await extractDir.create(recursive: true);
@@ -91,9 +93,11 @@ class ProjectSharingService {
     await inputStream.close();
 
     // 2. Validate Project
-    final projectFile = File(path.join(extractToPath, '.localizer', 'project.json'));
+    final projectFile =
+        File(path.join(extractToPath, '.localizer', 'project.json'));
     if (!await projectFile.exists()) {
-      throw Exception('Invalid project archive: missing .localizer/project.json');
+      throw Exception(
+          'Invalid project archive: missing .localizer/project.json');
     }
 
     final projectJson = jsonDecode(await projectFile.readAsString());
@@ -102,11 +106,15 @@ class ProjectSharingService {
 
     // 3. Load History (if any)
     List<ComparisonSession> history = [];
-    final historyFile = File(path.join(extractToPath, '.localizer', 'history_export.json'));
+    final historyFile =
+        File(path.join(extractToPath, '.localizer', 'history_export.json'));
     if (await historyFile.exists()) {
       try {
-        final historyList = jsonDecode(await historyFile.readAsString()) as List;
-        history = historyList.map((e) => _deserializeSessionInternal(e, project.id)).toList();
+        final historyList =
+            jsonDecode(await historyFile.readAsString()) as List;
+        history = historyList
+            .map((e) => _deserializeSessionInternal(e, project.id))
+            .toList();
       } catch (e) {
         // Log error but don't fail the import?
         print('Error parsing imported history: $e');
@@ -124,10 +132,10 @@ class ProjectSharingService {
   ) async {
     await for (final entity in dir.list(followLinks: false)) {
       final name = path.basename(entity.path);
-      
+
       // Check ignore patterns
       if (_ignorePatterns.contains(name)) continue;
-      
+
       // Skip hidden files/folders (except .localizer)
       if (name.startsWith('.') && name != '.localizer') continue;
 
@@ -135,17 +143,17 @@ class ProjectSharingService {
         await _addDirectoryToZip(
           encoder,
           entity,
-           path.join(zipRelativePath, name),
-           projectRoot,
+          path.join(zipRelativePath, name),
+          projectRoot,
         );
       } else if (entity is File) {
         // Calculate relative path for zip structure
         // zipRelativePath is empty for root items.
         // We use addFile but need to specify the name in the archive.
         final relativeFilePath = path.join(zipRelativePath, name);
-         // Important: Normalize separators to forward slashes for ZIP compatibility
+        // Important: Normalize separators to forward slashes for ZIP compatibility
         final zipName = relativeFilePath.replaceAll(r'\', '/');
-        
+
         await encoder.addFile(entity, zipName);
       }
     }
@@ -171,7 +179,8 @@ class ProjectSharingService {
     };
   }
 
-  ComparisonSession _deserializeSessionInternal(Map<String, dynamic> json, String newProjectId) {
+  ComparisonSession _deserializeSessionInternal(
+      Map<String, dynamic> json, String newProjectId) {
     return ComparisonSession(
       id: json['id'], // Keep ID or generate new? Keep for now.
       timestamp: DateTime.parse(json['timestamp']),

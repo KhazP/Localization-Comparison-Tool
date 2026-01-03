@@ -1,53 +1,52 @@
 import 'dart:convert';
 
-import 'package:localizer_app_main/data/models/project_settings.dart';
-import 'package:localizer_app_main/data/models/glossary_item.dart';
-import 'package:localizer_app_main/data/models/translation_memory_reference.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'glossary_item.dart';
+import 'project_settings.dart';
+import 'translation_memory_reference.dart';
+
+part 'project.freezed.dart';
 
 /// Represents a Localizer project.
-/// 
+///
 /// A project stores its identity and configuration in a `.localizer/` folder
 /// within the project directory. This enables per-project settings overrides.
-class Project {
-  /// Unique identifier (UUID) for this project.
-  final String id;
-  
-  /// User-defined project name displayed throughout the UI.
-  final String name;
-  
-  /// Absolute path to the project's root folder.
-  final String rootPath;
-  
-  /// When this project was first created.
-  final DateTime createdAt;
-  
-  /// When this project was last opened in the app.
-  DateTime lastOpenedAt;
-  
-  /// Project-specific settings overrides.
-  /// Settings not overridden here inherit from global defaults.
-  final ProjectSettings settings;
+@Freezed(equal: false, toStringOverride: false)
+class Project with _$Project {
+  const Project._();
 
-  /// Project-specific glossary terms.
-  final List<GlossaryItem> glossary;
+  /// Creates a project.
+  const factory Project({
+    /// Unique identifier (UUID) for this project.
+    required String id,
 
-  /// References to translation memories used by this project.
-  final List<TranslationMemoryReference> translationMemories;
+    /// User-defined project name displayed throughout the UI.
+    required String name,
 
-  Project({
-    required this.id,
-    required this.name,
-    required this.rootPath,
-    required this.createdAt,
-    required this.lastOpenedAt,
-    this.settings = const ProjectSettings.empty(),
-    this.glossary = const [],
-    this.translationMemories = const [],
-  });
+    /// Absolute path to the project's root folder.
+    required String rootPath,
+
+    /// When this project was first created.
+    required DateTime createdAt,
+
+    /// When this project was last opened in the app.
+    required DateTime lastOpenedAt,
+
+    /// Project-specific settings overrides.
+    /// Settings not overridden here inherit from global defaults.
+    @Default(ProjectSettings()) ProjectSettings settings,
+
+    /// Project-specific glossary terms.
+    @Default(<GlossaryItem>[]) List<GlossaryItem> glossary,
+
+    /// References to translation memories used by this project.
+    @Default(<TranslationMemoryReference>[])
+    List<TranslationMemoryReference> translationMemories,
+  }) = _Project;
 
   /// The path to the `.localizer` configuration folder.
   String get configFolderPath => '$rootPath/.localizer';
-  
+
   /// The path to the `project.json` file.
   String get projectFilePath => '$configFolderPath/project.json';
 
@@ -67,16 +66,20 @@ class Project {
               .toList() ??
           [],
       translationMemories: (json['translationMemories'] as List<dynamic>?)
-              ?.map((e) => TranslationMemoryReference.fromJson(
-                  e as Map<String, dynamic>))
+              ?.map(
+                (e) => TranslationMemoryReference.fromJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
               .toList() ??
           [],
     );
   }
 
   /// Converts this Project to JSON for storage in project.json.
-  /// 
-  /// Note: rootPath is not stored in JSON as it's derived from the file location.
+  ///
+  /// Note: rootPath is not stored in JSON as it's derived from the file
+  /// location.
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{
       'id': id,
@@ -85,8 +88,8 @@ class Project {
       'lastOpenedAt': lastOpenedAt.toIso8601String(),
       'version': 2, // Schema version - v2 adds settings
     };
-    
-    // Only include settings if there are overrides
+
+    // Only include settings if there are overrides.
     if (settings.hasOverrides) {
       json['settings'] = settings.toJson();
     }
@@ -99,7 +102,7 @@ class Project {
       json['translationMemories'] =
           translationMemories.map((e) => e.toJson()).toList();
     }
-    
+
     return json;
   }
 
@@ -107,29 +110,6 @@ class Project {
   String toJsonString() {
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert(toJson());
-  }
-
-  /// Creates a copy of this Project with updated fields.
-  Project copyWith({
-    String? id,
-    String? name,
-    String? rootPath,
-    DateTime? createdAt,
-    DateTime? lastOpenedAt,
-    ProjectSettings? settings,
-    List<GlossaryItem>? glossary,
-    List<TranslationMemoryReference>? translationMemories,
-  }) {
-    return Project(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      rootPath: rootPath ?? this.rootPath,
-      createdAt: createdAt ?? this.createdAt,
-      lastOpenedAt: lastOpenedAt ?? this.lastOpenedAt,
-      settings: settings ?? this.settings,
-      glossary: glossary ?? this.glossary,
-      translationMemories: translationMemories ?? this.translationMemories,
-    );
   }
 
   @override

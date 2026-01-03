@@ -10,4 +10,4 @@ class AdvancedComparisonView extends StatelessWidget {
       child: Text('Advanced Comparison View - Placeholder'),
     );
   }
-} 
+}

@@ -86,8 +86,7 @@ class ProjectImportService {
       }
 
       try {
-        importsDir ??=
-            await _ensureImportsDir(projectRoot, _importsFolderName);
+        importsDir ??= await _ensureImportsDir(projectRoot, _importsFolderName);
         final destinationPath =
             await _resolveDestinationPath(importsDir.path, file);
         await file.copy(destinationPath);
@@ -107,8 +106,7 @@ class ProjectImportService {
   }
 
   bool _isWithinProject(String projectRoot, String filePath) {
-    return p.equals(projectRoot, filePath) ||
-        p.isWithin(projectRoot, filePath);
+    return p.equals(projectRoot, filePath) || p.isWithin(projectRoot, filePath);
   }
 
   Future<String> _resolveDestinationPath(

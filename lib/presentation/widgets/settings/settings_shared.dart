@@ -31,7 +31,9 @@ class SettingsThemeHelper {
   }
 
   Color get textSecondaryColor {
-    return isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary;
+    return isDark
+        ? AppThemeV2.darkTextSecondary
+        : AppThemeV2.lightTextSecondary;
   }
 }
 
@@ -217,7 +219,8 @@ class SettingsDropdown<T> extends StatelessWidget {
         child: DropdownButton<T>(
           value: items.contains(value) ? value : items.first,
           items: items
-              .map((item) => DropdownMenuItem(value: item, child: Text(item.toString())))
+              .map((item) =>
+                  DropdownMenuItem(value: item, child: Text(item.toString())))
               .toList(),
           onChanged: onChanged,
           style: Theme.of(context).textTheme.bodyMedium,
@@ -418,6 +421,7 @@ class SettingsLinkRow extends StatelessWidget {
     );
   }
 }
+
 /// A description text for settings
 class SettingsDescription extends StatelessWidget {
   final String text;

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// Repository for managing "Don't show again" preferences for warnings.
-/// 
+///
 /// Currently supports suppressing the large file warning per file path.
 /// Preferences are persisted using Hive.
 class WarningSuppressionsRepository {
@@ -14,11 +14,12 @@ class WarningSuppressionsRepository {
   /// Initialize the repository. Must be called before other methods.
   Future<void> init() async {
     if (_box?.isOpen == true) return;
-    
+
     try {
       _box = await Hive.openBox<List<String>>(_boxName);
     } catch (e) {
-      debugPrint('WarningSuppressionsRepository: Error opening box, resetting: $e');
+      debugPrint(
+          'WarningSuppressionsRepository: Error opening box, resetting: $e');
       await Hive.deleteBoxFromDisk(_boxName);
       _box = await Hive.openBox<List<String>>(_boxName);
     }
@@ -26,7 +27,8 @@ class WarningSuppressionsRepository {
 
   /// Get the set of file paths that have the large file warning suppressed.
   Set<String> getSuppressedLargeFileWarnings() {
-    final list = _box?.get(_largeFileWarningsKey, defaultValue: <String>[]) ?? <String>[];
+    final list = _box?.get(_largeFileWarningsKey, defaultValue: <String>[]) ??
+        <String>[];
     return list.toSet();
   }
 
@@ -41,7 +43,8 @@ class WarningSuppressionsRepository {
     final suppressedPaths = getSuppressedLargeFileWarnings();
     suppressedPaths.add(_normalizePath(filePath));
     await _box?.put(_largeFileWarningsKey, suppressedPaths.toList());
-    debugPrint('WarningSuppressionsRepository: Suppressed large file warning for $filePath');
+    debugPrint(
+        'WarningSuppressionsRepository: Suppressed large file warning for $filePath');
   }
 
   /// Remove the suppression for the given file path (re-enable the warning).

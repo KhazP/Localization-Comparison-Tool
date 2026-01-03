@@ -19,7 +19,7 @@ class DocxParser extends LocalizationParser {
     try {
       final bytes = await file.readAsBytes();
       final text = docxToText(bytes);
-      
+
       final lines = text.split('\n');
       for (final line in lines) {
         final trimmedLine = line.trim();
@@ -29,7 +29,8 @@ class DocxParser extends LocalizationParser {
         }
       }
       if (translations.isEmpty && text.trim().isNotEmpty) {
-         debugPrint('Warning: Parsed .docx file ${file.path} but no non-empty lines found after text extraction.');
+        debugPrint(
+            'Warning: Parsed .docx file ${file.path} but no non-empty lines found after text extraction.');
       }
     } catch (e) {
       debugPrint('Error parsing .docx file ${file.path}: $e');
@@ -43,4 +44,4 @@ class DocxParser extends LocalizationParser {
   List<String> getSupportedExtensions() {
     return ['.docx'];
   }
-} 
+}

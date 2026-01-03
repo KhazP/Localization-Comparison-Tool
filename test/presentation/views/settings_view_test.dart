@@ -14,14 +14,15 @@ import 'package:bloc_test/bloc_test.dart'; // bloc_test for MockBloc and whenLis
 
 // Default API key tests map for SettingsState
 Map<ApiProvider, ApiKeyTestResult> get defaultApiKeyTests => {
-  ApiProvider.googleTranslate: const ApiKeyTestResult.idle(),
-  ApiProvider.deepl: const ApiKeyTestResult.idle(),
-  ApiProvider.gemini: const ApiKeyTestResult.idle(),
-  ApiProvider.openAi: const ApiKeyTestResult.idle(),
-};
+      ApiProvider.googleTranslate: ApiKeyTestResult.idle,
+      ApiProvider.deepl: ApiKeyTestResult.idle,
+      ApiProvider.gemini: ApiKeyTestResult.idle,
+      ApiProvider.openAi: ApiKeyTestResult.idle,
+    };
 
 // Mock SettingsBloc
-class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState> implements SettingsBloc {}
+class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
+    implements SettingsBloc {}
 
 // Fake SettingsEvent for mocktail
 // SettingsEvent itself is an abstract class, so we can extend it if it's exported by settings_bloc.dart
@@ -47,22 +48,31 @@ void main() {
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
     initialAppSettings = AppSettings.defaultSettings();
-    
+
     // Default stub for any add/remove event if not specifically overridden in a test
     // This should now work because FakeSettingsEvent is registered.
     when(() => mockSettingsBloc.add(any())).thenReturn(null);
 
     whenListen(
       mockSettingsBloc,
-      Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests)]),
-      initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests),
+      Stream.fromIterable([
+        SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: initialAppSettings,
+            apiKeyTests: defaultApiKeyTests)
+      ]),
+      initialState: SettingsState(
+          status: SettingsStatus.loaded,
+          appSettings: initialAppSettings,
+          apiKeyTests: defaultApiKeyTests),
     );
   });
 
   // tearDown is not strictly necessary for MockBloc as it handles its own cleanup if any.
   // However, if other resources were allocated in setUp, they should be cleaned here.
 
-  Future<void> pumpSettingsView(WidgetTester tester, {SettingsBloc? settingsBloc}) async {
+  Future<void> pumpSettingsView(WidgetTester tester,
+      {SettingsBloc? settingsBloc}) async {
     await tester.pumpWidget(
       MaterialApp(
         home: BlocProvider<SettingsBloc>.value(
@@ -75,15 +85,19 @@ void main() {
   }
 
   // Helper to navigate to a settings category
-  Future<void> navigateToCategory(WidgetTester tester, String categoryNavLabel) async {
+  Future<void> navigateToCategory(
+      WidgetTester tester, String categoryNavLabel) async {
     final categoryFinder = findSettingsCategoryTile(categoryNavLabel);
-    expect(categoryFinder, findsOneWidget, reason: 'Failed to find navigation tile for $categoryNavLabel');
+    expect(categoryFinder, findsOneWidget,
+        reason: 'Failed to find navigation tile for $categoryNavLabel');
     await tester.tap(categoryFinder);
     await tester.pumpAndSettle(); // Let the UI update to the new category
   }
 
   group('SettingsView - Comparison Engine Settings UI Tests', () {
-    testWidgets('Initial state of Comparison Engine settings is displayed correctly', (WidgetTester tester) async {
+    testWidgets(
+        'Initial state of Comparison Engine settings is displayed correctly',
+        (WidgetTester tester) async {
       initialAppSettings = initialAppSettings.copyWith(
         ignoreCase: true,
         ignoreWhitespace: false,
@@ -94,97 +108,153 @@ void main() {
       // No need for when(() => specificTestSettingsBloc.add(any())) here if covered by global setUp
       whenListen(
         specificTestSettingsBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests),
+        Stream.fromIterable([
+          SettingsState(
+              status: SettingsStatus.loaded,
+              appSettings: initialAppSettings,
+              apiKeyTests: defaultApiKeyTests)
+        ]),
+        initialState: SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: initialAppSettings,
+            apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: specificTestSettingsBloc);
       await navigateToCategory(tester, 'Comparison');
 
-      final ignoreCaseSwitch = tester.widget<Switch>(find.byKey(const Key('settings_ignoreCase_switch')));
-      expect(ignoreCaseSwitch.value, isTrue, reason: 'Ignore Case switch should be ON');
+      final ignoreCaseSwitch = tester
+          .widget<Switch>(find.byKey(const Key('settings_ignoreCase_switch')));
+      expect(ignoreCaseSwitch.value, isTrue,
+          reason: 'Ignore Case switch should be ON');
 
-      final ignoreWhitespaceSwitch = tester.widget<Switch>(find.byKey(const Key('settings_ignoreWhitespace_switch')));
-      expect(ignoreWhitespaceSwitch.value, isFalse, reason: 'Ignore Whitespace switch should be OFF');
+      final ignoreWhitespaceSwitch = tester.widget<Switch>(
+          find.byKey(const Key('settings_ignoreWhitespace_switch')));
+      expect(ignoreWhitespaceSwitch.value, isFalse,
+          reason: 'Ignore Whitespace switch should be OFF');
 
-      expect(find.byKey(const Key('ignorePattern_tile_^test_')), findsOneWidget);
-      expect(find.byKey(const Key(r'ignorePattern_tile__temp$')), findsOneWidget);
-      expect(find.byKey(const Key('settings_addPattern_button')), findsOneWidget);
+      expect(
+          find.byKey(const Key('ignorePattern_tile_^test_')), findsOneWidget);
+      expect(
+          find.byKey(const Key(r'ignorePattern_tile__temp$')), findsOneWidget);
+      expect(
+          find.byKey(const Key('settings_addPattern_button')), findsOneWidget);
     });
 
-    testWidgets('Initial state shows "No ignore patterns set." when list is empty', (WidgetTester tester) async {
+    testWidgets(
+        'Initial state shows "No ignore patterns set." when list is empty',
+        (WidgetTester tester) async {
       initialAppSettings = initialAppSettings.copyWith(ignorePatterns: []);
       final specificTestSettingsBloc = MockSettingsBloc();
       // No need for when(() => specificTestSettingsBloc.add(any())) here
       whenListen(
         specificTestSettingsBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: initialAppSettings, apiKeyTests: defaultApiKeyTests),
+        Stream.fromIterable([
+          SettingsState(
+              status: SettingsStatus.loaded,
+              appSettings: initialAppSettings,
+              apiKeyTests: defaultApiKeyTests)
+        ]),
+        initialState: SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: initialAppSettings,
+            apiKeyTests: defaultApiKeyTests),
       );
       await pumpSettingsView(tester, settingsBloc: specificTestSettingsBloc);
       await navigateToCategory(tester, 'Comparison');
       expect(find.text('No ignore patterns set.'), findsOneWidget);
     });
 
-    testWidgets('Tapping Ignore Case switch calls UpdateIgnoreCase event', (WidgetTester tester) async {
-      AppSettings currentSettings = AppSettings.defaultSettings().copyWith(ignoreCase: false);
+    testWidgets('Tapping Ignore Case switch calls UpdateIgnoreCase event',
+        (WidgetTester tester) async {
+      AppSettings currentSettings =
+          AppSettings.defaultSettings().copyWith(ignoreCase: false);
       final testBloc = MockSettingsBloc();
       // Specific event stubbing is good
       when(() => testBloc.add(const UpdateIgnoreCase(true))).thenReturn(null);
       whenListen(
         testBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests),
+        Stream.fromIterable([
+          SettingsState(
+              status: SettingsStatus.loaded,
+              appSettings: currentSettings,
+              apiKeyTests: defaultApiKeyTests)
+        ]),
+        initialState: SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: currentSettings,
+            apiKeyTests: defaultApiKeyTests),
       );
-      
+
       await pumpSettingsView(tester, settingsBloc: testBloc);
       await navigateToCategory(tester, 'Comparison');
-      
-      await tester.tap(find.byKey(const Key('settings_ignoreCase_switch'))); 
+
+      await tester.tap(find.byKey(const Key('settings_ignoreCase_switch')));
       await tester.pumpAndSettle();
 
       verify(() => testBloc.add(const UpdateIgnoreCase(true))).called(1);
     });
 
-    testWidgets('Tapping Ignore Whitespace switch calls UpdateIgnoreWhitespace event', (WidgetTester tester) async {
-      AppSettings currentSettings = AppSettings.defaultSettings().copyWith(ignoreWhitespace: false);
+    testWidgets(
+        'Tapping Ignore Whitespace switch calls UpdateIgnoreWhitespace event',
+        (WidgetTester tester) async {
+      AppSettings currentSettings =
+          AppSettings.defaultSettings().copyWith(ignoreWhitespace: false);
       final testBloc = MockSettingsBloc();
-      when(() => testBloc.add(const UpdateIgnoreWhitespace(true))).thenReturn(null);
+      when(() => testBloc.add(const UpdateIgnoreWhitespace(true)))
+          .thenReturn(null);
       whenListen(
         testBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests),
+        Stream.fromIterable([
+          SettingsState(
+              status: SettingsStatus.loaded,
+              appSettings: currentSettings,
+              apiKeyTests: defaultApiKeyTests)
+        ]),
+        initialState: SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: currentSettings,
+            apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);
       await navigateToCategory(tester, 'Comparison');
-      
-      await tester.tap(find.byKey(const Key('settings_ignoreWhitespace_switch'))); 
+
+      await tester
+          .tap(find.byKey(const Key('settings_ignoreWhitespace_switch')));
       await tester.pumpAndSettle();
 
       verify(() => testBloc.add(const UpdateIgnoreWhitespace(true))).called(1);
     });
 
-    testWidgets('Adding an ignore pattern calls AddIgnorePattern event and pattern appears', (WidgetTester tester) async {
+    testWidgets(
+        'Adding an ignore pattern calls AddIgnorePattern event and pattern appears',
+        (WidgetTester tester) async {
       const String newPattern = 'new_pattern_.*';
-      AppSettings settingsBeforeAdd = AppSettings.defaultSettings().copyWith(ignorePatterns: []);
-      AppSettings settingsAfterAdd = settingsBeforeAdd.copyWith(ignorePatterns: [newPattern]);
+      AppSettings settingsBeforeAdd =
+          AppSettings.defaultSettings().copyWith(ignorePatterns: []);
+      AppSettings settingsAfterAdd =
+          settingsBeforeAdd.copyWith(ignorePatterns: [newPattern]);
       final testBloc = MockSettingsBloc();
       final controller = StreamController<SettingsState>();
 
-      when(() => testBloc.add(AddIgnorePattern(newPattern))).thenReturn(null); // Still useful to verify the event is added
+      when(() => testBloc.add(AddIgnorePattern(newPattern)))
+          .thenReturn(null); // Still useful to verify the event is added
 
       whenListen(
         testBloc,
         controller.stream,
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsBeforeAdd, apiKeyTests: defaultApiKeyTests),
+        initialState: SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: settingsBeforeAdd,
+            apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);
       await navigateToCategory(tester, 'Comparison');
 
       // Ensure it starts without the pattern
-      expect(find.byKey(Key('ignorePattern_tile_$newPattern')), findsNothing); 
+      expect(find.byKey(Key('ignorePattern_tile_$newPattern')), findsNothing);
 
       await tester.ensureVisible(
         find.byKey(const Key('settings_addPattern_button')),
@@ -192,7 +262,8 @@ void main() {
       await tester.tap(find.byKey(const Key('settings_addPattern_button')));
       await tester.pumpAndSettle(); // Dialog opens
 
-      await tester.enterText(find.byKey(const Key('addPattern_textField')), newPattern);
+      await tester.enterText(
+          find.byKey(const Key('addPattern_textField')), newPattern);
       await tester.pump();
 
       controller.add(
@@ -206,7 +277,7 @@ void main() {
       await tester.tap(find.byKey(const Key('addPattern_addButton')));
       // Crucial: After adding, the BLoC should have emitted settingsAfterAdd, so we need to pump for the UI to catch up.
       // The whenListen stream will provide this new state upon the next bloc build trigger (which tap/event should cause).
-      await tester.pumpAndSettle(); 
+      await tester.pumpAndSettle();
 
       verify(() => testBloc.add(AddIgnorePattern(newPattern))).called(1);
       expect(find.byKey(Key('ignorePattern_tile_$newPattern')), findsOneWidget);
@@ -214,34 +285,45 @@ void main() {
       await controller.close();
     });
 
-    testWidgets('Removing an ignore pattern calls RemoveIgnorePattern event and pattern disappears', (WidgetTester tester) async {
+    testWidgets(
+        'Removing an ignore pattern calls RemoveIgnorePattern event and pattern disappears',
+        (WidgetTester tester) async {
       const String patternToRemove = 'pattern_to_remove';
       const String otherPattern = 'another_pattern';
-      AppSettings settingsWithPattern = AppSettings.defaultSettings().copyWith(ignorePatterns: [patternToRemove, otherPattern]);
-      AppSettings settingsWithoutPattern = AppSettings.defaultSettings().copyWith(ignorePatterns: [otherPattern]);
+      AppSettings settingsWithPattern = AppSettings.defaultSettings()
+          .copyWith(ignorePatterns: [patternToRemove, otherPattern]);
+      AppSettings settingsWithoutPattern = AppSettings.defaultSettings()
+          .copyWith(ignorePatterns: [otherPattern]);
       final testBloc = MockSettingsBloc();
       final controller = StreamController<SettingsState>();
 
       // Stub the event addition (optional but good for verification clarity)
-      when(() => testBloc.add(RemoveIgnorePattern(patternToRemove))).thenReturn(null);
+      when(() => testBloc.add(RemoveIgnorePattern(patternToRemove)))
+          .thenReturn(null);
 
       whenListen(
         testBloc,
         controller.stream,
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: settingsWithPattern, apiKeyTests: defaultApiKeyTests), // Start with the pattern present
+        initialState: SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: settingsWithPattern,
+            apiKeyTests: defaultApiKeyTests), // Start with the pattern present
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);
       await navigateToCategory(tester, 'Comparison');
 
       // Verify pattern is initially present
-      expect(find.byKey(Key('ignorePattern_tile_$patternToRemove')), findsOneWidget);
-      expect(find.byKey(Key('ignorePattern_tile_$otherPattern')), findsOneWidget);
+      expect(find.byKey(Key('ignorePattern_tile_$patternToRemove')),
+          findsOneWidget);
+      expect(
+          find.byKey(Key('ignorePattern_tile_$otherPattern')), findsOneWidget);
 
       await tester.ensureVisible(
         find.byKey(Key('ignorePattern_delete_$patternToRemove')),
       );
-      await tester.tap(find.byKey(Key('ignorePattern_delete_$patternToRemove')));
+      await tester
+          .tap(find.byKey(Key('ignorePattern_delete_$patternToRemove')));
       // After tap, the BLoC should process RemoveIgnorePattern.
       // The whenListen stream will then emit settingsWithoutPattern.
       // pumpAndSettle allows the UI to rebuild with the new state.
@@ -252,23 +334,37 @@ void main() {
           apiKeyTests: defaultApiKeyTests,
         ),
       );
-      await tester.pumpAndSettle(); 
+      await tester.pumpAndSettle();
 
-      verify(() => testBloc.add(RemoveIgnorePattern(patternToRemove))).called(1);
-      expect(find.byKey(Key('ignorePattern_tile_$patternToRemove')), findsNothing); // Should now be gone
-      expect(find.byKey(Key('ignorePattern_tile_$otherPattern')), findsOneWidget); // Other pattern should remain
+      verify(() => testBloc.add(RemoveIgnorePattern(patternToRemove)))
+          .called(1);
+      expect(find.byKey(Key('ignorePattern_tile_$patternToRemove')),
+          findsNothing); // Should now be gone
+      expect(find.byKey(Key('ignorePattern_tile_$otherPattern')),
+          findsOneWidget); // Other pattern should remain
 
       await controller.close();
     });
 
-    testWidgets('Cancelling add pattern dialog does not call AddIgnorePattern event', (WidgetTester tester) async {
-      AppSettings currentSettings = AppSettings.defaultSettings().copyWith(ignorePatterns: []);
-      final testBloc = MockSettingsBloc(); 
+    testWidgets(
+        'Cancelling add pattern dialog does not call AddIgnorePattern event',
+        (WidgetTester tester) async {
+      AppSettings currentSettings =
+          AppSettings.defaultSettings().copyWith(ignorePatterns: []);
+      final testBloc = MockSettingsBloc();
       // General when(() => testBloc.add(any())) from setUp should cover this
       whenListen(
         testBloc,
-        Stream.fromIterable([SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests)]),
-        initialState: SettingsState(status: SettingsStatus.loaded, appSettings: currentSettings, apiKeyTests: defaultApiKeyTests),
+        Stream.fromIterable([
+          SettingsState(
+              status: SettingsStatus.loaded,
+              appSettings: currentSettings,
+              apiKeyTests: defaultApiKeyTests)
+        ]),
+        initialState: SettingsState(
+            status: SettingsStatus.loaded,
+            appSettings: currentSettings,
+            apiKeyTests: defaultApiKeyTests),
       );
 
       await pumpSettingsView(tester, settingsBloc: testBloc);
@@ -281,15 +377,16 @@ void main() {
       await tester.pumpAndSettle(); // Dialog opens
 
       expect(find.byKey(const Key('addPattern_textField')), findsOneWidget);
-      await tester.enterText(find.byKey(const Key('addPattern_textField')), 'some_text');
+      await tester.enterText(
+          find.byKey(const Key('addPattern_textField')), 'some_text');
       await tester.pump();
 
       await tester.tap(find.byKey(const Key('addPattern_cancelButton')));
       await tester.pumpAndSettle(); // Dialog closes
 
       verifyNever(() => testBloc.add(any(that: isA<AddIgnorePattern>())));
-      expect(find.text('No ignore patterns set.'), findsOneWidget); // List should still be empty
+      expect(find.text('No ignore patterns set.'),
+          findsOneWidget); // List should still be empty
     });
-
   });
-} 
+}

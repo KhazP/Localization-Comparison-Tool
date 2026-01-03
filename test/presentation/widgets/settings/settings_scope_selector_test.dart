@@ -30,7 +30,8 @@ void main() {
   }
 
   group('SettingsScopeSelector Reset Button', () {
-    testWidgets('Reset button is hidden when no project is loaded', (tester) async {
+    testWidgets('Reset button is hidden when no project is loaded',
+        (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
         SettingsState.initial().copyWith(
           projectSettings: null,
@@ -42,13 +43,17 @@ void main() {
 
       expect(find.text('Reset Project to Global Defaults'), findsNothing);
       expect(find.byType(NoProjectScopePrompt), findsOneWidget);
-      expect(find.text('Create a project to customize settings for specific folders'), findsOneWidget);
+      expect(
+          find.text(
+              'Create a project to customize settings for specific folders'),
+          findsOneWidget);
     });
 
     testWidgets('Reset button is hidden when in global scope', (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
         SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings(systemTranslationContext: 'test'),
+          projectSettings:
+              const ProjectSettings(systemTranslationContext: 'test'),
           scope: SettingsScope.global,
           currentProjectName: 'Test Project',
         ),
@@ -59,10 +64,11 @@ void main() {
       expect(find.text('Reset Project to Global Defaults'), findsNothing);
     });
 
-    testWidgets('Reset button is hidden when project has no overrides', (tester) async {
+    testWidgets('Reset button is hidden when project has no overrides',
+        (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
         SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings.empty(),
+          projectSettings: const ProjectSettings(),
           scope: SettingsScope.project,
           currentProjectName: 'Test Project',
         ),
@@ -73,10 +79,13 @@ void main() {
       expect(find.text('Reset Project to Global Defaults'), findsNothing);
     });
 
-    testWidgets('Reset button is visible when overrides exist and scope is project', (tester) async {
+    testWidgets(
+        'Reset button is visible when overrides exist and scope is project',
+        (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
         SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings(systemTranslationContext: 'override'),
+          projectSettings:
+              const ProjectSettings(systemTranslationContext: 'override'),
           scope: SettingsScope.project,
           currentProjectName: 'Test Project',
         ),
@@ -87,10 +96,12 @@ void main() {
       expect(find.text('Reset Project to Global Defaults'), findsOneWidget);
     });
 
-    testWidgets('Clicking reset button shows confirmation dialog', (tester) async {
+    testWidgets('Clicking reset button shows confirmation dialog',
+        (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
         SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings(systemTranslationContext: 'override'),
+          projectSettings:
+              const ProjectSettings(systemTranslationContext: 'override'),
           scope: SettingsScope.project,
           currentProjectName: 'Test Project',
         ),
@@ -105,10 +116,12 @@ void main() {
       expect(find.text('Reset'), findsOneWidget);
     });
 
-    testWidgets('Confirming dialog triggers ResetAllProjectSettings event', (tester) async {
+    testWidgets('Confirming dialog triggers ResetAllProjectSettings event',
+        (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
         SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings(systemTranslationContext: 'override'),
+          projectSettings:
+              const ProjectSettings(systemTranslationContext: 'override'),
           scope: SettingsScope.project,
           currentProjectName: 'Test Project',
         ),
@@ -124,13 +137,15 @@ void main() {
       await tester.tap(find.text('Reset'));
       await tester.pumpAndSettle();
 
-      verify(() => mockSettingsBloc.add(const ResetAllProjectSettings())).called(1);
+      verify(() => mockSettingsBloc.add(const ResetAllProjectSettings()))
+          .called(1);
     });
-    
+
     testWidgets('Cancelling dialog does not trigger event', (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
         SettingsState.initial().copyWith(
-          projectSettings: const ProjectSettings(systemTranslationContext: 'override'),
+          projectSettings:
+              const ProjectSettings(systemTranslationContext: 'override'),
           scope: SettingsScope.project,
           currentProjectName: 'Test Project',
         ),

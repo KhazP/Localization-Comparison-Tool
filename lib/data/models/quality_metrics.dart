@@ -1,27 +1,26 @@
-import 'package:flutter/foundation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'quality_metrics.freezed.dart';
 
 /// Holds translation coverage counts for a single comparison.
-@immutable
-class CoverageMetrics {
+@freezed
+class CoverageMetrics with _$CoverageMetrics {
+  const CoverageMetrics._();
+
   /// Creates coverage metrics for a comparison.
-  const CoverageMetrics({
-    required this.sourceKeyCount,
-    required this.translatedKeyCount,
-    required this.sourceWordCount,
-    required this.translatedWordCount,
-  });
+  const factory CoverageMetrics({
+    /// Total number of source entries.
+    required int sourceKeyCount,
 
-  /// Total number of source entries.
-  final int sourceKeyCount;
+    /// Number of source entries with a non-empty translation.
+    required int translatedKeyCount,
 
-  /// Number of source entries with a non-empty translation.
-  final int translatedKeyCount;
+    /// Total words in the source entries.
+    required int sourceWordCount,
 
-  /// Total words in the source entries.
-  final int sourceWordCount;
-
-  /// Total words in the translated entries.
-  final int translatedWordCount;
+    /// Total words in the translated entries.
+    required int translatedWordCount,
+  }) = _CoverageMetrics;
 
   /// Translation coverage as a percentage (0 to 100).
   double get coveragePercent {
@@ -45,80 +44,69 @@ enum QualityIssueType {
 }
 
 /// Describes a specific quality issue found in a translation.
-@immutable
-class QualityIssue {
+@freezed
+class QualityIssue with _$QualityIssue {
   /// Creates a quality issue record.
-  const QualityIssue({
-    required this.key,
-    required this.sourceValue,
-    required this.targetValue,
-    required this.description,
-    required this.type,
-    this.relatedKeys,
-    this.relatedSources,
-  });
+  const factory QualityIssue({
+    /// The localization key tied to the issue.
+    required String key,
 
-  /// The localization key tied to the issue.
-  final String key;
+    /// The expected source text, when available.
+    String? sourceValue,
 
-  /// The expected source text, when available.
-  final String? sourceValue;
+    /// The translated text, when available.
+    String? targetValue,
 
-  /// The translated text, when available.
-  final String? targetValue;
+    /// A short description of the specific error.
+    required String description,
 
-  /// A short description of the specific error.
-  final String description;
+    /// The category of issue detected.
+    required QualityIssueType type,
 
-  /// The category of issue detected.
-  final QualityIssueType type;
+    /// For duplicate value issues, this list contains all keys sharing
+    /// the value.
+    List<String>? relatedKeys,
 
-  /// For duplicate value issues, this list contains all keys sharing the value.
-  final List<String>? relatedKeys;
-
-  /// For duplicate values, maps each key to its source text (if available).
-  final Map<String, String>? relatedSources;
+    /// For duplicate values, maps each key to its source text (if available).
+    Map<String, String>? relatedSources,
+  }) = _QualityIssue;
 }
 
 /// Holds issue counts and detailed issue lists.
-@immutable
-class IssueMetrics {
+@freezed
+class IssueMetrics with _$IssueMetrics {
+  const IssueMetrics._();
+
   /// Creates issue metrics for a comparison.
-  const IssueMetrics({
-    required this.placeholderMismatchCount,
-    required this.lengthOutlierCount,
-    required this.duplicateValueCount,
-    required this.placeholderMismatchIssues,
-    required this.lengthOutlierIssues,
-    required this.duplicateValueIssues,
-  });
+  const factory IssueMetrics({
+    /// Count of placeholder mismatches.
+    required int placeholderMismatchCount,
+
+    /// Count of unusually short or long translations.
+    required int lengthOutlierCount,
+
+    /// Count of entries that share the same translation value.
+    required int duplicateValueCount,
+
+    /// Detailed placeholder mismatch issues.
+    required List<QualityIssue> placeholderMismatchIssues,
+
+    /// Detailed length outlier issues.
+    required List<QualityIssue> lengthOutlierIssues,
+
+    /// Detailed duplicate value issues.
+    required List<QualityIssue> duplicateValueIssues,
+  }) = _IssueMetrics;
 
   /// Creates an empty issue report.
-  const IssueMetrics.empty()
-      : placeholderMismatchCount = 0,
-        lengthOutlierCount = 0,
-        duplicateValueCount = 0,
-        placeholderMismatchIssues = const [],
-        lengthOutlierIssues = const [],
-        duplicateValueIssues = const [];
-
-  /// Count of placeholder mismatches.
-  final int placeholderMismatchCount;
-
-  /// Count of unusually short or long translations.
-  final int lengthOutlierCount;
-
-  /// Count of entries that share the same translation value.
-  final int duplicateValueCount;
-
-  /// Detailed placeholder mismatch issues.
-  final List<QualityIssue> placeholderMismatchIssues;
-
-  /// Detailed length outlier issues.
-  final List<QualityIssue> lengthOutlierIssues;
-
-  /// Detailed duplicate value issues.
-  final List<QualityIssue> duplicateValueIssues;
+  factory IssueMetrics.empty() => const IssueMetrics(
+        placeholderMismatchCount: 0,
+        lengthOutlierCount: 0,
+        duplicateValueCount: 0,
+        placeholderMismatchIssues: [],
+        lengthOutlierIssues: [],
+        duplicateValueIssues: [],
+      );
 
   /// Total number of issues across all categories.
   int get totalIssues {
@@ -130,126 +118,100 @@ class IssueMetrics {
 }
 
 /// Bundles coverage and issue data for a language.
-@immutable
-class LanguageQualityReport {
+@freezed
+class LanguageQualityReport with _$LanguageQualityReport {
   /// Creates a quality report for a language.
-  const LanguageQualityReport({
-    required this.languageCode,
-    required this.languageLabel,
-    required this.coverage,
-    required this.issues,
-  });
+  const factory LanguageQualityReport({
+    /// Language code (for example, "en" or "fr").
+    required String languageCode,
 
-  /// Language code (for example, "en" or "fr").
-  final String languageCode;
+    /// Friendly language label for display.
+    required String languageLabel,
 
-  /// Friendly language label for display.
-  final String languageLabel;
+    /// Translation coverage counts.
+    required CoverageMetrics coverage,
 
-  /// Translation coverage counts.
-  final CoverageMetrics coverage;
-
-  /// Detected issues for the language.
-  final IssueMetrics issues;
+    /// Detected issues for the language.
+    required IssueMetrics issues,
+  }) = _LanguageQualityReport;
 }
 
 /// Represents a point in the word trend chart.
-@immutable
-class WordTrendPoint {
+@freezed
+class WordTrendPoint with _$WordTrendPoint {
   /// Creates a trend point.
-  const WordTrendPoint({
-    required this.timestamp,
-    required this.words,
-    required this.coveragePercent,
-  });
+  const factory WordTrendPoint({
+    /// Time of the comparison.
+    required DateTime timestamp,
 
-  /// Time of the comparison.
-  final DateTime timestamp;
+    /// Number of translated words at that time.
+    required int words,
 
-  /// Number of translated words at that time.
-  final int words;
-
-  /// Coverage percentage at that time (0-100).
-  final double coveragePercent;
+    /// Coverage percentage at that time (0-100).
+    required double coveragePercent,
+  }) = _WordTrendPoint;
 }
 
 /// Represents a point in the activity trend chart (churn).
-@immutable
-class ActivityTrendPoint {
+@freezed
+class ActivityTrendPoint with _$ActivityTrendPoint {
   /// Creates an activity trend point.
-  const ActivityTrendPoint({
-    required this.timestamp,
-    required this.added,
-    required this.modified,
-    required this.removed,
-  });
+  const factory ActivityTrendPoint({
+    /// Time of the comparison.
+    required DateTime timestamp,
 
-  /// Time of the comparison.
-  final DateTime timestamp;
+    /// Number of added keys.
+    required int added,
 
-  /// Number of added keys.
-  final int added;
+    /// Number of modified keys.
+    required int modified,
 
-  /// Number of modified keys.
-  final int modified;
-
-  /// Number of removed keys.
-  final int removed;
+    /// Number of removed keys.
+    required int removed,
+  }) = _ActivityTrendPoint;
 }
 
 /// Represents a point in the burn-up chart (completion vs scope).
-@immutable
-class BurnUpPoint {
+@freezed
+class BurnUpPoint with _$BurnUpPoint {
   /// Creates a burn-up point.
-  const BurnUpPoint({
-    required this.timestamp,
-    required this.totalKeys,
-    required this.translatedKeys,
-  });
+  const factory BurnUpPoint({
+    /// Time of the comparison.
+    required DateTime timestamp,
 
-  /// Time of the comparison.
-  final DateTime timestamp;
+    /// Total number of keys (Scope).
+    required int totalKeys,
 
-  /// Total number of keys (Scope).
-  final int totalKeys;
-
-  /// Number of translated keys (Progress).
-  final int translatedKeys;
+    /// Number of translated keys (Progress).
+    required int translatedKeys,
+  }) = _BurnUpPoint;
 }
 
-
 /// Aggregated data used by the quality dashboard.
-@immutable
-class QualityDashboardData {
+@freezed
+class QualityDashboardData with _$QualityDashboardData {
+  const QualityDashboardData._();
+
   /// Creates dashboard data.
-  const QualityDashboardData({
-    required this.languages,
-    required this.wordTrend,
-    required this.activityTrend,
-    required this.burnUpTrend,
-    required this.warnings,
-    required this.generatedAt,
-  });
+  const factory QualityDashboardData({
+    /// Per-language quality reports.
+    required List<LanguageQualityReport> languages,
 
+    /// Trend points for translated words and coverage over time.
+    required List<WordTrendPoint> wordTrend,
 
+    /// Trend points for activity (added/modified/removed) over time.
+    required List<ActivityTrendPoint> activityTrend,
 
-  /// Per-language quality reports.
-  final List<LanguageQualityReport> languages;
+    /// Trend points for completion versus scope over time.
+    required List<BurnUpPoint> burnUpTrend,
 
-  /// Trend points for translated words and coverage over time.
-  final List<WordTrendPoint> wordTrend;
+    /// User-facing warnings about skipped files.
+    required List<String> warnings,
 
-  /// Trend points for activity (added/modified/removed) over time.
-  final List<ActivityTrendPoint> activityTrend;
-
-  /// Trend points for completion versus scope over time.
-  final List<BurnUpPoint> burnUpTrend;
-
-  /// User-facing warnings about skipped files.
-  final List<String> warnings;
-
-  /// Timestamp when the data was generated.
-  final DateTime generatedAt;
+    /// Timestamp when the data was generated.
+    required DateTime generatedAt,
+  }) = _QualityDashboardData;
 
   /// Total number of languages with data.
   int get totalLanguages => languages.length;

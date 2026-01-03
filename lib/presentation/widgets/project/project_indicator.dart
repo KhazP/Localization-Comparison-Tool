@@ -7,7 +7,7 @@ import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_sta
 import 'package:localizer_app_main/presentation/widgets/project/project_selection_dialog.dart';
 
 /// A compact widget that shows the current project status.
-/// 
+///
 /// Displays either:
 /// - A button to create a project if none is open
 /// - The current project name with options to close it
@@ -17,7 +17,7 @@ class ProjectIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return BlocBuilder<ProjectBloc, ProjectState>(
       builder: (context, state) {
         if (state.hasProject) {
@@ -57,7 +57,8 @@ class ProjectIndicator extends StatelessWidget {
     );
   }
 
-  Widget _buildProjectOpen(BuildContext context, ProjectState state, ColorScheme colorScheme) {
+  Widget _buildProjectOpen(
+      BuildContext context, ProjectState state, ColorScheme colorScheme) {
     return Tooltip(
       message: 'Project: ${state.projectName}\nClick to see options',
       child: Material(
@@ -87,7 +88,7 @@ class ProjectIndicator extends StatelessWidget {
 
   void _showProjectMenu(BuildContext context, ProjectState state) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -150,9 +151,10 @@ class ProjectIndicator extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
+  Widget _buildInfoRow(
+      BuildContext context, IconData icon, String label, String value) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -165,8 +167,8 @@ class ProjectIndicator extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                      color: colorScheme.onSurfaceVariant,
+                    ),
               ),
               Text(
                 value,
@@ -182,7 +184,7 @@ class ProjectIndicator extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Today';
     } else if (difference.inDays == 1) {
@@ -200,5 +202,4 @@ class ProjectIndicator extends StatelessWidget {
       builder: (context) => const ProjectSelectionDialog(),
     );
   }
-
 }

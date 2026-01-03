@@ -186,8 +186,7 @@ class SystemInfoService {
           runInShell: true,
         );
         if (result.exitCode == 0) {
-          final match =
-              RegExp(r'(\d+)').firstMatch(result.stdout.toString());
+          final match = RegExp(r'(\d+)').firstMatch(result.stdout.toString());
           if (match != null) {
             final totalKb = int.tryParse(match.group(1)!);
             if (totalKb != null) {

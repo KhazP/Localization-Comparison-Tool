@@ -25,10 +25,10 @@ class ProjectGlossaryCard extends StatelessWidget {
           'Define terms that should be treated consistently or never translated.',
         ),
         const SizedBox(height: 16),
-        
+
         // List of terms
         if (project.glossary.isEmpty)
-           Padding(
+          Padding(
             padding: const EdgeInsets.all(16.0),
             child: Center(
               child: Text(
@@ -48,8 +48,8 @@ class ProjectGlossaryCard extends StatelessWidget {
               final item = project.glossary[index];
               return ListTile(
                 title: Text(item.term),
-                subtitle: Text(item.forbidTranslation 
-                    ? 'Do not translate' 
+                subtitle: Text(item.forbidTranslation
+                    ? 'Do not translate'
                     : (item.preferredTranslation ?? 'No specific translation')),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
@@ -59,7 +59,7 @@ class ProjectGlossaryCard extends StatelessWidget {
               );
             },
           ),
-          
+
         const SizedBox(height: 16),
         Center(
           child: FilledButton.icon(
@@ -88,32 +88,34 @@ class ProjectGlossaryCard extends StatelessWidget {
   void _editTerm(BuildContext context, GlossaryItem item) async {
     final updatedItem = await _showGlossaryDialog(context, item: item);
     if (updatedItem != null && context.mounted) {
-       final projectBloc = context.read<ProjectBloc>();
-       final currentProject = projectBloc.state.currentProject;
-       if (currentProject != null) {
-         final updatedGlossary = currentProject.glossary.map((g) {
-           return g.id == item.id ? updatedItem : g;
-         }).toList();
-         projectBloc.add(UpdateProjectGlossary(updatedGlossary));
-       }
+      final projectBloc = context.read<ProjectBloc>();
+      final currentProject = projectBloc.state.currentProject;
+      if (currentProject != null) {
+        final updatedGlossary = currentProject.glossary.map((g) {
+          return g.id == item.id ? updatedItem : g;
+        }).toList();
+        projectBloc.add(UpdateProjectGlossary(updatedGlossary));
+      }
     }
   }
 
   void _deleteTerm(BuildContext context, String id) {
-     final projectBloc = context.read<ProjectBloc>();
-     final currentProject = projectBloc.state.currentProject;
-     if (currentProject != null) {
-       final updatedGlossary = List<GlossaryItem>.from(currentProject.glossary)
-         ..removeWhere((g) => g.id == id);
-       projectBloc.add(UpdateProjectGlossary(updatedGlossary));
-     }
+    final projectBloc = context.read<ProjectBloc>();
+    final currentProject = projectBloc.state.currentProject;
+    if (currentProject != null) {
+      final updatedGlossary = List<GlossaryItem>.from(currentProject.glossary)
+        ..removeWhere((g) => g.id == id);
+      projectBloc.add(UpdateProjectGlossary(updatedGlossary));
+    }
   }
 
-  Future<GlossaryItem?> _showGlossaryDialog(BuildContext context, {GlossaryItem? item}) {
+  Future<GlossaryItem?> _showGlossaryDialog(BuildContext context,
+      {GlossaryItem? item}) {
     final isEditing = item != null;
     final termController = TextEditingController(text: item?.term);
     final definitionController = TextEditingController(text: item?.definition);
-    final translationController = TextEditingController(text: item?.preferredTranslation);
+    final translationController =
+        TextEditingController(text: item?.preferredTranslation);
     bool forbidTranslation = item?.forbidTranslation ?? true;
     bool caseSensitive = item?.caseSensitive ?? false;
 
@@ -156,7 +158,7 @@ class ProjectGlossaryCard extends StatelessWidget {
                       labelText: 'Preferred Translation',
                     ),
                   ),
-                 SwitchListTile(
+                SwitchListTile(
                   title: const Text('Case Sensitive'),
                   value: caseSensitive,
                   onChanged: (val) => setState(() => caseSensitive = val),
@@ -173,14 +175,15 @@ class ProjectGlossaryCard extends StatelessWidget {
             FilledButton(
               onPressed: () {
                 if (termController.text.isEmpty) return;
-                
+
                 final newItem = GlossaryItem(
                   id: item?.id ?? const Uuid().v4(),
                   term: termController.text,
                   definition: definitionController.text,
                   caseSensitive: caseSensitive,
                   forbidTranslation: forbidTranslation,
-                  preferredTranslation: forbidTranslation ? null : translationController.text,
+                  preferredTranslation:
+                      forbidTranslation ? null : translationController.text,
                 );
                 Navigator.pop(context, newItem);
               },

@@ -71,9 +71,8 @@ class ApiKeyValidationService {
   }
 
   Future<ApiKeyValidationResult> _testDeepL(String apiKey) async {
-    final host = apiKey.endsWith(':fx')
-        ? 'api-free.deepl.com'
-        : 'api.deepl.com';
+    final host =
+        apiKey.endsWith(':fx') ? 'api-free.deepl.com' : 'api.deepl.com';
     final url = 'https://$host/v2/usage';
 
     try {

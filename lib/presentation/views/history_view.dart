@@ -27,7 +27,8 @@ class HistoryView extends StatefulWidget {
   State<HistoryView> createState() => _HistoryViewState();
 }
 
-class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStateMixin {
+class _HistoryViewState extends State<HistoryView>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _filterController = TextEditingController();
   List<ComparisonSession> _allHistory = [];
   List<ComparisonSession> _filteredHistory = [];
@@ -179,19 +180,23 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
-    
+
     final projectState = context.watch<ProjectBloc>().state;
     final isProjectLoaded = projectState.status == ProjectStatus.loaded;
-    
+
     // AMOLED detection
     final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = isDark && 
+    final bool isAmoled = isDark &&
         settingsState.status == SettingsStatus.loaded &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-    
+
     // AMOLED-aware color helpers
-    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
-    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    final cardColor = isAmoled
+        ? AppThemeV2.amoledCard
+        : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final borderColor = isAmoled
+        ? AppThemeV2.amoledBorder
+        : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -223,11 +228,15 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                   Tooltip(
                     message: 'Clear all history',
                     child: IconButton(
-                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                      color: isDark
+                          ? AppThemeV2.darkTextMuted
+                          : AppThemeV2.lightTextMuted,
                       onPressed: () => _showClearConfirmation(context),
                       icon: Icon(
                         LucideIcons.trash2,
-                        color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted,
                       ),
                     ),
                   ),
@@ -253,20 +262,25 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                           hintText: 'Search by file name...',
                           prefixIcon: Icon(
                             LucideIcons.search,
-                            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                            color: isDark
+                                ? AppThemeV2.darkTextMuted
+                                : AppThemeV2.lightTextMuted,
                           ),
                           suffixIcon: _filterController.text.isNotEmpty
                               ? IconButton(
                                   icon: Icon(
                                     LucideIcons.x,
                                     size: 20,
-                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                    color: isDark
+                                        ? AppThemeV2.darkTextMuted
+                                        : AppThemeV2.lightTextMuted,
                                   ),
                                   onPressed: () => _filterController.clear(),
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
                         ),
                       ),
                     ),
@@ -284,16 +298,20 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                     child: PopupMenuButton<String>(
                       onSelected: _setSort,
                       tooltip: 'Sort by',
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               LucideIcons.arrowUpDown,
                               size: 20,
-                              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                              color: isDark
+                                  ? AppThemeV2.darkTextSecondary
+                                  : AppThemeV2.lightTextSecondary,
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -301,7 +319,9 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                               style: theme.textTheme.bodyMedium,
                             ),
                             Icon(
-                              _sortAscending ? LucideIcons.arrowUp : LucideIcons.arrowDown,
+                              _sortAscending
+                                  ? LucideIcons.arrowUp
+                                  : LucideIcons.arrowDown,
                               size: 16,
                               color: colorScheme.primary,
                             ),
@@ -309,9 +329,12 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                       ),
                       itemBuilder: (context) => [
-                        _buildSortMenuItem('timestamp', 'Date', LucideIcons.clock),
-                        _buildSortMenuItem('file1Path', 'Source File', LucideIcons.fileInput),
-                        _buildSortMenuItem('file2Path', 'Target File', LucideIcons.arrowRightLeft),
+                        _buildSortMenuItem(
+                            'timestamp', 'Date', LucideIcons.clock),
+                        _buildSortMenuItem(
+                            'file1Path', 'Source File', LucideIcons.fileInput),
+                        _buildSortMenuItem('file2Path', 'Target File',
+                            LucideIcons.arrowRightLeft),
                       ],
                     ),
                   ),
@@ -345,14 +368,21 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                   ],
                   // Group by folder toggle
                   Tooltip(
-                    message: _groupByFolder ? 'Disable folder grouping' : 'Group by folder',
+                    message: _groupByFolder
+                        ? 'Disable folder grouping'
+                        : 'Group by folder',
                     child: IconButton(
-                      onPressed: () => setState(() => _groupByFolder = !_groupByFolder),
+                      onPressed: () =>
+                          setState(() => _groupByFolder = !_groupByFolder),
                       icon: Icon(
-                        _groupByFolder ? LucideIcons.folder : LucideIcons.folderOpen,
-                        color: _groupByFolder 
-                            ? colorScheme.primary 
-                            : (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted),
+                        _groupByFolder
+                            ? LucideIcons.folder
+                            : LucideIcons.folderOpen,
+                        color: _groupByFolder
+                            ? colorScheme.primary
+                            : (isDark
+                                ? AppThemeV2.darkTextMuted
+                                : AppThemeV2.lightTextMuted),
                       ),
                     ),
                   ),
@@ -406,7 +436,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                           isExpanded: _expandedStates[session.id] ?? false,
                           onTap: () {
                             setState(() {
-                              _expandedStates[session.id] = !(_expandedStates[session.id] ?? false);
+                              _expandedStates[session.id] =
+                                  !(_expandedStates[session.id] ?? false);
                             });
                           },
                           onView: () => _onViewDetails(session),
@@ -435,10 +466,11 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     }
   }
 
-  PopupMenuItem<String> _buildSortMenuItem(String value, String label, IconData icon) {
+  PopupMenuItem<String> _buildSortMenuItem(
+      String value, String label, IconData icon) {
     final theme = Theme.of(context);
     final isSelected = _sortBy == value;
-    
+
     return PopupMenuItem<String>(
       value: value,
       child: Row(
@@ -473,25 +505,25 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final themeState = context.watch<ThemeBloc>().state;
-    
+
     // Group sessions by parent folder with full path context
     final Map<String, List<ComparisonSession>> grouped = {};
     final Map<String, String> folderPaths = {}; // Store grandparent context
-    
+
     for (final session in _filteredHistory) {
       final parts = session.file1Path.split(Platform.pathSeparator);
       final folder = parts.length > 1 ? parts[parts.length - 2] : 'Root';
       final grandparent = parts.length > 2 ? parts[parts.length - 3] : '';
-      
+
       grouped.putIfAbsent(folder, () => []).add(session);
       if (grandparent.isNotEmpty && !folderPaths.containsKey(folder)) {
         folderPaths[folder] = grandparent;
       }
     }
-    
+
     // Sort folder names alphabetically
     final sortedFolders = grouped.keys.toList()..sort();
-    
+
     return ListView.builder(
       itemCount: sortedFolders.length,
       itemBuilder: (context, folderIndex) {
@@ -499,21 +531,21 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
         final sessions = grouped[folder]!;
         final isExpanded = _expandedStates['folder_$folder'] ?? true;
         final grandparent = folderPaths[folder];
-        
+
         // Aggregate stats for this folder
         int totalAdded = 0, totalRemoved = 0, totalModified = 0;
         final Set<String> fileTypes = {};
-        
+
         for (final session in sessions) {
           totalAdded += session.stringsAdded;
           totalRemoved += session.stringsRemoved;
           totalModified += session.stringsModified;
-          
+
           // Extract file type
           final ext = session.file1Path.split('.').last.toUpperCase();
           if (ext.isNotEmpty && ext.length <= 5) fileTypes.add(ext);
         }
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -525,13 +557,16 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                margin: EdgeInsets.only(bottom: 8, top: folderIndex > 0 ? 16 : 0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                margin:
+                    EdgeInsets.only(bottom: 8, top: folderIndex > 0 ? 16 : 0),
                 decoration: BoxDecoration(
                   color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                    color:
+                        isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
                   ),
                 ),
                 child: Column(
@@ -541,7 +576,9 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                     Row(
                       children: [
                         Icon(
-                          isExpanded ? LucideIcons.folderOpen : LucideIcons.folder,
+                          isExpanded
+                              ? LucideIcons.folderOpen
+                              : LucideIcons.folder,
                           size: 18,
                           color: theme.colorScheme.primary,
                         ),
@@ -550,11 +587,14 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         Expanded(
                           child: Row(
                             children: [
-                              if (grandparent != null && grandparent.isNotEmpty) ...[
+                              if (grandparent != null &&
+                                  grandparent.isNotEmpty) ...[
                                 Text(
                                   '.../$grandparent/',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                    color: isDark
+                                        ? AppThemeV2.darkTextMuted
+                                        : AppThemeV2.lightTextMuted,
                                   ),
                                 ),
                               ],
@@ -569,7 +609,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                         // Count badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primary.withAlpha(30),
                             borderRadius: BorderRadius.circular(4),
@@ -585,9 +626,13 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                         const SizedBox(width: 8),
                         Icon(
-                          isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                          isExpanded
+                              ? LucideIcons.chevronUp
+                              : LucideIcons.chevronDown,
                           size: 20,
-                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
                         ),
                       ],
                     ),
@@ -597,11 +642,17 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                       children: [
                         // Aggregate stats
                         if (totalAdded > 0)
-                          _MiniStatBadge(label: '+$totalAdded', color: themeState.diffAddedColor),
+                          _MiniStatBadge(
+                              label: '+$totalAdded',
+                              color: themeState.diffAddedColor),
                         if (totalRemoved > 0)
-                          _MiniStatBadge(label: '-$totalRemoved', color: themeState.diffRemovedColor),
+                          _MiniStatBadge(
+                              label: '-$totalRemoved',
+                              color: themeState.diffRemovedColor),
                         if (totalModified > 0)
-                          _MiniStatBadge(label: '~$totalModified', color: themeState.diffModifiedColor),
+                          _MiniStatBadge(
+                              label: '~$totalModified',
+                              color: themeState.diffModifiedColor),
                         const SizedBox(width: 8),
                         // Mini density bar
                         Expanded(
@@ -614,21 +665,23 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         const SizedBox(width: 8),
                         // File types
                         ...fileTypes.take(3).map((type) => Container(
-                          margin: const EdgeInsets.only(left: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondary.withAlpha(20),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            type,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.secondary,
-                            ),
-                          ),
-                        )),
+                              margin: const EdgeInsets.only(left: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color:
+                                    theme.colorScheme.secondary.withAlpha(20),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                type,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.secondary,
+                                ),
+                              ),
+                            )),
                       ],
                     ),
                   ],
@@ -638,16 +691,17 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
             // Sessions in this folder
             if (isExpanded)
               ...sessions.map((session) => _HistoryCard(
-                session: session,
-                isExpanded: _expandedStates[session.id] ?? false,
-                onTap: () {
-                  setState(() {
-                    _expandedStates[session.id] = !(_expandedStates[session.id] ?? false);
-                  });
-                },
-                onView: () => _onViewDetails(session),
-                onDelete: () => _deleteSession(session),
-              )),
+                    session: session,
+                    isExpanded: _expandedStates[session.id] ?? false,
+                    onTap: () {
+                      setState(() {
+                        _expandedStates[session.id] =
+                            !(_expandedStates[session.id] ?? false);
+                      });
+                    },
+                    onView: () => _onViewDetails(session),
+                    onDelete: () => _deleteSession(session),
+                  )),
           ],
         );
       },
@@ -660,47 +714,52 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final themeState = context.watch<ThemeBloc>().state;
-    
+
     // AMOLED detection
     final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = isDark && 
+    final bool isAmoled = isDark &&
         settingsState.status == SettingsStatus.loaded &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-    
-    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
-    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
-    
+
+    final cardColor = isAmoled
+        ? AppThemeV2.amoledCard
+        : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final borderColor = isAmoled
+        ? AppThemeV2.amoledBorder
+        : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+
     // Group sessions by projectId
     final Map<String?, List<ComparisonSession>> grouped = {};
-    
+
     for (final session in _filteredHistory) {
       grouped.putIfAbsent(session.projectId, () => []).add(session);
     }
-    
+
     // Sort: current project first (if applicable), then by name, with "Unassigned" last
     final projectState = context.watch<ProjectBloc>().state;
     final currentProjectId = projectState.currentProject?.id;
-    
-    final sortedKeys = grouped.keys.toList()..sort((a, b) {
-      // Current project first
-      if (a == currentProjectId) return -1;
-      if (b == currentProjectId) return 1;
-      // Unassigned (null) last
-      if (a == null) return 1;
-      if (b == null) return -1;
-      // Sort by name alphabetically
-      final nameA = _projectNames[a] ?? a;
-      final nameB = _projectNames[b] ?? b;
-      return nameA.compareTo(nameB);
-    });
-    
+
+    final sortedKeys = grouped.keys.toList()
+      ..sort((a, b) {
+        // Current project first
+        if (a == currentProjectId) return -1;
+        if (b == currentProjectId) return 1;
+        // Unassigned (null) last
+        if (a == null) return 1;
+        if (b == null) return -1;
+        // Sort by name alphabetically
+        final nameA = _projectNames[a] ?? a;
+        final nameB = _projectNames[b] ?? b;
+        return nameA.compareTo(nameB);
+      });
+
     return ListView.builder(
       itemCount: sortedKeys.length,
       itemBuilder: (context, projectIndex) {
         final projectId = sortedKeys[projectIndex];
         final sessions = grouped[projectId]!;
         final isExpanded = _expandedStates['project_$projectId'] ?? true;
-        
+
         // Get project name
         String projectName;
         IconData projectIcon;
@@ -708,27 +767,30 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
           projectName = 'Unassigned';
           projectIcon = LucideIcons.folderMinus;
         } else if (projectId == currentProjectId) {
-          projectName = _projectNames[projectId] ?? projectState.currentProject?.name ?? 'Current Project';
+          projectName = _projectNames[projectId] ??
+              projectState.currentProject?.name ??
+              'Current Project';
           projectIcon = LucideIcons.star;
         } else {
-          projectName = _projectNames[projectId] ?? 'Project ${projectId.substring(0, 8)}...';
+          projectName = _projectNames[projectId] ??
+              'Project ${projectId.substring(0, 8)}...';
           projectIcon = LucideIcons.folder;
         }
-        
+
         // Aggregate stats for this project
         int totalAdded = 0, totalRemoved = 0, totalModified = 0;
         final Set<String> fileTypes = {};
-        
+
         for (final session in sessions) {
           totalAdded += session.stringsAdded;
           totalRemoved += session.stringsRemoved;
           totalModified += session.stringsModified;
-          
+
           // Extract file type
           final ext = session.file1Path.split('.').last.toUpperCase();
           if (ext.isNotEmpty && ext.length <= 5) fileTypes.add(ext);
         }
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -741,8 +803,10 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                margin: EdgeInsets.only(bottom: 8, top: projectIndex > 0 ? 16 : 0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                margin:
+                    EdgeInsets.only(bottom: 8, top: projectIndex > 0 ? 16 : 0),
                 decoration: BoxDecoration(
                   color: cardColor,
                   borderRadius: BorderRadius.circular(8),
@@ -760,7 +824,9 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                           color: projectId == currentProjectId
                               ? theme.colorScheme.primary
                               : (projectId == null
-                                  ? (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted)
+                                  ? (isDark
+                                      ? AppThemeV2.darkTextMuted
+                                      : AppThemeV2.lightTextMuted)
                                   : theme.colorScheme.secondary),
                         ),
                         const SizedBox(width: 10),
@@ -770,7 +836,9 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: projectId == null
-                                  ? (isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted)
+                                  ? (isDark
+                                      ? AppThemeV2.darkTextMuted
+                                      : AppThemeV2.lightTextMuted)
                                   : null,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -778,7 +846,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                         // Count badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primary.withAlpha(30),
                             borderRadius: BorderRadius.circular(4),
@@ -794,9 +863,13 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         ),
                         const SizedBox(width: 8),
                         Icon(
-                          isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                          isExpanded
+                              ? LucideIcons.chevronUp
+                              : LucideIcons.chevronDown,
                           size: 20,
-                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                          color: isDark
+                              ? AppThemeV2.darkTextMuted
+                              : AppThemeV2.lightTextMuted,
                         ),
                       ],
                     ),
@@ -806,11 +879,17 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                       children: [
                         // Aggregate stats
                         if (totalAdded > 0)
-                          _MiniStatBadge(label: '+$totalAdded', color: themeState.diffAddedColor),
+                          _MiniStatBadge(
+                              label: '+$totalAdded',
+                              color: themeState.diffAddedColor),
                         if (totalRemoved > 0)
-                          _MiniStatBadge(label: '-$totalRemoved', color: themeState.diffRemovedColor),
+                          _MiniStatBadge(
+                              label: '-$totalRemoved',
+                              color: themeState.diffRemovedColor),
                         if (totalModified > 0)
-                          _MiniStatBadge(label: '~$totalModified', color: themeState.diffModifiedColor),
+                          _MiniStatBadge(
+                              label: '~$totalModified',
+                              color: themeState.diffModifiedColor),
                         const SizedBox(width: 8),
                         // Mini density bar
                         Expanded(
@@ -823,21 +902,23 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
                         const SizedBox(width: 8),
                         // File types
                         ...fileTypes.take(3).map((type) => Container(
-                          margin: const EdgeInsets.only(left: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondary.withAlpha(20),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            type,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.secondary,
-                            ),
-                          ),
-                        )),
+                              margin: const EdgeInsets.only(left: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color:
+                                    theme.colorScheme.secondary.withAlpha(20),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                type,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.secondary,
+                                ),
+                              ),
+                            )),
                       ],
                     ),
                   ],
@@ -847,16 +928,17 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
             // Sessions in this project
             if (isExpanded)
               ...sessions.map((session) => _HistoryCard(
-                session: session,
-                isExpanded: _expandedStates[session.id] ?? false,
-                onTap: () {
-                  setState(() {
-                    _expandedStates[session.id] = !(_expandedStates[session.id] ?? false);
-                  });
-                },
-                onView: () => _onViewDetails(session),
-                onDelete: () => _deleteSession(session),
-              )),
+                    session: session,
+                    isExpanded: _expandedStates[session.id] ?? false,
+                    onTap: () {
+                      setState(() {
+                        _expandedStates[session.id] =
+                            !(_expandedStates[session.id] ?? false);
+                      });
+                    },
+                    onView: () => _onViewDetails(session),
+                    onDelete: () => _deleteSession(session),
+                  )),
           ],
         );
       },
@@ -894,20 +976,24 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
           Icon(
             LucideIcons.history,
             size: 72,
-            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            color:
+                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
           ),
           const SizedBox(height: 16),
           Text(
             'No comparison history yet',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+              color: isDark
+                  ? AppThemeV2.darkTextSecondary
+                  : AppThemeV2.lightTextSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Your file comparisons will appear here',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+              color:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),
           ),
         ],
@@ -926,20 +1012,24 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
           Icon(
             LucideIcons.searchX,
             size: 64,
-            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            color:
+                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
           ),
           const SizedBox(height: 16),
           Text(
             'No results found',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+              color: isDark
+                  ? AppThemeV2.darkTextSecondary
+                  : AppThemeV2.lightTextSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Try adjusting your search',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+              color:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),
           ),
         ],
@@ -951,7 +1041,8 @@ class _HistoryViewState extends State<HistoryView> with SingleTickerProviderStat
     final confirmed = await DialogService.showConfirmation(
       context: context,
       title: 'Clear All History?',
-      content: 'This will permanently delete all comparison history. This action cannot be undone.',
+      content:
+          'This will permanently delete all comparison history. This action cannot be undone.',
       confirmText: 'Clear All',
       isDestructive: true,
       icon: LucideIcons.trash2,
@@ -990,7 +1081,8 @@ class _HistoryCardState extends State<_HistoryCard> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final session = widget.session;
-    final formattedDate = DateFormat('MMM dd, yyyy • HH:mm').format(session.timestamp);
+    final formattedDate =
+        DateFormat('MMM dd, yyyy • HH:mm').format(session.timestamp);
 
     // simple filename extraction
     final file1Name = session.file1Path.split(Platform.pathSeparator).last;
@@ -1002,17 +1094,23 @@ class _HistoryCardState extends State<_HistoryCard> {
     );
 
     final themeState = context.watch<ThemeBloc>().state;
-    
+
     // AMOLED detection
     final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = isDark && 
+    final bool isAmoled = isDark &&
         settingsState.status == SettingsStatus.loaded &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
-    
+
     // AMOLED-aware colors
-    final cardColor = isAmoled ? AppThemeV2.amoledCard : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
-    final cardHoverColor = isAmoled ? AppThemeV2.amoledCardHover : (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover);
-    final borderColor = isAmoled ? AppThemeV2.amoledBorder : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+    final cardColor = isAmoled
+        ? AppThemeV2.amoledCard
+        : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    final cardHoverColor = isAmoled
+        ? AppThemeV2.amoledCardHover
+        : (isDark ? AppThemeV2.darkCardHover : AppThemeV2.lightCardHover);
+    final borderColor = isAmoled
+        ? AppThemeV2.amoledBorder
+        : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
     final neutralStatColor =
         isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted;
     final totalStrings = session.stringsAdded +
@@ -1022,11 +1120,16 @@ class _HistoryCardState extends State<_HistoryCard> {
 
     // Determine the dominant status color for the left border
     Color statusColor;
-    if (session.stringsAdded > 0 && session.stringsRemoved == 0 && session.stringsModified == 0) {
+    if (session.stringsAdded > 0 &&
+        session.stringsRemoved == 0 &&
+        session.stringsModified == 0) {
       statusColor = themeState.diffAddedColor;
-    } else if (session.stringsRemoved > 0 && session.stringsAdded == 0 && session.stringsModified == 0) {
+    } else if (session.stringsRemoved > 0 &&
+        session.stringsAdded == 0 &&
+        session.stringsModified == 0) {
       statusColor = themeState.diffRemovedColor;
-    } else if (session.stringsModified > 0 || (session.stringsAdded > 0 && session.stringsRemoved > 0)) {
+    } else if (session.stringsModified > 0 ||
+        (session.stringsAdded > 0 && session.stringsRemoved > 0)) {
       statusColor = themeState.diffModifiedColor;
     } else if (session.stringsAdded > 0 || session.stringsRemoved > 0) {
       statusColor = themeState.diffModifiedColor;
@@ -1080,11 +1183,16 @@ class _HistoryCardState extends State<_HistoryCard> {
                         Row(
                           children: [
                             // 1. Pie Chart
-                            _buildStatsChart(session.stringsAdded, session.stringsRemoved, session.stringsModified, themeState),
+                            _buildStatsChart(
+                                session.stringsAdded,
+                                session.stringsRemoved,
+                                session.stringsModified,
+                                themeState),
                             const SizedBox(width: 16),
-                            
+
                             // 2. Info Column (File Names + Date)
-                            Expanded( // ... no changes here ...
+                            Expanded(
+                              // ... no changes here ...
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -1094,7 +1202,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                                       Flexible(
                                         child: Text(
                                           file1Name,
-                                          style: theme.textTheme.titleMedium?.copyWith(
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 15,
                                           ),
@@ -1103,7 +1212,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                                       ),
                                       if (!isBilingualSession) ...[
                                         Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8),
                                           child: Icon(
                                             LucideIcons.arrowRightLeft,
                                             size: 16,
@@ -1115,7 +1225,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                                         Flexible(
                                           child: Text(
                                             file2Name,
-                                            style: theme.textTheme.titleMedium?.copyWith(
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 15,
                                             ),
@@ -1132,13 +1243,18 @@ class _HistoryCardState extends State<_HistoryCard> {
                                       Icon(
                                         LucideIcons.clock,
                                         size: 12,
-                                        color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                        color: isDark
+                                            ? AppThemeV2.darkTextMuted
+                                            : AppThemeV2.lightTextMuted,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         formattedDate,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: isDark
+                                              ? AppThemeV2.darkTextMuted
+                                              : AppThemeV2.lightTextMuted,
                                         ),
                                       ),
                                     ],
@@ -1152,7 +1268,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                                         label: isBilingualSession
                                             ? 'Bilingual'
                                             : 'Two files',
-                                            icon: isBilingualSession
+                                        icon: isBilingualSession
                                             ? LucideIcons.languages
                                             : LucideIcons.arrowRightLeft,
                                         color: theme.colorScheme.primary,
@@ -1171,41 +1287,47 @@ class _HistoryCardState extends State<_HistoryCard> {
 
                             // 3. Right Side: Specific Stat Pills + Expand
                             if (!widget.isExpanded) ...[
-                                const SizedBox(width: 12),
-                                if (session.stringsAdded > 0)
-                                  _StatPill(
-                                    count: session.stringsAdded,
-                                    color: themeState.diffAddedColor,
-                                    icon: LucideIcons.plus,
+                              const SizedBox(width: 12),
+                              if (session.stringsAdded > 0)
+                                _StatPill(
+                                  count: session.stringsAdded,
+                                  color: themeState.diffAddedColor,
+                                  icon: LucideIcons.plus,
+                                ),
+                              if (session.stringsRemoved > 0)
+                                _StatPill(
+                                  count: session.stringsRemoved,
+                                  color: themeState.diffRemovedColor,
+                                  icon: LucideIcons.minus,
+                                ),
+                              if (session.stringsModified > 0)
+                                _StatPill(
+                                  count: session.stringsModified,
+                                  color: themeState.diffModifiedColor,
+                                  icon: LucideIcons.pencil,
+                                ),
+                              if (session.stringsAdded == 0 &&
+                                  session.stringsRemoved == 0 &&
+                                  session.stringsModified == 0)
+                                Text(
+                                  'No changes',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: isDark
+                                        ? AppThemeV2.darkTextMuted
+                                        : AppThemeV2.lightTextMuted,
+                                    fontStyle: FontStyle.italic,
                                   ),
-                                if (session.stringsRemoved > 0)
-                                  _StatPill(
-                                    count: session.stringsRemoved,
-                                    color: themeState.diffRemovedColor,
-                                    icon: LucideIcons.minus,
-                                  ),
-                                if (session.stringsModified > 0)
-                                  _StatPill(
-                                    count: session.stringsModified,
-                                    color: themeState.diffModifiedColor,
-                                    icon: LucideIcons.pencil,
-                                  ),
-                                if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
-                                  Text(
-                                    'No changes',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
+                                ),
                             ],
                             const SizedBox(width: 8),
                             AnimatedRotation(
                               turns: widget.isExpanded ? 0.5 : 0,
                               duration: const Duration(milliseconds: 200),
-                                child: Icon(
-                                  LucideIcons.chevronDown,
-                                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                              child: Icon(
+                                LucideIcons.chevronDown,
+                                color: isDark
+                                    ? AppThemeV2.darkTextMuted
+                                    : AppThemeV2.lightTextMuted,
                               ),
                             ),
                           ],
@@ -1214,7 +1336,11 @@ class _HistoryCardState extends State<_HistoryCard> {
                         // Expanded content
                         if (widget.isExpanded) ...[
                           const SizedBox(height: 16),
-                          Divider(height: 1, color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppThemeV2.darkBorder
+                                  : AppThemeV2.lightBorder),
                           const SizedBox(height: 16),
                           if (isBilingualSession)
                             _FilePathRow(
@@ -1239,7 +1365,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                             ),
                           ],
                           const SizedBox(height: 16),
-                          
+
                           // Change Density Bar (visual ratio)
                           _ChangeDensityBar(
                             added: session.stringsAdded,
@@ -1247,7 +1373,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                             modified: session.stringsModified,
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Stats row detailed
                           Row(
                             children: [
@@ -1286,28 +1412,35 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   color: neutralStatColor,
                                   icon: LucideIcons.list,
                                 ),
-                              if (session.stringsAdded == 0 && session.stringsRemoved == 0 && session.stringsModified == 0)
+                              if (session.stringsAdded == 0 &&
+                                  session.stringsRemoved == 0 &&
+                                  session.stringsModified == 0)
                                 Text(
                                   'No changes detected',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                                    color: isDark
+                                        ? AppThemeV2.darkTextMuted
+                                        : AppThemeV2.lightTextMuted,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          
+
                           // Actions row
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               TextButton.icon(
                                 onPressed: widget.onDelete,
-                                icon: Icon(LucideIcons.trash2, size: 18, color: AppThemeV2.error),
-                                label: Text('Delete', style: TextStyle(color: AppThemeV2.error)),
+                                icon: Icon(LucideIcons.trash2,
+                                    size: 18, color: AppThemeV2.error),
+                                label: Text('Delete',
+                                    style: TextStyle(color: AppThemeV2.error)),
                                 style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -1316,7 +1449,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                                 icon: const Icon(LucideIcons.eye, size: 18),
                                 label: const Text('View Details'),
                                 style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
                                 ),
                               ),
                             ],
@@ -1334,7 +1468,8 @@ class _HistoryCardState extends State<_HistoryCard> {
     );
   }
 
-  Widget _buildStatsChart(int added, int removed, int modified, AppThemeState themeState) {
+  Widget _buildStatsChart(
+      int added, int removed, int modified, AppThemeState themeState) {
     final total = added + removed + modified;
     // Show a gray ring if no changes, instead of empty space
     if (total == 0) {
@@ -1449,14 +1584,13 @@ class _FilePathRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Extract parent folder and filename for better context
     final parts = path.split(Platform.pathSeparator);
     final fileName = parts.last;
     final parentFolder = parts.length > 1 ? parts[parts.length - 2] : '';
-    final displayPath = parentFolder.isNotEmpty 
-        ? '.../$parentFolder/$fileName' 
-        : fileName;
+    final displayPath =
+        parentFolder.isNotEmpty ? '.../$parentFolder/$fileName' : fileName;
 
     return Row(
       children: [
@@ -1472,7 +1606,8 @@ class _FilePathRow extends StatelessWidget {
         Text(
           '$label: ',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+            color:
+                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -1493,7 +1628,8 @@ class _FilePathRow extends StatelessWidget {
             icon: Icon(
               LucideIcons.folderOpen,
               size: 16,
-              color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+              color:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -1653,11 +1789,11 @@ class _ChangeDensityBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeState = context.watch<ThemeBloc>().state;
     final total = added + removed + modified;
-    
+
     if (total == 0) {
       return const SizedBox.shrink();
     }
-    
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
       child: SizedBox(

@@ -14,11 +14,15 @@ void main() {
   setUp(() {
     mockSecureStorageService = MockSecureStorageService();
     // Stub common calls to avoid null errors
-    when(() => mockSecureStorageService.storeLastProject(any())).thenAnswer((_) async {});
-    when(() => mockSecureStorageService.getRecentProjectPaths()).thenAnswer((_) async => []);
-    when(() => mockSecureStorageService.storeRecentProjectPaths(any())).thenAnswer((_) async {});
-    
-    repository = ProjectRepository(secureStorageService: mockSecureStorageService);
+    when(() => mockSecureStorageService.storeLastProject(any()))
+        .thenAnswer((_) async {});
+    when(() => mockSecureStorageService.getRecentProjectPaths())
+        .thenAnswer((_) async => []);
+    when(() => mockSecureStorageService.storeRecentProjectPaths(any()))
+        .thenAnswer((_) async {});
+
+    repository =
+        ProjectRepository(secureStorageService: mockSecureStorageService);
   });
 
   setUpAll(() async {
@@ -63,7 +67,8 @@ void main() {
         await testFolder.delete(recursive: true);
       });
 
-      test('throws ProjectCreationException if project already exists', () async {
+      test('throws ProjectCreationException if project already exists',
+          () async {
         final testFolder = Directory('${tempDir.path}/existing_test');
         await testFolder.create();
 
@@ -170,10 +175,13 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 10));
 
         // Save the project
-        await repository.saveProject(project);
+        final savedProject = await repository.saveProject(project);
 
         // Verify lastOpenedAt was updated
-        expect(project.lastOpenedAt.isAfter(originalLastOpened), isTrue);
+        expect(
+          savedProject.lastOpenedAt.isAfter(originalLastOpened),
+          isTrue,
+        );
 
         // Clean up
         await testFolder.delete(recursive: true);

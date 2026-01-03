@@ -31,7 +31,7 @@ class AppColors {
   static const Color removed = Color(0xFFF44336);
   static const Color modified = Color(0xFFFF9800);
   static const Color danger = Color(0xFFD32F2F);
-  
+
   /// Get appropriate background color based on theme
   static Color getBackground(BuildContext context, {bool isAmoled = false}) {
     final isLight = Theme.of(context).brightness == Brightness.light;

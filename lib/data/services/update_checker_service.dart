@@ -88,7 +88,8 @@ class UpdateCheckerService {
       // Parse release info
       final tagName = data['tag_name'] as String? ?? '';
       final latestVersion = _cleanVersionString(tagName);
-      final changelog = data['body'] as String? ?? 'No release notes available.';
+      final changelog =
+          data['body'] as String? ?? 'No release notes available.';
       final htmlUrl = data['html_url'] as String?;
 
       // Find download URL (prefer Windows installer, then any asset)
@@ -96,7 +97,9 @@ class UpdateCheckerService {
       final assets = data['assets'] as List<dynamic>? ?? [];
       for (final asset in assets) {
         final name = (asset['name'] as String? ?? '').toLowerCase();
-        if (name.contains('.exe') || name.contains('.msix') || name.contains('.zip')) {
+        if (name.contains('.exe') ||
+            name.contains('.msix') ||
+            name.contains('.zip')) {
           downloadUrl = asset['browser_download_url'] as String?;
           break;
         }
@@ -205,7 +208,8 @@ class UpdateCheckerService {
     var delay = initialDelay;
     for (var i = 0; i < retries; i++) {
       try {
-        return await _dioClient.get<Map<String, dynamic>>(url, headers: headers);
+        return await _dioClient.get<Map<String, dynamic>>(url,
+            headers: headers);
       } on DioException catch (e) {
         if (i == retries - 1) rethrow; // Rethrow on last attempt
 

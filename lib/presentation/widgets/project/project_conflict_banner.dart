@@ -23,7 +23,7 @@ class _ProjectConflictBannerState extends State<ProjectConflictBanner> {
     final settingsState = context.watch<SettingsBloc>().state;
 
     // Only show when a project is loaded
-    if (projectState.status != ProjectStatus.loaded || 
+    if (projectState.status != ProjectStatus.loaded ||
         settingsState.status != SettingsStatus.loaded) {
       return const SizedBox.shrink();
     }
@@ -47,7 +47,8 @@ class _ProjectConflictBannerState extends State<ProjectConflictBanner> {
           conflicts.add(_ConflictInfo(
             id: conflictId,
             title: 'Missing API key for $projectService',
-            message: 'This project uses $projectService but no API key is configured. '
+            message:
+                'This project uses $projectService but no API key is configured. '
                 'Add your API key in Settings > AI Services, or the app will use the global default.',
             icon: Icons.key_off_rounded,
           ));
@@ -69,24 +70,28 @@ class _ProjectConflictBannerState extends State<ProjectConflictBanner> {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: conflicts.map((conflict) => _buildBanner(context, conflict)).toList(),
+      children:
+          conflicts.map((conflict) => _buildBanner(context, conflict)).toList(),
     );
   }
 
   Widget _buildBanner(BuildContext context, _ConflictInfo conflict) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // AMOLED detection
     final settingsState = context.watch<SettingsBloc>().state;
-    final bool isAmoled = isDark && 
+    final bool isAmoled = isDark &&
         settingsState.status == SettingsStatus.loaded &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
-    final backgroundColor = isAmoled 
-        ? AppThemeV2.amoledCard 
-        : (isDark ? Colors.orange.shade900.withAlpha(60) : Colors.orange.shade50);
-    final borderColor = isDark ? Colors.orange.shade700 : Colors.orange.shade200;
+    final backgroundColor = isAmoled
+        ? AppThemeV2.amoledCard
+        : (isDark
+            ? Colors.orange.shade900.withAlpha(60)
+            : Colors.orange.shade50);
+    final borderColor =
+        isDark ? Colors.orange.shade700 : Colors.orange.shade200;
     final iconColor = isDark ? Colors.orange.shade300 : Colors.orange.shade700;
     final textColor = isDark ? Colors.orange.shade200 : Colors.orange.shade900;
 

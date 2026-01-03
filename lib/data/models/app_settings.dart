@@ -515,7 +515,8 @@ class AppSettings extends HiveObject {
       ignorePatterns:
           _readStringList('ignorePatterns', defaults.ignorePatterns),
       ignoreCase: _readBool('ignoreCase', defaults.ignoreCase),
-      ignoreWhitespace: _readBool('ignoreWhitespace', defaults.ignoreWhitespace),
+      ignoreWhitespace:
+          _readBool('ignoreWhitespace', defaults.ignoreWhitespace),
       appLanguage: _readString('appLanguage', defaults.appLanguage),
       defaultViewOnStartup: _readString(
         'defaultViewOnStartup',
@@ -524,11 +525,9 @@ class AppSettings extends HiveObject {
       autoCheckForUpdates:
           _readBool('autoCheckForUpdates', defaults.autoCheckForUpdates),
       appThemeMode: _readString('appThemeMode', defaults.appThemeMode),
-      accentColorValue:
-          _readInt('accentColorValue', defaults.accentColorValue),
+      accentColorValue: _readInt('accentColorValue', defaults.accentColorValue),
       diffAddedColor: _readInt('diffAddedColor', defaults.diffAddedColor),
-      diffRemovedColor:
-          _readInt('diffRemovedColor', defaults.diffRemovedColor),
+      diffRemovedColor: _readInt('diffRemovedColor', defaults.diffRemovedColor),
       diffModifiedColor:
           _readInt('diffModifiedColor', defaults.diffModifiedColor),
       diffFontSize: _readDouble('diffFontSize', defaults.diffFontSize),
@@ -581,8 +580,7 @@ class AppSettings extends HiveObject {
         'enableTranslationMemory',
         defaults.enableTranslationMemory,
       ),
-      enableFuzzyFill:
-          _readBool('enableFuzzyFill', defaults.enableFuzzyFill),
+      enableFuzzyFill: _readBool('enableFuzzyFill', defaults.enableFuzzyFill),
       fuzzyFillMinScore:
           _readDouble('fuzzyFillMinScore', defaults.fuzzyFillMinScore),
       fuzzyFillAutoApply: _readBool(
@@ -609,10 +607,8 @@ class AppSettings extends HiveObject {
       gitUserEmail: _readString('gitUserEmail', defaults.gitUserEmail),
       enableGitIntegration:
           _readBool('enableGitIntegration', defaults.enableGitIntegration),
-      defaultBranch:
-          _readString('defaultBranch', defaults.defaultBranch),
-      defaultRemote:
-          _readString('defaultRemote', defaults.defaultRemote),
+      defaultBranch: _readString('defaultBranch', defaults.defaultBranch),
+      defaultRemote: _readString('defaultRemote', defaults.defaultRemote),
       commitMessageTemplate: _readString(
         'commitMessageTemplate',
         defaults.commitMessageTemplate,
@@ -630,37 +626,32 @@ class AppSettings extends HiveObject {
         'rememberWindowPosition',
         defaults.rememberWindowPosition,
       ),
-      lastWindowX: _readOptionalDouble('lastWindowX') ??
-          defaults.lastWindowX,
-      lastWindowY: _readOptionalDouble('lastWindowY') ??
-          defaults.lastWindowY,
-      lastWindowWidth: _readOptionalDouble('lastWindowWidth') ??
-          defaults.lastWindowWidth,
-      lastWindowHeight: _readOptionalDouble('lastWindowHeight') ??
-          defaults.lastWindowHeight,
+      lastWindowX: _readOptionalDouble('lastWindowX') ?? defaults.lastWindowX,
+      lastWindowY: _readOptionalDouble('lastWindowY') ?? defaults.lastWindowY,
+      lastWindowWidth:
+          _readOptionalDouble('lastWindowWidth') ?? defaults.lastWindowWidth,
+      lastWindowHeight:
+          _readOptionalDouble('lastWindowHeight') ?? defaults.lastWindowHeight,
       similarityThreshold: _readDouble(
         'similarityThreshold',
         defaults.similarityThreshold,
       ),
       aiTemperature: _readDouble('aiTemperature', defaults.aiTemperature),
       maxTokens: _readInt('maxTokens', defaults.maxTokens),
-      comparisonMode:
-          _readString('comparisonMode', defaults.comparisonMode),
+      comparisonMode: _readString('comparisonMode', defaults.comparisonMode),
       useMicaEffect: _readBool('useMicaEffect', defaults.useMicaEffect),
       diffFontFamily: _readString('diffFontFamily', defaults.diffFontFamily),
       diffIdenticalColor:
           _readInt('diffIdenticalColor', defaults.diffIdenticalColor),
       defaultExportFormat:
           _readString('defaultExportFormat', defaults.defaultExportFormat),
-      includeUtf8Bom:
-          _readBool('includeUtf8Bom', defaults.includeUtf8Bom),
+      includeUtf8Bom: _readBool('includeUtf8Bom', defaults.includeUtf8Bom),
       openFolderAfterExport: _readBool(
         'openFolderAfterExport',
         defaults.openFolderAfterExport,
       ),
       autoBackup: _readBool('autoBackup', defaults.autoBackup),
-      backupDirectory:
-          _readString('backupDirectory', defaults.backupDirectory),
+      backupDirectory: _readString('backupDirectory', defaults.backupDirectory),
       backupsToKeep: _readInt('backupsToKeep', defaults.backupsToKeep),
       autoDownloadUpdate:
           _readBool('autoDownloadUpdate', defaults.autoDownloadUpdate),
@@ -919,7 +910,8 @@ class AppSettings extends HiveObject {
       enableGitIntegration: enableGitIntegration ?? this.enableGitIntegration,
       defaultBranch: defaultBranch ?? this.defaultBranch,
       defaultRemote: defaultRemote ?? this.defaultRemote,
-      commitMessageTemplate: commitMessageTemplate ?? this.commitMessageTemplate,
+      commitMessageTemplate:
+          commitMessageTemplate ?? this.commitMessageTemplate,
       sshKeyPath: sshKeyPath ?? this.sshKeyPath,
       showIdenticalEntries: showIdenticalEntries ?? this.showIdenticalEntries,
       startMinimizedToTray: startMinimizedToTray ?? this.startMinimizedToTray,
@@ -948,7 +940,8 @@ class AppSettings extends HiveObject {
       autoDownloadUpdate: autoDownloadUpdate ?? this.autoDownloadUpdate,
       lastUpdateCheckTime: lastUpdateCheckTime ?? this.lastUpdateCheckTime,
       skipVersion: skipVersion ?? this.skipVersion,
-      enableAnonymousUsageStatistics: enableAnonymousUsageStatistics ?? this.enableAnonymousUsageStatistics,
+      enableAnonymousUsageStatistics:
+          enableAnonymousUsageStatistics ?? this.enableAnonymousUsageStatistics,
       enableCrashReporting: enableCrashReporting ?? this.enableCrashReporting,
       showDeveloperOptions: showDeveloperOptions ?? this.showDeveloperOptions,
       showDockBadge: showDockBadge ?? this.showDockBadge,

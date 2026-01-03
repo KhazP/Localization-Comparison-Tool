@@ -67,7 +67,8 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
                   color: isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
+                    color:
+                        isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder,
                   ),
                 ),
                 child: Column(
@@ -144,13 +145,15 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
                   ),
                 ),
               ] else ...[
-                 Row(
+                Row(
                   children: [
                     Icon(Icons.check_circle_outline, color: Colors.green),
                     const SizedBox(width: 8),
-                    Expanded(child: Text("This project uses standard global settings.")),
+                    Expanded(
+                        child: Text(
+                            "This project uses standard global settings.")),
                   ],
-                 )
+                )
               ],
 
               const SizedBox(height: 32),

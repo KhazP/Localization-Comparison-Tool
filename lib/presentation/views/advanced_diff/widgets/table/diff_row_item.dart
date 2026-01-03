@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
@@ -116,187 +115,209 @@ class _DiffRowItemState extends State<DiffRowItem> {
     return Material(
       type: MaterialType.transparency,
       child: Opacity(
-      opacity: isDimmed ? 0.5 : 1.0,
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          color: isDimmed ? Theme.of(context).disabledColor.withValues(alpha: 0.05) : null,
-          border: Border(
-            bottom: BorderSide(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        opacity: isDimmed ? 0.5 : 1.0,
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: isDimmed
+                ? Theme.of(context).disabledColor.withValues(alpha: 0.05)
+                : null,
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+              ),
             ),
           ),
-        ),
-        child: Row(
-          children: [
-            // Index
-            SizedBox(
-              width: 48,
-              child: Center(
-                child: Text(
-                  '${widget.index + 1}',
-                  style: TextStyle(color: Theme.of(context).disabledColor, fontSize: 12),
+          child: Row(
+            children: [
+              // Index
+              SizedBox(
+                width: 48,
+                child: Center(
+                  child: Text(
+                    '${widget.index + 1}',
+                    style: TextStyle(
+                        color: Theme.of(context).disabledColor, fontSize: 12),
+                  ),
                 ),
               ),
-            ),
-            // Status Badge
-            SizedBox(
-              width: 80,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: _buildStatusBadge(context),
-              ),
-            ),
-            // Key
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.keyName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
+              // Status Badge
+              SizedBox(
+                width: 80,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: _buildStatusBadge(context),
                 ),
               ),
-            ),
-            // Vertical Divider
-            VerticalDivider(width: 1, color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
-            // Old Value (Source) - with copy on hover
-            Expanded(
-              flex: 3,
-              child: MouseRegion(
-                onEnter: (_) => setState(() => _isHoveringSource = true),
-                onExit: (_) => setState(() => _isHoveringSource = false),
-                child: Stack(
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      alignment: Alignment.centerLeft,
-                      child: DiffHighlighter.buildDiffText(
-                        widget.oldValue,
-                        widget.newValue,
-                        isSource: true,
-                        baseStyle: const TextStyle(fontSize: 13, fontFamily: 'RobotoMono'),
-                        maxLines: 2,
-                      ),
-                    ),
-                    if (_isHoveringSource && widget.oldValue.isNotEmpty)
-                      Positioned(
-                        right: 4,
-                        child: IconButton(
-                          icon: const Icon(Icons.copy, size: 16),
-                          tooltip: 'Copy source text',
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: widget.oldValue));
-                            ToastService.showSuccess(context, 'Copied to clipboard');
-                          },
-                          style: IconButton.styleFrom(
-                            backgroundColor: Theme.of(context).cardColor.withValues(alpha: 0.9),
-                            padding: const EdgeInsets.all(4),
-                            minimumSize: const Size(28, 28),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            VerticalDivider(width: 1, color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
-            // New Value (Target) - single-click to edit
-            Expanded(
-              flex: 3,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _handleTargetTap,
+              // Key
+              Expanded(
+                flex: 2,
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   alignment: Alignment.centerLeft,
-                  color: widget.detail.status == StringComparisonStatus.added
-                      ? Colors.green.withValues(alpha: 0.05)
-                      : null,
-                  child: _isInlineEditing
-                      ? _buildInlineEditor(context)
-                      : DiffHighlighter.buildDiffText(
+                  child: Text(
+                    widget.keyName,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              // Vertical Divider
+              VerticalDivider(
+                  width: 1,
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+              // Old Value (Source) - with copy on hover
+              Expanded(
+                flex: 3,
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _isHoveringSource = true),
+                  onExit: (_) => setState(() => _isHoveringSource = false),
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        alignment: Alignment.centerLeft,
+                        child: DiffHighlighter.buildDiffText(
                           widget.oldValue,
                           widget.newValue,
-                          isSource: false,
-                          baseStyle: const TextStyle(fontSize: 13, fontFamily: 'RobotoMono'),
+                          isSource: true,
+                          baseStyle: const TextStyle(
+                              fontSize: 13, fontFamily: 'RobotoMono'),
                           maxLines: 2,
                         ),
+                      ),
+                      if (_isHoveringSource && widget.oldValue.isNotEmpty)
+                        Positioned(
+                          right: 4,
+                          child: IconButton(
+                            icon: const Icon(Icons.copy, size: 16),
+                            tooltip: 'Copy source text',
+                            onPressed: () {
+                              Clipboard.setData(
+                                  ClipboardData(text: widget.oldValue));
+                              ToastService.showSuccess(
+                                  context, 'Copied to clipboard');
+                            },
+                            style: IconButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .cardColor
+                                  .withValues(alpha: 0.9),
+                              padding: const EdgeInsets.all(4),
+                              minimumSize: const Size(28, 28),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            // Actions PopupMenu
-            SizedBox(
-              width: 40,
-              child: PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 18),
-                tooltip: 'Actions',
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'addToTM',
-                    child: Row(
-                      children: [
-                        Icon(Icons.psychology, size: 18),
-                        SizedBox(width: 8),
-                        Text('Add to TM'),
-                      ],
-                    ),
+              VerticalDivider(
+                  width: 1,
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+              // New Value (Target) - single-click to edit
+              Expanded(
+                flex: 3,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _handleTargetTap,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    alignment: Alignment.centerLeft,
+                    color: widget.detail.status == StringComparisonStatus.added
+                        ? Colors.green.withValues(alpha: 0.05)
+                        : null,
+                    child: _isInlineEditing
+                        ? _buildInlineEditor(context)
+                        : DiffHighlighter.buildDiffText(
+                            widget.oldValue,
+                            widget.newValue,
+                            isSource: false,
+                            baseStyle: const TextStyle(
+                                fontSize: 13, fontFamily: 'RobotoMono'),
+                            maxLines: 2,
+                          ),
                   ),
-                  PopupMenuItem(
-                    value: 'markReviewed',
-                    child: Row(
-                      children: [
-                        Icon(widget.isReviewed ? Icons.visibility_off : Icons.check_circle_outline, size: 18),
-                        const SizedBox(width: 8),
-                        Text(widget.isReviewed ? 'Unmark Reviewed' : 'Mark as Reviewed'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'revert',
-                    child: Row(
-                      children: [
-                        Icon(Icons.undo, size: 18),
-                        SizedBox(width: 8),
-                        Text('Revert to Source'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Delete Entry', style: TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
-                ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 'addToTM':
-                      widget.onAddToTM?.call();
-                      break;
-                    case 'markReviewed':
-                      widget.onMarkReviewed?.call();
-                      break;
-                    case 'revert':
-                      widget.onRevert?.call();
-                      break;
-                    case 'delete':
-                      widget.onDelete?.call();
-                      break;
-                  }
-                },
+                ),
               ),
-            ),
-          ],
+              // Actions PopupMenu
+              SizedBox(
+                width: 40,
+                child: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, size: 18),
+                  tooltip: 'Actions',
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'addToTM',
+                      child: Row(
+                        children: [
+                          Icon(Icons.psychology, size: 18),
+                          SizedBox(width: 8),
+                          Text('Add to TM'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'markReviewed',
+                      child: Row(
+                        children: [
+                          Icon(
+                              widget.isReviewed
+                                  ? Icons.visibility_off
+                                  : Icons.check_circle_outline,
+                              size: 18),
+                          const SizedBox(width: 8),
+                          Text(widget.isReviewed
+                              ? 'Unmark Reviewed'
+                              : 'Mark as Reviewed'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'revert',
+                      child: Row(
+                        children: [
+                          Icon(Icons.undo, size: 18),
+                          SizedBox(width: 8),
+                          Text('Revert to Source'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline,
+                              size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete Entry',
+                              style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'addToTM':
+                        widget.onAddToTM?.call();
+                        break;
+                      case 'markReviewed':
+                        widget.onMarkReviewed?.call();
+                        break;
+                      case 'revert':
+                        widget.onRevert?.call();
+                        break;
+                      case 'delete':
+                        widget.onDelete?.call();
+                        break;
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -306,7 +327,8 @@ class _DiffRowItemState extends State<DiffRowItem> {
       focusNode: FocusNode(),
       onKeyEvent: (event) {
         if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.enter && !HardwareKeyboard.instance.isShiftPressed) {
+          if (event.logicalKey == LogicalKeyboardKey.enter &&
+              !HardwareKeyboard.instance.isShiftPressed) {
             _saveInlineEdit();
           } else if (event.logicalKey == LogicalKeyboardKey.escape) {
             setState(() => _isInlineEditing = false);
@@ -324,7 +346,8 @@ class _DiffRowItemState extends State<DiffRowItem> {
           contentPadding: EdgeInsets.zero,
           border: InputBorder.none,
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
           ),
         ),
         onSubmitted: (_) => _saveInlineEdit(),

@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 
-// --- State ---
-class AppThemeState extends Equatable {
-  final ThemeMode themeMode;
-  final Color accentColor;
-  final Color diffAddedColor;
-  final Color diffRemovedColor;
-  final Color diffModifiedColor;
+part 'theme_bloc.freezed.dart';
 
-  const AppThemeState({
-    required this.themeMode,
-    required this.accentColor,
-    required this.diffAddedColor,
-    required this.diffRemovedColor,
-    required this.diffModifiedColor,
-  });
+// --- State ---
+@freezed
+class AppThemeState with _$AppThemeState {
+  const AppThemeState._();
+
+  const factory AppThemeState({
+    required ThemeMode themeMode,
+    required Color accentColor,
+    required Color diffAddedColor,
+    required Color diffRemovedColor,
+    required Color diffModifiedColor,
+  }) = _AppThemeState;
 
   factory AppThemeState.initial(AppSettings initialSettings) {
     return AppThemeState(
@@ -28,31 +28,6 @@ class AppThemeState extends Equatable {
       diffModifiedColor: Color(initialSettings.diffModifiedColor),
     );
   }
-
-  AppThemeState copyWith({
-    ThemeMode? themeMode,
-    Color? accentColor,
-    Color? diffAddedColor,
-    Color? diffRemovedColor,
-    Color? diffModifiedColor,
-  }) {
-    return AppThemeState(
-      themeMode: themeMode ?? this.themeMode,
-      accentColor: accentColor ?? this.accentColor,
-      diffAddedColor: diffAddedColor ?? this.diffAddedColor,
-      diffRemovedColor: diffRemovedColor ?? this.diffRemovedColor,
-      diffModifiedColor: diffModifiedColor ?? this.diffModifiedColor,
-    );
-  }
-
-  @override
-  List<Object> get props => [
-        themeMode,
-        accentColor,
-        diffAddedColor,
-        diffRemovedColor,
-        diffModifiedColor
-      ];
 }
 
 // Helper to convert string to ThemeMode
@@ -95,7 +70,8 @@ class ThemeBloc extends Bloc<ThemeEvent, AppThemeState> {
     on<UpdateThemeSettings>(_onUpdateThemeSettings);
   }
 
-  void _onUpdateThemeSettings(UpdateThemeSettings event, Emitter<AppThemeState> emit) {
+  void _onUpdateThemeSettings(
+      UpdateThemeSettings event, Emitter<AppThemeState> emit) {
     emit(state.copyWith(
       themeMode: _themeModeFromString(event.appSettings.appThemeMode),
       accentColor: Color(event.appSettings.accentColorValue),
@@ -104,4 +80,4 @@ class ThemeBloc extends Bloc<ThemeEvent, AppThemeState> {
       diffModifiedColor: Color(event.appSettings.diffModifiedColor),
     ));
   }
-} 
+}

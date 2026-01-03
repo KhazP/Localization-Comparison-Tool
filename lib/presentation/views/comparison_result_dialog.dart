@@ -35,7 +35,8 @@ class ComparisonResultDialog extends StatelessWidget {
             children: [
               _buildKeyList(context, 'Added Keys', addedKeys, Colors.green),
               _buildKeyList(context, 'Removed Keys', removedKeys, Colors.red),
-              _buildKeyList(context, 'Modified Keys', modifiedKeys, Colors.orange),
+              _buildKeyList(
+                  context, 'Modified Keys', modifiedKeys, Colors.orange),
             ],
           ),
         ),
@@ -49,7 +50,8 @@ class ComparisonResultDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildKeyList(BuildContext context, String title, List<String> keys, Color color) {
+  Widget _buildKeyList(
+      BuildContext context, String title, List<String> keys, Color color) {
     if (keys.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -58,11 +60,15 @@ class ComparisonResultDialog extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: color)),
+          Text(title,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(color: color)),
           const Divider(),
           ...keys.map((key) => Text(key)).toList(),
         ],
       ),
     );
   }
-} 
+}

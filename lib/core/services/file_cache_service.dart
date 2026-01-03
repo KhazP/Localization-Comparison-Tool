@@ -25,7 +25,7 @@ class FileCacheService {
         _cache.remove(key);
         return null;
       }
-      
+
       final stat = await file.stat();
       // Truncate to seconds for safety
       if (stat.modified.difference(cached.modifiedTime).abs().inSeconds < 2) {
@@ -34,12 +34,13 @@ class FileCacheService {
     } catch (e) {
       // If error (e.g. file access), just invalidate cache
     }
-    
+
     _cache.remove(key);
     return null;
   }
 
-  void cache(File file, Map<String, String> data, DateTime modifiedTime, {String? keySuffix}) {
+  void cache(File file, Map<String, String> data, DateTime modifiedTime,
+      {String? keySuffix}) {
     // Evict oldest if full
     if (_cache.length >= _maxCacheSize) {
       _cache.remove(_cache.keys.first);

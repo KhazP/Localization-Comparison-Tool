@@ -5,7 +5,8 @@ import 'package:localizer_app_main/core/services/dio_client.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 
 abstract class TranslationService {
-  Future<String> translate(String text, String targetLanguage, {String? sourceLanguage});
+  Future<String> translate(String text, String targetLanguage,
+      {String? sourceLanguage});
 }
 
 /// Thrown when a translation request is missing a required key.
@@ -30,10 +31,13 @@ class GoogleTranslationService implements TranslationService {
         _dioClient = dioClient ?? DioClient();
 
   @override
-  Future<String> translate(String text, String targetLanguage, {String? sourceLanguage}) async {
+  Future<String> translate(String text, String targetLanguage,
+      {String? sourceLanguage}) async {
     final apiKey = await _secureStorage.getGoogleApiKey();
 
-    if (apiKey == null || apiKey.isEmpty || apiKey == "YOUR_GOOGLE_TRANSLATE_API_KEY") {
+    if (apiKey == null ||
+        apiKey.isEmpty ||
+        apiKey == "YOUR_GOOGLE_TRANSLATE_API_KEY") {
       throw MissingApiKeyException(
         'Add your key in Settings to turn on translations.',
       );
@@ -61,7 +65,8 @@ class GoogleTranslationService implements TranslationService {
         throw Exception('No translation found in response');
       } else {
         debugPrint('Error from Google Translate API: ${response.statusCode}');
-        throw Exception('Failed to translate text. Status code: ${response.statusCode}');
+        throw Exception(
+            'Failed to translate text. Status code: ${response.statusCode}');
       }
     } on DioException catch (e) {
       debugPrint('Error calling Google Translate API: ${e.message}');

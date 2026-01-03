@@ -7,7 +7,7 @@ import 'package:localizer_app_main/core/services/app_tab_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'app_intents.dart';
 
-// Since some actions rely on specific Bloc events or Navigation which might differ 
+// Since some actions rely on specific Bloc events or Navigation which might differ
 // based on where we are, we can define a GlobalActions wrapper or just individual Action classes.
 // For now, these are top-level functional actions that the main App widget will provide.
 

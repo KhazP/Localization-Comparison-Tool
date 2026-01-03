@@ -30,14 +30,18 @@ class EmptyStateIcon extends StatelessWidget {
               Icon(
                 icon,
                 size: 64,
-                color: isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+                color: isDark
+                    ? AppThemeV2.darkTextMuted
+                    : AppThemeV2.lightTextMuted,
               ),
               const SizedBox(height: 16),
               Text(
                 text,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: isDark ? AppThemeV2.darkTextSecondary : AppThemeV2.lightTextSecondary,
+                  color: isDark
+                      ? AppThemeV2.darkTextSecondary
+                      : AppThemeV2.lightTextSecondary,
                 ),
               ),
             ],

@@ -202,9 +202,10 @@ class ComparisonSettingsCard extends StatelessWidget {
                 ),
               )
             else
-              ...ignorePatterns.asMap().entries.map((entry) =>
-                  _buildPatternItem(
-                      context, entry.value, entry.key, ignorePatterns)),
+              ...ignorePatterns.map(
+                (pattern) =>
+                    _buildPatternItem(context, pattern, ignorePatterns),
+              ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildPatternPresets(context, ignorePatterns),
@@ -231,13 +232,16 @@ class ComparisonSettingsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPatternItem(BuildContext context, String pattern, int index,
-      List<String> currentPatterns) {
+  Widget _buildPatternItem(
+    BuildContext context,
+    String pattern,
+    List<String> currentPatterns,
+  ) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
     final bloc = context.read<SettingsBloc>();
 
     return Padding(
-      key: Key('ignorePattern_tile_${pattern}_$index'),
+      key: Key('ignorePattern_tile_$pattern'),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -256,7 +260,7 @@ class ComparisonSettingsCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            key: Key('ignorePattern_delete_${pattern}_$index'),
+            key: Key('ignorePattern_delete_$pattern'),
             icon: Icon(LucideIcons.trash2,
                 size: 18,
                 color: AppThemeV2.error,

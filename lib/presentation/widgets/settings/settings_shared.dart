@@ -141,52 +141,75 @@ class SettingsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          label,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        if (trailing != null) ...[
-                          const SizedBox(width: 8),
-                          trailing!,
-                        ],
-                      ],
-                    ),
-                    if (description != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        description!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: theme.textMutedColor,
-                            ),
-                      ),
-                    ],
-                  ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 320;
+        final labelSection = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
+                if (trailing != null) trailing!,
+              ],
+            ),
+            if (description != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                description!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: theme.textMutedColor,
+                    ),
               ),
-              control,
             ],
-          ),
-        ),
-        if (showDivider)
-          Divider(
-            color: theme.borderColor,
-            height: 1,
-            indent: 16,
-            endIndent: 16,
-          ),
-      ],
+          ],
+        );
+        final content = isNarrow
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  labelSection,
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: control,
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(child: labelSection),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: control,
+                    ),
+                  ),
+                ],
+              );
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: content,
+            ),
+            if (showDivider)
+              Divider(
+                color: theme.borderColor,
+                height: 1,
+                indent: 16,
+                endIndent: 16,
+              ),
+          ],
+        );
+      },
     );
   }
 }

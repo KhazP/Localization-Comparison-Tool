@@ -5,6 +5,7 @@ enum AppCommandType {
   openFiles,
   openFolder,
   exportResults,
+  restartTutorial,
 }
 
 /// A command emitted by global actions.

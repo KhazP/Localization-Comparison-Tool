@@ -14,6 +14,7 @@ import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
+import 'package:localizer_app_main/data/repositories/review_status_repository.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/adaptive_ai_assistance_service.dart';
@@ -139,6 +140,11 @@ Future<void> setupServiceLocator() async {
   await warningSuppressionsRepository.init();
   sl.registerSingleton<WarningSuppressionsRepository>(
       warningSuppressionsRepository);
+
+  // Review Status Repository
+  final reviewStatusRepository = ReviewStatusRepository();
+  await reviewStatusRepository.init();
+  sl.registerSingleton<ReviewStatusRepository>(reviewStatusRepository);
 }
 
 /// Reset service locator - useful for testing

@@ -23,17 +23,19 @@ class PlutoGridAdapter {
     final theme = Theme.of(context);
 
     return [
-      // Row number column
+      // Row number column with checkbox for multi-select
       PlutoColumn(
         title: '#',
         field: 'index',
         type: PlutoColumnType.number(),
-        width: 60,
-        minWidth: 50,
+        width: 80, // Increased to fit checkbox + number
+        minWidth: 60,
         frozen: PlutoColumnFrozen.start,
         readOnly: true,
-        enableSorting: false,
+        enableSorting:
+            false, // Sorting + Checkbox can sometimes conflict visually in header
         enableContextMenu: false,
+        enableRowChecked: true, // Enable checkbox for multi-select
         textAlign: PlutoColumnTextAlign.center,
         titleTextAlign: PlutoColumnTextAlign.center,
       ),
@@ -64,15 +66,48 @@ class PlutoGridAdapter {
         readOnly: true,
         enableSorting: true,
         renderer: (rendererContext) {
+          final isModified =
+              rendererContext.row.cells['_isModified']?.value == true;
+          final rowKey = rendererContext.row.cells['key']?.value as String?;
+          final isReviewed = rowKey != null && reviewedKeys.contains(rowKey);
+
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              rendererContext.cell.value.toString(),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Row(
+              children: [
+                // Dirty marker (orange dot)
+                if (isModified)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: const BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                // Reviewed marker (green checkmark)
+                if (isReviewed && !isModified)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.check_circle,
+                      size: 14,
+                      color: Colors.green[600],
+                    ),
+                  ),
+                Expanded(
+                  child: Text(
+                    rendererContext.cell.value.toString(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: isReviewed ? Colors.grey : null,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -182,8 +217,8 @@ class PlutoGridAdapter {
         title: 'ACTIONS',
         field: 'actions',
         type: PlutoColumnType.text(),
-        width: 140,
-        minWidth: 120,
+        width: 160,
+        minWidth: 140,
         readOnly: true,
         enableSorting: false,
         enableContextMenu: false,
@@ -227,6 +262,7 @@ class PlutoGridAdapter {
                     ? Icons.visibility_off
                     : Icons.check_circle_outline,
                 tooltip: isReviewed ? 'Unmark Reviewed' : 'Mark Reviewed',
+                color: isReviewed ? Colors.green : null,
                 onPressed: () => onMarkReviewed(rowKey),
               ),
               _ActionIconButton(

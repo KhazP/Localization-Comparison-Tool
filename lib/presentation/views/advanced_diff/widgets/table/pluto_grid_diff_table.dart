@@ -128,8 +128,15 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   }
 
   void _handleMarkReviewed(AdvancedDiffController controller, String key) {
+    final wasReviewed = controller.reviewedKeys.contains(key);
     controller.toggleReviewed(key);
     _refreshGrid(controller);
+    // Provide immediate visual feedback
+    if (!wasReviewed) {
+      ToastService.showSuccess(context, 'Marked as reviewed ✓');
+    } else {
+      ToastService.showInfo(context, 'Unmarked review');
+    }
   }
 
   void _handleRevert(AdvancedDiffController controller, String key) {
@@ -304,45 +311,49 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
 
   void _handleBulkMarkReviewed() {
     final controller = context.read<AdvancedDiffController>();
-    final selectedRows = _stateManager?.currentSelectingRows ?? [];
+    // Use checkedRows from checkbox selection
+    final checkedRows = _stateManager?.checkedRows ?? [];
 
-    if (selectedRows.isEmpty) {
-      ToastService.showInfo(
-          context, 'Select rows first (Shift+Click or Ctrl+Click)');
+    if (checkedRows.isEmpty) {
+      ToastService.showInfo(context, 'Check rows using checkboxes first');
       return;
     }
 
-    for (final row in selectedRows) {
+    for (final row in checkedRows) {
       final key = row.cells['key']?.value as String?;
       if (key != null) {
         controller.toggleReviewed(key);
       }
     }
 
+    // Uncheck all rows after action
+    _stateManager?.toggleAllRowChecked(false);
     _refreshGrid(controller);
     ToastService.showSuccess(
-        context, 'Marked ${selectedRows.length} rows as reviewed');
+        context, 'Marked ${checkedRows.length} rows as reviewed');
   }
 
   void _handleBulkRevert() {
     final controller = context.read<AdvancedDiffController>();
-    final selectedRows = _stateManager?.currentSelectingRows ?? [];
+    // Use checkedRows from checkbox selection
+    final checkedRows = _stateManager?.checkedRows ?? [];
 
-    if (selectedRows.isEmpty) {
-      ToastService.showInfo(
-          context, 'Select rows first (Shift+Click or Ctrl+Click)');
+    if (checkedRows.isEmpty) {
+      ToastService.showInfo(context, 'Check rows using checkboxes first');
       return;
     }
 
-    for (final row in selectedRows) {
+    for (final row in checkedRows) {
       final key = row.cells['key']?.value as String?;
       if (key != null) {
         controller.revertEntry(key);
       }
     }
 
+    // Uncheck all rows after action
+    _stateManager?.toggleAllRowChecked(false);
     _refreshGrid(controller);
-    ToastService.showSuccess(context, 'Reverted ${selectedRows.length} rows');
+    ToastService.showSuccess(context, 'Reverted ${checkedRows.length} rows');
   }
 
   @override

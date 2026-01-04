@@ -104,6 +104,16 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
           fields[72] == null ? false : fields[72] as bool,
       enableCrashReporting: fields[73] == null ? true : fields[73] as bool,
       showDeveloperOptions: fields[74] == null ? false : fields[74] as bool,
+      showPerformanceOverlay: fields[84] == null ? false : fields[84] as bool,
+      showSemanticsDebugger: fields[85] == null ? false : fields[85] as bool,
+      debugShowMaterialGrid: fields[86] == null ? false : fields[86] as bool,
+      checkerboardRasterCacheImages:
+          fields[87] == null ? false : fields[87] as bool,
+      checkerboardOffscreenLayers:
+          fields[88] == null ? false : fields[88] as bool,
+      debugPaintSizeEnabled: fields[89] == null ? false : fields[89] as bool,
+      debugRepaintRainbowEnabled:
+          fields[90] == null ? false : fields[90] as bool,
       showDockBadge: fields[75] == null ? false : fields[75] as bool,
       macosWindowMaterial:
           fields[76] == null ? 'sidebar' : fields[76] as String,
@@ -114,13 +124,16 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       toastStyle: fields[80] == null ? 'Compact' : fields[80] as String,
       advancedDiffUseInlineEditing:
           fields[81] == null ? false : fields[81] as bool,
+      onboardingStep: fields[82] == null ? 0 : fields[82] as int,
+      isOnboardingCompleted: fields[83] == null ? false : fields[83] as bool,
+      showLocalizationKeys: fields[91] == null ? false : fields[91] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(82)
+      ..writeByte(92)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -271,6 +284,20 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..write(obj.enableCrashReporting)
       ..writeByte(74)
       ..write(obj.showDeveloperOptions)
+      ..writeByte(84)
+      ..write(obj.showPerformanceOverlay)
+      ..writeByte(85)
+      ..write(obj.showSemanticsDebugger)
+      ..writeByte(86)
+      ..write(obj.debugShowMaterialGrid)
+      ..writeByte(87)
+      ..write(obj.checkerboardRasterCacheImages)
+      ..writeByte(88)
+      ..write(obj.checkerboardOffscreenLayers)
+      ..writeByte(89)
+      ..write(obj.debugPaintSizeEnabled)
+      ..writeByte(90)
+      ..write(obj.debugRepaintRainbowEnabled)
       ..writeByte(75)
       ..write(obj.showDockBadge)
       ..writeByte(76)
@@ -284,7 +311,13 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..writeByte(80)
       ..write(obj.toastStyle)
       ..writeByte(81)
-      ..write(obj.advancedDiffUseInlineEditing);
+      ..write(obj.advancedDiffUseInlineEditing)
+      ..writeByte(82)
+      ..write(obj.onboardingStep)
+      ..writeByte(83)
+      ..write(obj.isOnboardingCompleted)
+      ..writeByte(91)
+      ..write(obj.showLocalizationKeys);
   }
 
   @override

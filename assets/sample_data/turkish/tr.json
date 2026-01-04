@@ -1,0 +1,16 @@
+{
+    "app_name": "Localizer Uygulaması",
+    "welcome_message": "En iyi yerelleştirme aracına hoş geldiniz!",
+    "login_btn": "Giriş Yap",
+    "signup_btn": "Kayıt Ol",
+    "home_title": "Kontrol Paneli",
+    "settings": "Ayarlar",
+    "profile": "Kullanıcı Profili",
+    "logout": "Çıkış Yap",
+    "search_hint": "Ara...",
+    "no_results": "Sonuç bulunamadı.",
+    "save_success": "Değişiklikler başarıyla kaydedildi.",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "loading": "Yükleniyor..."
+}

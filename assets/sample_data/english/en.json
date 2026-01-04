@@ -1,0 +1,20 @@
+{
+    "app_name": "Localizer App",
+    "welcome_message": "Welcome to the best localization tool!",
+    "login_btn": "Login",
+    "signup_btn": "Sign Up",
+    "home_title": "Dashboard",
+    "settings": "Settings",
+    "profile": "User Profile",
+    "logout": "Logout",
+    "search_hint": "Search...",
+    "no_results": "No results found.",
+    "error_occurred": "An error occurred. Please try again.",
+    "save_success": "Changes saved successfully.",
+    "delete_confirm": "Are you sure you want to delete this item?",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "version": "Version 1.0.0",
+    "copyright": "© 2024 Localizer Inc."
+}

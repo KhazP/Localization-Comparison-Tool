@@ -11,6 +11,7 @@ import 'package:localizer_app_main/data/services/'
     'translation_memory_service.dart';
 import 'package:localizer_app_main/data/services/ai_assistance_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/data/repositories/review_status_repository.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:csv/csv.dart';
@@ -34,6 +35,7 @@ class AdvancedDiffController extends ChangeNotifier {
 
   // Services
   final _fileService = LocalizationFileService();
+  final _reviewRepo = sl<ReviewStatusRepository>();
 
   // Reviewed keys (dimmed, persisted in session)
   Set<String> reviewedKeys = {};
@@ -70,17 +72,29 @@ class AdvancedDiffController extends ChangeNotifier {
   final Map<String, String> file2Data;
   final String? sourceFileExtension;
   final String? targetFileExtension;
+  final String targetFilePath;
 
   AdvancedDiffController({
     required this.fullDiff,
     required this.file1Data,
     required this.file2Data,
+    required this.targetFilePath,
     this.sourceFileExtension,
     this.targetFileExtension,
     bool? initialUseInlineEditing,
   }) {
     useInlineEditing = initialUseInlineEditing ?? useInlineEditing;
+    _loadReviewedKeys();
     _applyFilters();
+  }
+
+  void _loadReviewedKeys() {
+    final savedKeys = _reviewRepo.getReviewedKeys(targetFilePath);
+    if (savedKeys.isNotEmpty) {
+      reviewedKeys.addAll(savedKeys);
+      // We don't need to notify listeners here as it's called in constructor
+      // but if we call it later, we might need to.
+    }
   }
 
   String getSourceValue(String key) => file1Data[key] ?? '';
@@ -141,6 +155,8 @@ class AdvancedDiffController extends ChangeNotifier {
     } else {
       reviewedKeys.add(key);
     }
+    // Save to persistence
+    _reviewRepo.saveReviewedKeys(targetFilePath, reviewedKeys.toList());
     notifyListeners();
   }
 

@@ -31,6 +31,7 @@ import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_blo
 import 'package:localizer_app_main/presentation/widgets/project/project_glossary_card.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_memory_card.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_conflict_banner.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/developer_settings_card.dart';
 
 // Re-export SettingsCategory for external use
 export 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart'
@@ -794,6 +795,12 @@ class _SettingsViewState extends State<SettingsView>
             ProjectTranslationMemoryCard(),
           ],
         );
+      case SettingsCategory.developer:
+        return DeveloperSettingsCard(
+          settings: settings,
+          isDark: isDark,
+          isAmoled: isAmoled,
+        );
       case SettingsCategory.about:
         return AboutSettingsCard(
           settings: settings,
@@ -882,6 +889,8 @@ class _SettingsViewState extends State<SettingsView>
           // For now, no specific reset action in the bloc for this whole category.
           break;
         case SettingsCategory.about:
+          break;
+        case SettingsCategory.developer:
           break;
       }
       ToastService.showSuccess(context,

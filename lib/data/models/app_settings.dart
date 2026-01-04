@@ -249,6 +249,27 @@ class AppSettings extends HiveObject {
   @HiveField(74, defaultValue: false)
   bool showDeveloperOptions;
 
+  @HiveField(84, defaultValue: false)
+  bool showPerformanceOverlay;
+
+  @HiveField(85, defaultValue: false)
+  bool showSemanticsDebugger;
+
+  @HiveField(86, defaultValue: false)
+  bool debugShowMaterialGrid;
+
+  @HiveField(87, defaultValue: false)
+  bool checkerboardRasterCacheImages;
+
+  @HiveField(88, defaultValue: false)
+  bool checkerboardOffscreenLayers;
+
+  @HiveField(89, defaultValue: false)
+  bool debugPaintSizeEnabled;
+
+  @HiveField(90, defaultValue: false)
+  bool debugRepaintRainbowEnabled;
+
   // macOS Integration Settings
   @HiveField(75, defaultValue: false)
   bool showDockBadge;
@@ -270,6 +291,16 @@ class AppSettings extends HiveObject {
 
   @HiveField(81, defaultValue: false)
   bool advancedDiffUseInlineEditing;
+
+  @HiveField(82, defaultValue: 0)
+  int onboardingStep;
+
+  @HiveField(83, defaultValue: false)
+  bool isOnboardingCompleted;
+
+  // Extended Developer Tools
+  @HiveField(91, defaultValue: false)
+  bool showLocalizationKeys;
 
   AppSettings({
     required this.defaultSourceFormat,
@@ -347,6 +378,13 @@ class AppSettings extends HiveObject {
     required this.enableAnonymousUsageStatistics,
     required this.enableCrashReporting,
     required this.showDeveloperOptions,
+    required this.showPerformanceOverlay,
+    required this.showSemanticsDebugger,
+    required this.debugShowMaterialGrid,
+    required this.checkerboardRasterCacheImages,
+    required this.checkerboardOffscreenLayers,
+    required this.debugPaintSizeEnabled,
+    required this.debugRepaintRainbowEnabled,
     required this.showDockBadge,
     required this.macosWindowMaterial,
     required this.translationStrategy,
@@ -354,6 +392,9 @@ class AppSettings extends HiveObject {
     required this.toastPosition,
     required this.toastStyle,
     required this.advancedDiffUseInlineEditing,
+    required this.onboardingStep,
+    required this.isOnboardingCompleted,
+    required this.showLocalizationKeys,
   });
 
   // Default settings
@@ -435,6 +476,13 @@ class AppSettings extends HiveObject {
       enableAnonymousUsageStatistics: false,
       enableCrashReporting: true,
       showDeveloperOptions: false,
+      showPerformanceOverlay: false,
+      showSemanticsDebugger: false,
+      debugShowMaterialGrid: false,
+      checkerboardRasterCacheImages: false,
+      checkerboardOffscreenLayers: false,
+      debugPaintSizeEnabled: false,
+      debugRepaintRainbowEnabled: false,
       showDockBadge: false,
       macosWindowMaterial: 'sidebar',
       translationStrategy: 'llm',
@@ -442,6 +490,9 @@ class AppSettings extends HiveObject {
       toastPosition: 'BottomRight',
       toastStyle: 'Compact',
       advancedDiffUseInlineEditing: false,
+      onboardingStep: 0,
+      isOnboardingCompleted: false,
+      showLocalizationKeys: false,
     );
   }
 
@@ -673,6 +724,28 @@ class AppSettings extends HiveObject {
           _readBool('enableCrashReporting', defaults.enableCrashReporting),
       showDeveloperOptions:
           _readBool('showDeveloperOptions', defaults.showDeveloperOptions),
+      showPerformanceOverlay:
+          _readBool('showPerformanceOverlay', defaults.showPerformanceOverlay),
+      showSemanticsDebugger:
+          _readBool('showSemanticsDebugger', defaults.showSemanticsDebugger),
+      debugShowMaterialGrid:
+          _readBool('debugShowMaterialGrid', defaults.debugShowMaterialGrid),
+      checkerboardRasterCacheImages: _readBool(
+        'checkerboardRasterCacheImages',
+        defaults.checkerboardRasterCacheImages,
+      ),
+      checkerboardOffscreenLayers: _readBool(
+        'checkerboardOffscreenLayers',
+        defaults.checkerboardOffscreenLayers,
+      ),
+      debugPaintSizeEnabled: _readBool(
+        'debugPaintSizeEnabled',
+        defaults.debugPaintSizeEnabled,
+      ),
+      debugRepaintRainbowEnabled: _readBool(
+        'debugRepaintRainbowEnabled',
+        defaults.debugRepaintRainbowEnabled,
+      ),
       showDockBadge: _readBool('showDockBadge', defaults.showDockBadge),
       macosWindowMaterial: _readString(
         'macosWindowMaterial',
@@ -687,6 +760,15 @@ class AppSettings extends HiveObject {
       advancedDiffUseInlineEditing: _readBool(
         'advancedDiffUseInlineEditing',
         defaults.advancedDiffUseInlineEditing,
+      ),
+      onboardingStep: _readInt('onboardingStep', defaults.onboardingStep),
+      isOnboardingCompleted: _readBool(
+        'isOnboardingCompleted',
+        defaults.isOnboardingCompleted,
+      ),
+      showLocalizationKeys: _readBool(
+        'showLocalizationKeys',
+        defaults.showLocalizationKeys,
       ),
     );
   }
@@ -769,6 +851,13 @@ class AppSettings extends HiveObject {
       'enableAnonymousUsageStatistics': enableAnonymousUsageStatistics,
       'enableCrashReporting': enableCrashReporting,
       'showDeveloperOptions': showDeveloperOptions,
+      'showPerformanceOverlay': showPerformanceOverlay,
+      'showSemanticsDebugger': showSemanticsDebugger,
+      'debugShowMaterialGrid': debugShowMaterialGrid,
+      'checkerboardRasterCacheImages': checkerboardRasterCacheImages,
+      'checkerboardOffscreenLayers': checkerboardOffscreenLayers,
+      'debugPaintSizeEnabled': debugPaintSizeEnabled,
+      'debugRepaintRainbowEnabled': debugRepaintRainbowEnabled,
       'showDockBadge': showDockBadge,
       'macosWindowMaterial': macosWindowMaterial,
       'translationStrategy': translationStrategy,
@@ -776,6 +865,9 @@ class AppSettings extends HiveObject {
       'toastPosition': toastPosition,
       'toastStyle': toastStyle,
       'advancedDiffUseInlineEditing': advancedDiffUseInlineEditing,
+      'onboardingStep': onboardingStep,
+      'isOnboardingCompleted': isOnboardingCompleted,
+      'showLocalizationKeys': showLocalizationKeys,
     };
   }
 
@@ -858,10 +950,20 @@ class AppSettings extends HiveObject {
     bool? enableAnonymousUsageStatistics,
     bool? enableCrashReporting,
     bool? showDeveloperOptions,
+    bool? showPerformanceOverlay,
+    bool? showSemanticsDebugger,
+    bool? debugShowMaterialGrid,
+    bool? checkerboardRasterCacheImages,
+    bool? checkerboardOffscreenLayers,
+    bool? debugPaintSizeEnabled,
+    bool? debugRepaintRainbowEnabled,
+    bool? showLocalizationKeys,
     bool? showDockBadge,
     String? macosWindowMaterial,
     String? translationStrategy,
     List<String>? recentProjects,
+    int? onboardingStep,
+    bool? isOnboardingCompleted,
   }) {
     return AppSettings(
       defaultSourceFormat: defaultSourceFormat ?? this.defaultSourceFormat,
@@ -955,6 +1057,20 @@ class AppSettings extends HiveObject {
           enableAnonymousUsageStatistics ?? this.enableAnonymousUsageStatistics,
       enableCrashReporting: enableCrashReporting ?? this.enableCrashReporting,
       showDeveloperOptions: showDeveloperOptions ?? this.showDeveloperOptions,
+      showPerformanceOverlay:
+          showPerformanceOverlay ?? this.showPerformanceOverlay,
+      showSemanticsDebugger:
+          showSemanticsDebugger ?? this.showSemanticsDebugger,
+      debugShowMaterialGrid:
+          debugShowMaterialGrid ?? this.debugShowMaterialGrid,
+      checkerboardRasterCacheImages:
+          checkerboardRasterCacheImages ?? this.checkerboardRasterCacheImages,
+      checkerboardOffscreenLayers:
+          checkerboardOffscreenLayers ?? this.checkerboardOffscreenLayers,
+      debugPaintSizeEnabled:
+          debugPaintSizeEnabled ?? this.debugPaintSizeEnabled,
+      debugRepaintRainbowEnabled:
+          debugRepaintRainbowEnabled ?? this.debugRepaintRainbowEnabled,
       showDockBadge: showDockBadge ?? this.showDockBadge,
       macosWindowMaterial: macosWindowMaterial ?? this.macosWindowMaterial,
       translationStrategy: translationStrategy ?? this.translationStrategy,
@@ -963,6 +1079,10 @@ class AppSettings extends HiveObject {
       toastStyle: toastStyle ?? this.toastStyle,
       advancedDiffUseInlineEditing:
           advancedDiffUseInlineEditing ?? this.advancedDiffUseInlineEditing,
+      onboardingStep: onboardingStep ?? this.onboardingStep,
+      isOnboardingCompleted:
+          isOnboardingCompleted ?? this.isOnboardingCompleted,
+      showLocalizationKeys: showLocalizationKeys ?? this.showLocalizationKeys,
     );
   }
 }

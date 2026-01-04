@@ -608,6 +608,55 @@ class UpdateShowDeveloperOptions extends SettingsEvent {
   List<Object> get props => [enabled];
 }
 
+class UpdateShowPerformanceOverlay extends SettingsEvent {
+  final bool enabled;
+  const UpdateShowPerformanceOverlay(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateShowSemanticsDebugger extends SettingsEvent {
+  final bool enabled;
+  const UpdateShowSemanticsDebugger(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateDebugShowMaterialGrid extends SettingsEvent {
+  final bool enabled;
+  const UpdateDebugShowMaterialGrid(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateCheckerboardRasterCacheImages extends SettingsEvent {
+  final bool enabled;
+  const UpdateCheckerboardRasterCacheImages(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateCheckerboardOffscreenLayers extends SettingsEvent {
+  final bool enabled;
+  const UpdateCheckerboardOffscreenLayers(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateDebugPaintSizeEnabled extends SettingsEvent {
+  final bool enabled;
+  const UpdateDebugPaintSizeEnabled(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
+class UpdateDebugRepaintRainbowEnabled extends SettingsEvent {
+  final bool enabled;
+  const UpdateDebugRepaintRainbowEnabled(this.enabled);
+  @override
+  List<Object> get props => [enabled];
+}
+
 // macOS Integration Events
 class UpdateTranslationStrategy extends SettingsEvent {
   final String strategy;
@@ -655,6 +704,20 @@ class UpdateToastStyle extends SettingsEvent {
   const UpdateToastStyle(this.style);
   @override
   List<Object> get props => [style];
+}
+
+class UpdateOnboardingStep extends SettingsEvent {
+  final int step;
+  const UpdateOnboardingStep(this.step);
+  @override
+  List<Object> get props => [step];
+}
+
+class UpdateIsOnboardingCompleted extends SettingsEvent {
+  final bool completed;
+  const UpdateIsOnboardingCompleted(this.completed);
+  @override
+  List<Object> get props => [completed];
 }
 
 // ============================================================================
@@ -721,4 +784,12 @@ class UpdateProjectOverridableSetting extends SettingsEvent {
   });
   @override
   List<Object?> get props => [settingKey, value];
+}
+
+// Extended Developer Tools Events
+class UpdateShowLocalizationKeys extends SettingsEvent {
+  final bool enabled;
+  const UpdateShowLocalizationKeys(this.enabled);
+  @override
+  List<Object> get props => [enabled];
 }

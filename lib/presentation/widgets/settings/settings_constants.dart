@@ -11,6 +11,7 @@ enum SettingsCategory {
   versionControl,
   systemIntegrations,
   projectResources,
+  developer,
   about,
 }
 
@@ -215,7 +216,14 @@ class SettingsConstants {
       'Privacy Policy',
       'Telemetry',
       'Crash Reporting',
-      'Developer Options',
+    ],
+    SettingsCategory.developer: [
+      'Performance Overlay',
+      'Semantics Debugger',
+      'Material Grid',
+      'Raster Cache',
+      'Restart Tutorial',
+      'Factory Reset',
     ],
   };
 
@@ -238,6 +246,8 @@ class SettingsConstants {
         return LucideIcons.monitor;
       case SettingsCategory.projectResources:
         return LucideIcons.bookOpen;
+      case SettingsCategory.developer:
+        return LucideIcons.code;
       case SettingsCategory.about:
         return LucideIcons.info;
     }
@@ -262,6 +272,8 @@ class SettingsConstants {
         return 'System Integrations';
       case SettingsCategory.projectResources:
         return 'Project Resources';
+      case SettingsCategory.developer:
+        return 'Developer Options';
       case SettingsCategory.about:
         return 'About';
     }
@@ -286,6 +298,8 @@ class SettingsConstants {
         return 'System Integrations';
       case SettingsCategory.projectResources:
         return 'Project Resources (Glossary & TM)';
+      case SettingsCategory.developer:
+        return 'Developer Options';
       case SettingsCategory.about:
         return 'About';
     }

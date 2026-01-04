@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter/rendering.dart'; // For debug flags
 import 'package:equatable/equatable.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
@@ -127,6 +128,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<ReplaceAllSettings>(_onReplaceAllSettings);
     // Developer Options
     on<UpdateShowDeveloperOptions>(_onUpdateShowDeveloperOptions);
+    on<UpdateShowPerformanceOverlay>(_onUpdateShowPerformanceOverlay);
+    on<UpdateShowSemanticsDebugger>(_onUpdateShowSemanticsDebugger);
+    on<UpdateDebugShowMaterialGrid>(_onUpdateDebugShowMaterialGrid);
+    on<UpdateCheckerboardRasterCacheImages>(
+        _onUpdateCheckerboardRasterCacheImages);
+    on<UpdateCheckerboardOffscreenLayers>(_onUpdateCheckerboardOffscreenLayers);
+    on<UpdateDebugPaintSizeEnabled>(_onUpdateDebugPaintSizeEnabled);
+    on<UpdateDebugRepaintRainbowEnabled>(_onUpdateDebugRepaintRainbowEnabled);
     // macOS Integration Events
     on<UpdateShowDockBadge>(_onUpdateShowDockBadge);
     on<UpdateMacosWindowMaterial>(_onUpdateMacosWindowMaterial);
@@ -143,6 +152,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateRecentProjects>(_onUpdateRecentProjects);
     on<UpdateToastPosition>(_onUpdateToastPosition);
     on<UpdateToastStyle>(_onUpdateToastStyle);
+    on<UpdateOnboardingStep>(_onUpdateOnboardingStep);
+    on<UpdateIsOnboardingCompleted>(_onUpdateIsOnboardingCompleted);
+    // Extended Developer Tools
+    on<UpdateShowLocalizationKeys>(_onUpdateShowLocalizationKeys);
   }
 
   Future<void> _onLoadSettings(
@@ -182,6 +195,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
       await _saveSettingsToRepository(settings);
 
+      // Sync global debug flags
+      _syncGlobalDebugFlags(settings);
+
       emit(
           state.copyWith(appSettings: settings, status: SettingsStatus.loaded));
     } catch (e) {
@@ -198,6 +214,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       geminiApiKey: '',
       openaiApiKey: '',
     );
+
+    // Explicitly exclude developer options from Hive saving to prevent persistent dev mode/overlays
+    // UNLESS the user really wants them to persist. For now let's persist them so they stick during dev session restarts.
+    // However, maybe force developerOptions=false on release builds? But this is a desktop app.
+    // We already have `showDeveloperOptions` field.
     await _settingsRepository.saveSettings(storageSettings);
   }
 
@@ -1413,6 +1434,96 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   Future<void> _onUpdateToastStyle(
       UpdateToastStyle event, Emitter<SettingsState> emit) async {
     final newSettings = state.appSettings.copyWith(toastStyle: event.style);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateOnboardingStep(
+      UpdateOnboardingStep event, Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings.copyWith(onboardingStep: event.step);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateIsOnboardingCompleted(
+      UpdateIsOnboardingCompleted event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(isOnboardingCompleted: event.completed);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateShowPerformanceOverlay(
+      UpdateShowPerformanceOverlay event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(showPerformanceOverlay: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateShowSemanticsDebugger(
+      UpdateShowSemanticsDebugger event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(showSemanticsDebugger: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateDebugShowMaterialGrid(
+      UpdateDebugShowMaterialGrid event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(debugShowMaterialGrid: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateCheckerboardRasterCacheImages(
+      UpdateCheckerboardRasterCacheImages event,
+      Emitter<SettingsState> emit) async {
+    final newSettings = state.appSettings
+        .copyWith(checkerboardRasterCacheImages: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateCheckerboardOffscreenLayers(
+      UpdateCheckerboardOffscreenLayers event,
+      Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(checkerboardOffscreenLayers: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateDebugPaintSizeEnabled(
+      UpdateDebugPaintSizeEnabled event, Emitter<SettingsState> emit) async {
+    debugPaintSizeEnabled = event.enabled;
+    final newSettings =
+        state.appSettings.copyWith(debugPaintSizeEnabled: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  Future<void> _onUpdateDebugRepaintRainbowEnabled(
+      UpdateDebugRepaintRainbowEnabled event,
+      Emitter<SettingsState> emit) async {
+    debugRepaintRainbowEnabled = event.enabled;
+    final newSettings =
+        state.appSettings.copyWith(debugRepaintRainbowEnabled: event.enabled);
+    await _saveSettingsToRepository(newSettings);
+    emit(state.copyWith(appSettings: newSettings));
+  }
+
+  void _syncGlobalDebugFlags(AppSettings settings) {
+    debugPaintSizeEnabled = settings.debugPaintSizeEnabled;
+    debugRepaintRainbowEnabled = settings.debugRepaintRainbowEnabled;
+  }
+
+  // Extended Developer Tools Handlers
+  Future<void> _onUpdateShowLocalizationKeys(
+      UpdateShowLocalizationKeys event, Emitter<SettingsState> emit) async {
+    final newSettings =
+        state.appSettings.copyWith(showLocalizationKeys: event.enabled);
     await _saveSettingsToRepository(newSettings);
     emit(state.copyWith(appSettings: newSettings));
   }

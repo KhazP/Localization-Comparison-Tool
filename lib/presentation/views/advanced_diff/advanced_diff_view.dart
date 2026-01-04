@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
+import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/advanced_diff_sidebar.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -88,9 +89,14 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
         final settings = context.read<SettingsBloc>().state.appSettings;
         return AdvancedDiffController(
           // Convert IMap to mutable Map for editing (controller mutates this)
-          fullDiff: widget.comparisonResult.diff.unlock,
-          file1Data: widget.comparisonResult.file1Data,
-          file2Data: widget.comparisonResult.file2Data,
+          fullDiff: Map<String, ComparisonStatusDetail>.from(
+              widget.comparisonResult.diff.unlock),
+          // Create copies so discarding changes doesn't mutate original
+          file1Data:
+              Map<String, String>.from(widget.comparisonResult.file1Data),
+          file2Data:
+              Map<String, String>.from(widget.comparisonResult.file2Data),
+          targetFilePath: widget.targetFile.path,
           sourceFileExtension: p.extension(widget.sourceFile.path),
           targetFileExtension: p.extension(widget.targetFile.path),
           initialUseInlineEditing: settings.advancedDiffUseInlineEditing,
@@ -132,123 +138,221 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                   // ToastService.showInfo(context, 'Next Page');
                 },
               },
-              child: Scaffold(
-                appBar: AppBar(
-                  title: const Text('Advanced Localization Editor'),
-                  actions: [
-                    // Search Bar
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: SizedBox(
-                        width: 380,
-                        child: TextField(
-                          focusNode: _searchFocusNode,
-                          decoration: InputDecoration(
-                            hintText: 'Search keys & values... (Ctrl+F)',
-                            prefixIcon:
-                                const Icon(LucideIcons.search, size: 18),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8)),
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 8),
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Tooltip(
-                                  message: 'Fuzzy Search (typo-tolerant)',
-                                  child: IconButton(
-                                    icon: Text(
-                                      '~',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: controller.isFuzzyEnabled
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                            : Theme.of(context).hintColor,
-                                      ),
-                                    ),
-                                    onPressed: () => controller.toggleFuzzy(
-                                        !controller.isFuzzyEnabled),
-                                  ),
-                                ),
-                                Tooltip(
-                                  message: 'Regex Search',
-                                  child: IconButton(
-                                    icon: Text(
-                                      '.*',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: controller.isRegexEnabled
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                            : Theme.of(context).hintColor,
-                                      ),
-                                    ),
-                                    onPressed: () => controller.toggleRegex(
-                                        !controller.isRegexEnabled),
-                                  ),
-                                ),
-                              ],
-                            ),
+              child: PopScope(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, result) async {
+                  if (didPop) return;
+
+                  if (controller.dirtyKeys.isNotEmpty) {
+                    final shouldPop = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Unsaved Changes'),
+                        content: const Text(
+                            'You have unsaved changes. Are you sure you want to discard them?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
                           ),
-                          onChanged: (value) {
-                            controller.updateSearch(value);
-                          },
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            style: TextButton.styleFrom(
+                                foregroundColor: Colors.red),
+                            child: const Text('Discard Changes'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (shouldPop == true && context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Advanced Localization Editor'),
+                    actions: [
+                      // Search Bar
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: SizedBox(
+                          width: 380,
+                          child: TextField(
+                            focusNode: _searchFocusNode,
+                            decoration: InputDecoration(
+                              hintText: 'Search keys & values... (Ctrl+F)',
+                              prefixIcon:
+                                  const Icon(LucideIcons.search, size: 18),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Tooltip(
+                                    message: 'Fuzzy Search (typo-tolerant)',
+                                    child: IconButton(
+                                      icon: Text(
+                                        '~',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: controller.isFuzzyEnabled
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                              : Theme.of(context).hintColor,
+                                        ),
+                                      ),
+                                      onPressed: () => controller.toggleFuzzy(
+                                          !controller.isFuzzyEnabled),
+                                    ),
+                                  ),
+                                  Tooltip(
+                                    message: 'Regex Search',
+                                    child: IconButton(
+                                      icon: Text(
+                                        '.*',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: controller.isRegexEnabled
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                              : Theme.of(context).hintColor,
+                                        ),
+                                      ),
+                                      onPressed: () => controller.toggleRegex(
+                                          !controller.isRegexEnabled),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            onChanged: (value) {
+                              controller.updateSearch(value);
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                  ],
-                ),
-                body: Column(
-                  children: [
-                    // Toolbar
-                    Container(
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      color: Theme.of(context).cardColor,
-                      child: Row(
-                        children: [
-                          const Icon(LucideIcons.arrowLeft, size: 16),
-                          const SizedBox(width: 8),
-                          const Text('Home  >  Diff View'),
-                          const Spacer(),
-                          Tooltip(
-                            message: 'Save Changes (Ctrl+S)',
-                            child: FilledButton(
-                                onPressed: () =>
-                                    _handleSaveChanges(context, controller),
-                                child: const Text('Save Changes')),
-                          ),
-                          const SizedBox(width: 8),
-                          Tooltip(
-                            message: 'Export Data (Ctrl+E)',
-                            child: OutlinedButton(
-                                onPressed: () =>
-                                    _handleExport(context, controller),
-                                child: const Text('Export')),
-                          ),
-                        ],
+                      const SizedBox(width: 16),
+                    ],
+                  ),
+                  body: Column(
+                    children: [
+                      // Toolbar
+                      Container(
+                        height: 40,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        color: Theme.of(context).cardColor,
+                        child: Row(
+                          children: [
+                            const Icon(LucideIcons.arrowLeft, size: 16),
+                            const SizedBox(width: 8),
+                            const Text('Home  >  Diff View'),
+                            const Spacer(),
+                            // Unsaved changes indicator
+                            if (controller.dirtyKeys.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                margin: const EdgeInsets.only(right: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.orange.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.orange,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${controller.dirtyKeys.length} unsaved',
+                                      style: TextStyle(
+                                        color: Colors.orange[800],
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            // Reviewed count indicator
+                            if (controller.reviewedKeys.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                margin: const EdgeInsets.only(right: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.check_circle,
+                                        size: 14, color: Colors.green[600]),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${controller.reviewedKeys.length} reviewed',
+                                      style: TextStyle(
+                                        color: Colors.green[700],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            Tooltip(
+                              message: 'Save Changes (Ctrl+S)',
+                              child: FilledButton(
+                                  onPressed: () =>
+                                      _handleSaveChanges(context, controller),
+                                  child: const Text('Save Changes')),
+                            ),
+                            const SizedBox(width: 8),
+                            Tooltip(
+                              message: 'Export Data (Ctrl+E)',
+                              child: OutlinedButton(
+                                  onPressed: () =>
+                                      _handleExport(context, controller),
+                                  child: const Text('Export')),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          const AdvancedDiffSidebar(),
-                          VerticalDivider(
-                              width: 1, color: Theme.of(context).dividerColor),
-                          const Expanded(
-                            child: PlutoGridDiffTable(),
-                          ),
-                        ],
+                      const Divider(height: 1),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const AdvancedDiffSidebar(),
+                            VerticalDivider(
+                                width: 1,
+                                color: Theme.of(context).dividerColor),
+                            const Expanded(
+                              child: PlutoGridDiffTable(),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -9,7 +10,6 @@ import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/rendering.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
@@ -31,7 +31,6 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
-import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:localizer_app_main/core/services/problem_detector.dart';
 import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:string_similarity/string_similarity.dart';
@@ -41,6 +40,8 @@ import 'package:localizer_app_main/core/input/app_intents.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/app_command_service.dart';
 import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
+import 'package:localizer_app_main/core/services/onboarding_tutorial_service.dart';
+import 'package:path/path.dart' as path;
 
 // Enum for filter status in Basic View
 
@@ -84,6 +85,9 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
         _exportFromCommand();
         break;
       case AppCommandType.openFolder:
+        break;
+      case AppCommandType.restartTutorial:
+        _restartTutorialForDebug();
         break;
     }
   }
@@ -183,14 +187,194 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   // Flag to show loading state while we determine if we should auto-load
   bool _isCheckingAutoLoad = true;
 
+  // Tutorial GlobalKeys
+  final GlobalKey _keySourceFilePicker = GlobalKey();
+  final GlobalKey _keyTargetFilePicker = GlobalKey();
+  final GlobalKey _keyCompareButton = GlobalKey();
+  final GlobalKey _keyFilterChips = GlobalKey();
+  final GlobalKey _keySearchBar = GlobalKey();
+  final GlobalKey _keyAdvancedButton = GlobalKey();
+  final GlobalKey _keyExportButton = GlobalKey();
+  bool _tutorialShown = false;
+  bool _analysisTutorialShown = false;
+
   @override
   void initState() {
     super.initState();
     _appCommandSubscription =
         sl<AppCommandService>().stream.listen(_handleAppCommand);
+    assert(() {
+      debugPrint(
+          '[DEV] To restart the onboarding tutorial, run sl<AppCommandService>().emit(const AppCommand(AppCommandType.restartTutorial)); in the Debug Console.');
+      return true;
+    }());
     // Check if we should auto-load the last project on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryAutoLoadLastProject();
+    });
+
+    // Initialize tutorial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initTutorial();
+    });
+  }
+
+  void _initTutorial({bool forceRestart = false}) {
+    final settingsState = context.read<SettingsBloc>().state;
+
+    // If settings are not loaded yet, do nothing. Listener will trigger this later.
+    if (settingsState.status != SettingsStatus.loaded) {
+      return;
+    }
+
+    final settings = settingsState.appSettings;
+
+    // Don't show if already completed (unless forcing restart).
+    if (!forceRestart && settings.isOnboardingCompleted) {
+      return;
+    }
+
+    // Determine which phase to resume based on persisted step.
+    // Steps 0-2 = Phase 1 (file input), Steps 3+ = Phase 2 (analysis).
+    final step = settings.onboardingStep;
+
+    // If step >= 3, user already completed Phase 1; don't re-show Phase 1.
+    // Phase 2 is triggered by ComparisonSuccess, so nothing to do here.
+    if (!forceRestart && step >= 3) {
+      // Mark that we've "shown" Phase 1 so we don't re-init on rebuild.
+      _tutorialShown = true;
+      return;
+    }
+
+    // Prevent duplicate show if already displayed this session.
+    if (!forceRestart && _tutorialShown) {
+      return;
+    }
+
+    if (forceRestart) {
+      _analysisTutorialShown = false;
+    }
+
+    setState(() => _tutorialShown = true);
+
+    // Small delay to ensure UI is ready.
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+
+      OnboardingTutorialService(
+        onLoadSampleData: _loadSampleData,
+      ).showDataInputTutorial(
+        context,
+        keySourceFilePicker: _keySourceFilePicker,
+        keyTargetFilePicker: _keyTargetFilePicker,
+        keyCompareButton: _keyCompareButton,
+        onSourcePicked: () => _pickFileForTutorial(1),
+        onTargetPicked: () => _pickFileForTutorial(2),
+        onCompareTapped: _startComparison,
+      );
+    });
+  }
+
+  /// Picks a file for the tutorial and returns `true` if a valid file was
+  /// selected, `false` otherwise. The tutorial advances only on `true`.
+  Future<bool> _pickFileForTutorial(int fileNumber) async {
+    final result = await FilePicker.platform.pickFiles();
+    if (!mounted) return false;
+
+    if (result == null || result.files.isEmpty) {
+      // User cancelled.
+      return false;
+    }
+
+    final path = result.files.single.path;
+    if (path == null || !_isValidFileType(path)) {
+      ToastService.showError(
+        context,
+        'Unsupported file type.',
+        recoverySuggestion: 'Please select a supported localization file.',
+      );
+      return false;
+    }
+
+    setState(() {
+      if (fileNumber == 1) {
+        _file1 = File(path);
+      } else if (fileNumber == 2) {
+        _file2 = File(path);
+      } else {
+        _bilingualFile = File(path);
+      }
+    });
+
+    _updateFileWatcher();
+    return true;
+  }
+
+  void _restartTutorialForDebug() {
+    if (!mounted) return;
+
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    final isDev = kDebugMode || settings.showDeveloperOptions;
+
+    if (!isDev) {
+      ToastService.showInfo(
+        context,
+        'Tutorial restart is available in developer mode only.',
+      );
+      return;
+    }
+
+    context.read<SettingsBloc>()
+      ..add(const UpdateIsOnboardingCompleted(false))
+      ..add(const UpdateOnboardingStep(0));
+
+    setState(() {
+      _tutorialShown = false;
+      _analysisTutorialShown = false;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initTutorial(forceRestart: true);
+    });
+
+    debugPrint('[DEV] Onboarding tutorial restart requested.');
+  }
+
+  void _showTutorialPhase2() {
+    final settings = context.read<SettingsBloc>().state.appSettings;
+    if (_analysisTutorialShown || settings.isOnboardingCompleted) {
+      return;
+    }
+
+    _analysisTutorialShown = true;
+
+    // Mark that we've entered Phase 2 (step 3+), so hot reload won't restart
+    // Phase 1.
+    if (settings.onboardingStep < 3) {
+      context.read<SettingsBloc>().add(const UpdateOnboardingStep(3));
+    }
+
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (!mounted) return;
+
+      OnboardingTutorialService(
+        onFinish: () {
+          context
+              .read<SettingsBloc>()
+              .add(const UpdateIsOnboardingCompleted(true));
+        },
+        onSkip: () {
+          context
+              .read<SettingsBloc>()
+              .add(const UpdateIsOnboardingCompleted(true));
+        },
+      ).showAnalysisTutorial(
+        context,
+        keyFilterChips: _keyFilterChips,
+        keySearchBar: _keySearchBar,
+        keyAdvancedButton: _keyAdvancedButton,
+        keyExportButton: _keyExportButton,
+      );
     });
   }
 
@@ -251,6 +435,46 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     return false;
   }
 
+  Future<void> _loadSampleData() async {
+    try {
+      final tempDir = Directory.systemTemp.createTempSync('localizer_sample_');
+
+      // Load sample files from assets
+      final sourceContent =
+          await rootBundle.loadString('assets/sample_data/english/en.json');
+      final targetContent =
+          await rootBundle.loadString('assets/sample_data/turkish/tr.json');
+
+      final sourceFile = File(path.join(tempDir.path, 'en.json'));
+      final targetFile = File(path.join(tempDir.path, 'tr.json'));
+
+      await sourceFile.writeAsString(sourceContent);
+      await targetFile.writeAsString(targetContent);
+
+      if (!mounted) return;
+
+      setState(() {
+        _file1 = sourceFile;
+        _file2 = targetFile;
+        _bilingualFile = null;
+        _isBilingualMode = false;
+      });
+
+      _updateFileWatcher();
+
+      // Update Step to 1 (Compare)
+      context.read<SettingsBloc>().add(const UpdateOnboardingStep(1));
+
+      ToastService.showSuccess(context, 'Sample data loaded successfully');
+
+      // Auto start comparison
+      _startComparison();
+    } catch (e) {
+      if (!mounted) return;
+      ToastService.showError(context, 'Failed to load sample data: $e');
+    }
+  }
+
   Future<void> _pickFile(int fileNumber) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
@@ -298,6 +522,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             ));
       }
       _updateFileWatcher();
+
+      // Update Onboarding: Step 0 (Import) → Step 1 (Run Comparison)
+      if (context.read<SettingsBloc>().state.appSettings.onboardingStep == 0) {
+        context.read<SettingsBloc>().add(const UpdateOnboardingStep(1));
+      }
     } else {
       ToastService.showWarning(context, 'Please select two files to compare.');
     }
@@ -318,6 +547,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             );
       }
       _updateFileWatcher();
+
+      // Update Onboarding Step to 1 (Compare) if current step is 0
+      if (context.read<SettingsBloc>().state.appSettings.onboardingStep == 0) {
+        context.read<SettingsBloc>().add(const UpdateOnboardingStep(1));
+      }
     } else {
       ToastService.showWarning(
           context, 'Please select a bilingual file to compare.');
@@ -379,6 +613,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               ? 'Target file'
               : 'Bilingual file';
       ToastService.showSuccess(context, '$selectionLabel selected: $fileName');
+
+      // Update Onboarding Step to 1 (Compare) if current step is 0, since a file is selected
+      if (context.read<SettingsBloc>().state.appSettings.onboardingStep == 0) {
+        context.read<SettingsBloc>().add(const UpdateOnboardingStep(1));
+      }
     } else {
       // Show error for invalid file type
       ToastService.showError(
@@ -395,6 +634,13 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   void _navigateToAdvancedView() {
     if (_latestComparisonResult != null && _file1 != null && _file2 != null) {
+      // Advance onboarding: Step 2/3/4 → Step 5 (Advanced View)
+      final currentStep =
+          context.read<SettingsBloc>().state.appSettings.onboardingStep;
+      if (currentStep >= 2 && currentStep < 5) {
+        context.read<SettingsBloc>().add(const UpdateOnboardingStep(5));
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -600,295 +846,340 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               },
             ),
           },
-          child: MultiBlocListener(
-            listeners: [
-              // Auto-load last project on startup if setting is enabled
-              BlocListener<HistoryBloc, HistoryState>(
-                listenWhen: (previous, current) =>
-                    !_hasAutoLoadedLastProject && current is HistoryLoaded,
-                listener: (context, historyState) {
-                  _tryAutoLoadLastProject();
-                },
-              ),
-              // Also try auto-load when settings first load (in case history loaded first)
-              BlocListener<SettingsBloc, SettingsState>(
-                listenWhen: (previous, current) =>
-                    !_hasAutoLoadedLastProject &&
-                    previous.status != SettingsStatus.loaded &&
-                    current.status == SettingsStatus.loaded,
-                listener: (context, state) {
-                  _tryAutoLoadLastProject();
-                },
-              ),
-              BlocListener<SettingsBloc, SettingsState>(
-                listenWhen: (previous, current) =>
-                    previous.status == SettingsStatus.loaded &&
-                    current.status == SettingsStatus.loaded &&
-                    previous.appSettings.autoReloadOnChange !=
-                        current.appSettings.autoReloadOnChange,
-                listener: (context, state) {
-                  _updateFileWatcher();
-                },
-              ),
-              BlocListener<FileWatcherBloc, FileWatcherState>(
-                listener: (context, state) {
-                  if (state is FileChangedDetected) {
-                    // Show a toast notification about file change
-                    ToastService.showInfo(context,
-                        'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...');
+          child: Stack(
+            children: [
+              MultiBlocListener(
+                listeners: [
+                  // Auto-load last project on startup if setting is enabled
+                  BlocListener<HistoryBloc, HistoryState>(
+                    listenWhen: (previous, current) =>
+                        !_hasAutoLoadedLastProject && current is HistoryLoaded,
+                    listener: (context, historyState) {
+                      _tryAutoLoadLastProject();
+                    },
+                  ),
+                  // Also try auto-load when settings first load (in case history loaded first)
+                  BlocListener<SettingsBloc, SettingsState>(
+                    listenWhen: (previous, current) =>
+                        !_hasAutoLoadedLastProject &&
+                        previous.status != SettingsStatus.loaded &&
+                        current.status == SettingsStatus.loaded,
+                    listener: (context, state) {
+                      _tryAutoLoadLastProject();
+                    },
+                  ),
+                  BlocListener<SettingsBloc, SettingsState>(
+                    listenWhen: (previous, current) =>
+                        previous.status != SettingsStatus.loaded &&
+                        current.status == SettingsStatus.loaded,
+                    listener: (context, state) {
+                      _initTutorial();
+                    },
+                  ),
+                  BlocListener<SettingsBloc, SettingsState>(
+                    listenWhen: (previous, current) =>
+                        previous.status == SettingsStatus.loaded &&
+                        current.status == SettingsStatus.loaded &&
+                        previous.appSettings.autoReloadOnChange !=
+                            current.appSettings.autoReloadOnChange,
+                    listener: (context, state) {
+                      _updateFileWatcher();
+                    },
+                  ),
+                  BlocListener<FileWatcherBloc, FileWatcherState>(
+                    listener: (context, state) {
+                      if (state is FileChangedDetected) {
+                        // Show a toast notification about file change
+                        ToastService.showInfo(context,
+                            'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...');
 
-                    // Trigger automatic recomparison
-                    final settingsStateForReload =
-                        context.read<SettingsBloc>().state;
-                    if (settingsStateForReload.status ==
-                        SettingsStatus.loaded) {
-                      if (_isBilingualMode) {
-                        context.read<ComparisonBloc>().add(
-                              CompareBilingualFileRequested(
-                                file: File(state.file1Path),
-                                settings: settingsStateForReload.appSettings,
-                              ),
-                            );
-                      } else {
-                        context.read<ComparisonBloc>().add(
-                              CompareFilesRequested(
-                                file1: File(state.file1Path),
-                                file2: File(state.file2Path),
-                                settings: settingsStateForReload.appSettings,
-                              ),
-                            );
+                        // Trigger automatic recomparison
+                        final settingsStateForReload =
+                            context.read<SettingsBloc>().state;
+                        if (settingsStateForReload.status ==
+                            SettingsStatus.loaded) {
+                          if (_isBilingualMode) {
+                            context.read<ComparisonBloc>().add(
+                                  CompareBilingualFileRequested(
+                                    file: File(state.file1Path),
+                                    settings:
+                                        settingsStateForReload.appSettings,
+                                  ),
+                                );
+                          } else {
+                            context.read<ComparisonBloc>().add(
+                                  CompareFilesRequested(
+                                    file1: File(state.file1Path),
+                                    file2: File(state.file2Path),
+                                    settings:
+                                        settingsStateForReload.appSettings,
+                                  ),
+                                );
+                          }
+                        }
                       }
-                    }
-                  }
-                },
-              ),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  // File Selection Section
-                  Card(
-                    color:
-                        isAmoled ? Colors.black : Theme.of(context).cardColor,
-                    elevation: isAmoled ? 0.3 : 1.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      side: BorderSide(
+                    },
+                  ),
+                ],
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      // File Selection Section
+                      Card(
                         color: isAmoled
-                            ? Colors.grey[850]!
-                            : Theme.of(context)
-                                .dividerColor
-                                .withValues(alpha: 0.5),
-                      ),
-                    ),
-                    margin: const EdgeInsets.only(bottom: 12.0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        children: [
-                          if (_isBilingualMode)
-                            Row(
-                              children: [
-                                _buildFilePicker(
-                                  context: context,
-                                  title: 'Bilingual File',
-                                  file: _bilingualFile,
-                                  fileNumber: 3,
-                                  onPressed: () => _pickFile(3),
-                                  isDraggingOver: _isDraggingOverBilingualFile,
-                                  isAmoled: isAmoled,
-                                  shortcutHint: 'Ctrl+O',
-                                ),
-                              ],
-                            )
-                          else
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                _buildFilePicker(
-                                  context: context,
-                                  title: 'Source File',
-                                  file: _file1,
-                                  fileNumber: 1,
-                                  onPressed: () => _pickFile(1),
-                                  isDraggingOver: _isDraggingOverFile1,
-                                  isAmoled: isAmoled,
-                                  shortcutHint: 'Ctrl+O',
-                                ),
-                                const SizedBox(width: 12),
-                                _buildFilePicker(
-                                  context: context,
-                                  title: 'Target File',
-                                  file: _file2,
-                                  fileNumber: 2,
-                                  onPressed: () => _pickFile(2),
-                                  isDraggingOver: _isDraggingOverFile2,
-                                  isAmoled: isAmoled,
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 12),
-                          Row(
+                            ? Colors.black
+                            : Theme.of(context).cardColor,
+                        elevation: isAmoled ? 0.3 : 1.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          side: BorderSide(
+                            color: isAmoled
+                                ? Colors.grey[850]!
+                                : Theme.of(context)
+                                    .dividerColor
+                                    .withValues(alpha: 0.5),
+                          ),
+                        ),
+                        margin: const EdgeInsets.only(bottom: 12.0),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(LucideIcons.arrowRightLeft,
-                                      size: 18),
-                                  label: Text(_isBilingualMode
-                                      ? 'Compare File'
-                                      : 'Compare Files'),
-                                  onPressed: _isBilingualMode
-                                      ? (_bilingualFile != null
-                                          ? _startComparison
-                                          : null)
-                                      : (_file1 != null && _file2 != null
-                                          ? _startComparison
-                                          : null),
+                              if (_isBilingualMode)
+                                Row(
+                                  children: [
+                                    _buildFilePicker(
+                                      context: context,
+                                      title: 'Bilingual File',
+                                      file: _bilingualFile,
+                                      fileNumber: 3,
+                                      onPressed: () => _pickFile(3),
+                                      isDraggingOver:
+                                          _isDraggingOverBilingualFile,
+                                      isAmoled: isAmoled,
+                                      shortcutHint: 'Ctrl+O',
+                                    ),
+                                  ],
+                                )
+                              else
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Container(
+                                      key: _keySourceFilePicker,
+                                      child: _buildFilePicker(
+                                        context: context,
+                                        title: 'Source File',
+                                        file: _file1,
+                                        fileNumber: 1,
+                                        onPressed: () => _pickFile(1),
+                                        isDraggingOver: _isDraggingOverFile1,
+                                        isAmoled: isAmoled,
+                                        shortcutHint: 'Ctrl+O',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Container(
+                                      key: _keyTargetFilePicker,
+                                      child: _buildFilePicker(
+                                        context: context,
+                                        title: 'Target File',
+                                        file: _file2,
+                                        fileNumber: 2,
+                                        onPressed: () => _pickFile(2),
+                                        isDraggingOver: _isDraggingOverFile2,
+                                        isAmoled: isAmoled,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              OutlinedButton.icon(
-                                icon:
-                                    const Icon(LucideIcons.languages, size: 18),
-                                label: Text(_isBilingualMode
-                                    ? 'Two Files'
-                                    : 'Bilingual Mode'),
-                                onPressed: _toggleComparisonMode,
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    key: _keyCompareButton,
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(
+                                          LucideIcons.arrowRightLeft,
+                                          size: 18),
+                                      label: Text(_isBilingualMode
+                                          ? 'Compare File'
+                                          : 'Compare Files'),
+                                      onPressed: _isBilingualMode
+                                          ? (_bilingualFile != null
+                                              ? _startComparison
+                                              : null)
+                                          : (_file1 != null && _file2 != null
+                                              ? _startComparison
+                                              : null),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  OutlinedButton.icon(
+                                    icon: const Icon(LucideIcons.languages,
+                                        size: 18),
+                                    label: Text(_isBilingualMode
+                                        ? 'Two Files'
+                                        : 'Bilingual Mode'),
+                                    onPressed: _toggleComparisonMode,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  // Analytics and Actions Bar - Modified Layout
-                  _buildAnalyticsAndActionsBar(),
-                  const SizedBox(height: 16.0), // Reduced bottom margin
-                  BlocBuilder<ProgressBloc, ProgressState>(
-                    builder: (context, state) {
-                      if (state is ProgressLoading) {
-                        return _buildAnimatedProgressOverlay(context, state);
-                      }
-                      if (state is ProgressFailure) {
-                        return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(LucideIcons.alertCircle,
-                                    color: Theme.of(context).colorScheme.error,
-                                    size: 20),
-                                const SizedBox(width: 8),
-                                Text('Error during processing: ${state.error}',
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .error)),
-                              ],
-                            ));
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                  Expanded(
-                    child: BlocConsumer<ComparisonBloc, ComparisonState>(
-                      listener: (context, state) {
-                        // When comparison state changes, we are definitely no longer checking auto load
-                        if (state is ComparisonLoading ||
-                            state is ComparisonSuccess ||
-                            state is ComparisonFailure) {
-                          if (_isCheckingAutoLoad) {
-                            setState(() => _isCheckingAutoLoad = false);
+                      // Analytics and Actions Bar - Modified Layout
+                      _buildAnalyticsAndActionsBar(),
+                      const SizedBox(height: 16.0), // Reduced bottom margin
+                      BlocBuilder<ProgressBloc, ProgressState>(
+                        builder: (context, state) {
+                          if (state is ProgressLoading) {
+                            return _buildAnimatedProgressOverlay(
+                                context, state);
                           }
-                        }
-
-                        if (state is ComparisonLargeFileWarning) {
-                          context
-                              .read<ProgressBloc>()
-                              .add(ComparisonCompleted());
-                          _showLargeFileWarningDialog(context, state);
-                        }
-
-                        if (state is ComparisonSuccess) {
-                          context
-                              .read<ProgressBloc>()
-                              .add(ComparisonCompleted());
-                          // Update file references in the UI
-                          final isBilingualResult =
-                              state.file1.path == state.file2.path;
-                          setState(() {
-                            _isBilingualMode = isBilingualResult;
-                            _file1 = state.file1;
-                            _file2 = state.file2;
-                            if (isBilingualResult) {
-                              _bilingualFile = state.file1;
-                            }
-                            _latestComparisonResult = state.result;
-                            _currentPage = 0; // Reset pagination
-                          });
-                          _updateFileWatcher();
-
-                          // Announce result for screen readers
-                          final changeCount = state.result.diff.values
-                              .where((d) =>
-                                  d.status != StringComparisonStatus.identical)
-                              .length;
-                          SemanticsService.announce(
-                            'Comparison complete. Found $changeCount changes.',
-                            TextDirection.ltr,
-                          );
-
-                          // Only add to history if it wasn't loaded from history
-                          if (!state.wasLoadedFromHistory) {
-                            final result = state.result;
-                            int added = 0,
-                                removed = 0,
-                                modified = 0,
-                                identical = 0;
-                            result.diff.forEach((key, statusDetail) {
-                              switch (statusDetail.status) {
-                                case StringComparisonStatus.added:
-                                  added++;
-                                  break;
-                                case StringComparisonStatus.removed:
-                                  removed++;
-                                  break;
-                                case StringComparisonStatus.modified:
-                                  modified++;
-                                  break;
-                                case StringComparisonStatus.identical:
-                                  identical++;
-                                  break;
+                          if (state is ProgressFailure) {
+                            return Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(LucideIcons.alertCircle,
+                                        color:
+                                            Theme.of(context).colorScheme.error,
+                                        size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                        'Error during processing: ${state.error}',
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error)),
+                                  ],
+                                ));
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      Expanded(
+                        child: BlocConsumer<ComparisonBloc, ComparisonState>(
+                          listener: (context, state) {
+                            // When comparison state changes, we are definitely no longer checking auto load
+                            if (state is ComparisonLoading ||
+                                state is ComparisonSuccess ||
+                                state is ComparisonFailure) {
+                              if (_isCheckingAutoLoad) {
+                                setState(() => _isCheckingAutoLoad = false);
                               }
-                            });
-                            // Ensure file paths from the state are used for history
-                            final coverageMetrics = _qualityMetricsService
-                                .calculateCoverageFromMaps(
-                              sourceData: result.file1Data,
-                              targetData: result.file2Data,
-                              settings: settingsState.appSettings,
-                            );
-                            final session = ComparisonSession(
-                              id: const Uuid().v4(),
-                              timestamp: DateTime.now(),
-                              file1Path:
-                                  state.file1.path, // Use path from state
-                              file2Path:
-                                  state.file2.path, // Use path from state
-                              stringsAdded: added,
-                              stringsRemoved: removed,
-                              stringsModified: modified,
-                              stringsIdentical: identical,
-                              sourceKeyCount: coverageMetrics.sourceKeyCount,
-                              translatedKeyCount:
-                                  coverageMetrics.translatedKeyCount,
-                              sourceWordCount: coverageMetrics.sourceWordCount,
-                              translatedWordCount:
-                                  coverageMetrics.translatedWordCount,
-                              projectId:
-                                  context.read<ProjectBloc>().state.status ==
+                            }
+
+                            if (state is ComparisonLargeFileWarning) {
+                              context
+                                  .read<ProgressBloc>()
+                                  .add(ComparisonCompleted());
+                              _showLargeFileWarningDialog(context, state);
+                            }
+
+                            if (state is ComparisonSuccess) {
+                              _showTutorialPhase2();
+                              context
+                                  .read<ProgressBloc>()
+                                  .add(ComparisonCompleted());
+
+                              // Advance onboarding: Step 1 (Run Comparison) → Step 2 (Review Missing)
+                              if (context
+                                      .read<SettingsBloc>()
+                                      .state
+                                      .appSettings
+                                      .onboardingStep ==
+                                  1) {
+                                context
+                                    .read<SettingsBloc>()
+                                    .add(const UpdateOnboardingStep(2));
+                              }
+
+                              // Update file references in the UI
+                              final isBilingualResult =
+                                  state.file1.path == state.file2.path;
+                              setState(() {
+                                _isBilingualMode = isBilingualResult;
+                                _file1 = state.file1;
+                                _file2 = state.file2;
+                                if (isBilingualResult) {
+                                  _bilingualFile = state.file1;
+                                }
+                                _latestComparisonResult = state.result;
+                                _currentPage = 0; // Reset pagination
+                              });
+                              _updateFileWatcher();
+
+                              // Announce result for screen readers
+                              final changeCount = state.result.diff.values
+                                  .where((d) =>
+                                      d.status !=
+                                      StringComparisonStatus.identical)
+                                  .length;
+                              SemanticsService.announce(
+                                'Comparison complete. Found $changeCount changes.',
+                                TextDirection.ltr,
+                              );
+
+                              // Only add to history if it wasn't loaded from history
+                              if (!state.wasLoadedFromHistory) {
+                                final result = state.result;
+                                int added = 0,
+                                    removed = 0,
+                                    modified = 0,
+                                    identical = 0;
+                                result.diff.forEach((key, statusDetail) {
+                                  switch (statusDetail.status) {
+                                    case StringComparisonStatus.added:
+                                      added++;
+                                      break;
+                                    case StringComparisonStatus.removed:
+                                      removed++;
+                                      break;
+                                    case StringComparisonStatus.modified:
+                                      modified++;
+                                      break;
+                                    case StringComparisonStatus.identical:
+                                      identical++;
+                                      break;
+                                  }
+                                });
+                                // Ensure file paths from the state are used for history
+                                final coverageMetrics = _qualityMetricsService
+                                    .calculateCoverageFromMaps(
+                                  sourceData: result.file1Data,
+                                  targetData: result.file2Data,
+                                  settings: settingsState.appSettings,
+                                );
+                                final session = ComparisonSession(
+                                  id: const Uuid().v4(),
+                                  timestamp: DateTime.now(),
+                                  file1Path:
+                                      state.file1.path, // Use path from state
+                                  file2Path:
+                                      state.file2.path, // Use path from state
+                                  stringsAdded: added,
+                                  stringsRemoved: removed,
+                                  stringsModified: modified,
+                                  stringsIdentical: identical,
+                                  sourceKeyCount:
+                                      coverageMetrics.sourceKeyCount,
+                                  translatedKeyCount:
+                                      coverageMetrics.translatedKeyCount,
+                                  sourceWordCount:
+                                      coverageMetrics.sourceWordCount,
+                                  translatedWordCount:
+                                      coverageMetrics.translatedWordCount,
+                                  projectId: context
+                                              .read<ProjectBloc>()
+                                              .state
+                                              .status ==
                                           ProjectStatus.loaded
                                       ? context
                                           .read<ProjectBloc>()
@@ -896,537 +1187,558 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                                           .currentProject
                                           ?.id
                                       : null,
-                            );
-                            context
-                                .read<HistoryBloc>()
-                                .add(AddToHistory(session));
-                          }
-                        } else if (state is ComparisonFailure) {
-                          context
-                              .read<ProgressBloc>()
-                              .add(ComparisonError(state.error));
-                          // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
-                          // Or just show the error via ProgressBloc/Snackbar
-                          ToastService.showError(
-                              context, 'Comparison failed: ${state.error}');
-                        }
-                      },
-                      builder: (context, state) {
-                        final theme = Theme.of(context);
-
-                        Widget content;
-                        if (_isCheckingAutoLoad) {
-                          content = const Center(
-                              key: ValueKey('checking'),
-                              child: CircularProgressIndicator());
-                        } else if (state is ComparisonLoading) {
-                          content = const Center(
-                              key: ValueKey('loading'),
-                              child: Text('Comparison in progress...'));
-                        } else if (state is ComparisonSuccess) {
-                          var diffEntries = state.result.diff.entries.toList();
-
-                          // Apply filter
-
-                          if (_currentFilter != BasicDiffFilter.all) {
-                            diffEntries = diffEntries.where((entry) {
-                              switch (_currentFilter) {
-                                case BasicDiffFilter.added:
-                                  return entry.value.status ==
-                                      StringComparisonStatus.added;
-                                case BasicDiffFilter.removed:
-                                  return entry.value.status ==
-                                      StringComparisonStatus.removed;
-                                case BasicDiffFilter.modified:
-                                  return entry.value.status ==
-                                      StringComparisonStatus.modified;
-                                case BasicDiffFilter.problems:
-                                  final key = entry.key;
-                                  final value1 =
-                                      state.result.file1Data[key] ?? '';
-                                  final value2 = state.result.file2Data[key];
-                                  return _detectProblem(value1, value2);
-                                default:
-                                  return true;
+                                );
+                                context
+                                    .read<HistoryBloc>()
+                                    .add(AddToHistory(session));
                               }
-                            }).toList();
-                          }
-
-                          // Hide identical entries if setting is disabled and we are in 'All' filter
-                          final showIdentical =
-                              settingsState.appSettings.showIdenticalEntries;
-                          int hiddenIdenticalCount = 0;
-                          if (!showIdentical &&
-                              _currentFilter == BasicDiffFilter.all) {
-                            final identicals = diffEntries
-                                .where((entry) =>
-                                    entry.value.status ==
-                                    StringComparisonStatus.identical)
-                                .toList();
-                            hiddenIdenticalCount = identicals.length;
-                            if (hiddenIdenticalCount > 0) {
-                              diffEntries = diffEntries
-                                  .where((entry) =>
-                                      entry.value.status !=
-                                      StringComparisonStatus.identical)
-                                  .toList();
+                            } else if (state is ComparisonFailure) {
+                              context
+                                  .read<ProgressBloc>()
+                                  .add(ComparisonError(state.error));
+                              // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
+                              // Or just show the error via ProgressBloc/Snackbar
+                              ToastService.showError(
+                                  context, 'Comparison failed: ${state.error}');
                             }
-                          }
+                          },
+                          builder: (context, state) {
+                            final theme = Theme.of(context);
 
-                          // Apply text search filter
-                          final int totalBeforeSearch = diffEntries.length;
-                          if (_searchQuery.isNotEmpty) {
-                            final query = _isRegexEnabled
-                                ? _searchQuery
-                                : _searchQuery.toLowerCase();
-                            diffEntries = diffEntries.where((entry) {
-                              final key = entry
-                                  .key; // Keys are case-sensitive usually, but let's be generous
-                              final value1 =
-                                  (state.result.file1Data[entry.key] ?? '');
-                              final value2 =
-                                  (state.result.file2Data[entry.key] ?? '');
+                            Widget content;
+                            if (_isCheckingAutoLoad) {
+                              content = const Center(
+                                  key: ValueKey('checking'),
+                                  child: CircularProgressIndicator());
+                            } else if (state is ComparisonLoading) {
+                              content = const Center(
+                                  key: ValueKey('loading'),
+                                  child: Text('Comparison in progress...'));
+                            } else if (state is ComparisonSuccess) {
+                              var diffEntries =
+                                  state.result.diff.entries.toList();
 
-                              // Regex Search
-                              if (_isRegexEnabled) {
-                                try {
-                                  final regex =
-                                      RegExp(query, caseSensitive: false);
-                                  return regex.hasMatch(key) ||
-                                      regex.hasMatch(value1) ||
-                                      regex.hasMatch(value2);
-                                } catch (e) {
-                                  return false; // Invalid regex
+                              // Apply filter
+
+                              if (_currentFilter != BasicDiffFilter.all) {
+                                diffEntries = diffEntries.where((entry) {
+                                  switch (_currentFilter) {
+                                    case BasicDiffFilter.added:
+                                      return entry.value.status ==
+                                          StringComparisonStatus.added;
+                                    case BasicDiffFilter.removed:
+                                      return entry.value.status ==
+                                          StringComparisonStatus.removed;
+                                    case BasicDiffFilter.modified:
+                                      return entry.value.status ==
+                                          StringComparisonStatus.modified;
+                                    case BasicDiffFilter.problems:
+                                      final key = entry.key;
+                                      final value1 =
+                                          state.result.file1Data[key] ?? '';
+                                      final value2 =
+                                          state.result.file2Data[key];
+                                      return _detectProblem(value1, value2);
+                                    default:
+                                      return true;
+                                  }
+                                }).toList();
+                              }
+
+                              // Hide identical entries if setting is disabled and we are in 'All' filter
+                              final showIdentical = settingsState
+                                  .appSettings.showIdenticalEntries;
+                              int hiddenIdenticalCount = 0;
+                              if (!showIdentical &&
+                                  _currentFilter == BasicDiffFilter.all) {
+                                final identicals = diffEntries
+                                    .where((entry) =>
+                                        entry.value.status ==
+                                        StringComparisonStatus.identical)
+                                    .toList();
+                                hiddenIdenticalCount = identicals.length;
+                                if (hiddenIdenticalCount > 0) {
+                                  diffEntries = diffEntries
+                                      .where((entry) =>
+                                          entry.value.status !=
+                                          StringComparisonStatus.identical)
+                                      .toList();
                                 }
                               }
 
-                              // Fuzzy Search
-                              if (_isFuzzyEnabled) {
-                                // Check key normally
-                                if (key.toLowerCase().contains(query))
-                                  return true;
+                              // Apply text search filter
+                              final int totalBeforeSearch = diffEntries.length;
+                              if (_searchQuery.isNotEmpty) {
+                                final query = _isRegexEnabled
+                                    ? _searchQuery
+                                    : _searchQuery.toLowerCase();
+                                diffEntries = diffEntries.where((entry) {
+                                  final key = entry
+                                      .key; // Keys are case-sensitive usually, but let's be generous
+                                  final value1 =
+                                      (state.result.file1Data[entry.key] ?? '');
+                                  final value2 =
+                                      (state.result.file2Data[entry.key] ?? '');
 
-                                if (value1.toLowerCase().contains(query) ||
-                                    value2.toLowerCase().contains(query))
-                                  return true;
+                                  // Regex Search
+                                  if (_isRegexEnabled) {
+                                    try {
+                                      final regex =
+                                          RegExp(query, caseSensitive: false);
+                                      return regex.hasMatch(key) ||
+                                          regex.hasMatch(value1) ||
+                                          regex.hasMatch(value2);
+                                    } catch (e) {
+                                      return false; // Invalid regex
+                                    }
+                                  }
 
-                                // If not found by contains, try similarity
-                                if (value1.similarityTo(query) > 0.4 ||
-                                    value2.similarityTo(query) > 0.4)
-                                  return true;
+                                  // Fuzzy Search
+                                  if (_isFuzzyEnabled) {
+                                    // Check key normally
+                                    if (key.toLowerCase().contains(query))
+                                      return true;
 
-                                return false;
+                                    if (value1.toLowerCase().contains(query) ||
+                                        value2.toLowerCase().contains(query))
+                                      return true;
+
+                                    // If not found by contains, try similarity
+                                    if (value1.similarityTo(query) > 0.4 ||
+                                        value2.similarityTo(query) > 0.4)
+                                      return true;
+
+                                    return false;
+                                  }
+
+                                  // Standard Search
+                                  return key.toLowerCase().contains(query) ||
+                                      value1.toLowerCase().contains(query) ||
+                                      value2.toLowerCase().contains(query);
+                                }).toList();
                               }
 
-                              // Standard Search
-                              return key.toLowerCase().contains(query) ||
-                                  value1.toLowerCase().contains(query) ||
-                                  value2.toLowerCase().contains(query);
-                            }).toList();
-                          }
-
-                          if (diffEntries.isEmpty) {
-                            if (_searchQuery.isNotEmpty) {
-                              content = Center(
-                                key: const ValueKey('empty_search'),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(LucideIcons.searchX,
-                                        size: 48,
-                                        color: theme.colorScheme.onSurface
-                                            .withAlpha(100)),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'No matches found for "$_searchQuery"',
-                                      style: TextStyle(
-                                          color: theme.colorScheme.onSurface
-                                              .withAlpha(150)),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Showing 0 of $totalBeforeSearch entries',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: theme.colorScheme.onSurface
-                                              .withAlpha(100)),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            } else if (_searchQuery.isEmpty &&
-                                !state.result.diff.values.any((e) =>
-                                    e.status !=
-                                    StringComparisonStatus.identical)) {
-                              content = const Center(
-                                  key: ValueKey('identical'),
-                                  child: Text('Files are identical.'));
-                            } else if (diffEntries.isEmpty &&
-                                hiddenIdenticalCount > 0) {
-                              // If we hid everything (e.g. only identicals existed and we hid them)
-                              content = Column(
-                                key: const ValueKey('hidden_identical'),
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                      '$hiddenIdenticalCount identical entries hidden',
-                                      style: TextStyle(
-                                          color: theme.colorScheme.onSurface
-                                              .withAlpha(150))),
-                                  const SizedBox(height: 8),
-                                  TextButton(
-                                    onPressed: () {
-                                      context.read<SettingsBloc>().add(
-                                          const UpdateShowIdenticalEntries(
-                                              true));
-                                    },
-                                    child: const Text('Show Identical Entries'),
-                                  )
-                                ],
-                              );
-                            } else {
-                              content = const Center(
-                                  key: ValueKey('no_diff'),
-                                  child: Text(
-                                      'No differences found based on keys.'));
-                            }
-                          } else {
-                            content = Column(
-                              key: const ValueKey('results'),
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Hidden entries summary
-                                if (hiddenIdenticalCount > 0)
-                                  Container(
-                                    width: double.infinity,
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 8, horizontal: 16),
-                                    decoration: BoxDecoration(
-                                      color: theme
-                                          .colorScheme.surfaceContainerHighest
-                                          .withValues(alpha: 0.5),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                          color: theme.dividerColor
-                                              .withValues(alpha: 0.2)),
-                                    ),
-                                    child: Row(
+                              if (diffEntries.isEmpty) {
+                                if (_searchQuery.isNotEmpty) {
+                                  content = Center(
+                                    key: const ValueKey('empty_search'),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(LucideIcons.eyeOff,
-                                            size: 16,
-                                            color: theme
-                                                .colorScheme.onSurfaceVariant),
-                                        const SizedBox(width: 8),
+                                        Icon(LucideIcons.searchX,
+                                            size: 48,
+                                            color: theme.colorScheme.onSurface
+                                                .withAlpha(100)),
+                                        const SizedBox(height: 12),
                                         Text(
-                                          '$hiddenIdenticalCount identical entries hidden',
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                            fontStyle: FontStyle.italic,
-                                            color: theme
-                                                .colorScheme.onSurfaceVariant,
-                                          ),
+                                          'No matches found for "$_searchQuery"',
+                                          style: TextStyle(
+                                              color: theme.colorScheme.onSurface
+                                                  .withAlpha(150)),
                                         ),
-                                        const Spacer(),
-                                        TextButton(
-                                          style: TextButton.styleFrom(
-                                            padding: EdgeInsets.zero,
-                                            minimumSize: const Size(60, 24),
-                                            tapTargetSize: MaterialTapTargetSize
-                                                .shrinkWrap,
-                                          ),
-                                          onPressed: () {
-                                            context.read<SettingsBloc>().add(
-                                                const UpdateShowIdenticalEntries(
-                                                    true));
-                                          },
-                                          child: const Text('Show'),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Showing 0 of $totalBeforeSearch entries',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              color: theme.colorScheme.onSurface
+                                                  .withAlpha(100)),
                                         ),
                                       ],
                                     ),
-                                  ),
-
-                                // Result count header when search is active
-                                if (_searchQuery.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4, vertical: 8),
-                                    child: Text(
-                                      'Showing ${diffEntries.length} of $totalBeforeSearch entries',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: theme.colorScheme.onSurface
-                                            .withAlpha(150),
+                                  );
+                                } else if (_searchQuery.isEmpty &&
+                                    !state.result.diff.values.any((e) =>
+                                        e.status !=
+                                        StringComparisonStatus.identical)) {
+                                  content = const Center(
+                                      key: ValueKey('identical'),
+                                      child: Text('Files are identical.'));
+                                } else if (diffEntries.isEmpty &&
+                                    hiddenIdenticalCount > 0) {
+                                  // If we hid everything (e.g. only identicals existed and we hid them)
+                                  content = Column(
+                                    key: const ValueKey('hidden_identical'),
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                          '$hiddenIdenticalCount identical entries hidden',
+                                          style: TextStyle(
+                                              color: theme.colorScheme.onSurface
+                                                  .withAlpha(150))),
+                                      const SizedBox(height: 8),
+                                      TextButton(
+                                        onPressed: () {
+                                          context.read<SettingsBloc>().add(
+                                              const UpdateShowIdenticalEntries(
+                                                  true));
+                                        },
+                                        child: const Text(
+                                            'Show Identical Entries'),
+                                      )
+                                    ],
+                                  );
+                                } else {
+                                  content = const Center(
+                                      key: ValueKey('no_diff'),
+                                      child: Text(
+                                          'No differences found based on keys.'));
+                                }
+                              } else {
+                                content = Column(
+                                  key: const ValueKey('results'),
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Hidden entries summary
+                                    if (hiddenIdenticalCount > 0)
+                                      Container(
+                                        width: double.infinity,
+                                        margin:
+                                            const EdgeInsets.only(bottom: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8, horizontal: 16),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.5),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: theme.dividerColor
+                                                  .withValues(alpha: 0.2)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(LucideIcons.eyeOff,
+                                                size: 16,
+                                                color: theme.colorScheme
+                                                    .onSurfaceVariant),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '$hiddenIdenticalCount identical entries hidden',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                fontStyle: FontStyle.italic,
+                                                color: theme.colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            TextButton(
+                                              style: TextButton.styleFrom(
+                                                padding: EdgeInsets.zero,
+                                                minimumSize: const Size(60, 24),
+                                                tapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
+                                              ),
+                                              onPressed: () {
+                                                context.read<SettingsBloc>().add(
+                                                    const UpdateShowIdenticalEntries(
+                                                        true));
+                                              },
+                                              child: const Text('Show'),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                Expanded(
-                                  child: Builder(builder: (context) {
-                                    final filteredCount = diffEntries.length;
 
-                                    // Handle "All" selection (-1)
-                                    final effectiveItemsPerPage =
-                                        _itemsPerPage == -1
-                                            ? math.max(1, filteredCount)
-                                            : _itemsPerPage;
+                                    // Result count header when search is active
+                                    if (_searchQuery.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 4, vertical: 8),
+                                        child: Text(
+                                          'Showing ${diffEntries.length} of $totalBeforeSearch entries',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: theme.colorScheme.onSurface
+                                                .withAlpha(150),
+                                          ),
+                                        ),
+                                      ),
+                                    Expanded(
+                                      child: Builder(builder: (context) {
+                                        final filteredCount =
+                                            diffEntries.length;
 
-                                    final startIndex =
-                                        _currentPage * effectiveItemsPerPage;
-                                    final endIndex = math.min(
-                                        startIndex + effectiveItemsPerPage,
-                                        filteredCount);
-                                    final visibleEntries =
-                                        (startIndex < filteredCount)
-                                            ? diffEntries.sublist(
-                                                startIndex, endIndex)
-                                            : <MapEntry<String,
-                                                ComparisonStatusDetail>>[];
+                                        // Handle "All" selection (-1)
+                                        final effectiveItemsPerPage =
+                                            _itemsPerPage == -1
+                                                ? math.max(1, filteredCount)
+                                                : _itemsPerPage;
 
-                                    return Column(
-                                      children: [
-                                        Expanded(
-                                          child: Scrollbar(
-                                            controller: _scrollController,
-                                            thumbVisibility: true,
-                                            child: ListView.builder(
-                                              controller: _scrollController,
+                                        final startIndex = _currentPage *
+                                            effectiveItemsPerPage;
+                                        final endIndex = math.min(
+                                            startIndex + effectiveItemsPerPage,
+                                            filteredCount);
+                                        final visibleEntries =
+                                            (startIndex < filteredCount)
+                                                ? diffEntries.sublist(
+                                                    startIndex, endIndex)
+                                                : <MapEntry<String,
+                                                    ComparisonStatusDetail>>[];
+
+                                        return Column(
+                                          children: [
+                                            Expanded(
+                                              child: Scrollbar(
+                                                controller: _scrollController,
+                                                thumbVisibility: true,
+                                                child: ListView.builder(
+                                                  controller: _scrollController,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 8),
+                                                  itemCount:
+                                                      visibleEntries.length,
+                                                  addAutomaticKeepAlives: false,
+                                                  addRepaintBoundaries: false,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final entry =
+                                                        visibleEntries[index];
+                                                    final globalIndex =
+                                                        startIndex + index;
+                                                    final key = entry.key;
+                                                    final statusDetail =
+                                                        entry.value;
+                                                    final status =
+                                                        statusDetail.status;
+                                                    final value1 = state
+                                                        .result.file1Data[key];
+                                                    final value2 = state
+                                                        .result.file2Data[key];
+
+                                                    final lineNumber =
+                                                        (globalIndex + 1)
+                                                            .toString()
+                                                            .padLeft(3, '0');
+
+                                                    final lineSettingsState =
+                                                        context
+                                                            .watch<
+                                                                SettingsBloc>()
+                                                            .state;
+                                                    String lineFontFamily =
+                                                        'Consolas, Monaco, monospace';
+                                                    double lineFontSize = 12.0;
+                                                    if (lineSettingsState
+                                                            .status ==
+                                                        SettingsStatus.loaded) {
+                                                      try {
+                                                        final ff =
+                                                            lineSettingsState
+                                                                .appSettings
+                                                                .diffFontFamily;
+                                                        if (ff.isNotEmpty &&
+                                                            ff !=
+                                                                'System Default')
+                                                          lineFontFamily = ff;
+                                                        lineFontSize =
+                                                            lineSettingsState
+                                                                .appSettings
+                                                                .diffFontSize;
+                                                      } catch (_) {}
+                                                    }
+
+                                                    return RepaintBoundary(
+                                                      child: Row(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Container(
+                                                            width: 48,
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .fromLTRB(
+                                                                    8, 4, 8, 4),
+                                                            child: Text(
+                                                              lineNumber,
+                                                              style: TextStyle(
+                                                                color: theme
+                                                                    .colorScheme
+                                                                    .outline,
+                                                                fontFamily:
+                                                                    lineFontFamily,
+                                                                fontSize:
+                                                                    lineFontSize,
+                                                                height: 1.4,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign.end,
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            child:
+                                                                _buildDiffListItem(
+                                                              key: key,
+                                                              status: status,
+                                                              value1: value1,
+                                                              value2: value2,
+                                                              isAmoled:
+                                                                  isAmoled,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              height: 48,
+                                              decoration: BoxDecoration(
+                                                color: theme.cardColor,
+                                                border: Border(
+                                                    top: BorderSide(
+                                                        color: theme
+                                                            .dividerColor)),
+                                              ),
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                      vertical: 8),
-                                              itemCount: visibleEntries.length,
-                                              addAutomaticKeepAlives: false,
-                                              addRepaintBoundaries: false,
-                                              itemBuilder: (context, index) {
-                                                final entry =
-                                                    visibleEntries[index];
-                                                final globalIndex =
-                                                    startIndex + index;
-                                                final key = entry.key;
-                                                final statusDetail =
-                                                    entry.value;
-                                                final status =
-                                                    statusDetail.status;
-                                                final value1 =
-                                                    state.result.file1Data[key];
-                                                final value2 =
-                                                    state.result.file2Data[key];
-
-                                                final lineNumber =
-                                                    (globalIndex + 1)
-                                                        .toString()
-                                                        .padLeft(3, '0');
-
-                                                final lineSettingsState =
-                                                    context
-                                                        .watch<SettingsBloc>()
-                                                        .state;
-                                                String lineFontFamily =
-                                                    'Consolas, Monaco, monospace';
-                                                double lineFontSize = 12.0;
-                                                if (lineSettingsState.status ==
-                                                    SettingsStatus.loaded) {
-                                                  try {
-                                                    final ff = lineSettingsState
-                                                        .appSettings
-                                                        .diffFontFamily;
-                                                    if (ff.isNotEmpty &&
-                                                        ff != 'System Default')
-                                                      lineFontFamily = ff;
-                                                    lineFontSize =
-                                                        lineSettingsState
-                                                            .appSettings
-                                                            .diffFontSize;
-                                                  } catch (_) {}
-                                                }
-
-                                                return RepaintBoundary(
-                                                  child: Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Container(
-                                                        width: 48,
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .fromLTRB(
-                                                                8, 4, 8, 4),
-                                                        child: Text(
-                                                          lineNumber,
-                                                          style: TextStyle(
-                                                            color: theme
-                                                                .colorScheme
-                                                                .outline,
-                                                            fontFamily:
-                                                                lineFontFamily,
-                                                            fontSize:
-                                                                lineFontSize,
-                                                            height: 1.4,
-                                                          ),
-                                                          textAlign:
-                                                              TextAlign.end,
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        child:
-                                                            _buildDiffListItem(
-                                                          key: key,
-                                                          status: status,
-                                                          value1: value1,
-                                                          value2: value2,
-                                                          isAmoled: isAmoled,
-                                                        ),
-                                                      ),
-                                                    ],
+                                                      horizontal: 16),
+                                              child: Row(
+                                                children: [
+                                                  Text('Show: ',
+                                                      style: theme
+                                                          .textTheme.bodySmall),
+                                                  DropdownButton<int>(
+                                                    value: _itemsPerPage,
+                                                    underline: const SizedBox(),
+                                                    style: theme
+                                                        .textTheme.bodySmall,
+                                                    items: _availablePageSizes
+                                                        .map((e) {
+                                                      final text = e == -1
+                                                          ? 'All'
+                                                          : '$e';
+                                                      return DropdownMenuItem(
+                                                          value: e,
+                                                          child: Text(text));
+                                                    }).toList(),
+                                                    onChanged: (v) {
+                                                      if (v != null &&
+                                                          v != _itemsPerPage) {
+                                                        setState(() {
+                                                          _itemsPerPage = v;
+                                                          _currentPage = 0;
+                                                        });
+                                                      }
+                                                    },
                                                   ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          height: 48,
-                                          decoration: BoxDecoration(
-                                            color: theme.cardColor,
-                                            border: Border(
-                                                top: BorderSide(
-                                                    color: theme.dividerColor)),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Row(
-                                            children: [
-                                              Text('Show: ',
-                                                  style: theme
-                                                      .textTheme.bodySmall),
-                                              DropdownButton<int>(
-                                                value: _itemsPerPage,
-                                                underline: const SizedBox(),
-                                                style:
-                                                    theme.textTheme.bodySmall,
-                                                items: _availablePageSizes
-                                                    .map((e) {
-                                                  final text =
-                                                      e == -1 ? 'All' : '$e';
-                                                  return DropdownMenuItem(
-                                                      value: e,
-                                                      child: Text(text));
-                                                }).toList(),
-                                                onChanged: (v) {
-                                                  if (v != null &&
-                                                      v != _itemsPerPage) {
-                                                    setState(() {
-                                                      _itemsPerPage = v;
-                                                      _currentPage = 0;
-                                                    });
-                                                  }
-                                                },
-                                              ),
-                                              const Spacer(),
-                                              Text(
-                                                  '${startIndex + 1}-$endIndex of $filteredCount',
-                                                  style: theme
-                                                      .textTheme.bodySmall),
-                                              const SizedBox(width: 8),
-                                              IconButton(
-                                                icon: const Icon(
-                                                    LucideIcons.chevronsLeft),
-                                                splashRadius: 20,
-                                                onPressed: _currentPage > 0
-                                                    ? () {
-                                                        setState(() =>
-                                                            _currentPage = 0);
-                                                        _scrollController
-                                                            .jumpTo(0);
-                                                      }
-                                                    : null,
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                    LucideIcons.chevronLeft),
-                                                splashRadius: 20,
-                                                onPressed: _currentPage > 0
-                                                    ? () {
-                                                        setState(() =>
-                                                            _currentPage--);
-                                                        _scrollController
-                                                            .jumpTo(0);
-                                                      }
-                                                    : null,
-                                              ),
-                                              Text(
-                                                  ' ${_currentPage + 1} / ${(filteredCount / effectiveItemsPerPage).ceil()} ',
-                                                  style: theme
-                                                      .textTheme.bodySmall),
-                                              IconButton(
-                                                icon: const Icon(
-                                                    LucideIcons.chevronRight),
-                                                splashRadius: 20,
-                                                onPressed:
-                                                    endIndex < filteredCount
+                                                  const Spacer(),
+                                                  Text(
+                                                      '${startIndex + 1}-$endIndex of $filteredCount',
+                                                      style: theme
+                                                          .textTheme.bodySmall),
+                                                  const SizedBox(width: 8),
+                                                  IconButton(
+                                                    icon: const Icon(LucideIcons
+                                                        .chevronsLeft),
+                                                    splashRadius: 20,
+                                                    onPressed: _currentPage > 0
                                                         ? () {
-                                                            setState(() =>
-                                                                _currentPage++);
-                                                            _scrollController
-                                                                .jumpTo(0);
-                                                          }
-                                                        : null,
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                    LucideIcons.chevronsRight),
-                                                splashRadius: 20,
-                                                onPressed:
-                                                    endIndex < filteredCount
-                                                        ? () {
-                                                            final lastPage =
-                                                                (filteredCount /
-                                                                            effectiveItemsPerPage)
-                                                                        .ceil() -
-                                                                    1;
                                                             setState(() =>
                                                                 _currentPage =
-                                                                    lastPage);
+                                                                    0);
                                                             _scrollController
                                                                 .jumpTo(0);
                                                           }
                                                         : null,
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(LucideIcons
+                                                        .chevronLeft),
+                                                    splashRadius: 20,
+                                                    onPressed: _currentPage > 0
+                                                        ? () {
+                                                            setState(() =>
+                                                                _currentPage--);
+                                                            _scrollController
+                                                                .jumpTo(0);
+                                                          }
+                                                        : null,
+                                                  ),
+                                                  Text(
+                                                      ' ${_currentPage + 1} / ${(filteredCount / effectiveItemsPerPage).ceil()} ',
+                                                      style: theme
+                                                          .textTheme.bodySmall),
+                                                  IconButton(
+                                                    icon: const Icon(LucideIcons
+                                                        .chevronRight),
+                                                    splashRadius: 20,
+                                                    onPressed:
+                                                        endIndex < filteredCount
+                                                            ? () {
+                                                                setState(() =>
+                                                                    _currentPage++);
+                                                                _scrollController
+                                                                    .jumpTo(0);
+                                                              }
+                                                            : null,
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(LucideIcons
+                                                        .chevronsRight),
+                                                    splashRadius: 20,
+                                                    onPressed:
+                                                        endIndex < filteredCount
+                                                            ? () {
+                                                                final lastPage =
+                                                                    (filteredCount /
+                                                                                effectiveItemsPerPage)
+                                                                            .ceil() -
+                                                                        1;
+                                                                setState(() =>
+                                                                    _currentPage =
+                                                                        lastPage);
+                                                                _scrollController
+                                                                    .jumpTo(0);
+                                                              }
+                                                            : null,
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  }),
-                                ),
-                              ],
-                            );
-                          }
-                        } else if (state is ComparisonFailure) {
-                          content = Center(
-                              key: const ValueKey('failure'),
-                              child: Text('Comparison Failed: ${state.error}',
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .error)));
-                        } else {
-                          content = _buildEmptyState(context, isAmoled);
-                        }
+                                            ),
+                                          ],
+                                        );
+                                      }),
+                                    ),
+                                  ],
+                                );
+                              }
+                            } else if (state is ComparisonFailure) {
+                              content = Center(
+                                  key: const ValueKey('failure'),
+                                  child: Text(
+                                      'Comparison Failed: ${state.error}',
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error)));
+                            } else {
+                              content = _buildEmptyState(context, isAmoled);
+                            }
 
-                        return AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 400),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          child: content,
-                        );
-                      },
-                    ),
+                            return AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 400),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              child: content,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              // UserOnboardingChecklist removed
+            ],
           ),
         ),
       ),
@@ -1636,6 +1948,11 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
   Future<void> _exportResult() async {
     if (_latestComparisonResult == null) return;
+
+    // Mark onboarding as completed if at export step (step 7)
+    if (context.read<SettingsBloc>().state.appSettings.onboardingStep == 7) {
+      context.read<SettingsBloc>().add(const UpdateIsOnboardingCompleted(true));
+    }
 
     final settings = context.read<SettingsBloc>().state.appSettings;
     final format = settings.defaultExportFormat;
@@ -2195,6 +2512,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
 
           // Search Field
           Container(
+            key: _keySearchBar,
             width: 320,
             height: 32,
             margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -2206,7 +2524,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 color: theme.colorScheme.onSurface,
               ),
               decoration: InputDecoration(
-                hintText: 'Search keys or values... (Ctrl+F)',
                 hintStyle: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.onSurface.withAlpha(100),
@@ -2281,6 +2598,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
+              key: _keyFilterChips,
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildFilterChip(
@@ -2356,6 +2674,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildExportActionButton(
+                key: _keyExportButton,
                 icon: LucideIcons.download,
                 label: 'Export',
                 onPressed: _exportResult,
@@ -2364,6 +2683,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
               ),
               const SizedBox(width: 8),
               _buildCompactActionButton(
+                key: _keyAdvancedButton,
                 icon: LucideIcons.maximize,
                 label: 'Advanced',
                 onPressed: _navigateToAdvancedView,
@@ -2530,6 +2850,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   Widget _buildCompactActionButton({
+    Key? key,
     required IconData icon,
     required String label,
     required VoidCallback onPressed,
@@ -2537,6 +2858,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     String? tooltip,
   }) {
     final button = TextButton.icon(
+      key: key,
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 13)),
@@ -2555,6 +2877,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   Widget _buildExportActionButton({
+    Key? key,
     required IconData icon,
     required String label,
     required VoidCallback onPressed,
@@ -2562,6 +2885,7 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     String? tooltip,
   }) {
     final button = _buildCompactActionButton(
+      key: key,
       icon: icon,
       label: label,
       onPressed: onPressed,
@@ -3027,17 +3351,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 children: _buildFormatBadges(theme),
               ),
               const SizedBox(height: 32),
-              // Quick Tutorial Link
-              TextButton.icon(
-                onPressed: () => _showQuickTutorialDialog(context),
-                icon: Icon(LucideIcons.lightbulb,
-                    size: 18, color: theme.colorScheme.secondary),
-                label: Text(
-                  'Quick Tutorial',
-                  style: TextStyle(color: theme.colorScheme.secondary),
-                ),
-              ),
-              const SizedBox(height: 24),
               // Recent Comparisons Section
               BlocBuilder<HistoryBloc, HistoryState>(
                 builder: (context, historyState) {
@@ -3141,145 +3454,6 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
-  }
-
-  void _showQuickTutorialDialog(BuildContext context) {
-    final theme = Theme.of(context);
-    final isAmoled = theme.brightness == Brightness.dark &&
-        context
-                .read<SettingsBloc>()
-                .state
-                .appSettings
-                .appThemeMode
-                .toLowerCase() ==
-            'amoled';
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isAmoled ? Colors.black : theme.dialogBackgroundColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: isAmoled
-              ? BorderSide(color: theme.dividerColor.withValues(alpha: 0.2))
-              : BorderSide.none,
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.secondary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(LucideIcons.lightbulb,
-                  color: theme.colorScheme.secondary, size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Text('Quick Tutorial'),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTutorialStep(
-                theme: theme,
-                icon: LucideIcons.upload,
-                title: 'Import & Sync',
-                description:
-                    'Drag & drop two files, or use "Bilingual Mode" for a single file containing both languages.',
-              ),
-              const SizedBox(height: 16),
-              _buildTutorialStep(
-                theme: theme,
-                icon: LucideIcons.arrowRightLeft,
-                title: 'Smart Comparison',
-                description:
-                    'See additions, removals, and modifications immediately with smart key-based matching.',
-              ),
-              const SizedBox(height: 16),
-              _buildTutorialStep(
-                theme: theme,
-                icon: LucideIcons.sparkles,
-                title: 'Quality & AI',
-                description:
-                    'Spot translation issues automatically and use AI suggestions to fix missing keys.',
-              ),
-              const SizedBox(height: 16),
-              _buildTutorialStep(
-                theme: theme,
-                icon: LucideIcons.folders,
-                title: 'Version Control',
-                description:
-                    'Use the Git tab to compare branches, view diffs, and resolve conflicts directly.',
-              ),
-              const SizedBox(height: 16),
-              _buildTutorialStep(
-                theme: theme,
-                icon: LucideIcons.barChart2,
-                title: 'Deep Insights',
-                description:
-                    'Switch to "Advanced View" for detailed metrics, charts, and complex diff analysis.',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 45),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('Get Started'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTutorialStep({
-    required ThemeData theme,
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon,
-            color: theme.colorScheme.primary.withValues(alpha: 0.8), size: 28),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   List<Widget> _buildFormatBadges(ThemeData theme) {

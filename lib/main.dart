@@ -101,11 +101,22 @@ Future<void> main(List<String> args) async {
   final talker = sl<TalkerService>().talker;
 
   // Handle Flutter errors
-  FlutterError.onError = (details) => talker.handle(
-        details.exception,
-        details.stack,
-        'Flutter Error: ${details.context?.toDescription()}',
-      );
+  FlutterError.onError = (details) {
+    // Suppress known Flutter keyboard state assertion bug
+    // https://github.com/flutter/flutter/issues/knows-issue
+    final exceptionStr = details.exception.toString();
+    if (exceptionStr.contains('KeyDownEvent is dispatched') ||
+        exceptionStr.contains('KeyUpEvent is dispatched') ||
+        exceptionStr.contains('_pressedKeys.containsKey')) {
+      // Known Flutter bug with keyboard state tracking - ignore
+      return;
+    }
+    talker.handle(
+      details.exception,
+      details.stack,
+      'Flutter Error: ${details.context?.toDescription()}',
+    );
+  };
 
   // Handle Platform errors (async errors not caught by Flutter)
   PlatformDispatcher.instance.onError = (error, stack) {

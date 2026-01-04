@@ -299,6 +299,16 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                   shortcuts: AppShortcuts.defaults,
                   child: MaterialApp(
                     debugShowCheckedModeBanner: kDebugMode,
+                    showPerformanceOverlay:
+                        settingsState.appSettings.showPerformanceOverlay,
+                    showSemanticsDebugger:
+                        settingsState.appSettings.showSemanticsDebugger,
+                    debugShowMaterialGrid:
+                        settingsState.appSettings.debugShowMaterialGrid,
+                    checkerboardRasterCacheImages:
+                        settingsState.appSettings.checkerboardRasterCacheImages,
+                    checkerboardOffscreenLayers:
+                        settingsState.appSettings.checkerboardOffscreenLayers,
                     title: 'Localization Comparison Tool',
                     theme: AppThemeV2.createLightTheme(themeState.accentColor),
                     darkTheme: darkTheme,

@@ -423,45 +423,55 @@ class _DiffRowItemState extends State<DiffRowItem> {
   }
 
   Widget _buildStatusBadge(BuildContext context) {
-    Color bg;
-    Color fg;
+    Color barColor;
     String label;
 
     switch (widget.detail.status) {
       case StringComparisonStatus.added:
-        bg = Colors.green.withValues(alpha: 0.2);
-        fg = Colors.green;
+        barColor = Colors.green;
         label = 'ADDED';
         break;
       case StringComparisonStatus.removed:
-        bg = Colors.red.withValues(alpha: 0.2);
-        fg = Colors.red;
+        barColor = Colors.red;
         label = 'MISSING';
         break;
       case StringComparisonStatus.modified:
-        bg = Colors.amber.withValues(alpha: 0.2);
-        fg = Colors.amber[800]!;
+        barColor = Colors.amber[700]!;
         int percent = ((1.0 - (widget.detail.similarity ?? 0)) * 100).toInt();
         label = 'CHG $percent%';
         break;
       default:
-        bg = Colors.grey.withValues(alpha: 0.2);
-        fg = Colors.grey;
+        barColor = Colors.grey[400]!;
         label = 'SAME';
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold),
-        textAlign: TextAlign.center,
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 3,
+          height: 22,
+          decoration: BoxDecoration(
+            color: barColor,
+            borderRadius: BorderRadius.circular(1.5),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.color
+                    ?.withValues(alpha: 0.7) ??
+                Colors.grey[600],
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

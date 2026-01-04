@@ -325,38 +325,41 @@ class PlutoGridAdapter {
   }
 
   static Widget _buildStatusBadge(String label, ThemeData theme) {
-    Color bg;
-    Color fg;
+    Color barColor;
 
     if (label == 'ADDED') {
-      bg = Colors.green.withValues(alpha: 0.2);
-      fg = Colors.green;
+      barColor = Colors.green;
     } else if (label == 'MISSING') {
-      bg = Colors.red.withValues(alpha: 0.2);
-      fg = Colors.red;
+      barColor = Colors.red;
     } else if (label.startsWith('CHG')) {
-      bg = Colors.amber.withValues(alpha: 0.2);
-      fg = Colors.amber[800]!;
+      barColor = Colors.amber[700]!;
     } else {
-      bg = Colors.grey.withValues(alpha: 0.2);
-      fg = Colors.grey;
+      barColor = Colors.grey[400]!;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: fg,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 3,
+          height: 22,
+          decoration: BoxDecoration(
+            color: barColor,
+            borderRadius: BorderRadius.circular(1.5),
+          ),
         ),
-        textAlign: TextAlign.center,
-      ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7) ??
+                Colors.grey[600],
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }

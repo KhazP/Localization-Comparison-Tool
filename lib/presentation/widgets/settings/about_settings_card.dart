@@ -300,23 +300,26 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
           children: [
             SettingsRow(
               label: 'Anonymous Usage Statistics',
-              description:
-                  'Help improve the app by sending anonymous usage data',
-              control: Switch(
-                value: widget.settings.enableAnonymousUsageStatistics,
-                onChanged: (val) =>
-                    bloc.add(UpdateEnableAnonymousUsageStatistics(val)),
+              description: 'Requires Firebase configuration',
+              control: Tooltip(
+                message: 'Feature currently unavailable (Requires Firebase)',
+                child: Switch(
+                  value: false, // Force disabled state
+                  onChanged: null, // Disable interaction
+                ),
               ),
               isDark: widget.isDark,
               isAmoled: widget.isAmoled,
             ),
             SettingsRow(
               label: 'Crash Reporting',
-              description:
-                  'Automatically send crash reports to help fix issues',
-              control: Switch(
-                value: widget.settings.enableCrashReporting,
-                onChanged: (val) => bloc.add(UpdateEnableCrashReporting(val)),
+              description: 'Requires Firebase configuration',
+              control: Tooltip(
+                message: 'Feature currently unavailable (Requires Firebase)',
+                child: Switch(
+                  value: false, // Force disabled state
+                  onChanged: null, // Disable interaction
+                ),
               ),
               isDark: widget.isDark,
               isAmoled: widget.isAmoled,

@@ -312,10 +312,10 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
           onPressed: () {
             widget.onSave(_targetController.text);
             Navigator.of(context).pop();
-            ToastService.showSuccess(context, 'Saved & Added to TM');
+            ToastService.showSuccess(context, 'Entry applied & added to TM');
           },
-          icon: const Icon(Icons.save),
-          label: const Text('Save Changes'),
+          icon: const Icon(Icons.check),
+          label: const Text('Apply'),
         ),
       ],
     );

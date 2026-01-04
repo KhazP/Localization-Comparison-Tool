@@ -217,8 +217,8 @@ class PlutoGridAdapter {
         title: 'ACTIONS',
         field: 'actions',
         type: PlutoColumnType.text(),
-        width: 160,
-        minWidth: 140,
+        width: 140,
+        minWidth: 120,
         readOnly: true,
         enableSorting: false,
         enableContextMenu: false,
@@ -236,27 +236,11 @@ class PlutoGridAdapter {
           final hasSource = sourceValue.trim().isNotEmpty;
           final hasTarget = targetValue.trim().isNotEmpty;
 
-          final aiMenu = _buildAiMenu(
-            context: context,
-            hasSource: hasSource,
-            hasTarget: hasTarget,
-            isCloudTranslation: isCloudTranslation,
-            onAiTranslate: onAiTranslate,
-            onAiSuggest: onAiSuggest,
-            onAiRephrase: onAiRephrase,
-            rowKey: rowKey,
-          );
-
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (aiMenu != null) aiMenu,
-              _ActionIconButton(
-                icon: Icons.psychology,
-                tooltip: 'Add to TM',
-                onPressed: () => onAddToTM(rowKey),
-              ),
+              // Primary action: Mark as Reviewed
               _ActionIconButton(
                 icon: isReviewed
                     ? Icons.visibility_off
@@ -265,16 +249,26 @@ class PlutoGridAdapter {
                 color: isReviewed ? Colors.green : null,
                 onPressed: () => onMarkReviewed(rowKey),
               ),
+              // Primary action: Revert
               _ActionIconButton(
                 icon: Icons.undo,
                 tooltip: 'Revert to Source',
                 onPressed: () => onRevert(rowKey),
               ),
-              _ActionIconButton(
-                icon: Icons.delete_outline,
-                tooltip: 'Delete Entry',
-                color: Colors.red,
-                onPressed: () => onDelete(rowKey),
+              // Overflow menu with all other actions
+              _buildOverflowMenu(
+                context: context,
+                rowKey: rowKey,
+                isReviewed: isReviewed,
+                hasSource: hasSource,
+                hasTarget: hasTarget,
+                isCloudTranslation: isCloudTranslation,
+                onAddToTM: onAddToTM,
+                onEdit: onEditCell,
+                onDelete: onDelete,
+                onAiTranslate: onAiTranslate,
+                onAiSuggest: onAiSuggest,
+                onAiRephrase: onAiRephrase,
               ),
             ],
           );
@@ -367,101 +361,146 @@ class PlutoGridAdapter {
   }
 }
 
-enum _AiRowAction {
-  translate,
-  suggest,
-  rephrase,
+enum _OverflowAction {
+  edit,
+  aiTranslate,
+  aiSuggest,
+  aiRephrase,
+  addToTM,
+  delete,
 }
 
-Widget? _buildAiMenu({
+/// Builds the overflow "..." menu with AI actions and secondary operations.
+Widget _buildOverflowMenu({
   required BuildContext context,
+  required String rowKey,
+  required bool isReviewed,
   required bool hasSource,
   required bool hasTarget,
-  required String rowKey,
   required bool isCloudTranslation,
+  required void Function(String key) onAddToTM,
+  required void Function(String key) onEdit,
+  required void Function(String key) onDelete,
   void Function(String key)? onAiTranslate,
   void Function(String key)? onAiSuggest,
   void Function(String key)? onAiRephrase,
 }) {
-  final items = <PopupMenuEntry<_AiRowAction>>[];
+  final theme = Theme.of(context);
   final translateLabel =
       isCloudTranslation ? 'Translate with Cloud' : 'Translate with AI';
   final rephraseLabel = isCloudTranslation ? 'Rephrase' : 'Rephrase with AI';
-  final toolsLabel = isCloudTranslation ? 'Translation tools' : 'AI tools';
-
-  if (hasSource && !hasTarget && onAiTranslate != null) {
-    items.add(
-      PopupMenuItem(
-        value: _AiRowAction.translate,
-        child: Row(
-          children: [
-            const Icon(LucideIcons.sparkles, size: 16),
-            const SizedBox(width: 8),
-            Text(translateLabel),
-          ],
-        ),
-      ),
-    );
-  }
-
-  if (hasSource && hasTarget && onAiSuggest != null) {
-    items.add(
-      PopupMenuItem(
-        value: _AiRowAction.suggest,
-        child: Row(
-          children: const [
-            Icon(LucideIcons.lightbulb, size: 16),
-            SizedBox(width: 8),
-            Text('Suggest Translation'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  if (hasTarget && onAiRephrase != null) {
-    items.add(
-      PopupMenuItem(
-        value: _AiRowAction.rephrase,
-        child: Row(
-          children: [
-            const Icon(LucideIcons.wand2, size: 16),
-            const SizedBox(width: 8),
-            Text(rephraseLabel),
-          ],
-        ),
-      ),
-    );
-  }
-
-  if (items.isEmpty) return null;
 
   return Tooltip(
-    message: toolsLabel,
+    message: 'More actions',
     child: SizedBox(
-      width: 24,
-      height: 24,
-      child: PopupMenuButton<_AiRowAction>(
+      width: 32,
+      height: 32,
+      child: PopupMenuButton<_OverflowAction>(
         padding: EdgeInsets.zero,
         icon: Icon(
-          LucideIcons.sparkles,
-          size: 16,
-          color: Theme.of(context).iconTheme.color,
+          Icons.more_vert,
+          size: 18,
+          color: theme.iconTheme.color,
         ),
+        tooltip: '',
         onSelected: (action) {
           switch (action) {
-            case _AiRowAction.translate:
+            case _OverflowAction.edit:
+              onEdit(rowKey);
+              break;
+            case _OverflowAction.aiTranslate:
               onAiTranslate?.call(rowKey);
               break;
-            case _AiRowAction.suggest:
+            case _OverflowAction.aiSuggest:
               onAiSuggest?.call(rowKey);
               break;
-            case _AiRowAction.rephrase:
+            case _OverflowAction.aiRephrase:
               onAiRephrase?.call(rowKey);
+              break;
+            case _OverflowAction.addToTM:
+              onAddToTM(rowKey);
+              break;
+            case _OverflowAction.delete:
+              onDelete(rowKey);
               break;
           }
         },
-        itemBuilder: (context) => items,
+        itemBuilder: (context) => [
+          // Edit Action
+          const PopupMenuItem(
+            value: _OverflowAction.edit,
+            child: Row(
+              children: [
+                Icon(Icons.edit_outlined, size: 16),
+                SizedBox(width: 8),
+                Text('Edit Details'),
+              ],
+            ),
+          ),
+          const PopupMenuDivider(),
+          // AI Actions section
+          if (hasSource && onAiTranslate != null)
+            PopupMenuItem(
+              value: _OverflowAction.aiTranslate,
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.sparkles,
+                      size: 16, color: Colors.purple),
+                  const SizedBox(width: 8),
+                  Text(translateLabel),
+                ],
+              ),
+            ),
+          if (hasSource && hasTarget && onAiSuggest != null)
+            PopupMenuItem(
+              value: _OverflowAction.aiSuggest,
+              child: Row(
+                children: const [
+                  Icon(LucideIcons.lightbulb, size: 16, color: Colors.amber),
+                  SizedBox(width: 8),
+                  Text('Suggest Translation'),
+                ],
+              ),
+            ),
+          if (hasTarget && onAiRephrase != null)
+            PopupMenuItem(
+              value: _OverflowAction.aiRephrase,
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.wand2, size: 16, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Text(rephraseLabel),
+                ],
+              ),
+            ),
+          // Divider if AI actions exist
+          if ((hasSource && onAiTranslate != null) ||
+              (hasSource && hasTarget && onAiSuggest != null) ||
+              (hasTarget && onAiRephrase != null))
+            const PopupMenuDivider(),
+          // Standard actions
+          const PopupMenuItem(
+            value: _OverflowAction.addToTM,
+            child: Row(
+              children: [
+                Icon(Icons.psychology, size: 16),
+                SizedBox(width: 8),
+                Text('Add to TM'),
+              ],
+            ),
+          ),
+          const PopupMenuDivider(),
+          const PopupMenuItem(
+            value: _OverflowAction.delete,
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                SizedBox(width: 8),
+                Text('Delete Entry', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+        ],
       ),
     ),
   );
@@ -486,12 +525,12 @@ class _ActionIconButton extends StatelessWidget {
       message: tooltip,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         child: Padding(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(6),
           child: Icon(
             icon,
-            size: 16,
+            size: 18,
             color: color ?? Theme.of(context).iconTheme.color,
           ),
         ),

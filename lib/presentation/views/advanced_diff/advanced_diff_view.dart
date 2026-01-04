@@ -44,9 +44,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Save Changes?'),
-        content: const Text(
-            'This will overwrite the target file with the current values in the editor. This action cannot be undone.'),
+        title: const Text('Save All Changes?'),
+        content: Text(
+            'This will save all ${controller.dirtyKeys.length} modified entries to the target file. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -320,11 +320,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                                 ),
                               ),
                             Tooltip(
-                              message: 'Save Changes (Ctrl+S)',
+                              message: 'Save All Changes (Ctrl+S)',
                               child: FilledButton(
-                                  onPressed: () =>
-                                      _handleSaveChanges(context, controller),
-                                  child: const Text('Save Changes')),
+                                  onPressed: controller.dirtyKeys.isEmpty
+                                      ? null
+                                      : () => _handleSaveChanges(
+                                          context, controller),
+                                  child: Text(controller.dirtyKeys.isEmpty
+                                      ? 'All Saved'
+                                      : 'Save All (${controller.dirtyKeys.length})')),
                             ),
                             const SizedBox(width: 8),
                             Tooltip(

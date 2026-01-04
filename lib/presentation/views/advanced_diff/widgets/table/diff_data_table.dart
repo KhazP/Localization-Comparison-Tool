@@ -293,14 +293,14 @@ class DiffDataTable extends StatelessWidget {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Saved and Added to TM'),
+                    content: Text('Entry applied & added to TM'),
                     behavior: SnackBarBehavior.floating,
                     width: 300,
                   ),
                 );
               },
               icon: const Icon(Icons.psychology, size: 16),
-              label: const Text('Save & Add to TM'),
+              label: const Text('Apply & Add to TM'),
             ),
             const SizedBox(width: 8),
             FilledButton(
@@ -308,7 +308,7 @@ class DiffDataTable extends StatelessWidget {
                 controller.updateEntry(key, textController.text);
                 Navigator.of(context).pop();
               },
-              child: const Text('Save'),
+              child: const Text('Apply'),
             ),
           ],
         );

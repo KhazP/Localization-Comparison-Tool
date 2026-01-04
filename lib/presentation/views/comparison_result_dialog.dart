@@ -9,36 +9,47 @@ class ComparisonResultDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final addedKeys = result.diff.entries
-        .where((entry) => entry.value.status == StringComparisonStatus.added)
-        .map((entry) => entry.key)
-        .toList();
-
-    final removedKeys = result.diff.entries
-        .where((entry) => entry.value.status == StringComparisonStatus.removed)
-        .map((entry) => entry.key)
-        .toList();
-
-    final modifiedKeys = result.diff.entries
-        .where((entry) => entry.value.status == StringComparisonStatus.modified)
-        .map((entry) => entry.key)
-        .toList();
+    // Collect all entries and sort them by key for better readability
+    final entries = result.diff.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
 
     return AlertDialog(
       title: const Text('Comparison Details'),
       content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.5,
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildKeyList(context, 'Added Keys', addedKeys, Colors.green),
-              _buildKeyList(context, 'Removed Keys', removedKeys, Colors.red),
-              _buildKeyList(
-                  context, 'Modified Keys', modifiedKeys, Colors.orange),
-            ],
-          ),
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: const [
+                      DataColumn(label: Text('Key')),
+                      DataColumn(label: Text('Source')),
+                      DataColumn(label: Text('Target')),
+                      DataColumn(label: Text('Status')),
+                    ],
+                    rows: entries.map((entry) {
+                      final key = entry.key;
+                      final detail = entry.value;
+                      final sourceValue = result.file1Data[key] ?? '';
+                      final targetValue = result.file2Data[key] ?? '';
+
+                      return DataRow(cells: [
+                        DataCell(_buildSyntaxHighlightedKey(context, key)),
+                        DataCell(Text(sourceValue)),
+                        DataCell(Text(targetValue)),
+                        DataCell(_buildStatusCell(context, detail)),
+                      ]);
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
@@ -50,24 +61,70 @@ class ComparisonResultDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildKeyList(
-      BuildContext context, String title, List<String> keys, Color color) {
-    if (keys.isEmpty) {
-      return const SizedBox.shrink();
+  Widget _buildSyntaxHighlightedKey(BuildContext context, String key) {
+    final parts = key.split('.');
+    if (parts.length < 2) {
+      return Text(key, style: const TextStyle(fontWeight: FontWeight.bold));
     }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+
+    final path = parts.sublist(0, parts.length - 1).join('.') + '.';
+    final item = parts.last;
+
+    return RichText(
+      text: TextSpan(
+        style: Theme.of(context).textTheme.bodyMedium,
         children: [
-          Text(title,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(color: color)),
-          const Divider(),
-          ...keys.map((key) => Text(key)).toList(),
+          TextSpan(
+            text: path,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
+          ),
+          TextSpan(
+            text: item,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusCell(BuildContext context, ComparisonStatusDetail detail) {
+    Color color;
+    String text;
+
+    switch (detail.status) {
+      case StringComparisonStatus.added:
+        color = Colors.green;
+        text = 'Added';
+        break;
+      case StringComparisonStatus.removed:
+        color = Colors.red;
+        text = 'Removed';
+        break;
+      case StringComparisonStatus.modified:
+        color = Colors.orange;
+        text = 'Modified';
+        break;
+      case StringComparisonStatus.identical:
+        color = Colors.grey;
+        text = 'Identical';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }

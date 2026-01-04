@@ -5,27 +5,26 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 
 /// Onboarding step definitions
 enum OnboardingStep {
-  importFiles(
-      0, 'Import Files', 'Load source & target files', LucideIcons.upload),
-  runComparison(1, 'Run Comparison', 'Click "Compare Files"', LucideIcons.play),
-  reviewMissing(2, 'Review Missing Keys', 'Notice red MISSING items',
+  importFiles('Import Files', 'Load source & target files', LucideIcons.upload),
+  runComparison('Run Comparison', 'Click "Compare Files"', LucideIcons.play),
+  reviewMissing('Review Missing Keys', 'Notice red MISSING items',
       LucideIcons.alertTriangle),
-  useFilters(3, 'Use Filters', 'Filter by type', LucideIcons.filter),
-  searchResults(4, 'Search Results', 'Find specific keys', LucideIcons.search),
+  useFilters('Use Filters', 'Filter by type', LucideIcons.filter),
+  searchResults('Search Results', 'Find specific keys', LucideIcons.search),
   advancedView(
-      5, 'Advanced View', 'Explore detailed analysis', LucideIcons.maximize),
-  editCell(6, 'Edit a Cell', 'Click to edit a value', LucideIcons.edit3),
-  exportResults(7, 'Export', 'Save your report', LucideIcons.download);
+      'Advanced View', 'Explore detailed analysis', LucideIcons.maximize),
+  editCell('Edit a Cell', 'Click to edit a value', LucideIcons.edit3),
+  exportResults('Export', 'Save your report', LucideIcons.download);
 
-  final int index;
   final String title;
   final String description;
   final IconData icon;
 
-  const OnboardingStep(this.index, this.title, this.description, this.icon);
+  const OnboardingStep(this.title, this.description, this.icon);
 
   static OnboardingStep? fromIndex(int index) {
-    return OnboardingStep.values.where((s) => s.index == index).firstOrNull;
+    if (index < 0 || index >= OnboardingStep.values.length) return null;
+    return OnboardingStep.values[index];
   }
 }
 

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 
 /// A widget for managing feature flag overrides.
@@ -75,11 +73,7 @@ class FeatureFlagsSection extends StatelessWidget {
               TextButton.icon(
                 icon: const Icon(LucideIcons.rotateCcw),
                 label: const Text('Reset All Flags'),
-                onPressed: () {
-                  context
-                      .read<SettingsBloc>()
-                      .add(const ClearFeatureFlagOverrides());
-                },
+                onPressed: null,
               ),
             ],
           ),
@@ -122,11 +116,7 @@ class FeatureFlagsSection extends StatelessWidget {
               DropdownMenuItem(value: true, child: Text('ON')),
               DropdownMenuItem(value: false, child: Text('OFF')),
             ],
-            onChanged: (value) {
-              context.read<SettingsBloc>().add(
-                    UpdateFeatureFlagOverride(flag.key, value),
-                  );
-            },
+            onChanged: null,
           ),
         ],
       ),

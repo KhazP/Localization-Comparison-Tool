@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 
 /// Dialog for creating a new Localizer project.
@@ -75,6 +76,24 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     return BlocListener<ProjectBloc, ProjectState>(
       listener: (context, state) {
         if (state.status == ProjectStatus.loaded) {
+          // Add to recent projects list for immediate visibility
+          final settingsBloc = context.read<SettingsBloc>();
+          final currentRecent = List<String>.from(
+            settingsBloc.state.appSettings.recentProjects,
+          );
+          final projectPath = state.currentProject!.rootPath;
+
+          // Remove if already exists, then add to top
+          currentRecent.remove(projectPath);
+          currentRecent.insert(0, projectPath);
+
+          // Limit to 10 recent projects
+          if (currentRecent.length > 10) {
+            currentRecent.removeRange(10, currentRecent.length);
+          }
+
+          settingsBloc.add(UpdateRecentProjects(currentRecent));
+
           Navigator.of(context).pop();
           ToastService.showSuccess(
             context,

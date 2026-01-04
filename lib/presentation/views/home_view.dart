@@ -18,6 +18,8 @@ import 'package:localizer_app_main/core/services/app_tab_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -151,162 +153,117 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     final isAmoled =
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 
-    return Scaffold(
-      body: Padding(
-        // Add top padding on macOS to prevent window buttons from overlapping with nav rail
-        padding: EdgeInsets.only(top: Platform.isMacOS ? 28.0 : 0.0),
-        child: Row(
-          children: [
-            // Navigation Rail
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).navigationRailTheme.backgroundColor ??
-                    (isAmoled
-                        ? AppThemeV2.amoledSurface
-                        : (isDarkMode
-                            ? AppThemeV2.darkCard
-                            : AppThemeV2.lightCard)),
-                border: Border(
-                  right: BorderSide(
-                    color: isAmoled
-                        ? AppThemeV2.amoledBorder
-                        : Theme.of(context).dividerColor,
+    return BlocListener<ProjectBloc, ProjectState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status &&
+          current.status == ProjectStatus.loaded,
+      listener: (context, state) {
+        // Automatically switch to comparison view when a project is loaded
+        // and we are currently on the Projects view
+        if (_selectedIndex == 0) {
+          _onDestinationSelected(1);
+        }
+      },
+      child: Scaffold(
+        body: Padding(
+          // Add top padding on macOS to prevent window buttons from overlapping with nav rail
+          padding: EdgeInsets.only(top: Platform.isMacOS ? 28.0 : 0.0),
+          child: Row(
+            children: [
+              // Navigation Rail
+              Container(
+                decoration: BoxDecoration(
+                  color:
+                      Theme.of(context).navigationRailTheme.backgroundColor ??
+                          (isAmoled
+                              ? AppThemeV2.amoledSurface
+                              : (isDarkMode
+                                  ? AppThemeV2.darkCard
+                                  : AppThemeV2.lightCard)),
+                  border: Border(
+                    right: BorderSide(
+                      color: isAmoled
+                          ? AppThemeV2.amoledBorder
+                          : Theme.of(context).dividerColor,
+                    ),
                   ),
                 ),
-              ),
-              child: NavigationRail(
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: _onDestinationSelected,
-                backgroundColor: Colors.transparent,
-                indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
-                labelType: NavigationRailLabelType.all,
-                destinations: [
-                  _buildNavDestination(
-                    index: 0,
-                    icon: LucideIcons.layoutGrid,
-                    selectedIcon: LucideIcons.layoutGrid,
-                    label: 'Projects',
-                    colorScheme: colorScheme,
-                  ),
-                  _buildNavDestination(
-                    index: 1,
-                    icon: LucideIcons.arrowLeftRight,
-                    selectedIcon: LucideIcons.arrowLeftRight,
-                    label: 'Compare',
-                    colorScheme: colorScheme,
-                  ),
-                  _buildNavDestination(
-                    index: 2,
-                    icon: LucideIcons.clock3,
-                    selectedIcon: LucideIcons.clock3,
-                    label: 'History',
-                    colorScheme: colorScheme,
-                  ),
-                  _buildNavDestination(
-                    index: 3,
-                    icon: LucideIcons.barChart3,
-                    selectedIcon: LucideIcons.barChart3,
-                    label: 'Dashboard',
-                    colorScheme: colorScheme,
-                  ),
-                  _buildNavDestination(
-                    index: 4,
-                    icon: LucideIcons.folderOpen,
-                    selectedIcon: LucideIcons.folderOpen,
-                    label: 'Files',
-                    colorScheme: colorScheme,
-                  ),
-                  _buildNavDestination(
-                    index: 5,
-                    icon: LucideIcons.gitBranch,
-                    selectedIcon: LucideIcons.gitBranch,
-                    label: 'Git',
-                    colorScheme: colorScheme,
-                  ),
-                  _buildNavDestination(
-                    index: 6,
-                    icon: LucideIcons.settings,
-                    selectedIcon: LucideIcons.settings,
-                    label: 'Settings',
-                    colorScheme: colorScheme,
-                  ),
-                ],
-                trailing: Expanded(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Project indicator/create button
-                          const ProjectIndicator(),
-                          const SizedBox(height: 12),
-                          // Theme toggle button
-                          Tooltip(
-                            message:
-                                'Toggle Theme (Light > Dark > AMOLED > System)',
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: _toggleTheme,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Theme.of(context).dividerColor,
-                                    ),
-                                  ),
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 200),
-                                    transitionBuilder: (child, animation) {
-                                      return RotationTransition(
-                                        turns: Tween(begin: 0.5, end: 1.0)
-                                            .animate(animation),
-                                        child: FadeTransition(
-                                            opacity: animation, child: child),
-                                      );
-                                    },
-                                    child: Icon(
-                                      isDarkMode
-                                          ? LucideIcons.sun
-                                          : LucideIcons.moon,
-                                      key: ValueKey(isDarkMode),
-                                      size: 20,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Debug Console button (only in debug mode)
-                          if (kDebugMode && widget.talkerService != null) ...[
-                            const SizedBox(height: 8),
+                child: NavigationRail(
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: _onDestinationSelected,
+                  backgroundColor: Colors.transparent,
+                  indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    _buildNavDestination(
+                      index: 0,
+                      icon: LucideIcons.layoutGrid,
+                      selectedIcon: LucideIcons.layoutGrid,
+                      label: 'Projects',
+                      colorScheme: colorScheme,
+                    ),
+                    _buildNavDestination(
+                      index: 1,
+                      icon: LucideIcons.arrowLeftRight,
+                      selectedIcon: LucideIcons.arrowLeftRight,
+                      label: 'Compare',
+                      colorScheme: colorScheme,
+                    ),
+                    _buildNavDestination(
+                      index: 2,
+                      icon: LucideIcons.clock3,
+                      selectedIcon: LucideIcons.clock3,
+                      label: 'History',
+                      colorScheme: colorScheme,
+                    ),
+                    _buildNavDestination(
+                      index: 3,
+                      icon: LucideIcons.barChart3,
+                      selectedIcon: LucideIcons.barChart3,
+                      label: 'Dashboard',
+                      colorScheme: colorScheme,
+                    ),
+                    _buildNavDestination(
+                      index: 4,
+                      icon: LucideIcons.folderOpen,
+                      selectedIcon: LucideIcons.folderOpen,
+                      label: 'Files',
+                      colorScheme: colorScheme,
+                    ),
+                    _buildNavDestination(
+                      index: 5,
+                      icon: LucideIcons.gitBranch,
+                      selectedIcon: LucideIcons.gitBranch,
+                      label: 'Git',
+                      colorScheme: colorScheme,
+                    ),
+                    _buildNavDestination(
+                      index: 6,
+                      icon: LucideIcons.settings,
+                      selectedIcon: LucideIcons.settings,
+                      label: 'Settings',
+                      colorScheme: colorScheme,
+                    ),
+                  ],
+                  trailing: Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Project indicator/create button
+                            const ProjectIndicator(),
+                            const SizedBox(height: 12),
+                            // Theme toggle button
                             Tooltip(
-                              message: 'Debug Console',
+                              message:
+                                  'Toggle Theme (Light > Dark > AMOLED > System)',
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => TalkerScreen(
-                                          talker: widget.talkerService!.talker,
-                                          theme: TalkerScreenTheme(
-                                            backgroundColor: Theme.of(context)
-                                                .scaffoldBackgroundColor,
-                                            textColor: colorScheme.onSurface,
-                                            cardColor:
-                                                Theme.of(context).cardColor,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                  onTap: _toggleTheme,
                                   borderRadius: BorderRadius.circular(12),
                                   child: Container(
                                     padding: const EdgeInsets.all(10),
@@ -317,32 +274,92 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                         color: Theme.of(context).dividerColor,
                                       ),
                                     ),
-                                    child: Icon(
-                                      LucideIcons.terminal,
-                                      size: 20,
-                                      color: colorScheme.tertiary,
+                                    child: AnimatedSwitcher(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      transitionBuilder: (child, animation) {
+                                        return RotationTransition(
+                                          turns: Tween(begin: 0.5, end: 1.0)
+                                              .animate(animation),
+                                          child: FadeTransition(
+                                              opacity: animation, child: child),
+                                        );
+                                      },
+                                      child: Icon(
+                                        isDarkMode
+                                            ? LucideIcons.sun
+                                            : LucideIcons.moon,
+                                        key: ValueKey(isDarkMode),
+                                        size: 20,
+                                        color: colorScheme.primary,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
+                            // Debug Console button (only in debug mode)
+                            if (kDebugMode && widget.talkerService != null) ...[
+                              const SizedBox(height: 8),
+                              Tooltip(
+                                message: 'Debug Console',
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) => TalkerScreen(
+                                            talker:
+                                                widget.talkerService!.talker,
+                                            theme: TalkerScreenTheme(
+                                              backgroundColor: Theme.of(context)
+                                                  .scaffoldBackgroundColor,
+                                              textColor: colorScheme.onSurface,
+                                              cardColor:
+                                                  Theme.of(context).cardColor,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.surface,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Theme.of(context).dividerColor,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        LucideIcons.terminal,
+                                        size: 20,
+                                        color: colorScheme.tertiary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            // Main content - using IndexedStack to preserve widget state across tab switches
-            // This prevents heavy views from being recreated when navigating tabs
-            Expanded(
-              child: IndexedStack(
-                index: _selectedIndex,
-                children: _pages,
+              // Main content - using IndexedStack to preserve widget state across tab switches
+              // This prevents heavy views from being recreated when navigating tabs
+              Expanded(
+                child: IndexedStack(
+                  index: _selectedIndex,
+                  children: _pages,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

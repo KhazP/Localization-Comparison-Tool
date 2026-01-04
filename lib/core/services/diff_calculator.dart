@@ -1,6 +1,7 @@
 import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
+import 'package:localizer_app_main/data/models/app_settings.dart';
 
 /// Progress callback for reporting diff calculation progress.
 typedef DiffProgressCallback = void Function(int processed, int total);
@@ -14,45 +15,43 @@ class DiffCalculator {
   ///
   /// [onProgress] is an optional callback for reporting progress during calculation.
   static Map<String, ComparisonStatusDetail> calculateDiff({
-    required Map<String, String> data1,
-    required Map<String, String> data2,
-    required bool ignoreCase,
-    required List<String> ignorePatterns,
-    required bool ignoreWhitespace,
-    required String comparisonMode,
-    required double similarityThreshold,
+    required Map<String, String> sourceData,
+    required Map<String, String> targetData,
+    required AppSettings settings,
     DiffProgressCallback? onProgress,
   }) {
-    switch (comparisonMode) {
+    final mode = settings.comparisonMode;
+
+    switch (mode) {
       case 'Order-based':
         return _calculateOrderBasedDiff(
-          data1: data1,
-          data2: data2,
-          ignoreCase: ignoreCase,
-          ignorePatterns: ignorePatterns,
-          ignoreWhitespace: ignoreWhitespace,
-          similarityThreshold: similarityThreshold,
+          sourceData: sourceData,
+          targetData: targetData,
+          ignoreCase: settings.ignoreCase,
+          ignorePatterns: settings.ignorePatterns,
+          ignoreWhitespace: settings.ignoreWhitespace,
+          similarityThreshold: settings.similarityThreshold,
           onProgress: onProgress,
         );
       case 'Smart Match':
         return _calculateSmartMatchDiff(
-          data1: data1,
-          data2: data2,
-          ignoreCase: ignoreCase,
-          ignorePatterns: ignorePatterns,
-          ignoreWhitespace: ignoreWhitespace,
-          similarityThreshold: similarityThreshold,
+          sourceData: sourceData,
+          targetData: targetData,
+          ignoreCase: settings.ignoreCase,
+          ignorePatterns: settings.ignorePatterns,
+          ignoreWhitespace: settings.ignoreWhitespace,
+          similarityThreshold: settings.similarityThreshold,
           onProgress: onProgress,
         );
       case 'Key-based':
       default:
         return _calculateKeyBasedDiff(
-          data1: data1,
-          data2: data2,
-          ignoreCase: ignoreCase,
-          ignorePatterns: ignorePatterns,
-          ignoreWhitespace: ignoreWhitespace,
-          similarityThreshold: similarityThreshold,
+          sourceData: sourceData,
+          targetData: targetData,
+          ignoreCase: settings.ignoreCase,
+          ignorePatterns: settings.ignorePatterns,
+          ignoreWhitespace: settings.ignoreWhitespace,
+          similarityThreshold: settings.similarityThreshold,
           onProgress: onProgress,
         );
     }
@@ -60,8 +59,8 @@ class DiffCalculator {
 
   /// Key-based matching: matches entries by their key name.
   static Map<String, ComparisonStatusDetail> _calculateKeyBasedDiff({
-    required Map<String, String> data1,
-    required Map<String, String> data2,
+    required Map<String, String> sourceData,
+    required Map<String, String> targetData,
     required bool ignoreCase,
     required List<String> ignorePatterns,
     required bool ignoreWhitespace,
@@ -69,7 +68,7 @@ class DiffCalculator {
     DiffProgressCallback? onProgress,
   }) {
     final diff = <String, ComparisonStatusDetail>{};
-    final allKeys = {...data1.keys, ...data2.keys}.toList();
+    final allKeys = {...sourceData.keys, ...targetData.keys}.toList();
     final totalKeys = allKeys.length;
     int processedKeys = 0;
     int lastReportedPercent = 0;
@@ -80,8 +79,8 @@ class DiffCalculator {
         continue;
       }
 
-      String? value1 = data1[key];
-      String? value2 = data2[key];
+      String? value1 = sourceData[key];
+      String? value2 = targetData[key];
 
       value1 = _normalizeValue(value1, ignoreCase, ignoreWhitespace);
       value2 = _normalizeValue(value2, ignoreCase, ignoreWhitespace);
@@ -107,8 +106,8 @@ class DiffCalculator {
 
   /// Order-based matching: matches entries by their position (index).
   static Map<String, ComparisonStatusDetail> _calculateOrderBasedDiff({
-    required Map<String, String> data1,
-    required Map<String, String> data2,
+    required Map<String, String> sourceData,
+    required Map<String, String> targetData,
     required bool ignoreCase,
     required List<String> ignorePatterns,
     required bool ignoreWhitespace,
@@ -116,10 +115,12 @@ class DiffCalculator {
     DiffProgressCallback? onProgress,
   }) {
     final diff = <String, ComparisonStatusDetail>{};
-    final keys1 =
-        data1.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
-    final keys2 =
-        data2.keys.where((k) => !_shouldIgnoreKey(k, ignorePatterns)).toList();
+    final keys1 = sourceData.keys
+        .where((k) => !_shouldIgnoreKey(k, ignorePatterns))
+        .toList();
+    final keys2 = targetData.keys
+        .where((k) => !_shouldIgnoreKey(k, ignorePatterns))
+        .toList();
 
     final maxLength = keys1.length > keys2.length ? keys1.length : keys2.length;
     int lastReportedPercent = 0;
@@ -131,8 +132,8 @@ class DiffCalculator {
       // Use key2 as the primary key for display (target file), fallback to key1
       final displayKey = key2 ?? key1!;
 
-      String? value1 = key1 != null ? data1[key1] : null;
-      String? value2 = key2 != null ? data2[key2] : null;
+      String? value1 = key1 != null ? sourceData[key1] : null;
+      String? value2 = key2 != null ? targetData[key2] : null;
 
       value1 = _normalizeValue(value1, ignoreCase, ignoreWhitespace);
       value2 = _normalizeValue(value2, ignoreCase, ignoreWhitespace);
@@ -155,8 +156,8 @@ class DiffCalculator {
 
   /// Smart Match: Key-based first, then detects potential key renames.
   static Map<String, ComparisonStatusDetail> _calculateSmartMatchDiff({
-    required Map<String, String> data1,
-    required Map<String, String> data2,
+    required Map<String, String> sourceData,
+    required Map<String, String> targetData,
     required bool ignoreCase,
     required List<String> ignorePatterns,
     required bool ignoreWhitespace,
@@ -168,7 +169,7 @@ class DiffCalculator {
     final matchedKeys2 = <String>{};
 
     // Calculate total work: phase1 + phase2 + phase3 + phase4
-    final totalKeys = data1.length + data2.length;
+    final totalKeys = sourceData.length + targetData.length;
     int processedKeys = 0;
     int lastReportedPercent = 0;
 
@@ -183,17 +184,17 @@ class DiffCalculator {
     }
 
     // Phase 1: Exact key matches
-    for (final key in data1.keys) {
+    for (final key in sourceData.keys) {
       if (_shouldIgnoreKey(key, ignorePatterns)) {
         processedKeys++;
         continue;
       }
 
-      if (data2.containsKey(key)) {
+      if (targetData.containsKey(key)) {
         String? value1 =
-            _normalizeValue(data1[key], ignoreCase, ignoreWhitespace);
+            _normalizeValue(sourceData[key], ignoreCase, ignoreWhitespace);
         String? value2 =
-            _normalizeValue(data2[key], ignoreCase, ignoreWhitespace);
+            _normalizeValue(targetData[key], ignoreCase, ignoreWhitespace);
         diff[key] = _compareValues(value1, value2, similarityThreshold);
         matchedKeys1.add(key);
         matchedKeys2.add(key);
@@ -203,11 +204,11 @@ class DiffCalculator {
     }
 
     // Phase 2: Find unmatched keys
-    final unmatchedKeys1 = data1.keys
+    final unmatchedKeys1 = sourceData.keys
         .where((k) =>
             !matchedKeys1.contains(k) && !_shouldIgnoreKey(k, ignorePatterns))
         .toList();
-    final unmatchedKeys2 = data2.keys
+    final unmatchedKeys2 = targetData.keys
         .where((k) =>
             !matchedKeys2.contains(k) && !_shouldIgnoreKey(k, ignorePatterns))
         .toList();
@@ -216,14 +217,14 @@ class DiffCalculator {
     final usedKeys2 = <String>{};
     for (final key1 in unmatchedKeys1) {
       String? value1 =
-          _normalizeValue(data1[key1], ignoreCase, ignoreWhitespace);
+          _normalizeValue(sourceData[key1], ignoreCase, ignoreWhitespace);
       String? bestMatch;
       double bestSimilarity = 0.0;
 
       for (final key2 in unmatchedKeys2) {
         if (usedKeys2.contains(key2)) continue;
         String? value2 =
-            _normalizeValue(data2[key2], ignoreCase, ignoreWhitespace);
+            _normalizeValue(targetData[key2], ignoreCase, ignoreWhitespace);
 
         if (value1 != null && value2 != null) {
           final similarity = value1.similarityTo(value2);

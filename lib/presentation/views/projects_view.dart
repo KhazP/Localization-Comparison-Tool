@@ -19,6 +19,7 @@ import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
 import 'package:localizer_app_main/presentation/widgets/common/shimmer_skeleton.dart';
+import 'package:localizer_app_main/presentation/views/settings_view.dart';
 
 class ProjectsView extends StatelessWidget {
   const ProjectsView({super.key});
@@ -88,7 +89,7 @@ class ProjectsView extends StatelessWidget {
                 _buildActionButton(
                   context,
                   icon: LucideIcons.folderOpen,
-                  label: 'Open Project Settings',
+                  label: 'Open Existing Project',
                   isOutlined: true,
                   onTap: () => _pickProjectFolder(context),
                 ),
@@ -99,6 +100,14 @@ class ProjectsView extends StatelessWidget {
                   label: 'Import Project Zip',
                   isOutlined: true,
                   onTap: () => _importProjectZip(context),
+                ),
+                const SizedBox(width: 16),
+                _buildActionButton(
+                  context,
+                  icon: LucideIcons.bookOpen,
+                  label: 'Project Resources',
+                  isOutlined: true,
+                  onTap: () => _openProjectResources(context),
                 ),
               ],
             ),
@@ -314,6 +323,27 @@ class ProjectsView extends StatelessWidget {
             filePaths: filePaths,
           ),
         );
+  }
+
+  void _openProjectResources(BuildContext context) {
+    // Check if a project is open
+    final projectState = context.read<ProjectBloc>().state;
+    if (!projectState.hasProject) {
+      ToastService.showWarning(
+        context,
+        'Open a project first to manage its resources.',
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const SettingsView(
+          initialCategory: SettingsCategory.projectResources,
+          showBackButton: true,
+        ),
+      ),
+    );
   }
 }
 

@@ -109,7 +109,9 @@ class PremiumToast extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
-                      maxLines: isCompact ? 1 : null,
+                      // Error toasts get more lines to show full error messages
+                      maxLines:
+                          isCompact ? (type == ToastType.error ? 4 : 2) : null,
                       overflow: isCompact ? TextOverflow.ellipsis : null,
                     ),
                   ),

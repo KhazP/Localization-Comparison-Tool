@@ -9,6 +9,7 @@ import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/advanced_diff_sidebar.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/table/pluto_grid_diff_table.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
@@ -92,14 +93,15 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
           fullDiff: Map<String, ComparisonStatusDetail>.from(
               widget.comparisonResult.diff.unlock),
           // Create copies so discarding changes doesn't mutate original
-          file1Data:
+          sourceData:
               Map<String, String>.from(widget.comparisonResult.file1Data),
-          file2Data:
+          targetData:
               Map<String, String>.from(widget.comparisonResult.file2Data),
           targetFilePath: widget.targetFile.path,
           sourceFileExtension: p.extension(widget.sourceFile.path),
           targetFileExtension: p.extension(widget.targetFile.path),
           initialUseInlineEditing: settings.advancedDiffUseInlineEditing,
+          project: context.read<ProjectBloc>().state.currentProject,
         );
       },
       child: Consumer<AdvancedDiffController>(
@@ -189,7 +191,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                               padding: const EdgeInsets.all(8),
                             ),
                             const SizedBox(width: 4),
-                            const Text('Home  >  Diff View'),
+                            const Text('Home  >  Editor'),
                             const Spacer(),
                             // Unsaved changes indicator
                             if (controller.dirtyKeys.isNotEmpty)

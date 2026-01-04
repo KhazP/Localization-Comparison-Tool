@@ -81,10 +81,13 @@ class ToastService {
 
   /// Shows an error toast with a red warning icon.
   /// Optionally provide a recovery suggestion for actionable feedback.
+  /// When [onRetry] is provided, a "Retry" button is shown and the toast
+  /// uses expanded (non-compact) mode to prevent message truncation.
   static void showError(
     BuildContext context,
     String message, {
     String? recoverySuggestion,
+    VoidCallback? onRetry,
     Duration duration = const Duration(seconds: 6),
   }) {
     final fullMessage =
@@ -94,6 +97,9 @@ class ToastService {
       message: fullMessage,
       type: ToastType.error,
       duration: duration,
+      actionLabel: onRetry != null ? 'Retry' : null,
+      onAction: onRetry,
+      forceExpanded: onRetry != null,
     );
   }
 
@@ -133,9 +139,10 @@ class ToastService {
     String? actionLabel,
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
+    bool forceExpanded = false,
   }) {
     final alignment = _getAlignment();
-    final isCompact = _isCompact();
+    final isCompact = forceExpanded ? false : _isCompact();
 
     toastification.showCustom(
       context: context,

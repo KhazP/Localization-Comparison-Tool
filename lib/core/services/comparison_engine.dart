@@ -195,14 +195,11 @@ class ComparisonEngine {
   /// Isolate entry point for diff calculation with progress reporting
   static void _diffIsolateEntryPoint(_DiffIsolateParams params) {
     try {
+      final settings = AppSettings.fromJson(params.diffParams.settingsAsJson);
       final diff = DiffCalculator.calculateDiff(
-        data1: params.diffParams.data1,
-        data2: params.diffParams.data2,
-        ignoreCase: params.diffParams.ignoreCase,
-        ignorePatterns: params.diffParams.ignorePatterns,
-        ignoreWhitespace: params.diffParams.ignoreWhitespace,
-        comparisonMode: params.diffParams.comparisonMode,
-        similarityThreshold: params.diffParams.similarityThreshold,
+        sourceData: params.diffParams.sourceData,
+        targetData: params.diffParams.targetData,
+        settings: settings,
         onProgress: (processed, total) {
           params.sendPort.send(_IsolateProgressMessage(processed, total));
         },
@@ -260,13 +257,9 @@ class ComparisonEngine {
     onProgress?.call(50, 'Calculating differences...');
 
     final diffParams = _ComputeDiffParams(
-      data1: file1Data,
-      data2: file2Data,
-      ignoreCase: settings.ignoreCase,
-      ignorePatterns: settings.ignorePatterns,
-      ignoreWhitespace: settings.ignoreWhitespace,
-      comparisonMode: settings.comparisonMode,
-      similarityThreshold: settings.similarityThreshold,
+      sourceData: file1Data,
+      targetData: file2Data,
+      settingsAsJson: settings.toJson(),
     );
 
     final rawDiff = await _runDiffWithProgress(
@@ -348,13 +341,9 @@ class ComparisonEngine {
     onProgress?.call(50, 'Calculating differences...');
 
     final diffParams = _ComputeDiffParams(
-      data1: sourceData,
-      data2: targetData,
-      ignoreCase: settings.ignoreCase,
-      ignorePatterns: settings.ignorePatterns,
-      ignoreWhitespace: settings.ignoreWhitespace,
-      comparisonMode: settings.comparisonMode,
-      similarityThreshold: settings.similarityThreshold,
+      sourceData: sourceData,
+      targetData: targetData,
+      settingsAsJson: settings.toJson(),
     );
 
     final rawDiff = await _runDiffWithProgress(
@@ -393,22 +382,14 @@ class _ComputeParseParams {
 
 // Helper class for parameters to diff calculation
 class _ComputeDiffParams {
-  final Map<String, String> data1;
-  final Map<String, String> data2;
-  final bool ignoreCase;
-  final List<String> ignorePatterns;
-  final bool ignoreWhitespace;
-  final String comparisonMode;
-  final double similarityThreshold;
+  final Map<String, String> sourceData;
+  final Map<String, String> targetData;
+  final Map<String, dynamic> settingsAsJson;
 
   _ComputeDiffParams({
-    required this.data1,
-    required this.data2,
-    required this.ignoreCase,
-    required this.ignorePatterns,
-    required this.ignoreWhitespace,
-    required this.comparisonMode,
-    required this.similarityThreshold,
+    required this.sourceData,
+    required this.targetData,
+    required this.settingsAsJson,
   });
 }
 

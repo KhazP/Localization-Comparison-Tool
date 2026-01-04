@@ -263,6 +263,7 @@ class AiSection extends StatelessWidget {
         ToastService.showError(
           context,
           aiUserMessageForError(e),
+          onRetry: () => _translateAllMissing(context, controller),
         );
       }
     }

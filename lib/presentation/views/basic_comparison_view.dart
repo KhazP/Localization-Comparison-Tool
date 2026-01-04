@@ -2682,13 +2682,18 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
                 tooltip: 'Export Results (Ctrl+S)',
               ),
               const SizedBox(width: 8),
-              _buildCompactActionButton(
-                key: _keyAdvancedButton,
-                icon: LucideIcons.maximize,
-                label: 'Advanced',
-                onPressed: _navigateToAdvancedView,
-                color: theme.colorScheme.primary,
-                tooltip: 'Open Advanced View',
+              Tooltip(
+                message: 'Open Editor',
+                child: FilledButton.icon(
+                  key: _keyAdvancedButton,
+                  icon: const Icon(LucideIcons.maximize, size: 16),
+                  label: const Text('Editor'),
+                  onPressed: _navigateToAdvancedView,
+                  style: FilledButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                ),
               ),
               // AI button moved to Advanced view
             ],

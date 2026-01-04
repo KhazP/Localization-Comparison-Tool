@@ -792,7 +792,14 @@ class _SettingsViewState extends State<SettingsView>
           children: [
             ProjectGlossaryCard(),
             const SizedBox(height: 16),
-            ProjectTranslationMemoryCard(),
+            ProjectTranslationMemoryCard(
+              settings: settings,
+              translationMemoryService: _translationMemoryService,
+              translationMemoryStatsFuture: _translationMemoryStatsFuture,
+              onRefreshStats: _refreshTranslationMemoryStats,
+              isDark: isDark,
+              isAmoled: isAmoled,
+            ),
           ],
         );
       case SettingsCategory.developer:

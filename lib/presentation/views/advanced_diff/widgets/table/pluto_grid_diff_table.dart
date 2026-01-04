@@ -114,8 +114,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
 
     _rows = PlutoGridAdapter.createRows(
       entries: controller.processedEntries,
-      sourceData: controller.file1Data,
-      targetData: controller.file2Data,
+      sourceData: controller.sourceData,
+      targetData: controller.targetData,
       dirtyKeys: controller.dirtyKeys,
     );
   }
@@ -223,7 +223,16 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         'AI translation failed for "$key"',
       );
       if (context.mounted) {
-        ToastService.showError(context, aiUserMessageForError(e));
+        ToastService.showError(
+          context,
+          aiUserMessageForError(e),
+          onRetry: () => _runTranslationSuggestion(
+            controller,
+            key,
+            titleOverride: titleOverride,
+            successMessage: successMessage,
+          ),
+        );
       }
     }
   }
@@ -264,7 +273,11 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         'AI rephrase failed for "$key"',
       );
       if (context.mounted) {
-        ToastService.showError(context, aiUserMessageForError(e));
+        ToastService.showError(
+          context,
+          aiUserMessageForError(e),
+          onRetry: () => _handleAiRephrase(controller, key),
+        );
       }
     }
   }
@@ -383,8 +396,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
 
         _rows = PlutoGridAdapter.createRows(
           entries: controller.processedEntries,
-          sourceData: controller.file1Data,
-          targetData: controller.file2Data,
+          sourceData: controller.sourceData,
+          targetData: controller.targetData,
           dirtyKeys: controller.dirtyKeys,
         );
 

@@ -15,6 +15,7 @@ import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:developer' as developer;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:open_file_plus/open_file_plus.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/global_translation_memory_card.dart';
 
 class AiServicesSettingsCard extends StatefulWidget {
   final AppSettings settings;
@@ -109,133 +110,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     }
   }
 
-  String _formatMemorySize(int bytes) {
-    if (bytes <= 0) return '0 KB';
-    final kb = bytes / 1024;
-    if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
-    final mb = kb / 1024;
-    return '${mb.toStringAsFixed(1)} MB';
-  }
-
-  Future<void> _runTranslationMemoryAction(
-      Future<void> Function() action) async {
-    if (_translationMemoryBusy) return;
-    setState(() => _translationMemoryBusy = true);
-    try {
-      await action();
-    } finally {
-      if (mounted) {
-        setState(() => _translationMemoryBusy = false);
-      }
-    }
-  }
-
-  Future<void> _importTranslationMemory(BuildContext context) async {
-    final service = widget.translationMemoryService;
-    if (service == null) return;
-    await _runTranslationMemoryAction(() async {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['tmx', 'csv'],
-      );
-      if (result == null || result.files.single.path == null) return;
-      final file = File(result.files.single.path!);
-      final imported = await service.importFromFile(file);
-      widget.onRefreshStats();
-      if (!mounted) return;
-      final message = imported > 0
-          ? 'Imported $imported items into memory.'
-          : 'No items were added.';
-      ToastService.showInfo(context, message);
-    });
-  }
-
-  Future<void> _exportTranslationMemoryTmx(BuildContext context) async {
-    final service = widget.translationMemoryService;
-    if (service == null) return;
-    await _runTranslationMemoryAction(() async {
-      final stats = await service.getStats();
-      if (stats.entryCount == 0) {
-        if (mounted)
-          ToastService.showWarning(context, 'Nothing to export yet.');
-        return;
-      }
-      final outputPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export TMX',
-        fileName: 'translation_memory.tmx',
-        type: FileType.custom,
-        allowedExtensions: ['tmx'],
-      );
-      if (outputPath == null) return;
-      await service.exportToTmx(File(outputPath));
-      if (mounted) {
-        ToastService.showSuccessWithAction(
-          context,
-          'TMX saved',
-          actionLabel: 'Open',
-          onAction: () => OpenFile.open(outputPath),
-        );
-      }
-    });
-  }
-
-  Future<void> _exportTranslationMemoryCsv(BuildContext context) async {
-    final service = widget.translationMemoryService;
-    if (service == null) return;
-    await _runTranslationMemoryAction(() async {
-      final stats = await service.getStats();
-      if (stats.entryCount == 0) {
-        if (mounted)
-          ToastService.showWarning(context, 'Nothing to export yet.');
-        return;
-      }
-      final outputPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export CSV',
-        fileName: 'translation_memory.csv',
-        type: FileType.custom,
-        allowedExtensions: ['csv'],
-      );
-      if (outputPath == null) return;
-      await service.exportToCsv(File(outputPath));
-      if (mounted) {
-        ToastService.showSuccessWithAction(
-          context,
-          'CSV saved',
-          actionLabel: 'Open',
-          onAction: () => OpenFile.open(outputPath),
-        );
-      }
-    });
-  }
-
-  Future<void> _confirmClearTranslationMemory(BuildContext context) async {
-    final service = widget.translationMemoryService;
-    if (service == null) return;
-    final confirm = await DialogService.showConfirmation(
-      context: context,
-      title: 'Clear translation memory?',
-      content:
-          'This removes all saved translation pairs on this device. This action cannot be undone.',
-      confirmText: 'Clear Memory',
-      isDestructive: true,
-      icon: LucideIcons.trash2,
-    );
-
-    if (confirm != true) return;
-
-    await _runTranslationMemoryAction(() async {
-      try {
-        await service.clearMemory();
-        widget.onRefreshStats();
-        if (mounted)
-          ToastService.showSuccess(context, 'Translation memory cleared.');
-      } catch (e, s) {
-        developer.log('Failed to clear translation memory.',
-            name: 'translation_memory.clear', error: e, stackTrace: s);
-        if (mounted) ToastService.showError(context, 'Could not clear memory.');
-      }
-    });
-  }
+  // TM logic moved to GlobalTranslationMemoryCard
 
   @override
   Widget build(BuildContext context) {
@@ -562,106 +437,13 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             ],
           ),
         ],
-        SettingsCardContainer(
-          title: 'Translation Memory',
+        GlobalTranslationMemoryCard(
+          settings: widget.settings,
+          translationMemoryService: widget.translationMemoryService,
+          translationMemoryStatsFuture: widget.translationMemoryStatsFuture,
+          onRefreshStats: widget.onRefreshStats,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
-          children: [
-            SettingsRow(
-              label: 'Auto-learn',
-              description: 'Save translations to local memory for future reuse',
-              control: Switch(
-                value: widget.settings.enableTranslationMemory,
-                onChanged: (val) =>
-                    bloc.add(UpdateEnableTranslationMemory(val)),
-              ),
-              isDark: widget.isDark,
-              isAmoled: widget.isAmoled,
-            ),
-            SettingsRow(
-              label: 'Confidence Threshold',
-              description:
-                  'Minimum score to auto-apply (${(widget.settings.translationConfidenceThreshold * 100).toInt()}%)',
-              control: SizedBox(
-                width: 150,
-                child: Slider(
-                  value: widget.settings.translationConfidenceThreshold,
-                  onChanged: (val) =>
-                      bloc.add(UpdateTranslationConfidenceThreshold(val)),
-                ),
-              ),
-              isDark: widget.isDark,
-              isAmoled: widget.isAmoled,
-            ),
-            FutureBuilder<TranslationMemoryStats>(
-              future: widget.translationMemoryStatsFuture,
-              builder: (context, snapshot) {
-                final stats = snapshot.data;
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          _buildStatItem('Entries',
-                              stats?.entryCount.toString() ?? '...', context),
-                          const SizedBox(width: 24),
-                          _buildStatItem(
-                              'Size',
-                              stats != null
-                                  ? 'Memory Size: ${_formatMemorySize(stats.storageBytes)}'
-                                  : '...',
-                              context),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: _translationMemoryBusy
-                                ? null
-                                : () => _importTranslationMemory(context),
-                            icon: const Icon(LucideIcons.download, size: 18),
-                            label: const Text('Import'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _translationMemoryBusy
-                                ? null
-                                : () => _exportTranslationMemoryTmx(context),
-                            icon: const Icon(LucideIcons.upload, size: 18),
-                            label: const Text('Export TMX'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _translationMemoryBusy
-                                ? null
-                                : () => _exportTranslationMemoryCsv(context),
-                            icon: const Icon(LucideIcons.table, size: 18),
-                            label: const Text('Export CSV'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _translationMemoryBusy
-                                ? null
-                                : () => _confirmClearTranslationMemory(context),
-                            icon: Icon(LucideIcons.trash2,
-                                size: 18, color: AppThemeV2.error),
-                            label: Text('Clear Memory',
-                                style: TextStyle(color: AppThemeV2.error)),
-                            style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                    color: AppThemeV2.error
-                                        .withValues(alpha: 0.5))),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
         ),
       ],
     );

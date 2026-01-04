@@ -11,9 +11,28 @@ import 'package:uuid/uuid.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
+import 'package:localizer_app_main/presentation/widgets/settings/global_translation_memory_card.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/data/services/translation_memory_service.dart';
+import 'package:localizer_app_main/data/models/app_settings.dart';
 
 class ProjectTranslationMemoryCard extends StatelessWidget {
-  const ProjectTranslationMemoryCard({super.key});
+  final TranslationMemoryService? translationMemoryService;
+  final Future<TranslationMemoryStats>? translationMemoryStatsFuture;
+  final VoidCallback onRefreshStats;
+  final AppSettings settings;
+  final bool isDark;
+  final bool isAmoled;
+
+  const ProjectTranslationMemoryCard({
+    super.key,
+    this.translationMemoryService,
+    this.translationMemoryStatsFuture,
+    required this.onRefreshStats,
+    required this.settings,
+    required this.isDark,
+    required this.isAmoled,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,48 +41,107 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
 
     if (project == null) return const SizedBox.shrink();
 
-    return SettingsCard(
-      title: 'Translation Memory',
+    return Column(
       children: [
-        const SettingsDescription(
-          'Select Translation Memory (TM) files to reuse past translations.',
-        ),
-        const SizedBox(height: 16),
-        if (project.translationMemories.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: Text(
-                'No Translation Memories selected.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
+        SettingsCard(
+          title: 'Translation Memories',
+          children: [
+            const SettingsDescription(
+              'Manage translation memory sources for this project.',
             ),
-          )
-        else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: project.translationMemories.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final tm = project.translationMemories[index];
-              return SwitchListTile(
-                title: Text(tm.name),
-                subtitle: Text(tm.path),
-                value: tm.isEnabled,
-                onChanged: (val) => _toggleTM(context, tm, val),
-                secondary: const Icon(Icons.history_edu),
-              );
-            },
-          ),
-        const SizedBox(height: 16),
-        Center(
-          child: FilledButton.icon(
-            onPressed: () => _addTM(context),
-            icon: const Icon(Icons.add),
-            label: const Text('Add TM File'),
-          ),
+            const SizedBox(height: 16),
+            // Global TM Toggle
+            SwitchListTile(
+              title: const Text('Global Translation Memory'),
+              subtitle: const Text(
+                  'Use the shared translation memory from your app settings'),
+              value: settings.enableTranslationMemory,
+              onChanged: (val) {
+                context
+                    .read<SettingsBloc>()
+                    .add(UpdateEnableTranslationMemory(val));
+              },
+              secondary: const Icon(Icons.public),
+            ),
+            const Divider(),
+            const SizedBox(height: 8),
+            Text(
+              'Linked Files (Project Specific)',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            if (project.translationMemories.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.history_edu,
+                        size: 48,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No project-specific files linked.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 16),
+                      // Only show "Add TM File" if lists are empty
+                      FilledButton.icon(
+                        onPressed: () => _addTM(context),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add TM File'),
+                      ),
+                      // If Global TM is NOT enabled, show the suggestion button
+                      if (!settings.enableTranslationMemory) ...[
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => _enableGlobalTM(context),
+                          icon: const Icon(Icons.public),
+                          label: const Text('Use Global TM'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              )
+            else ...[
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: project.translationMemories.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final tm = project.translationMemories[index];
+                  return SwitchListTile(
+                    title: Text(tm.name),
+                    subtitle: Text(tm.path),
+                    value: tm.isEnabled,
+                    onChanged: (val) => _toggleTM(context, tm, val),
+                    secondary: const Icon(Icons.history_edu),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: FilledButton.icon(
+                  onPressed: () => _addTM(context),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add TM File'),
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );
@@ -110,5 +188,15 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
       }).toList();
       projectBloc.add(UpdateProjectTMs(updatedTMs));
     }
+  }
+
+  void _enableGlobalTM(BuildContext context) {
+    context.read<SettingsBloc>().add(const UpdateEnableTranslationMemory(true));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Global Translation Memory enabled'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 }

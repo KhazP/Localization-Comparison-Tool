@@ -16,7 +16,9 @@ import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:fuzzy/fuzzy.dart';
+import 'package:localizer_app_main/data/models/project.dart';
+import 'package:fuzzy/fuzzy.dart' as fuzzy;
+import 'dart:developer' as developer;
 
 // Re-export enums if needed or define new ones here.
 // For now, reuse Enums from the old view to minimize breakage during
@@ -68,20 +70,22 @@ class AdvancedDiffController extends ChangeNotifier {
 
   // Dependencies or initial data
   final Map<String, ComparisonStatusDetail> fullDiff;
-  final Map<String, String> file1Data;
-  final Map<String, String> file2Data;
+  final Map<String, String> sourceData;
+  final Map<String, String> targetData;
   final String? sourceFileExtension;
   final String? targetFileExtension;
   final String targetFilePath;
+  final Project? project;
 
   AdvancedDiffController({
     required this.fullDiff,
-    required this.file1Data,
-    required this.file2Data,
+    required this.sourceData,
+    required this.targetData,
     required this.targetFilePath,
     this.sourceFileExtension,
     this.targetFileExtension,
     bool? initialUseInlineEditing,
+    this.project,
   }) {
     useInlineEditing = initialUseInlineEditing ?? useInlineEditing;
     _loadReviewedKeys();
@@ -97,8 +101,8 @@ class AdvancedDiffController extends ChangeNotifier {
     }
   }
 
-  String getSourceValue(String key) => file1Data[key] ?? '';
-  String getTargetValue(String key) => file2Data[key] ?? '';
+  String getSourceValue(String key) => sourceData[key] ?? '';
+  String getTargetValue(String key) => targetData[key] ?? '';
 
   // Search Settings
   bool isRegexEnabled = false;
@@ -254,9 +258,9 @@ class AdvancedDiffController extends ChangeNotifier {
         } else if (isFuzzyEnabled) {
           // Fuzzy typo-tolerant search
           final searchables = [key, val1, val2];
-          final fuse = Fuzzy(
+          final fuse = fuzzy.Fuzzy(
             searchables,
-            options: FuzzyOptions(
+            options: fuzzy.FuzzyOptions(
               threshold: 0.4, // Lower = stricter matching
               findAllMatches: true,
             ),
@@ -347,13 +351,13 @@ class AdvancedDiffController extends ChangeNotifier {
 
   // Editing Methods
   void updateEntry(String key, String newValue) {
-    if (file2Data[key] == newValue) return;
+    if (targetData[key] == newValue) return;
 
-    file2Data[key] = newValue;
+    targetData[key] = newValue;
     dirtyKeys.add(key);
 
     // Re-evaluate status
-    final sourceValue = file1Data[key];
+    final sourceValue = sourceData[key];
     if (sourceValue != null) {
       if (sourceValue == newValue) {
         fullDiff[key] = ComparisonStatusDetail.identical();
@@ -388,7 +392,7 @@ class AdvancedDiffController extends ChangeNotifier {
     // For now, we accept the overhead or try to be smart.
 
     for (var key in dirtyKeys) {
-      final val = file2Data[key];
+      final val = targetData[key];
       if (val != null) {
         await _fileService.upsertEntry(
           file: targetFile,
@@ -419,10 +423,10 @@ class AdvancedDiffController extends ChangeNotifier {
 
   /// Reverts the target value to match the source value.
   void revertEntry(String key) {
-    final source = file1Data[key];
+    final source = sourceData[key];
     if (source == null) return; // Nothing to revert to
 
-    file2Data[key] = source;
+    targetData[key] = source;
     dirtyKeys.add(key);
     fullDiff[key] = ComparisonStatusDetail.identical();
     _applyFilters();
@@ -430,11 +434,11 @@ class AdvancedDiffController extends ChangeNotifier {
 
   /// Deletes the entry from the target file (sets value to empty).
   void deleteEntry(String key) {
-    file2Data.remove(key);
+    targetData.remove(key);
     dirtyKeys.add(key);
 
     // If source exists, mark as removed. Otherwise, remove from diff entirely.
-    if (file1Data.containsKey(key)) {
+    if (sourceData.containsKey(key)) {
       fullDiff[key] = ComparisonStatusDetail.removed();
     } else {
       fullDiff.remove(key);
@@ -449,8 +453,8 @@ class AdvancedDiffController extends ChangeNotifier {
     for (var entry in processedEntries) {
       var key = entry.key;
       var status = entry.value;
-      var source = file1Data[key] ?? '';
-      var target = file2Data[key] ?? '';
+      var source = sourceData[key] ?? '';
+      var target = targetData[key] ?? '';
 
       rows.add([
         status.status.name,
@@ -486,10 +490,10 @@ class AdvancedDiffController extends ChangeNotifier {
 
     // Iterate fullDiff to find missing targets
     for (var key in fullDiff.keys) {
-      final currentTarget = file2Data[key];
+      final currentTarget = targetData[key];
       // If target is empty, try to fill
       if (currentTarget == null || currentTarget.trim().isEmpty) {
-        final source = file1Data[key];
+        final source = sourceData[key];
         if (source != null && source.isNotEmpty) {
           final match = await tmService.findBestMatch(
             sourceText: source,
@@ -510,10 +514,10 @@ class AdvancedDiffController extends ChangeNotifier {
         final key = entry.key;
         final newVal = entry.value;
 
-        file2Data[key] = newVal;
+        targetData[key] = newVal;
         dirtyKeys.add(key);
 
-        final sourceValue = file1Data[key];
+        final sourceValue = sourceData[key];
         if (sourceValue != null) {
           if (sourceValue == newVal) {
             fullDiff[key] = ComparisonStatusDetail.identical();
@@ -603,7 +607,54 @@ class AdvancedDiffController extends ChangeNotifier {
       text: sourceText,
       targetLanguage: targetLang,
       sourceLanguage: sourceLang,
+      contextStrings: await _buildContextStrings(sourceText),
     );
+  }
+
+  Future<List<String>> _buildContextStrings(String sourceText) async {
+    if (project == null) return [];
+
+    final contextStrings = <String>[];
+
+    // 1. Glossary Matches
+    if (project!.glossary.isNotEmpty) {
+      final textLower = sourceText.toLowerCase();
+      // Simple exact matching for now - could be improved with tokenization
+      for (final item in project!.glossary) {
+        if (textLower.contains(item.term.toLowerCase())) {
+          String context = 'Glossary: "${item.term}" -> "${item.definition}"';
+          if (item.forbidTranslation) {
+            context += ' (DO NOT TRANSLATE)';
+          }
+          contextStrings.add(context);
+        }
+      }
+    }
+
+    // 2. Translation Memory Matches
+    if (enableTM) {
+      // Only if TM is enabled in controller settings
+      final tmService = sl<TranslationMemoryService>();
+      try {
+        final matches = await tmService.findMatches(
+          sourceText: sourceText,
+          sourceLang: sourceLang,
+          targetLang: targetLang,
+          minScore: 0.7, // Only reasonably good matches
+          limit: 3,
+        );
+
+        for (final match in matches) {
+          contextStrings.add(
+              'TM Match (${(match.score * 100).toInt()}%): "${match.sourceText}" -> "${match.targetText}"');
+        }
+      } catch (e) {
+        // Silently fail TM lookup to not block AI
+        developer.log('TM lookup failed during AI context build', error: e);
+      }
+    }
+
+    return contextStrings;
   }
 
   /// Requests a rephrase suggestion for the target value of a specific key.
@@ -656,6 +707,7 @@ class AdvancedDiffController extends ChangeNotifier {
             text: sourceText,
             targetLanguage: targetLang,
             sourceLanguage: sourceLang,
+            contextStrings: await _buildContextStrings(sourceText),
           );
 
           // Apply the translation

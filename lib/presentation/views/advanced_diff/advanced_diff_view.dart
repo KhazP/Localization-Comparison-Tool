@@ -173,88 +173,22 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                   }
                 },
                 child: Scaffold(
-                  appBar: AppBar(
-                    title: const Text('Advanced Localization Editor'),
-                    actions: [
-                      // Search Bar
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: SizedBox(
-                          width: 380,
-                          child: TextField(
-                            focusNode: _searchFocusNode,
-                            decoration: InputDecoration(
-                              hintText: 'Search keys & values... (Ctrl+F)',
-                              prefixIcon:
-                                  const Icon(LucideIcons.search, size: 18),
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Tooltip(
-                                    message: 'Fuzzy Search (typo-tolerant)',
-                                    child: IconButton(
-                                      icon: Text(
-                                        '~',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: controller.isFuzzyEnabled
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                              : Theme.of(context).hintColor,
-                                        ),
-                                      ),
-                                      onPressed: () => controller.toggleFuzzy(
-                                          !controller.isFuzzyEnabled),
-                                    ),
-                                  ),
-                                  Tooltip(
-                                    message: 'Regex Search',
-                                    child: IconButton(
-                                      icon: Text(
-                                        '.*',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: controller.isRegexEnabled
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                              : Theme.of(context).hintColor,
-                                        ),
-                                      ),
-                                      onPressed: () => controller.toggleRegex(
-                                          !controller.isRegexEnabled),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            onChanged: (value) {
-                              controller.updateSearch(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                    ],
-                  ),
                   body: Column(
                     children: [
                       // Toolbar
                       Container(
-                        height: 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         color: Theme.of(context).cardColor,
                         child: Row(
                           children: [
-                            const Icon(LucideIcons.arrowLeft, size: 16),
-                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(LucideIcons.arrowLeft, size: 24),
+                              onPressed: () => Navigator.maybePop(context),
+                              tooltip: 'Go back',
+                              padding: const EdgeInsets.all(8),
+                            ),
+                            const SizedBox(width: 4),
                             const Text('Home  >  Diff View'),
                             const Spacer(),
                             // Unsaved changes indicator
@@ -345,7 +279,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                       Expanded(
                         child: Row(
                           children: [
-                            const AdvancedDiffSidebar(),
+                            AdvancedDiffSidebar(
+                                searchFocusNode: _searchFocusNode),
                             VerticalDivider(
                                 width: 1,
                                 color: Theme.of(context).dividerColor),

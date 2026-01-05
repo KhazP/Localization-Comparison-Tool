@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -14,133 +14,233 @@ import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.
 
 import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:csv/csv.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 
-class GitView extends StatelessWidget {
-  const GitView({super.key});
+class GitComparisonView extends StatefulWidget {
+  const GitComparisonView({super.key});
+
+  @override
+  State<GitComparisonView> createState() => _GitComparisonViewState();
+}
+
+class _GitComparisonViewState extends State<GitComparisonView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    _fadeAnimation =
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut);
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Git Integration',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 16),
-          // Repository Selection Area
-          const _RepositorySelector(),
-          const Divider(height: 32),
-          // Main Content Area (Branches, Diff)
-          // Main Content Area (Branches, Diff)
-          Expanded(
-            child: BlocListener<GitBloc, GitState>(
-              listener: (context, state) {
-                if (state is GitOperationSuccess) {
-                  ToastService.showSuccess(context, state.message);
-                  // Auto-reload after success.
-                  context.read<GitBloc>().add(LoadBranches());
-                } else if (state is GitError) {
-                  ToastService.showError(context, state.message);
-                  // Attempt to recover state if possible, or stay in Error if it's fatal.
-                  // If it was a transient error (like Pull failed), we might want to go back to Loaded?
-                  // For now, let's try to reload branches to see if we can recover the view.
-                  context.read<GitBloc>().add(LoadBranches());
-                }
-              },
-              child: BlocBuilder<GitBloc, GitState>(
-                buildWhen: (previous, current) {
-                  // Don't rebuild basic UI for transient states if we want to keep the view visible behind the toast
-                  // But our states ARE mutually exclusive in this Bloc.
-                  // So we DO need to handle building.
-                  return current is! GitOperationSuccess;
-                },
-                builder: (context, state) {
-                  if (state is GitInitial) {
-                    return const Center(
-                        child: Text('Select a repository to begin.'));
-                  } else if (state is GitLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is GitError) {
-                    // If error is permanent (like repo load fail), show it.
-                    // If transient (pull fail), the listener handled it and we triggered reload.
-                    // But until reload finishes, what do we show?
-                    // Let's show the error properly here too if it persists.
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.alertCircle,
-                              color: Theme.of(context).colorScheme.error,
-                              size: 48),
-                          const SizedBox(height: 16),
-                          Text('Error: ${state.message}',
-                              style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error),
-                              textAlign: TextAlign.center),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                              onPressed: () =>
-                                  context.read<GitBloc>().add(LoadBranches()),
-                              child: const Text('Retry'))
-                        ],
-                      ),
-                    );
-                  } else if (state is GitRepositorySelected) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is GitBranchesLoaded) {
-                    return Column(
-                      children: [
-                        // Action Bar (New)
-                        _RepoActionsToolbar(
-                          repoPath: state.repoPath,
-                          currentBranch: state.branches
-                              .firstWhere(
-                                  (b) => b.name == state.branches.first.name,
-                                  orElse: () => GitBranch('Unknown', ''))
-                              .name, // Logic improved below
-                          branches: state.branches,
-                        ),
-                        const Divider(),
-                        Expanded(
-                          child: _ComparisonControls(
-                            state: state,
-                            repoPath: state.repoPath,
-                          ),
-                        ),
-                      ],
-                    );
-                  } else if (state is GitComparisonInProgress) {
-                    return const Center(
-                        child: Column(
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    final settingsState = context.watch<SettingsBloc>().state;
+    final bool isAmoled = isDark &&
+        settingsState.status == SettingsStatus.loaded &&
+        settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
+
+    // AMOLED-aware helpers
+    Color getCardColor() => isAmoled
+        ? AppThemeV2.amoledCard
+        : (isDark ? AppThemeV2.darkCard : AppThemeV2.lightCard);
+    Color getBorderColor() => isAmoled
+        ? AppThemeV2.amoledBorder
+        : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder);
+
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.gitBranch,
+                      size: 28, color: colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Repository Comparison',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Repository Selector Card
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: getCardColor(),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: getBorderColor()),
+              ),
+              child: const _RepositorySelector(),
+            ),
+            const SizedBox(height: 24),
+            // Main Content
+            Expanded(
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: getCardColor(),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: getBorderColor()),
+                ),
+                child: BlocListener<GitBloc, GitState>(
+                  listener: (context, state) {
+                    if (state is GitOperationSuccess) {
+                      ToastService.showSuccess(context, state.message);
+                      context.read<GitBloc>().add(LoadBranches());
+                    } else if (state is GitError) {
+                      ToastService.showError(context, state.message);
+                      context.read<GitBloc>().add(LoadBranches());
+                    }
+                  },
+                  child: BlocBuilder<GitBloc, GitState>(
+                    buildWhen: (previous, current) {
+                      return current is! GitOperationSuccess;
+                    },
+                    builder: (context, state) {
+                      if (state is GitInitial) {
+                        return _buildEmptyState(context);
+                      } else if (state is GitLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (state is GitError) {
+                        // For permanent errors
+                        return Center(
+                          child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Comparing...')
-                        ]));
-                  } else if (state is GitConflictsDetected) {
-                    return ConflictResolutionView(
-                      repoPath: state.repoPath,
-                      conflictedFiles: state.conflictedFiles,
-                    );
-                  } else if (state is GitComparisonResult) {
-                    return _ComparisonResultList(
-                      diffFiles: state.diffFiles,
-                      repoPath: state.repoPath,
-                      base: state.base,
-                      target: state.target,
-                      mode: state.mode,
-                      onBack: () => context
-                          .read<GitBloc>()
-                          .add(LoadBranches()), // Will load from cache
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+                              Icon(LucideIcons.alertCircle,
+                                  color: theme.colorScheme.error, size: 48),
+                              const SizedBox(height: 16),
+                              Text('Error: ${state.message}',
+                                  style:
+                                      TextStyle(color: theme.colorScheme.error),
+                                  textAlign: TextAlign.center),
+                              const SizedBox(height: 16),
+                              FilledButton(
+                                  onPressed: () => context
+                                      .read<GitBloc>()
+                                      .add(LoadBranches()),
+                                  child: const Text('Retry'))
+                            ],
+                          ),
+                        );
+                      } else if (state is GitRepositorySelected) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (state is GitBranchesLoaded) {
+                        return Column(
+                          children: [
+                            _RepoActionsToolbar(
+                              repoPath: state.repoPath,
+                              currentBranch: state.branches
+                                  .firstWhere(
+                                      (b) =>
+                                          b.name == state.branches.first.name,
+                                      orElse: () => GitBranch('Unknown', ''))
+                                  .name,
+                              branches: state.branches,
+                            ),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: _ComparisonControls(
+                                  state: state,
+                                  repoPath: state.repoPath,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      } else if (state is GitComparisonInProgress) {
+                        return const Center(
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Comparing...')
+                            ]));
+                      } else if (state is GitConflictsDetected) {
+                        return ConflictResolutionView(
+                          repoPath: state.repoPath,
+                          conflictedFiles: state.conflictedFiles,
+                        );
+                      } else if (state is GitComparisonResult) {
+                        return _ComparisonResultList(
+                          diffFiles: state.diffFiles,
+                          repoPath: state.repoPath,
+                          base: state.base,
+                          target: state.target,
+                          mode: state.mode,
+                          onBack: () =>
+                              context.read<GitBloc>().add(LoadBranches()),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            LucideIcons.gitBranch,
+            size: 64,
+            color:
+                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Select a repository to begin',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: isDark
+                  ? AppThemeV2.darkTextSecondary
+                  : AppThemeV2.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Open a local Git repository to compare branches or commits',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color:
+                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),
           ),
         ],
@@ -161,23 +261,58 @@ class _RepositorySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return BlocBuilder<GitBloc, GitState>(
       builder: (context, state) {
         String currentPath = state.repoPath ?? 'No repository selected';
+        bool hasRepo = state.repoPath != null;
 
         return Row(
           children: [
-            ElevatedButton.icon(
-              onPressed: () => _pickRepository(context),
-              icon: const Icon(LucideIcons.folderOpen),
-              label: const Text('Open Repository'),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(LucideIcons.gitFork,
+                  color: theme.colorScheme.primary, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                'Current Repo: $currentPath',
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyLarge,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Create / Open Repository',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    currentPath,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppThemeV2.darkTextMuted
+                          : AppThemeV2.lightTextMuted,
+                      fontFamily: hasRepo ? 'monospace' : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            FilledButton.icon(
+              onPressed: () => _pickRepository(context),
+              icon: const Icon(LucideIcons.folderOpen, size: 18),
+              label: const Text('Open'),
+              style: FilledButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
             ),
           ],
@@ -240,14 +375,13 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
   Widget build(BuildContext context) {
     final mode = widget.state.mode;
 
-    return Card(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      elevation: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Mode Toggle
-          Center(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Mode Toggle
+        Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
             child: SegmentedButton<ComparisonMode>(
               segments: const [
                 ButtonSegment(
@@ -267,27 +401,37 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                     .read<GitBloc>()
                     .add(SwitchComparisonMode(newSelection.first));
               },
+              style: ButtonStyle(
+                visualDensity: VisualDensity.comfortable,
+                shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12))),
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-          if (mode == ComparisonMode.branch)
-            _buildBranchControls(context)
-          else
-            _buildCommitControls(context),
+        ),
+        const SizedBox(height: 32),
+        if (mode == ComparisonMode.branch)
+          _buildBranchControls(context)
+        else
+          _buildCommitControls(context),
 
-          const SizedBox(height: 24),
-          // Compare Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: FilledButton.icon(
-              onPressed: _canCompare() ? _performCompare : null,
-              icon: const Icon(LucideIcons.arrowRightLeft),
-              label: const Text('Compare', style: TextStyle(fontSize: 16)),
+        const SizedBox(height: 32),
+        // Compare Action Button
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: FilledButton.icon(
+            onPressed: _canCompare() ? _performCompare : null,
+            icon: const Icon(LucideIcons.arrowRightLeft),
+            label: const Text('Compare',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -322,7 +466,11 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 value: _baseBranch,
                 decoration: const InputDecoration(
                   labelText: 'Base Branch',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 items: widget.state.branches
                     .map((b) => DropdownMenuItem(
@@ -335,21 +483,20 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 },
               ),
             ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: (_baseBranch != null && _targetBranch != null)
-                  ? _swapBranches
-                  : null,
-              icon: const Icon(LucideIcons.arrowRightLeft),
-              tooltip: 'Swap branches',
-            ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 16),
+            Icon(LucideIcons.arrowRightLeft,
+                size: 20, color: Theme.of(context).colorScheme.outline),
+            const SizedBox(width: 16),
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _targetBranch,
                 decoration: const InputDecoration(
                   labelText: 'Target Branch',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 items: widget.state.branches
                     .map((b) => DropdownMenuItem(
@@ -383,7 +530,11 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 value: _filterBranch,
                 decoration: const InputDecoration(
                   labelText: 'Filter Commits by Branch',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 items: widget.state.branches
                     .map((b) => DropdownMenuItem(
@@ -416,7 +567,7 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
 
         if (commits.isEmpty && !isLoading)
           const Text(
@@ -433,7 +584,11 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Base Commit (Older)',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   ),
                   items: _buildCommitItems(context, commits),
                   selectedItemBuilder: (ctx) =>
@@ -443,24 +598,21 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: IconButton(
-                  onPressed:
-                      (_baseCommitSha != null && _targetCommitSha != null)
-                          ? _swapCommits
-                          : null,
-                  icon: const Icon(LucideIcons.arrowRightLeft),
-                  tooltip: 'Swap commits',
-                ),
-              ),
+              const SizedBox(width: 16),
+              Icon(LucideIcons.arrowRightLeft,
+                  size: 20, color: Theme.of(context).colorScheme.outline),
+              const SizedBox(width: 16),
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: _targetCommitSha,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Target Commit (Newer)',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   ),
                   items: _buildCommitItems(context, commits),
                   selectedItemBuilder: (ctx) =>
@@ -554,7 +706,7 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
 
 class _RepoActionsToolbar extends StatelessWidget {
   final String repoPath;
-  final String currentBranch; // In a real app we'd identify HEAD properly
+  final String currentBranch;
   final List<GitBranch> branches;
 
   const _RepoActionsToolbar({
@@ -563,6 +715,57 @@ class _RepoActionsToolbar extends StatelessWidget {
     required this.branches,
   });
 
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface,
+        border: Border(
+            bottom: BorderSide(
+                color: isDark
+                    ? AppThemeV2.darkBorderSubtle
+                    : AppThemeV2.lightBorderSubtle)),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.gitBranch, size: 20, color: colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            'Actions:',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 24),
+          _ActionButton(
+            icon: LucideIcons.cornerUpRight,
+            label: 'Checkout',
+            onPressed: () => _showCheckoutDialog(context),
+          ),
+          const SizedBox(width: 12),
+          _ActionButton(
+            icon: LucideIcons.merge,
+            label: 'Merge',
+            onPressed: () => _showMergeDialog(context),
+          ),
+          const SizedBox(width: 12),
+          _ActionButton(
+            icon: LucideIcons.download,
+            label: 'Pull',
+            onPressed: () => context.read<GitBloc>().add(PullChanges()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ... dialog methods (unchanged) ...
   void _showCheckoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -609,52 +812,37 @@ class _RepoActionsToolbar extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Note: 'currentBranch' passed here is just the first one or logic from parent.
-    // Ideally GitBloc should tell us which one is HEAD.
-    // For now we will assume the user knows or we add a specific "HEAD" field to state later.
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Theme.of(context)
-          .colorScheme
-          .surfaceContainerHighest
-          .withValues(alpha: 0.3),
-      child: Row(
-        children: [
-          const Icon(LucideIcons.gitBranch, size: 20),
-          const SizedBox(width: 8),
-          Text('Actions:',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary)),
-          const SizedBox(width: 16),
-
-          // Checkout
-          OutlinedButton.icon(
-            onPressed: () => _showCheckoutDialog(context),
-            icon: const Icon(LucideIcons.cornerUpRight, size: 18),
-            label: const Text('Checkout'),
-          ),
-          const SizedBox(width: 8),
-
-          // Merge
-          OutlinedButton.icon(
-            onPressed: () => _showMergeDialog(context),
-            icon: const Icon(LucideIcons.merge, size: 18),
-            label: const Text('Merge'),
-          ),
-          const SizedBox(width: 8),
-
-          // Pull
-          OutlinedButton.icon(
-            onPressed: () => context.read<GitBloc>().add(PullChanges()),
-            icon: const Icon(LucideIcons.download, size: 18),
-            label: const Text('Pull'),
-          ),
-        ],
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        side: BorderSide(
+          color: isDark
+              ? AppThemeV2.darkBorderSubtle
+              : AppThemeV2.lightBorderSubtle,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -706,7 +894,7 @@ class _BranchSelectionDialog extends StatelessWidget {
   }
 }
 
-class _ComparisonResultList extends StatelessWidget {
+class _ComparisonResultList extends StatefulWidget {
   final List<GitDiffFile> diffFiles;
   final String repoPath;
   final String base;
@@ -722,48 +910,547 @@ class _ComparisonResultList extends StatelessWidget {
       required this.mode,
       required this.onBack});
 
+  @override
+  State<_ComparisonResultList> createState() => _ComparisonResultListState();
+}
+
+class _ComparisonResultListState extends State<_ComparisonResultList> {
+  // Export State
+  bool _isExporting = false;
+  int _exportedCount = 0;
+  int _totalToExport = 0;
+  String? _currentExportFile;
+  StateSetter? _exportDialogSetState;
+
+  Future<void> _exportResults() async {
+    // Get settings for export format
+    final settingsState = context.read<SettingsBloc>().state;
+    final exportFormat = settingsState.status == SettingsStatus.loaded
+        ? settingsState.appSettings.defaultExportFormat.toLowerCase()
+        : 'csv';
+    final includeUtf8Bom = settingsState.status == SettingsStatus.loaded
+        ? settingsState.appSettings.includeUtf8Bom
+        : true;
+    final openFolderAfterExport = settingsState.status == SettingsStatus.loaded
+        ? settingsState.appSettings.openFolderAfterExport
+        : true;
+
+    // Get GitService from context
+    final gitBloc = context.read<GitBloc>();
+
+    // 1. Ask user for directory
+    final exportPath = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: 'Select Export Folder',
+    );
+
+    if (exportPath == null) return;
+
+    // 2. Create timestamped folder with subfolders
+    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final exportDir = Directory('$exportPath/git_export_$timestamp');
+    final filesDir = Directory('${exportDir.path}/files');
+
+    try {
+      await exportDir.create(recursive: true);
+      await filesDir.create(recursive: true);
+    } catch (e) {
+      if (mounted) {
+        ToastService.showError(context, 'Failed to create export folder: $e');
+      }
+      return;
+    }
+
+    setState(() {
+      _isExporting = true;
+      _exportedCount = 0;
+      _totalToExport = widget.diffFiles.length;
+      _currentExportFile = null;
+    });
+
+    // Show progress dialog
+    if (mounted) {
+      _showExportProgressDialog();
+    }
+
+    try {
+      // Build enriched data
+      final now = DateTime.now();
+      final repoName = p.basename(widget.repoPath);
+
+      // Calculate totals
+      int totalAdditions = 0;
+      int totalDeletions = 0;
+      for (var file in widget.diffFiles) {
+        totalAdditions += file.additions;
+        totalDeletions += file.deletions;
+      }
+
+      // Export individual file diffs
+      for (int i = 0; i < widget.diffFiles.length; i++) {
+        final file = widget.diffFiles[i];
+        final fileName = p.basename(file.path);
+
+        setState(() {
+          _exportedCount = i;
+          _currentExportFile = fileName;
+        });
+        _refreshExportDialog();
+
+        try {
+          // Fetch base and target versions
+          final baseContent = await gitBloc.gitService.getFileContentAtBranch(
+            widget.repoPath,
+            widget.base,
+            file.path,
+          );
+          final targetContent = await gitBloc.gitService.getFileContentAtBranch(
+            widget.repoPath,
+            widget.target,
+            file.path,
+          );
+
+          // Create diff content
+          final diffContent = StringBuffer();
+          diffContent
+              .writeln('--- a/${file.path} (${_truncateRef(widget.base)})');
+          diffContent
+              .writeln('+++ b/${file.path} (${_truncateRef(widget.target)})');
+          diffContent.writeln('');
+          diffContent.writeln('Status: ${file.status.toUpperCase()}');
+          diffContent.writeln('Additions: +${file.additions}');
+          diffContent.writeln('Deletions: -${file.deletions}');
+          diffContent.writeln('');
+          diffContent.writeln('=' * 60);
+          diffContent.writeln('BASE VERSION (${_truncateRef(widget.base)}):');
+          diffContent.writeln('=' * 60);
+          diffContent.writeln(baseContent.isEmpty
+              ? '(File does not exist in base)'
+              : baseContent);
+          diffContent.writeln('');
+          diffContent.writeln('=' * 60);
+          diffContent
+              .writeln('TARGET VERSION (${_truncateRef(widget.target)}):');
+          diffContent.writeln('=' * 60);
+          diffContent.writeln(targetContent.isEmpty
+              ? '(File does not exist in target)'
+              : targetContent);
+
+          // Write to file - sanitize filename
+          final safeFileName =
+              file.path.replaceAll('/', '_').replaceAll('\\', '_');
+          final diffFile = File('${filesDir.path}/$safeFileName.diff');
+          await diffFile.writeAsString(diffContent.toString());
+        } catch (e) {
+          // Log error but continue with other files
+          debugPrint('Failed to export ${file.path}: $e');
+        }
+      }
+
+      // Write summary files
+      if (exportFormat == 'json') {
+        // JSON Export
+        final jsonData = {
+          'metadata': {
+            'repository': widget.repoPath,
+            'repositoryName': repoName,
+            'baseRef': widget.base,
+            'targetRef': widget.target,
+            'comparisonMode':
+                widget.mode == ComparisonMode.commit ? 'commit' : 'branch',
+            'exportedAt': now.toIso8601String(),
+            'totalFiles': widget.diffFiles.length,
+            'totalAdditions': totalAdditions,
+            'totalDeletions': totalDeletions,
+          },
+          'changes': widget.diffFiles
+              .map((file) => {
+                    'path': file.path,
+                    'status': file.status,
+                    'additions': file.additions,
+                    'deletions': file.deletions,
+                    'totalChanges': file.additions + file.deletions,
+                    'diffFile':
+                        'files/${file.path.replaceAll('/', '_').replaceAll('\\', '_')}.diff',
+                  })
+              .toList(),
+        };
+
+        final jsonString = const JsonEncoder.withIndent('  ').convert(jsonData);
+        final jsonFile = File('${exportDir.path}/_summary.json');
+        await jsonFile.writeAsString(jsonString);
+      } else {
+        // CSV Export
+        final csvData = <List<dynamic>>[
+          [
+            'File Path',
+            'Status',
+            'Additions',
+            'Deletions',
+            'Total Changes',
+            'Diff File'
+          ],
+        ];
+
+        for (var file in widget.diffFiles) {
+          final safeFileName =
+              file.path.replaceAll('/', '_').replaceAll('\\', '_');
+          csvData.add([
+            file.path,
+            file.status,
+            file.additions,
+            file.deletions,
+            file.additions + file.deletions,
+            'files/$safeFileName.diff',
+          ]);
+        }
+
+        // Add summary row
+        csvData.add([]);
+        csvData.add([
+          'TOTAL',
+          '',
+          totalAdditions,
+          totalDeletions,
+          totalAdditions + totalDeletions,
+          ''
+        ]);
+        csvData.add([]);
+        csvData.add(['Repository', repoName]);
+        csvData.add(['Base Ref', widget.base]);
+        csvData.add(['Target Ref', widget.target]);
+        csvData.add(['Exported At', now.toIso8601String()]);
+
+        final csvString = const ListToCsvConverter().convert(csvData);
+        final csvFile = File('${exportDir.path}/_summary.csv');
+        final prefix = includeUtf8Bom ? '\uFEFF' : '';
+        await csvFile.writeAsString('$prefix$csvString');
+      }
+
+      setState(() {
+        _exportedCount = widget.diffFiles.length;
+        _currentExportFile = null;
+      });
+      _refreshExportDialog();
+
+      // Close progress dialog and show success
+      if (mounted) {
+        _exportDialogSetState = null;
+        Navigator.of(context).pop();
+        _showExportCompleteDialog(
+            exportDir.path, widget.diffFiles.length, openFolderAfterExport);
+      }
+    } catch (e) {
+      if (mounted) {
+        _exportDialogSetState = null;
+        Navigator.of(context).pop();
+        ToastService.showError(context, 'Export failed: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+          _exportedCount = 0;
+          _totalToExport = 0;
+          _currentExportFile = null;
+        });
+      }
+    }
+  }
+
+  void _refreshExportDialog() {
+    _exportDialogSetState?.call(() {});
+  }
+
+  void _showExportProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            _exportDialogSetState = setDialogState;
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(LucideIcons.download, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  const Text('Exporting Files'),
+                ],
+              ),
+              content: SizedBox(
+                width: 400,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_currentExportFile != null)
+                      Text(
+                        'Processing: $_currentExportFile',
+                        style: theme.textTheme.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 16),
+                    LinearProgressIndicator(
+                      value: _totalToExport > 0
+                          ? _exportedCount / _totalToExport
+                          : null,
+                      backgroundColor: isDark
+                          ? AppThemeV2.darkBorder
+                          : AppThemeV2.lightBorder,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '$_exportedCount of $_totalToExport files exported',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showExportCompleteDialog(
+      String exportPath, int fileCount, bool showOpenFolder) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(LucideIcons.checkCircle, color: Colors.green.shade400),
+              const SizedBox(width: 12),
+              const Text('Export Complete'),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    'Successfully exported $fileCount files with full content.'),
+                const SizedBox(height: 8),
+                Text(
+                  'Each file\'s diff is saved in the "files" subfolder.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isDark
+                        ? AppThemeV2.darkTextMuted
+                        : AppThemeV2.lightTextMuted,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppThemeV2.darkSurface
+                        : AppThemeV2.lightSurface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark
+                          ? AppThemeV2.darkBorder
+                          : AppThemeV2.lightBorder,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.folder,
+                        size: 20,
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          exportPath,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(fontFamily: 'monospace'),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            if (showOpenFolder)
+              TextButton(
+                onPressed: () {
+                  // Use shell: true and proper Windows path format
+                  final windowsPath = exportPath.replaceAll('/', '\\');
+                  Process.run('explorer.exe', [windowsPath], runInShell: true);
+                  Navigator.of(dialogContext).pop();
+                },
+                child: const Text('Open Folder'),
+              ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showDiffDialog(BuildContext context, String filePath) {
     showDialog(
       context: context,
       builder: (context) => _GitFileDiffDialog(
-        repoPath: repoPath,
+        repoPath: widget.repoPath,
         filePath: filePath,
-        baseRef: base,
-        targetRef: target,
+        baseRef: widget.base,
+        targetRef: widget.target,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Calculate stats for display
+    int added = 0, modified = 0, deleted = 0;
+    for (var file in widget.diffFiles) {
+      switch (file.status) {
+        case 'added':
+          added++;
+          break;
+        case 'modified':
+          modified++;
+          break;
+        case 'deleted':
+          deleted++;
+          break;
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            IconButton(
-                onPressed: onBack, icon: const Icon(LucideIcons.arrowLeft)),
-            const Text('Comparison Results',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
+        // Header Row
         Padding(
-          padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-          child: Text(
-            "Comparing ${mode == ComparisonMode.commit ? 'Commit' : 'Branch'} "
-            "$base → $target",
-            style: Theme.of(context).textTheme.bodySmall,
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: widget.onBack,
+                icon: const Icon(LucideIcons.arrowLeft),
+                tooltip: 'Back to comparison controls',
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Comparison Results',
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "${widget.mode == ComparisonMode.commit ? 'Commit' : 'Branch'}: "
+                      "${_truncateRef(widget.base)} → ${_truncateRef(widget.target)}",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? AppThemeV2.darkTextMuted
+                            : AppThemeV2.lightTextMuted,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Stats and Actions Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? AppThemeV2.darkSurface : AppThemeV2.lightSurface,
+            border: Border(
+              top: BorderSide(
+                  color: isDark
+                      ? AppThemeV2.darkBorderSubtle
+                      : AppThemeV2.lightBorderSubtle),
+              bottom: BorderSide(
+                  color: isDark
+                      ? AppThemeV2.darkBorderSubtle
+                      : AppThemeV2.lightBorderSubtle),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Stats chips
+              _StatChip(
+                  icon: LucideIcons.plus,
+                  label: 'Added',
+                  count: added,
+                  color: Colors.green),
+              const SizedBox(width: 12),
+              _StatChip(
+                  icon: LucideIcons.pencil,
+                  label: 'Modified',
+                  count: modified,
+                  color: Colors.orange),
+              const SizedBox(width: 12),
+              _StatChip(
+                  icon: LucideIcons.minus,
+                  label: 'Deleted',
+                  count: deleted,
+                  color: Colors.red),
+              const Spacer(),
+              // Export Button
+              OutlinedButton.icon(
+                onPressed: _isExporting ? null : _exportResults,
+                icon: _isExporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(LucideIcons.download, size: 18),
+                label: Text(_isExporting ? 'Exporting...' : 'Export'),
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
         Expanded(
-          child: diffFiles.isEmpty
+          child: widget.diffFiles.isEmpty
               ? const Center(
-                  child: Text('No changes found between selected branches.'))
+                  child: Text('No changes found between selected refs.'))
               : ListView.builder(
-                  itemCount: diffFiles.length,
+                  itemCount: widget.diffFiles.length,
                   itemBuilder: (context, index) {
-                    final file = diffFiles[index];
+                    final file = widget.diffFiles[index];
                     final themeState = context.watch<ThemeBloc>().state;
                     final settingsState = context.watch<SettingsBloc>().state;
 
@@ -921,6 +1608,56 @@ class _ComparisonResultList extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+
+  String _truncateRef(String ref) {
+    // If it's a commit SHA (40 chars hex), truncate to 7
+    if (ref.length == 40 && RegExp(r'^[0-9a-fA-F]+$').hasMatch(ref)) {
+      return ref.substring(0, 7);
+    }
+    // Otherwise return as-is (branch name)
+    return ref;
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int count;
+  final Color color;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            '$count $label',
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

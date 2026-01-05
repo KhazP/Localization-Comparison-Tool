@@ -62,7 +62,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
   void _completeWizard() {
     // Advance to step 3 (Start of Phase 2 / Analysis)
     // We do NOT mark 'isOnboardingCompleted' as true yet, so that
-    // BasicComparisonView can show the Phase 2 tutorial (Filters, Search, Export).
+    // FileComparisonView can show the Phase 2 tutorial (Filters, Search, Export).
     context.read<SettingsBloc>().add(const UpdateOnboardingStep(3));
     widget.onCompleted?.call();
   }

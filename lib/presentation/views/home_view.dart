@@ -5,11 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
-import 'package:localizer_app_main/presentation/views/basic_comparison_view.dart';
-import 'package:localizer_app_main/presentation/views/files_view.dart';
+import 'package:localizer_app_main/presentation/views/file_comparison_view.dart';
+import 'package:localizer_app_main/presentation/views/directory_comparison_view.dart';
 import 'package:localizer_app_main/presentation/views/history_view.dart';
 import 'package:localizer_app_main/presentation/views/settings_view.dart';
-import 'package:localizer_app_main/presentation/views/git_view.dart';
+import 'package:localizer_app_main/presentation/views/git_comparison_view.dart';
 import 'package:localizer_app_main/presentation/views/quality_dashboard_view.dart';
 import 'package:localizer_app_main/presentation/views/projects_view.dart';
 import 'package:localizer_app_main/presentation/widgets/project/project_indicator.dart';
@@ -62,14 +62,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // Initialize pages once to avoid recreation on every tab switch
     _pages = <Widget>[
       const ProjectsView(),
-      BasicComparisonView(
+      FileComparisonView(
         onNavigateToTab: _onDestinationSelected,
         initialSession: widget.initialSession,
       ),
       HistoryView(onNavigateToTab: _onDestinationSelected),
       const QualityDashboardView(),
-      const FilesView(),
-      const GitView(),
+      const DirectoryComparisonView(),
+      const GitComparisonView(),
       const SettingsView(),
     ];
   }
@@ -222,9 +222,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     ),
                     _buildNavDestination(
                       index: 1,
-                      icon: LucideIcons.arrowLeftRight,
-                      selectedIcon: LucideIcons.arrowLeftRight,
-                      label: 'Compare',
+                      icon: LucideIcons.fileDiff,
+                      selectedIcon: LucideIcons.fileDiff,
+                      label: 'File',
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
@@ -243,16 +243,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     ),
                     _buildNavDestination(
                       index: 4,
-                      icon: LucideIcons.folderOpen,
-                      selectedIcon: LucideIcons.folderOpen,
-                      label: 'Files',
+                      icon: LucideIcons.folders,
+                      selectedIcon: LucideIcons.folders,
+                      label: 'Directory',
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
                       index: 5,
                       icon: LucideIcons.gitBranch,
                       selectedIcon: LucideIcons.gitBranch,
-                      label: 'Git',
+                      label: 'Repository',
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(

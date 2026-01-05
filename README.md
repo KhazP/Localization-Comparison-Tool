@@ -2,7 +2,7 @@
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.19%2B-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/Platform-Windows-blue?style=for-the-badge)](https://flutter.dev/desktop)
-[![License](https://img.shields.io/badge/License-GPLv3-red?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/KhazP/LocalizerAppMain?style=for-the-badge)](https://github.com/KhazP/LocalizerAppMain/stargazers)
 
 **A powerful, modern desktop application for comparing, analyzing, and managing localization files. Built with Flutter for native performance.**
@@ -127,7 +127,7 @@ Please read our [Contributing Guide](CONTRIBUTING.md) before getting started.
 
 ## 📜 License
 
-This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Mozilla Public License 2.0**. See the [LICENSE](LICENSE) file for details.
 
 ---
 

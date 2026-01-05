@@ -1127,11 +1127,8 @@ class _HistoryViewState extends State<HistoryView>
     final isDark = theme.brightness == Brightness.dark;
 
     return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(
+      avatar: icon != null
+          ? Icon(
               icon,
               size: 16,
               color: isSelected
@@ -1139,12 +1136,9 @@ class _HistoryViewState extends State<HistoryView>
                   : (isDark
                       ? AppThemeV2.darkTextSecondary
                       : AppThemeV2.lightTextSecondary),
-            ),
-            const SizedBox(width: 6),
-          ],
-          Text(label),
-        ],
-      ),
+            )
+          : null,
+      label: Text(label),
       selected: isSelected,
       onSelected: (bool selected) {
         if (selected) {
@@ -1154,7 +1148,7 @@ class _HistoryViewState extends State<HistoryView>
           });
         }
       },
-      showCheckmark: false,
+      showCheckmark: false, // We use the icon as the indicator or just color
       backgroundColor: Colors.transparent,
       selectedColor: theme.colorScheme.primary,
       labelStyle: TextStyle(

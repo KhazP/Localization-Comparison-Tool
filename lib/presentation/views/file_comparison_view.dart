@@ -47,21 +47,21 @@ import 'package:path/path.dart' as path;
 
 enum BasicDiffFilter { all, added, removed, modified, problems }
 
-class BasicComparisonView extends StatefulWidget {
+class FileComparisonView extends StatefulWidget {
   final Function(int)? onNavigateToTab;
   final ComparisonSession? initialSession;
 
-  const BasicComparisonView({
+  const FileComparisonView({
     super.key,
     this.onNavigateToTab,
     this.initialSession,
   });
 
   @override
-  State<BasicComparisonView> createState() => _BasicComparisonViewState();
+  State<FileComparisonView> createState() => _FileComparisonViewState();
 }
 
-class _BasicComparisonViewState extends State<BasicComparisonView> {
+class _FileComparisonViewState extends State<FileComparisonView> {
   // ... existing fields ...
   final QualityMetricsService _qualityMetricsService = QualityMetricsService();
   StreamSubscription<AppCommand>? _appCommandSubscription;
@@ -3447,6 +3447,18 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
   }
 
   void _loadRecentComparison(ComparisonSession session) {
+    // Handle non-file comparison types
+    if (session.type == ComparisonType.git) {
+      ToastService.showInfo(
+          context, 'Git comparisons should be opened from the Repository tab.');
+      return;
+    }
+    if (session.type == ComparisonType.directory) {
+      ToastService.showInfo(context,
+          'Directory comparisons should be opened from the Directory tab.');
+      return;
+    }
+
     final file1 = File(session.file1Path);
     final file2 = File(session.file2Path);
     final isBilingualSession = session.file1Path == session.file2Path;

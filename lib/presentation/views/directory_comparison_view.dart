@@ -20,14 +20,15 @@ import 'package:path/path.dart' as p;
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/app_command_service.dart';
 
-class FilesView extends StatefulWidget {
-  const FilesView({super.key});
+class DirectoryComparisonView extends StatefulWidget {
+  const DirectoryComparisonView({super.key});
 
   @override
-  State<FilesView> createState() => _FilesViewState();
+  State<DirectoryComparisonView> createState() =>
+      _DirectoryComparisonViewState();
 }
 
-class _FilesViewState extends State<FilesView>
+class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
     with SingleTickerProviderStateMixin {
   String? _sourceDirectory;
   String? _targetDirectory;

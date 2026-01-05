@@ -410,70 +410,6 @@ class UpdateFuzzyFillExactMatchesOnly extends SettingsEvent {
   List<Object> get props => [enabled];
 }
 
-// Version Control Events
-class UpdateDefaultGitRepositoryPath extends SettingsEvent {
-  final String path;
-  const UpdateDefaultGitRepositoryPath(this.path);
-  @override
-  List<Object> get props => [path];
-}
-
-class UpdateAutoCommitOnSave extends SettingsEvent {
-  final bool enabled;
-  const UpdateAutoCommitOnSave(this.enabled);
-  @override
-  List<Object> get props => [enabled];
-}
-
-class UpdateGitUserName extends SettingsEvent {
-  final String userName;
-  const UpdateGitUserName(this.userName);
-  @override
-  List<Object> get props => [userName];
-}
-
-class UpdateGitUserEmail extends SettingsEvent {
-  final String userEmail;
-  const UpdateGitUserEmail(this.userEmail);
-  @override
-  List<Object> get props => [userEmail];
-}
-
-class UpdateEnableGitIntegration extends SettingsEvent {
-  final bool enabled;
-  const UpdateEnableGitIntegration(this.enabled);
-  @override
-  List<Object> get props => [enabled];
-}
-
-class UpdateDefaultBranch extends SettingsEvent {
-  final String branch;
-  const UpdateDefaultBranch(this.branch);
-  @override
-  List<Object> get props => [branch];
-}
-
-class UpdateDefaultRemote extends SettingsEvent {
-  final String remote;
-  const UpdateDefaultRemote(this.remote);
-  @override
-  List<Object> get props => [remote];
-}
-
-class UpdateCommitMessageTemplate extends SettingsEvent {
-  final String template;
-  const UpdateCommitMessageTemplate(this.template);
-  @override
-  List<Object> get props => [template];
-}
-
-class UpdateSshKeyPath extends SettingsEvent {
-  final String path;
-  const UpdateSshKeyPath(this.path);
-  @override
-  List<Object> get props => [path];
-}
-
 class UpdateShowIdenticalEntries extends SettingsEvent {
   final bool show;
   const UpdateShowIdenticalEntries(this.show);
@@ -483,8 +419,6 @@ class UpdateShowIdenticalEntries extends SettingsEvent {
 
 // Reset events for new categories
 class ResetAiServicesSettings extends SettingsEvent {}
-
-class ResetVersionControlSettings extends SettingsEvent {}
 
 class ResetDiffColors extends SettingsEvent {}
 

@@ -775,12 +775,7 @@ class _SettingsViewState extends State<SettingsView>
           isDark: isDark,
           isAmoled: isAmoled,
         );
-      case SettingsCategory.versionControl:
-        return VersionControlSettingsCard(
-          settings: settings,
-          isDark: isDark,
-          isAmoled: isAmoled,
-        );
+
       case SettingsCategory.systemIntegrations:
         return SystemIntegrationsCard(
           settings: settings,
@@ -887,9 +882,7 @@ class _SettingsViewState extends State<SettingsView>
         case SettingsCategory.aiServices:
           context.read<SettingsBloc>().add(ResetAiServicesSettings());
           break;
-        case SettingsCategory.versionControl:
-          context.read<SettingsBloc>().add(ResetVersionControlSettings());
-          break;
+
         case SettingsCategory.systemIntegrations:
           // System integrations often toggle immediate settings (like registry keys)
           // rather than holding state in the bloc, or have their own specific resets.

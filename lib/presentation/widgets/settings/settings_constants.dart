@@ -8,7 +8,7 @@ enum SettingsCategory {
   appearance,
   fileHandling,
   aiServices,
-  versionControl,
+
   systemIntegrations,
   projectResources,
   developer,
@@ -186,12 +186,6 @@ class SettingsConstants {
       'Temperature',
       'Custom Prompt',
     ],
-    SettingsCategory.versionControl: [
-      'Default Branch',
-      'Auto Stage',
-      'Commit Template',
-      'SSH Key',
-    ],
     SettingsCategory.systemIntegrations: [
       'System Tray',
       'Start Minimized',
@@ -240,8 +234,7 @@ class SettingsConstants {
         return LucideIcons.folderOpen;
       case SettingsCategory.aiServices:
         return LucideIcons.sparkles;
-      case SettingsCategory.versionControl:
-        return LucideIcons.gitBranch;
+
       case SettingsCategory.systemIntegrations:
         return LucideIcons.monitor;
       case SettingsCategory.projectResources:
@@ -266,8 +259,7 @@ class SettingsConstants {
         return 'File Handling';
       case SettingsCategory.aiServices:
         return 'AI Services';
-      case SettingsCategory.versionControl:
-        return 'Version History';
+
       case SettingsCategory.systemIntegrations:
         return 'System Integrations';
       case SettingsCategory.projectResources:
@@ -292,8 +284,7 @@ class SettingsConstants {
         return 'File Handling';
       case SettingsCategory.aiServices:
         return 'AI Services';
-      case SettingsCategory.versionControl:
-        return 'Version History (Git)';
+
       case SettingsCategory.systemIntegrations:
         return 'System Integrations';
       case SettingsCategory.projectResources:

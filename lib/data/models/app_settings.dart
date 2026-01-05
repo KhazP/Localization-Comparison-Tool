@@ -125,34 +125,6 @@ class AppSettings extends HiveObject {
   @HiveField(64, defaultValue: false)
   bool fuzzyFillExactMatchesOnly;
 
-  // Version Control Settings
-  @HiveField(25, defaultValue: '')
-  String defaultGitRepositoryPath;
-
-  @HiveField(26, defaultValue: false)
-  bool autoCommitOnSave;
-
-  @HiveField(27, defaultValue: '')
-  String gitUserName;
-
-  @HiveField(28, defaultValue: '')
-  String gitUserEmail;
-
-  @HiveField(29, defaultValue: false)
-  bool enableGitIntegration;
-
-  @HiveField(65, defaultValue: 'main')
-  String defaultBranch;
-
-  @HiveField(66, defaultValue: 'origin')
-  String defaultRemote;
-
-  @HiveField(67, defaultValue: 'Update localization: {files}')
-  String commitMessageTemplate;
-
-  @HiveField(68, defaultValue: '')
-  String sshKeyPath;
-
   @HiveField(36, defaultValue: true)
   bool showIdenticalEntries;
 
@@ -342,15 +314,6 @@ class AppSettings extends HiveObject {
     required this.fuzzyFillOnlyEmptyTargets,
     required this.fuzzyFillMatchLimit,
     required this.fuzzyFillExactMatchesOnly,
-    required this.defaultGitRepositoryPath,
-    required this.autoCommitOnSave,
-    required this.gitUserName,
-    required this.gitUserEmail,
-    required this.enableGitIntegration,
-    required this.defaultBranch,
-    required this.defaultRemote,
-    required this.commitMessageTemplate,
-    required this.sshKeyPath,
     required this.showIdenticalEntries,
     required this.startMinimizedToTray,
     required this.openLastProjectOnStartup,
@@ -440,15 +403,7 @@ class AppSettings extends HiveObject {
       fuzzyFillOnlyEmptyTargets: true,
       fuzzyFillMatchLimit: 3,
       fuzzyFillExactMatchesOnly: false,
-      defaultGitRepositoryPath: '',
-      autoCommitOnSave: false,
-      gitUserName: '',
-      gitUserEmail: '',
-      enableGitIntegration: false,
-      defaultBranch: 'main',
-      defaultRemote: 'origin',
-      commitMessageTemplate: 'Update localization: {files}',
-      sshKeyPath: '',
+
       showIdenticalEntries: true,
       startMinimizedToTray: false,
       openLastProjectOnStartup: false,
@@ -653,23 +608,6 @@ class AppSettings extends HiveObject {
         'fuzzyFillExactMatchesOnly',
         defaults.fuzzyFillExactMatchesOnly,
       ),
-      defaultGitRepositoryPath: _readString(
-        'defaultGitRepositoryPath',
-        defaults.defaultGitRepositoryPath,
-      ),
-      autoCommitOnSave:
-          _readBool('autoCommitOnSave', defaults.autoCommitOnSave),
-      gitUserName: _readString('gitUserName', defaults.gitUserName),
-      gitUserEmail: _readString('gitUserEmail', defaults.gitUserEmail),
-      enableGitIntegration:
-          _readBool('enableGitIntegration', defaults.enableGitIntegration),
-      defaultBranch: _readString('defaultBranch', defaults.defaultBranch),
-      defaultRemote: _readString('defaultRemote', defaults.defaultRemote),
-      commitMessageTemplate: _readString(
-        'commitMessageTemplate',
-        defaults.commitMessageTemplate,
-      ),
-      sshKeyPath: _readString('sshKeyPath', defaults.sshKeyPath),
       showIdenticalEntries:
           _readBool('showIdenticalEntries', defaults.showIdenticalEntries),
       startMinimizedToTray:
@@ -815,15 +753,6 @@ class AppSettings extends HiveObject {
       'fuzzyFillOnlyEmptyTargets': fuzzyFillOnlyEmptyTargets,
       'fuzzyFillMatchLimit': fuzzyFillMatchLimit,
       'fuzzyFillExactMatchesOnly': fuzzyFillExactMatchesOnly,
-      'defaultGitRepositoryPath': defaultGitRepositoryPath,
-      'autoCommitOnSave': autoCommitOnSave,
-      'gitUserName': gitUserName,
-      'gitUserEmail': gitUserEmail,
-      'enableGitIntegration': enableGitIntegration,
-      'defaultBranch': defaultBranch,
-      'defaultRemote': defaultRemote,
-      'commitMessageTemplate': commitMessageTemplate,
-      'sshKeyPath': sshKeyPath,
       'showIdenticalEntries': showIdenticalEntries,
       'startMinimizedToTray': startMinimizedToTray,
       'openLastProjectOnStartup': openLastProjectOnStartup,
@@ -914,15 +843,6 @@ class AppSettings extends HiveObject {
     bool? fuzzyFillOnlyEmptyTargets,
     int? fuzzyFillMatchLimit,
     bool? fuzzyFillExactMatchesOnly,
-    String? defaultGitRepositoryPath,
-    bool? autoCommitOnSave,
-    String? gitUserName,
-    String? gitUserEmail,
-    bool? enableGitIntegration,
-    String? defaultBranch,
-    String? defaultRemote,
-    String? commitMessageTemplate,
-    String? sshKeyPath,
     bool? showIdenticalEntries,
     bool? startMinimizedToTray,
     bool? openLastProjectOnStartup,
@@ -1015,17 +935,6 @@ class AppSettings extends HiveObject {
       fuzzyFillMatchLimit: fuzzyFillMatchLimit ?? this.fuzzyFillMatchLimit,
       fuzzyFillExactMatchesOnly:
           fuzzyFillExactMatchesOnly ?? this.fuzzyFillExactMatchesOnly,
-      defaultGitRepositoryPath:
-          defaultGitRepositoryPath ?? this.defaultGitRepositoryPath,
-      autoCommitOnSave: autoCommitOnSave ?? this.autoCommitOnSave,
-      gitUserName: gitUserName ?? this.gitUserName,
-      gitUserEmail: gitUserEmail ?? this.gitUserEmail,
-      enableGitIntegration: enableGitIntegration ?? this.enableGitIntegration,
-      defaultBranch: defaultBranch ?? this.defaultBranch,
-      defaultRemote: defaultRemote ?? this.defaultRemote,
-      commitMessageTemplate:
-          commitMessageTemplate ?? this.commitMessageTemplate,
-      sshKeyPath: sshKeyPath ?? this.sshKeyPath,
       showIdenticalEntries: showIdenticalEntries ?? this.showIdenticalEntries,
       startMinimizedToTray: startMinimizedToTray ?? this.startMinimizedToTray,
       openLastProjectOnStartup:

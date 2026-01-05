@@ -11,7 +11,7 @@ export 'comparison_settings_card.dart';
 export 'appearance_settings_card.dart';
 export 'file_handling_settings_card.dart';
 export 'ai_services_settings_card.dart';
-export 'version_control_settings_card.dart';
+
 export 'system_integrations_card.dart';
 export 'developer_settings_card.dart';
 export 'about_settings_card.dart';

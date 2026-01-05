@@ -88,20 +88,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateFuzzyFillOnlyEmptyTargets>(_onUpdateFuzzyFillOnlyEmptyTargets);
     on<UpdateFuzzyFillMatchLimit>(_onUpdateFuzzyFillMatchLimit);
     on<UpdateFuzzyFillExactMatchesOnly>(_onUpdateFuzzyFillExactMatchesOnly);
-    // Version Control Events
-    on<UpdateDefaultGitRepositoryPath>(_onUpdateDefaultGitRepositoryPath);
-    on<UpdateAutoCommitOnSave>(_onUpdateAutoCommitOnSave);
-    on<UpdateGitUserName>(_onUpdateGitUserName);
-    on<UpdateGitUserEmail>(_onUpdateGitUserEmail);
-    on<UpdateEnableGitIntegration>(_onUpdateEnableGitIntegration);
-    on<UpdateDefaultBranch>(_onUpdateDefaultBranch);
-    on<UpdateDefaultRemote>(_onUpdateDefaultRemote);
-    on<UpdateCommitMessageTemplate>(_onUpdateCommitMessageTemplate);
-    on<UpdateSshKeyPath>(_onUpdateSshKeyPath);
     on<UpdateShowIdenticalEntries>(_onUpdateShowIdenticalEntries);
     // Reset events for new categories
     on<ResetAiServicesSettings>(_onResetAiServicesSettings);
-    on<ResetVersionControlSettings>(_onResetVersionControlSettings);
     // Startup Options Events
     on<UpdateStartMinimizedToTray>(_onUpdateStartMinimizedToTray);
     on<UpdateOpenLastProjectOnStartup>(_onUpdateOpenLastProjectOnStartup);
@@ -844,75 +833,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(state.copyWith(appSettings: newSettings));
   }
 
-  // Version Control Event Handlers
-  Future<void> _onUpdateDefaultGitRepositoryPath(
-      UpdateDefaultGitRepositoryPath event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(defaultGitRepositoryPath: event.path);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateAutoCommitOnSave(
-      UpdateAutoCommitOnSave event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(autoCommitOnSave: event.enabled);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateGitUserName(
-      UpdateGitUserName event, Emitter<SettingsState> emit) async {
-    final newSettings = state.appSettings.copyWith(gitUserName: event.userName);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateGitUserEmail(
-      UpdateGitUserEmail event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(gitUserEmail: event.userEmail);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateEnableGitIntegration(
-      UpdateEnableGitIntegration event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(enableGitIntegration: event.enabled);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateDefaultBranch(
-      UpdateDefaultBranch event, Emitter<SettingsState> emit) async {
-    final newSettings = state.appSettings.copyWith(defaultBranch: event.branch);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateDefaultRemote(
-      UpdateDefaultRemote event, Emitter<SettingsState> emit) async {
-    final newSettings = state.appSettings.copyWith(defaultRemote: event.remote);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateCommitMessageTemplate(
-      UpdateCommitMessageTemplate event, Emitter<SettingsState> emit) async {
-    final newSettings =
-        state.appSettings.copyWith(commitMessageTemplate: event.template);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
-  Future<void> _onUpdateSshKeyPath(
-      UpdateSshKeyPath event, Emitter<SettingsState> emit) async {
-    final newSettings = state.appSettings.copyWith(sshKeyPath: event.path);
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
-  }
-
   Future<void> _onUpdateShowIdenticalEntries(
       UpdateShowIdenticalEntries event, Emitter<SettingsState> emit) async {
     final newSettings =
@@ -945,22 +865,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       appSettings: newSettings,
       apiKeyTests: _initialApiKeyTests(),
     ));
-  }
-
-  Future<void> _onResetVersionControlSettings(
-      ResetVersionControlSettings event, Emitter<SettingsState> emit) async {
-    final defaultSettings = AppSettings.defaultSettings();
-    final newSettings = state.appSettings.copyWith(
-      defaultGitRepositoryPath: defaultSettings.defaultGitRepositoryPath,
-      autoCommitOnSave: defaultSettings.autoCommitOnSave,
-      gitUserName: defaultSettings.gitUserName,
-      gitUserEmail: defaultSettings.gitUserEmail,
-      enableGitIntegration: defaultSettings.enableGitIntegration,
-      defaultBranch: defaultSettings.defaultBranch,
-      defaultRemote: defaultSettings.defaultRemote,
-    );
-    await _saveSettingsToRepository(newSettings);
-    emit(state.copyWith(appSettings: newSettings));
   }
 
   // Startup Options Event Handlers

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
@@ -11,14 +12,27 @@ abstract class HistoryRepository {
   Future<void> deleteSession(String sessionId);
   Future<void> clearHistory();
   Future<void> close(); // Close the Hive box
+  Stream<void> get onHistoryChanged;
 }
 
 class LocalHistoryRepository implements HistoryRepository {
   Box<ComparisonSession>? _historyBox;
+  final _controller = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> get onHistoryChanged => _controller.stream;
 
   @override
   Future<void> init() async {
     if (_historyBox == null || !_historyBox!.isOpen) {
+      // Register adapters if not already registered
+      if (!Hive.isAdapterRegistered(0)) {
+        Hive.registerAdapter(ComparisonSessionAdapter());
+      }
+      if (!Hive.isAdapterRegistered(1)) {
+        Hive.registerAdapter(ComparisonTypeAdapter());
+      }
+
       try {
         _historyBox = await Hive.openBox<ComparisonSession>(_historyBoxName);
         debugPrint('Comparison history Hive box opened.');
@@ -41,6 +55,7 @@ class LocalHistoryRepository implements HistoryRepository {
   Future<void> addComparisonToHistory(ComparisonSession session) async {
     final box = await _getBox();
     await box.put(session.id, session); // Using session.id as the key
+    _controller.add(null);
     debugPrint('Comparison session added to Hive: ${session.id}');
   }
 
@@ -58,6 +73,7 @@ class LocalHistoryRepository implements HistoryRepository {
   Future<void> deleteSession(String sessionId) async {
     final box = await _getBox();
     await box.delete(sessionId);
+    _controller.add(null);
     debugPrint('Deleted session from Hive: $sessionId');
   }
 
@@ -65,6 +81,7 @@ class LocalHistoryRepository implements HistoryRepository {
   Future<void> clearHistory() async {
     final box = await _getBox();
     await box.clear();
+    _controller.add(null);
     debugPrint('Comparison history Hive box cleared.');
   }
 
@@ -72,6 +89,7 @@ class LocalHistoryRepository implements HistoryRepository {
   Future<void> close() async {
     if (_historyBox != null && _historyBox!.isOpen) {
       await _historyBox!.close();
+      await _controller.close();
       debugPrint('Comparison history Hive box closed.');
     }
   }

@@ -123,12 +123,16 @@ class MyApp extends StatelessWidget {
             ),
           ),
           BlocProvider<GitBloc>(
-            create: (context) => GitBloc(gitService: gitService),
+            create: (context) => GitBloc(
+              gitService: gitService,
+              historyRepository: historyRepository,
+            ),
           ),
           BlocProvider<DirectoryComparisonBloc>(
             create: (context) => DirectoryComparisonBloc(
               fileDiscoveryService: fileDiscoveryService,
               comparisonEngine: comparisonEngine,
+              historyRepository: historyRepository,
             ),
           ),
           BlocProvider<FileWatcherBloc>(

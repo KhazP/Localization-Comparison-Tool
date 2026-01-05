@@ -235,6 +235,23 @@ class _FilesViewState extends State<FilesView>
 
             const SizedBox(height: 24),
 
+            // Sync local state with BLoC state
+            BlocListener<DirectoryComparisonBloc, DirectoryComparisonState>(
+              listener: (context, state) {
+                if (state is DirectoryComparisonSuccess) {
+                  // If directories changed externally (e.g. from History), update local inputs
+                  if (state.sourceDirectory != _sourceDirectory ||
+                      state.targetDirectory != _targetDirectory) {
+                    setState(() {
+                      _sourceDirectory = state.sourceDirectory;
+                      _targetDirectory = state.targetDirectory;
+                    });
+                  }
+                }
+              },
+              child: const SizedBox.shrink(),
+            ),
+
             // Action Buttons
             BlocBuilder<DirectoryComparisonBloc, DirectoryComparisonState>(
               builder: (context, state) {

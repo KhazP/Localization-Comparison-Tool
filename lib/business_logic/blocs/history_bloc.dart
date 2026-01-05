@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
@@ -43,8 +45,14 @@ class HistoryState with _$HistoryState {
 class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
   final HistoryRepository historyRepository;
   ComparisonSession? _lastDeletedSession;
+  late StreamSubscription _historySubscription;
 
-  HistoryBloc({required this.historyRepository}) : super(HistoryInitial()) {
+  HistoryBloc({required this.historyRepository})
+      : super(const HistoryInitial()) {
+    _historySubscription = historyRepository.onHistoryChanged.listen((_) {
+      add(LoadHistory());
+    });
+
     on<LoadHistory>(_onLoadHistory);
     on<AddToHistory>(_onAddToHistory);
     on<DeleteHistoryItem>(_onDeleteHistoryItem);
@@ -52,6 +60,12 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
 
     on<UndoDeleteHistoryItem>(_onUndoDeleteHistoryItem);
     on<ImportHistory>(_onImportHistory);
+  }
+
+  @override
+  Future<void> close() {
+    _historySubscription.cancel();
+    return super.close();
   }
 
   Future<void> _onLoadHistory(

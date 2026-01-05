@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -14,9 +16,11 @@ import 'package:localizer_app_main/presentation/widgets/common/skeleton_loader.d
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'dart:io';
-import 'package:fl_chart/fl_chart.dart';
+
 import 'package:get_it/get_it.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+
+enum HistoryFilterType { all, file, directory, git }
 
 class HistoryView extends StatefulWidget {
   final Function(int) onNavigateToTab;
@@ -30,6 +34,7 @@ class HistoryView extends StatefulWidget {
 class _HistoryViewState extends State<HistoryView>
     with SingleTickerProviderStateMixin {
   final TextEditingController _filterController = TextEditingController();
+  HistoryFilterType _selectedFilter = HistoryFilterType.all;
   List<ComparisonSession> _allHistory = [];
   List<ComparisonSession> _filteredHistory = [];
   final Map<String, bool> _expandedStates = {};
@@ -102,6 +107,14 @@ class _HistoryViewState extends State<HistoryView>
           return session.projectId == currentProjectId;
         }
 
+        // Type filter
+        if (_selectedFilter == HistoryFilterType.file &&
+            session.type != ComparisonType.file) return false;
+        if (_selectedFilter == HistoryFilterType.directory &&
+            session.type != ComparisonType.directory) return false;
+        if (_selectedFilter == HistoryFilterType.git &&
+            session.type != ComparisonType.git) return false;
+
         return true;
       }).toList();
       _applySort();
@@ -140,8 +153,42 @@ class _HistoryViewState extends State<HistoryView>
   }
 
   void _onViewDetails(ComparisonSession session) {
-    widget.onNavigateToTab(1); // Navigate to Compare tab (index 1)
     final settingsState = context.read<SettingsBloc>().state;
+
+    // Directory Comparison
+    if (session.type == ComparisonType.directory) {
+      widget.onNavigateToTab(4); // Navigate to Files tab
+      context.read<DirectoryComparisonBloc>().add(
+          CompareDirectoriesRequested(session.file1Path, session.file2Path));
+      return;
+    }
+
+    // Git Comparison
+    if (session.type == ComparisonType.git) {
+      widget.onNavigateToTab(5); // Navigate to Git tab
+      // Assuming gitRepoPath is stored in file1Path (or explicit field if I added one?)
+      // I added explicit fields: gitRepoPath, gitBranch1, gitBranch2, etc.
+      if (session.gitRepoPath != null) {
+        context.read<GitBloc>().add(SelectRepository(session.gitRepoPath!));
+
+        // Wait minor delay or assume state builds up?
+        // BLoC queues events.
+
+        if (session.gitBranch1 != null && session.gitBranch2 != null) {
+          context
+              .read<GitBloc>()
+              .add(CompareBranches(session.gitBranch1!, session.gitBranch2!));
+        } else if (session.gitCommit1 != null && session.gitCommit2 != null) {
+          context
+              .read<GitBloc>()
+              .add(CompareCommits(session.gitCommit1!, session.gitCommit2!));
+        }
+      }
+      return;
+    }
+
+    // Default: File Comparison
+    widget.onNavigateToTab(1); // Basic Comparison
     if (settingsState.status == SettingsStatus.loaded) {
       final isBilingualSession = session.file1Path == session.file2Path;
       if (isBilingualSession) {
@@ -387,6 +434,26 @@ class _HistoryViewState extends State<HistoryView>
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 20),
+
+              // Filter Chips Row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip('All', HistoryFilterType.all),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Files', HistoryFilterType.file,
+                        icon: LucideIcons.arrowRightLeft),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Directories', HistoryFilterType.directory,
+                        icon: LucideIcons.folder),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Git', HistoryFilterType.git,
+                        icon: LucideIcons.gitBranch),
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -1052,6 +1119,63 @@ class _HistoryViewState extends State<HistoryView>
       context.read<HistoryBloc>().add(ClearHistory());
     }
   }
+
+  Widget _buildFilterChip(String label, HistoryFilterType type,
+      {IconData? icon}) {
+    final isSelected = _selectedFilter == type;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return FilterChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : (isDark
+                      ? AppThemeV2.darkTextSecondary
+                      : AppThemeV2.lightTextSecondary),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Text(label),
+        ],
+      ),
+      selected: isSelected,
+      onSelected: (bool selected) {
+        if (selected) {
+          setState(() {
+            _selectedFilter = type;
+            _filterHistory();
+          });
+        }
+      },
+      showCheckmark: false,
+      backgroundColor: Colors.transparent,
+      selectedColor: theme.colorScheme.primary,
+      labelStyle: TextStyle(
+        color: isSelected
+            ? theme.colorScheme.onPrimary
+            : (isDark
+                ? AppThemeV2.darkTextSecondary
+                : AppThemeV2.lightTextSecondary),
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected
+              ? Colors.transparent
+              : (isDark ? AppThemeV2.darkBorder : AppThemeV2.lightBorder),
+        ),
+      ),
+    );
+  }
 }
 
 class _HistoryCard extends StatefulWidget {
@@ -1085,13 +1209,56 @@ class _HistoryCardState extends State<_HistoryCard> {
         DateFormat('MMM dd, yyyy • HH:mm').format(session.timestamp);
 
     // simple filename extraction
-    final file1Name = session.file1Path.split(Platform.pathSeparator).last;
-    final file2Name = session.file2Path.split(Platform.pathSeparator).last;
     final isBilingualSession = session.file1Path == session.file2Path;
+
+    // Customize display based on type
+    String name1, name2;
+    IconData typeIcon;
+    String typeLabel;
+
+    switch (session.type) {
+      case ComparisonType.directory:
+        name1 = session.file1Path.split(Platform.pathSeparator).last;
+        name2 = session.file2Path.split(Platform.pathSeparator).last;
+        typeIcon = LucideIcons.folderInput;
+        typeLabel = 'Directory';
+        break;
+      case ComparisonType.git:
+        // Use repo name if possible or path
+        name1 =
+            session.gitRepoPath?.split(Platform.pathSeparator).last ?? 'Repo';
+        name2 = ''; // Unused in main title for Git
+        typeIcon = LucideIcons.gitBranch;
+        typeLabel = 'Git';
+        break;
+      case ComparisonType.file:
+      default:
+        name1 = session.file1Path.split(Platform.pathSeparator).last;
+        name2 = session.file2Path.split(Platform.pathSeparator).last;
+        typeIcon = isBilingualSession
+            ? LucideIcons.languages
+            : LucideIcons.arrowRightLeft;
+        typeLabel = isBilingualSession ? 'Bilingual' : 'File Pair';
+        break;
+    }
+
+    final file1Name = name1;
+    final file2Name = name2;
+
     final fileTypeLabel = _buildFileTypeLabel(
       session.file1Path,
       session.file2Path,
     );
+    // For Git, branches info
+    String? gitContext;
+    if (session.type == ComparisonType.git) {
+      if (session.gitBranch1 != null) {
+        gitContext = '${session.gitBranch1} ↔ ${session.gitBranch2}';
+      } else if (session.gitCommit1 != null) {
+        gitContext =
+            '${session.gitCommit1?.substring(0, 7)} ↔ ${session.gitCommit2?.substring(0, 7)}';
+      }
+    }
 
     final themeState = context.watch<ThemeBloc>().state;
 
@@ -1182,40 +1349,68 @@ class _HistoryCardState extends State<_HistoryCard> {
                         // Header row
                         Row(
                           children: [
-                            // 1. Pie Chart
-                            _buildStatsChart(
-                                session.stringsAdded,
-                                session.stringsRemoved,
-                                session.stringsModified,
-                                themeState),
+                            // 1. Type Icon & Status
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: (session.type == ComparisonType.git
+                                        ? Colors.orange
+                                        : (session.type ==
+                                                ComparisonType.directory
+                                            ? Colors.purple
+                                            : Colors.blue))
+                                    .withAlpha(25),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: (session.type == ComparisonType.git
+                                          ? Colors.orange
+                                          : (session.type ==
+                                                  ComparisonType.directory
+                                              ? Colors.purple
+                                              : Colors.blue))
+                                      .withAlpha(50),
+                                ),
+                              ),
+                              child: Icon(
+                                typeIcon,
+                                size: 24,
+                                color: (session.type == ComparisonType.git
+                                    ? Colors.orange
+                                    : (session.type == ComparisonType.directory
+                                        ? Colors.purple
+                                        : Colors.blue)),
+                              ),
+                            ),
                             const SizedBox(width: 16),
 
                             // 2. Info Column (File Names + Date)
                             Expanded(
-                              // ... no changes here ...
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // File Names
+                                  // Primary Title (Repo / Dir / File)
                                   Row(
                                     children: [
                                       Flexible(
                                         child: Text(
-                                          file1Name,
+                                          name1, // Cleaned up name
                                           style: theme.textTheme.titleMedium
                                               ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      if (!isBilingualSession) ...[
+                                      // If it's a file comparison (and not bilingual), show arrow and second file
+                                      if (session.type == ComparisonType.file &&
+                                          !isBilingualSession) ...[
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8),
                                           child: Icon(
-                                            LucideIcons.arrowRightLeft,
+                                            LucideIcons.arrowRight,
                                             size: 16,
                                             color: isDark
                                                 ? AppThemeV2.darkTextMuted
@@ -1224,11 +1419,11 @@ class _HistoryCardState extends State<_HistoryCard> {
                                         ),
                                         Flexible(
                                           child: Text(
-                                            file2Name,
+                                            name2,
                                             style: theme.textTheme.titleMedium
                                                 ?.copyWith(
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 15,
+                                              fontSize: 16,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -1237,17 +1432,51 @@ class _HistoryCardState extends State<_HistoryCard> {
                                     ],
                                   ),
                                   const SizedBox(height: 4),
-                                  // Date & Context
+
+                                  // Subtitles (Branches, Paths, etc)
+                                  if (session.type == ComparisonType.git &&
+                                      gitContext != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                        children: [
+                                          Icon(LucideIcons.gitBranch,
+                                              size: 14,
+                                              color:
+                                                  theme.colorScheme.secondary),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            gitContext,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color:
+                                                  theme.colorScheme.secondary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  else if (session.type ==
+                                      ComparisonType.directory)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Text(
+                                        '${session.file1Path} ↔ ${session.file2Path}',
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: isDark
+                                              ? AppThemeV2.darkTextMuted
+                                              : AppThemeV2.lightTextMuted,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+
+                                  // Meta Row: Date & Chips
                                   Row(
                                     children: [
-                                      Icon(
-                                        LucideIcons.clock,
-                                        size: 12,
-                                        color: isDark
-                                            ? AppThemeV2.darkTextMuted
-                                            : AppThemeV2.lightTextMuted,
-                                      ),
-                                      const SizedBox(width: 4),
                                       Text(
                                         formattedDate,
                                         style:
@@ -1257,27 +1486,62 @@ class _HistoryCardState extends State<_HistoryCard> {
                                               : AppThemeV2.lightTextMuted,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Wrap(
-                                    spacing: 6,
-                                    runSpacing: 6,
-                                    children: [
-                                      _InfoChip(
-                                        label: isBilingualSession
-                                            ? 'Bilingual'
-                                            : 'Two files',
-                                        icon: isBilingualSession
-                                            ? LucideIcons.languages
-                                            : LucideIcons.arrowRightLeft,
-                                        color: theme.colorScheme.primary,
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        width: 4,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? AppThemeV2.darkTextMuted
+                                              : AppThemeV2.lightTextMuted,
+                                          shape: BoxShape.circle,
+                                        ),
                                       ),
-                                      if (fileTypeLabel != null)
-                                        _InfoChip(
-                                          label: fileTypeLabel,
-                                          icon: LucideIcons.fileText,
-                                          color: theme.colorScheme.secondary,
+                                      const SizedBox(width: 8),
+                                      // Quick stats text instead of pie chart
+                                      if (totalStrings > 0)
+                                        Text.rich(
+                                          TextSpan(children: [
+                                            if (session.stringsAdded > 0)
+                                              TextSpan(
+                                                  text:
+                                                      '+${session.stringsAdded} ',
+                                                  style: TextStyle(
+                                                      color: themeState
+                                                          .diffAddedColor,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                            if (session.stringsRemoved > 0)
+                                              TextSpan(
+                                                  text:
+                                                      '-${session.stringsRemoved} ',
+                                                  style: TextStyle(
+                                                      color: themeState
+                                                          .diffRemovedColor,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                            if (session.stringsModified > 0)
+                                              TextSpan(
+                                                  text:
+                                                      '~${session.stringsModified}',
+                                                  style: TextStyle(
+                                                      color: themeState
+                                                          .diffModifiedColor,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                          ]),
+                                          style: theme.textTheme.bodySmall,
+                                        )
+                                      else
+                                        Text(
+                                          'No changes',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            fontStyle: FontStyle.italic,
+                                            color: isDark
+                                                ? AppThemeV2.darkTextMuted
+                                                : AppThemeV2.lightTextMuted,
+                                          ),
                                         ),
                                     ],
                                   ),
@@ -1285,40 +1549,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                               ),
                             ),
 
-                            // 3. Right Side: Specific Stat Pills + Expand
-                            if (!widget.isExpanded) ...[
-                              const SizedBox(width: 12),
-                              if (session.stringsAdded > 0)
-                                _StatPill(
-                                  count: session.stringsAdded,
-                                  color: themeState.diffAddedColor,
-                                  icon: LucideIcons.plus,
-                                ),
-                              if (session.stringsRemoved > 0)
-                                _StatPill(
-                                  count: session.stringsRemoved,
-                                  color: themeState.diffRemovedColor,
-                                  icon: LucideIcons.minus,
-                                ),
-                              if (session.stringsModified > 0)
-                                _StatPill(
-                                  count: session.stringsModified,
-                                  color: themeState.diffModifiedColor,
-                                  icon: LucideIcons.pencil,
-                                ),
-                              if (session.stringsAdded == 0 &&
-                                  session.stringsRemoved == 0 &&
-                                  session.stringsModified == 0)
-                                Text(
-                                  'No changes',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: isDark
-                                        ? AppThemeV2.darkTextMuted
-                                        : AppThemeV2.lightTextMuted,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                            ],
+                            // 3. Action Icon (Chevron)
                             const SizedBox(width: 8),
                             AnimatedRotation(
                               turns: widget.isExpanded ? 0.5 : 0,
@@ -1342,7 +1573,15 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   ? AppThemeV2.darkBorder
                                   : AppThemeV2.lightBorder),
                           const SizedBox(height: 16),
-                          if (isBilingualSession)
+                          if (session.type == ComparisonType.git)
+                            _FilePathRow(
+                              label: 'Repository',
+                              path: session.gitRepoPath ?? session.file1Path,
+                              icon: LucideIcons.gitBranch,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                          else if (isBilingualSession &&
+                              session.type == ComparisonType.file)
                             _FilePathRow(
                               label: 'Bilingual file',
                               path: session.file1Path,
@@ -1351,14 +1590,18 @@ class _HistoryCardState extends State<_HistoryCard> {
                             )
                           else ...[
                             _FilePathRow(
-                              label: 'Source',
+                              label: session.type == ComparisonType.directory
+                                  ? 'Source Dir'
+                                  : 'Source',
                               path: session.file1Path,
                               icon: LucideIcons.fileInput,
                               color: Theme.of(context).colorScheme.primary,
                             ),
                             const SizedBox(height: 8),
                             _FilePathRow(
-                              label: 'Target',
+                              label: session.type == ComparisonType.directory
+                                  ? 'Target Dir'
+                                  : 'Target',
                               path: session.file2Path,
                               icon: LucideIcons.arrowRightLeft,
                               color: Theme.of(context).colorScheme.secondary,
@@ -1463,68 +1706,6 @@ class _HistoryCardState extends State<_HistoryCard> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsChart(
-      int added, int removed, int modified, AppThemeState themeState) {
-    final total = added + removed + modified;
-    // Show a gray ring if no changes, instead of empty space
-    if (total == 0) {
-      return SizedBox(
-        width: 40,
-        height: 40,
-        child: PieChart(
-          PieChartData(
-            sections: [
-              PieChartSectionData(
-                value: 1,
-                color: Colors.grey.withValues(alpha: 0.2),
-                radius: 6,
-                showTitle: false,
-              ),
-            ],
-            sectionsSpace: 0,
-            centerSpaceRadius: 10,
-            startDegreeOffset: 270,
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      width: 40,
-      height: 40,
-      child: PieChart(
-        PieChartData(
-          sections: [
-            if (added > 0)
-              PieChartSectionData(
-                value: added.toDouble(),
-                color: themeState.diffAddedColor,
-                radius: 6,
-                showTitle: false,
-              ),
-            if (removed > 0)
-              PieChartSectionData(
-                value: removed.toDouble(),
-                color: themeState.diffRemovedColor,
-                radius: 6,
-                showTitle: false,
-              ),
-            if (modified > 0)
-              PieChartSectionData(
-                value: modified.toDouble(),
-                color: themeState.diffModifiedColor,
-                radius: 6,
-                showTitle: false,
-              ),
-          ],
-          sectionsSpace: 2,
-          centerSpaceRadius: 10,
-          startDegreeOffset: 270,
         ),
       ),
     );

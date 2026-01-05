@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
+import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/data/repositories/history_repository.dart';
+import 'package:uuid/uuid.dart';
 
 part 'git_bloc.freezed.dart';
 
@@ -150,8 +153,10 @@ class GitState with _$GitState {
 }
 
 // BLoC
+// BLoC
 class GitBloc extends Bloc<GitEvent, GitState> {
   final GitService gitService;
+  final HistoryRepository _historyRepository;
   String? _currentRepoPath;
 
   // Internal cache to persist state during mode switches if needed
@@ -159,7 +164,10 @@ class GitBloc extends Bloc<GitEvent, GitState> {
   List<GitCommit> _cachedCommits = [];
   ComparisonMode _currentMode = ComparisonMode.branch;
 
-  GitBloc({required this.gitService}) : super(GitInitial()) {
+  GitBloc(
+      {required this.gitService, required HistoryRepository historyRepository})
+      : _historyRepository = historyRepository,
+        super(const GitInitial()) {
     on<SelectRepository>(_onSelectRepository);
     on<LoadBranches>(_onLoadBranches);
     on<SwitchComparisonMode>(_onSwitchComparisonMode);
@@ -268,6 +276,33 @@ class GitBloc extends Bloc<GitEvent, GitState> {
       emit(GitComparisonResult(
           _currentRepoPath!, diffFiles, event.baseBranch, event.targetBranch,
           mode: ComparisonMode.branch));
+
+      // Save to history
+      try {
+        final totalChanges =
+            diffFiles.length; // Approximate, assuming file count
+        // Can refine stats if GitDiffFile has more info
+
+        final session = ComparisonSession(
+          id: const Uuid().v4(),
+          timestamp: DateTime.now(),
+          file1Path: _currentRepoPath!,
+          file2Path: _currentRepoPath!,
+          stringsAdded:
+              0, // Git diff usually lines, not easily mapped to strings w/o parsing
+          stringsRemoved: 0,
+          stringsModified: 0,
+          stringsIdentical: 0,
+          type: ComparisonType.git,
+          gitRepoPath: _currentRepoPath!,
+          gitBranch1: event.baseBranch,
+          gitBranch2: event.targetBranch,
+          fileCount: totalChanges,
+        );
+        await _historyRepository.addComparisonToHistory(session);
+      } catch (e) {
+        debugPrint('Failed to save git history: $e');
+      }
     } catch (e) {
       emit(GitError('Failed to compare branches: ${e.toString()}',
           repoPath: _currentRepoPath));
@@ -284,6 +319,30 @@ class GitBloc extends Bloc<GitEvent, GitState> {
       emit(GitComparisonResult(
           _currentRepoPath!, diffFiles, event.baseSha, event.targetSha,
           mode: ComparisonMode.commit));
+
+      // Save to history
+      try {
+        final totalChanges = diffFiles.length;
+
+        final session = ComparisonSession(
+          id: const Uuid().v4(),
+          timestamp: DateTime.now(),
+          file1Path: _currentRepoPath!,
+          file2Path: _currentRepoPath!,
+          stringsAdded: 0,
+          stringsRemoved: 0,
+          stringsModified: 0,
+          stringsIdentical: 0,
+          type: ComparisonType.git,
+          gitRepoPath: _currentRepoPath!,
+          gitCommit1: event.baseSha,
+          gitCommit2: event.targetSha,
+          fileCount: totalChanges,
+        );
+        await _historyRepository.addComparisonToHistory(session);
+      } catch (e) {
+        debugPrint('Failed to save git history: $e');
+      }
     } catch (e) {
       emit(GitError('Failed to compare commits: ${e.toString()}',
           repoPath: _currentRepoPath));

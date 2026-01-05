@@ -743,15 +743,20 @@ class _FilesViewState extends State<FilesView>
           ),
           const Spacer(),
           _StatChip(
-              label: 'A', count: totalAdded, color: themeState.diffAddedColor),
+              icon: LucideIcons.plus,
+              tooltip: 'Added',
+              count: totalAdded,
+              color: themeState.diffAddedColor),
           const SizedBox(width: 8),
           _StatChip(
-              label: 'R',
+              icon: LucideIcons.trash2,
+              tooltip: 'Removed',
               count: totalRemoved,
               color: themeState.diffRemovedColor),
           const SizedBox(width: 8),
           _StatChip(
-              label: 'M',
+              icon: LucideIcons.pencil,
+              tooltip: 'Modified',
               count: totalModified,
               color: themeState.diffModifiedColor),
         ],
@@ -856,17 +861,20 @@ class _FilesViewState extends State<FilesView>
                 ),
                 if (result != null) ...[
                   _StatChip(
-                      label: 'A',
+                      icon: LucideIcons.plus,
+                      tooltip: 'Added',
                       count: added,
                       color: themeState.diffAddedColor),
                   const SizedBox(width: 4),
                   _StatChip(
-                      label: 'R',
+                      icon: LucideIcons.trash2,
+                      tooltip: 'Removed',
                       count: removed,
                       color: themeState.diffRemovedColor),
                   const SizedBox(width: 4),
                   _StatChip(
-                      label: 'M',
+                      icon: LucideIcons.pencil,
+                      tooltip: 'Modified',
                       count: modified,
                       color: themeState.diffModifiedColor),
                   const SizedBox(width: 8),
@@ -1440,30 +1448,42 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _StatChip extends StatelessWidget {
-  final String label;
+  final IconData icon;
+  final String tooltip;
   final int count;
   final Color color;
 
   const _StatChip({
-    required this.label,
+    required this.icon,
+    required this.tooltip,
     required this.count,
     required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        '$label: $count',
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+    return Tooltip(
+      message: '$tooltip: $count',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+            Text(
+              '$count',
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

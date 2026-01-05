@@ -9,6 +9,7 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 
 import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -762,42 +763,207 @@ class _ComparisonResultList extends StatelessWidget {
                   itemCount: diffFiles.length,
                   itemBuilder: (context, index) {
                     final file = diffFiles[index];
-                    Color statusColor;
-                    IconData statusIcon;
-
                     final themeState = context.watch<ThemeBloc>().state;
+                    final settingsState = context.watch<SettingsBloc>().state;
+
+                    final isDark =
+                        Theme.of(context).brightness == Brightness.dark;
+                    final isAmoled = isDark &&
+                        settingsState.status == SettingsStatus.loaded &&
+                        settingsState.appSettings.appThemeMode.toLowerCase() ==
+                            'amoled';
+
+                    Color statusColor;
+                    String statusLabel;
 
                     switch (file.status) {
                       case 'added':
                         statusColor = themeState.diffAddedColor;
-                        statusIcon = LucideIcons.plusCircle;
+                        statusLabel = 'Added';
                         break;
                       case 'deleted':
                         statusColor = themeState.diffRemovedColor;
-                        statusIcon = LucideIcons.minusCircle;
+                        statusLabel = 'Removed';
                         break;
                       case 'modified':
                         statusColor = themeState.diffModifiedColor;
-                        statusIcon = LucideIcons.pencil;
+                        statusLabel = 'Modified';
+                        break;
+                      case 'renamed':
+                        statusColor = Colors.blue;
+                        statusLabel = 'Renamed';
                         break;
                       default:
                         statusColor = Colors.grey;
-                        statusIcon = LucideIcons.helpCircle;
+                        statusLabel = file.status;
                     }
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      child: ListTile(
-                        leading: Icon(statusIcon, color: statusColor),
-                        title: Text(file.path),
-                        subtitle: Text('Status: ${file.status}'),
+                    return Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isAmoled
+                            ? AppThemeV2.amoledSurface
+                            : (isDark
+                                ? AppThemeV2.darkSurface
+                                : AppThemeV2.lightSurface),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isAmoled
+                              ? AppThemeV2.amoledBorderSubtle
+                              : (isDark
+                                  ? AppThemeV2.darkBorderSubtle
+                                  : AppThemeV2.lightBorderSubtle),
+                        ),
+                      ),
+                      child: InkWell(
                         onTap: () => _showDiffDialog(context, file.path),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              // Colored Status Strip
+                              Container(
+                                width: 4,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+
+                              // Path Info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      file.path,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                    Text(
+                                      statusLabel,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: statusColor,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Stats
+                              if (file.additions > 0) ...[
+                                _GitStatChip(
+                                  icon: LucideIcons.plus,
+                                  count: file.additions,
+                                  color: themeState.diffAddedColor,
+                                  tooltip: 'Lines Added',
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+
+                              if (file.deletions > 0) ...[
+                                _GitStatChip(
+                                  icon: LucideIcons.trash2,
+                                  count: file.deletions,
+                                  color: themeState.diffRemovedColor,
+                                  tooltip: 'Lines Removed',
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+
+                              // Modified indicator if we don't have line stats but it is modified?
+                              // Actually, modified files always have adds/dels ideally.
+                              // But if 0/0 and modified (e.g. rename or permission), show icon?
+                              if (file.additions == 0 &&
+                                  file.deletions == 0 &&
+                                  file.status == 'modified')
+                                _GitStatChip(
+                                  icon: LucideIcons.pencil,
+                                  count: 0,
+                                  color: themeState.diffModifiedColor,
+                                  tooltip: 'Modified',
+                                ),
+
+                              if (file.additions == 0 &&
+                                  file.deletions == 0 &&
+                                  file.status == 'modified')
+                                const SizedBox(width: 8),
+
+                              // View Button
+                              TextButton.icon(
+                                onPressed: () =>
+                                    _showDiffDialog(context, file.path),
+                                icon: const Icon(LucideIcons.eye, size: 16),
+                                label: const Text('View'),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     );
                   },
                 ),
         ),
       ],
+    );
+  }
+}
+
+class _GitStatChip extends StatelessWidget {
+  final IconData icon;
+  final int count;
+  final Color color;
+  final String tooltip;
+
+  const _GitStatChip({
+    required this.icon,
+    required this.count,
+    required this.color,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+            Text(
+              '$count',
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -837,6 +1003,12 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   final ScrollController _baseScrollController = ScrollController();
   final ScrollController _targetScrollController = ScrollController();
   bool _isSyncingScroll = false;
+
+  // Filter states
+  bool _showAdded = true;
+  bool _showRemoved = true;
+  bool _showModified =
+      true; // Show modified by default for Git view as it is line-based
 
   @override
   void initState() {
@@ -957,7 +1129,105 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final themeBloc = context.read<ThemeBloc>();
+    final themeState = context.watch<ThemeBloc>().state;
+
+    // Process content for diff
+    final baseLinesRaw = (_baseContent ?? '').split('\n');
+    final targetLinesRaw = (_targetContent ?? '').split('\n');
+    final maxLines = baseLinesRaw.length > targetLinesRaw.length
+        ? baseLinesRaw.length
+        : targetLinesRaw.length;
+
+    final sourceLines = <_DiffLine>[];
+    final targetLines = <_DiffLine>[];
+
+    int addedCount = 0;
+    int removedCount = 0;
+    int modifiedCount = 0;
+
+    // First pass to count stats and build raw lines
+    for (int i = 0; i < maxLines; i++) {
+      final baseLine = i < baseLinesRaw.length ? baseLinesRaw[i] : null;
+      final targetLine = i < targetLinesRaw.length ? targetLinesRaw[i] : null;
+
+      _LineStatus status = _LineStatus.unchanged;
+
+      if (baseLine != targetLine) {
+        if (baseLine == null && targetLine != null) {
+          status = _LineStatus.added;
+          addedCount++;
+        } else if (baseLine != null && targetLine == null) {
+          status = _LineStatus.removed;
+          removedCount++;
+        } else {
+          status = _LineStatus.modified;
+          modifiedCount++;
+        }
+      }
+
+      // Apply filters
+      bool show = false;
+      switch (status) {
+        case _LineStatus.added:
+          show = _showAdded;
+          break;
+        case _LineStatus.removed:
+          show = _showRemoved;
+          break;
+        case _LineStatus.modified:
+          show = _showModified;
+          break;
+        case _LineStatus.unchanged:
+          show =
+              true; // Always show unchanged for context in Git view? Or maybe filter?
+          // For now, let's keep unchanged typically visible, but maybe not if focusing on diffs.
+          // Actually, Git diffs usually show context.
+          break;
+        default:
+          break;
+      }
+
+      // Slight deviation from ComparisonDialog: Git view is context-heavy.
+      // If we strictly hide "Unchanged", it becomes unreadable code.
+      // But for consistency with the other dialog, we'll keep the badging/filtering visual.
+      // Let's assume we show everything but use filters to 'highlight' or 'jump'?
+      // Wait, the user asked for *filtering* behavior.
+      // In the other dialog, we hide the rows.
+      // In code diff, hiding unchanged rows makes it a patch view.
+      // Let's apply valid filtering.
+
+      if (!show &&
+          status != _LineStatus.unchanged &&
+          status != _LineStatus.empty) {
+        // If it's a change status that is filtered OUT, we skip it?
+        // It's safer to just build the list and then render?
+        continue;
+      }
+
+      sourceLines.add(_DiffLine(
+        lineNumber: i + 1,
+        content: baseLine ?? '',
+        status: status == _LineStatus.added
+            ? _LineStatus.empty
+            : (status == _LineStatus.removed
+                ? _LineStatus.removed
+                : (status == _LineStatus.modified
+                    ? _LineStatus.modified
+                    : _LineStatus.unchanged)),
+      ));
+
+      targetLines.add(_DiffLine(
+        lineNumber: i + 1,
+        content: targetLine ?? '',
+        status: status == _LineStatus.removed
+            ? _LineStatus.empty
+            : (status == _LineStatus.added
+                ? _LineStatus.added
+                : (status == _LineStatus.modified
+                    ? _LineStatus.modified
+                    : _LineStatus.unchanged)),
+      ));
+    }
 
     return Dialog(
       insetPadding: const EdgeInsets.all(24),
@@ -976,12 +1246,56 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Diff Viewer', style: theme.textTheme.titleLarge),
-                      const SizedBox(height: 4),
-                      Text(
-                          '${widget.baseRef.substring(0, 7)} (Base)  →  ${widget.targetRef.substring(0, 7)} (Target)',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.6))),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          // Branch Info
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(4)),
+                            child: Text(
+                                '${widget.baseRef.substring(0, 7)} (Base)  →  ${widget.targetRef.substring(0, 7)} (Target)',
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(fontFamily: 'monospace')),
+                          ),
+                          const SizedBox(width: 16),
+
+                          // Filters
+                          _FilterBadge(
+                            icon: LucideIcons.plus,
+                            count: addedCount,
+                            color: themeState.diffAddedColor,
+                            label: 'Added',
+                            isActive: _showAdded,
+                            onTap: () =>
+                                setState(() => _showAdded = !_showAdded),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterBadge(
+                            icon: LucideIcons.trash2,
+                            count: removedCount,
+                            color: themeState.diffRemovedColor,
+                            label: 'Removed',
+                            isActive: _showRemoved,
+                            onTap: () =>
+                                setState(() => _showRemoved = !_showRemoved),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterBadge(
+                            icon: LucideIcons.pencil,
+                            count: modifiedCount,
+                            color: themeState.diffModifiedColor,
+                            label: 'Modified',
+                            isActive: _showModified,
+                            onTap: () =>
+                                setState(() => _showModified = !_showModified),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   IconButton(
@@ -1005,8 +1319,8 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                             children: [
                               _buildFileSelectorButton(context, isBase: true),
                               Expanded(
-                                  child: _buildDiffPane(_baseContent ?? '',
-                                      true, themeBloc, _baseScrollController)),
+                                  child: _buildDiffPane(sourceLines, true,
+                                      themeState, _baseScrollController)),
                             ],
                           ),
                         ),
@@ -1017,11 +1331,8 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                             children: [
                               _buildFileSelectorButton(context, isBase: false),
                               Expanded(
-                                  child: _buildDiffPane(
-                                      _targetContent ?? '',
-                                      false,
-                                      themeBloc,
-                                      _targetScrollController)),
+                                  child: _buildDiffPane(targetLines, false,
+                                      themeState, _targetScrollController)),
                             ],
                           ),
                         ),
@@ -1085,9 +1396,11 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
     );
   }
 
-  Widget _buildDiffPane(String content, bool isBase, ThemeBloc themeBloc,
-      ScrollController scrollController) {
-    final otherContent = isBase ? (_targetContent ?? '') : (_baseContent ?? '');
+  Widget _buildDiffPane(List<_DiffLine> lines, bool isBase,
+      AppThemeState themeState, ScrollController scrollController) {
+    if (lines.isEmpty) {
+      return const Center(child: Text("No lines to display"));
+    }
 
     // Get font settings
     final settingsState = context.watch<SettingsBloc>().state;
@@ -1101,47 +1414,10 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
       } catch (_) {}
     }
 
-    if (content.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.insert_drive_file_outlined,
-                size: 48, color: Colors.grey.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            Text(
-              isBase
-                  ? 'File does not exist in Base version'
-                  : 'File does not exist in Target version',
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Split content into lines
-    final lines = content.split('\n');
-    final otherLines = otherContent.split('\n');
-
-    // Get theme colors
-    final addedColor = themeBloc.state.diffAddedColor;
-    final removedColor = themeBloc.state.diffRemovedColor;
-    final addedBgColor = addedColor.withValues(alpha: 0.25);
-    final removedBgColor = removedColor.withValues(alpha: 0.25);
-
-    // Build a set of changed line indices for accurate highlighting
-    final Set<int> changedLines = {};
-    final maxLines =
-        lines.length > otherLines.length ? lines.length : otherLines.length;
-
-    for (int i = 0; i < maxLines; i++) {
-      final thisLine = i < lines.length ? lines[i] : '';
-      final otherLine = i < otherLines.length ? otherLines[i] : '';
-      if (thisLine != otherLine) {
-        changedLines.add(i);
-      }
-    }
+    // Colors
+    final addedColor = themeState.diffAddedColor;
+    final removedColor = themeState.diffRemovedColor;
+    final modifiedColor = themeState.diffModifiedColor;
 
     return Row(
       children: [
@@ -1153,11 +1429,26 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
             itemCount: lines.length,
             itemBuilder: (context, index) {
               final line = lines[index];
-
-              // Only highlight if this line is in the changed set
               Color? bgColor;
-              if (changedLines.contains(index)) {
-                bgColor = isBase ? removedBgColor : addedBgColor;
+              switch (line.status) {
+                case _LineStatus.added:
+                  bgColor = addedColor.withValues(alpha: 0.25);
+                  break;
+                case _LineStatus.removed:
+                  bgColor = removedColor.withValues(alpha: 0.25);
+                  break;
+                case _LineStatus.modified:
+                  bgColor = modifiedColor.withValues(alpha: 0.25);
+                  break;
+                case _LineStatus.empty:
+                  bgColor = Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest
+                      .withValues(alpha: 0.3);
+                  break;
+                case _LineStatus.unchanged:
+                  bgColor = null;
+                  break;
               }
 
               return Container(
@@ -1169,7 +1460,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                     SizedBox(
                       width: 40,
                       child: Text(
-                        '${index + 1}',
+                        '${line.lineNumber}',
                         style: TextStyle(
                           fontFamily: fontFamily,
                           fontSize: fontSize,
@@ -1182,9 +1473,19 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                     ),
                     Expanded(
                       child: SelectableText(
-                        line.isEmpty ? ' ' : line,
+                        line.content.isEmpty ? ' ' : line.content,
                         style: TextStyle(
-                            fontFamily: fontFamily, fontSize: fontSize),
+                            fontFamily: fontFamily,
+                            fontSize: fontSize,
+                            fontStyle: line.status == _LineStatus.empty
+                                ? FontStyle.italic
+                                : null,
+                            color: line.status == _LineStatus.empty
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.3)
+                                : null),
                       ),
                     ),
                   ],
@@ -1193,7 +1494,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
             },
           ),
         ),
-        // Minimap / Overview Bar
+        // Minimap / Overview Bar (Reused Logic)
         Container(
           width: 12,
           margin: const EdgeInsets.symmetric(vertical: 4),
@@ -1207,9 +1508,11 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
               return CustomPaint(
                 size: Size(12, totalHeight),
                 painter: _MinimapPainter(
-                  changedLines: changedLines,
+                  lines: lines,
                   totalLines: totalLines,
-                  color: isBase ? removedColor : addedColor,
+                  addedColor: addedColor,
+                  removedColor: removedColor,
+                  modifiedColor: modifiedColor,
                 ),
               );
             },
@@ -1220,33 +1523,143 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   }
 }
 
+// Reusing helper classes to ensure consistency
+enum _LineStatus {
+  unchanged,
+  added,
+  removed,
+  modified,
+  empty,
+}
+
+class _DiffLine {
+  final int lineNumber;
+  final String content;
+  final _LineStatus status;
+
+  _DiffLine({
+    required this.lineNumber,
+    required this.content,
+    required this.status,
+  });
+}
+
+class _FilterBadge extends StatelessWidget {
+  final IconData icon;
+  final int count;
+  final Color color;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _FilterBadge({
+    required this.icon,
+    required this.count,
+    required this.color,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final activeColor = color;
+    final inactiveColor = isDark
+        ? AppThemeV2.darkTextMuted.withValues(alpha: 0.5)
+        : AppThemeV2.lightTextMuted.withValues(alpha: 0.5);
+
+    final displayColor = isActive ? activeColor : inactiveColor;
+
+    return Tooltip(
+      message:
+          '$label: $count${isActive ? ' (click to hide)' : ' (click to show)'}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: displayColor.withValues(alpha: isActive ? 0.2 : 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: displayColor.withValues(alpha: isActive ? 0.5 : 0.2),
+                width: isActive ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 14, color: displayColor),
+                const SizedBox(width: 6),
+                Text(
+                  '$count',
+                  style: TextStyle(
+                    color: displayColor,
+                    fontSize: 12,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Custom painter for the minimap/overview bar
 class _MinimapPainter extends CustomPainter {
-  final Set<int> changedLines;
+  final List<_DiffLine> lines;
   final int totalLines;
-  final Color color;
+  final Color addedColor;
+  final Color removedColor;
+  final Color modifiedColor;
 
   _MinimapPainter({
-    required this.changedLines,
+    required this.lines,
     required this.totalLines,
-    required this.color,
+    required this.addedColor,
+    required this.removedColor,
+    required this.modifiedColor,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     if (totalLines == 0) return;
 
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
     final lineHeight = size.height / totalLines;
-    final minHeight = 2.0; // Minimum height for visibility
+    const minHeight = 2.0;
 
-    for (final lineIndex in changedLines) {
-      if (lineIndex >= totalLines) continue;
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      Color? color;
 
-      final y = (lineIndex / totalLines) * size.height;
+      switch (line.status) {
+        case _LineStatus.added:
+          color = addedColor;
+          break;
+        case _LineStatus.removed:
+          color = removedColor;
+          break;
+        case _LineStatus.modified:
+          color = modifiedColor;
+          break;
+        default:
+          continue;
+      }
+
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+
+      final y = (i / totalLines) * size.height;
       final h = lineHeight < minHeight ? minHeight : lineHeight;
 
       canvas.drawRect(
@@ -1258,9 +1671,7 @@ class _MinimapPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _MinimapPainter oldDelegate) {
-    return changedLines != oldDelegate.changedLines ||
-        totalLines != oldDelegate.totalLines ||
-        color != oldDelegate.color;
+    return lines != oldDelegate.lines || totalLines != oldDelegate.totalLines;
   }
 }
 

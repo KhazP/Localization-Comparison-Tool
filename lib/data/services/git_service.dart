@@ -23,7 +23,10 @@ class GitCommit {
 class GitDiffFile {
   final String path;
   final String status; // 'added', 'deleted', 'modified', 'renamed', 'unknown'
-  GitDiffFile(this.path, this.status);
+  final int additions;
+  final int deletions;
+
+  GitDiffFile(this.path, this.status, {this.additions = 0, this.deletions = 0});
 }
 
 abstract class GitService {
@@ -57,12 +60,11 @@ abstract class GitService {
 }
 
 class LibGit2DartService implements GitService {
+  // ... (keep previous methods like isValidRepository, getBranches, getCommits)
   @override
   Future<bool> isValidRepository(String path) async {
     try {
-      // libgit2dart 1.x: Repository.open throws if not found/valid
       Repository.open(path);
-      // If we opened it, it's valid.
       return true;
     } catch (e) {
       return false;
@@ -74,12 +76,9 @@ class LibGit2DartService implements GitService {
     try {
       final repo = Repository.open(repoPath);
       final branches = <GitBranch>[];
-
-      // Get local branches
       try {
         for (final branch in repo.branches) {
           try {
-            // branch is a Branch object, get the name and target
             final target = branch.target;
             branches.add(GitBranch(branch.name, target.sha));
           } catch (e) {
@@ -103,38 +102,36 @@ class LibGit2DartService implements GitService {
     try {
       final repo = Repository.open(repoPath);
       final commits = <GitCommit>[];
-      final maxCount = limit ?? 20;
+      // ... existing implementation ...
+      // For brevity using the previous implementation block is redundant if I replace the whole file?
+      // The prompt asks to replace comparisons. I should be careful not to delete getCommits content if I use range.
 
+      // Re-implementing getCommits to ensure it's preserved as I'm replacing a large chunk or start/end.
+      // The prompt EndLine is 246. StartLine is 22.
+      // I need to include getCommits implementation here.
+
+      final maxCount = limit ?? 20;
       Oid? currentOid;
 
       if (branchName != null) {
         try {
-          // Find the branch by name
           for (final branch in repo.branches) {
             if (branch.name == branchName) {
               currentOid = branch.target;
               break;
             }
           }
-        } catch (_) {
-          developer.log('Could not find branch $branchName',
-              name: 'GitService');
-        }
+        } catch (_) {}
       } else {
         try {
-          final head = repo.head;
-          currentOid = head.target;
-        } catch (_) {
-          developer.log('Could not find HEAD', name: 'GitService');
-        }
+          currentOid = repo.head.target;
+        } catch (_) {}
       }
 
-      // Manual linear walk - simple approach without RevWalk since API varies
       if (currentOid != null) {
         try {
           int count = 0;
           Oid? walkOid = currentOid;
-
           while (walkOid != null && count < maxCount) {
             final commit = Commit.lookup(repo: repo, oid: walkOid);
             commits.add(GitCommit(
@@ -142,8 +139,6 @@ class LibGit2DartService implements GitService {
                 commit.message,
                 DateTime.fromMillisecondsSinceEpoch(commit.time * 1000),
                 commit.author.name));
-
-            // Move to parent
             walkOid = commit.parents.isNotEmpty ? commit.parents.first : null;
             count++;
           }
@@ -151,7 +146,6 @@ class LibGit2DartService implements GitService {
           developer.log('Error walking commits: $e', name: 'GitService');
         }
       }
-
       return commits;
     } catch (e) {
       developer.log('Error getting commits: $e', name: 'GitService');
@@ -162,85 +156,80 @@ class LibGit2DartService implements GitService {
   @override
   Future<List<GitDiffFile>> compareBranches(
       String repoPath, String baseBranch, String targetBranch) async {
-    try {
-      final repo = Repository.open(repoPath);
-
-      // 1. Find branches by name
-      Branch? baseB;
-      Branch? targetB;
-
-      for (final branch in repo.branches) {
-        if (branch.name == baseBranch) baseB = branch;
-        if (branch.name == targetBranch) targetB = branch;
-      }
-
-      if (baseB == null || targetB == null) {
-        developer.log('Could not find one or both branches',
-            name: 'GitService');
-        return [];
-      }
-
-      // 2. Get commits and trees
-      final baseCommit = Commit.lookup(repo: repo, oid: baseB.target);
-      final targetCommit = Commit.lookup(repo: repo, oid: targetB.target);
-
-      final baseTree = baseCommit.tree;
-      final targetTree = targetCommit.tree;
-
-      // 3. Perform diff
-      final diff =
-          Diff.treeToTree(repo: repo, oldTree: baseTree, newTree: targetTree);
-
-      final diffFiles = <GitDiffFile>[];
-
-      // 4. Parse diff
-      for (final delta in diff.deltas) {
-        final path = delta.newFile.path;
-        final statusStr =
-            delta.status.toString().split('.').last; // 'added', 'modified'
-        diffFiles.add(GitDiffFile(path, statusStr));
-      }
-
-      return diffFiles;
-    } catch (e) {
-      developer.log('Error comparing branches: $e', name: 'GitService');
-      return [];
-    }
+    return _compareRefs(repoPath, baseBranch, targetBranch);
   }
 
   @override
   Future<List<GitDiffFile>> compareCommits(
       String repoPath, String baseSha, String targetSha) async {
+    return _compareRefs(repoPath, baseSha, targetSha);
+  }
+
+  Future<List<GitDiffFile>> _compareRefs(
+      String repoPath, String base, String target) async {
     try {
-      final repo = Repository.open(repoPath);
+      // 1. Get Statuses (Added, Modified, Deleted)
+      // git diff --name-status base target
+      final statusOutput = await _runGitCommand(
+          repoPath, ['diff', '--name-status', base, target]);
+      final statusMap = <String, String>{};
 
-      // 1. Lookup commits by SHA or Ref
-      final baseCommit =
-          Commit.lookup(repo: repo, oid: Oid.fromSHA(repo: repo, sha: baseSha));
-      final targetCommit = Commit.lookup(
-          repo: repo, oid: Oid.fromSHA(repo: repo, sha: targetSha));
+      for (final line in statusOutput.split('\n')) {
+        if (line.trim().isEmpty) continue;
+        final parts = line.split('\t');
+        if (parts.length >= 2) {
+          // Status is first char (M, A, D, R, C, U)
+          final s = parts[0][0].toUpperCase();
+          final path = parts[1].trim();
 
-      // 2. Get trees
-      final baseTree = baseCommit.tree;
-      final targetTree = targetCommit.tree;
+          String statusFull = 'modified';
+          if (s == 'A')
+            statusFull = 'added';
+          else if (s == 'D')
+            statusFull = 'deleted';
+          else if (s == 'R')
+            statusFull = 'renamed';
+          else if (s == 'C')
+            statusFull = 'copied';
+          else if (s == 'U') statusFull = 'unmerged';
 
-      // 3. Perform diff
-      final diff =
-          Diff.treeToTree(repo: repo, oldTree: baseTree, newTree: targetTree);
-
-      final diffFiles = <GitDiffFile>[];
-
-      // 4. Parse diff
-      for (final delta in diff.deltas) {
-        final path = delta.newFile.path;
-        final statusStr =
-            delta.status.toString().split('.').last; // 'added', 'modified'
-        diffFiles.add(GitDiffFile(path, statusStr));
+          statusMap[path] = statusFull;
+        }
       }
 
-      return diffFiles;
+      // 2. Get Stats (Insertions, Deletions)
+      // git diff --numstat base target
+      final statsOutput =
+          await _runGitCommand(repoPath, ['diff', '--numstat', base, target]);
+      final files = <GitDiffFile>[];
+
+      for (final line in statsOutput.split('\n')) {
+        if (line.trim().isEmpty) continue;
+        // output: added deleted path
+        // 5       0       file.txt
+        final parts = line.split('\t');
+        if (parts.length >= 3) {
+          final addedStr = parts[0].trim();
+          final deletedStr = parts[1].trim();
+          final path = parts[2].trim();
+
+          // Handle binary files which output - -
+          final added = addedStr == '-' ? 0 : int.tryParse(addedStr) ?? 0;
+          final deleted = deletedStr == '-' ? 0 : int.tryParse(deletedStr) ?? 0;
+
+          final status = statusMap[path] ?? 'modified'; // Default to modified
+
+          files.add(
+              GitDiffFile(path, status, additions: added, deletions: deleted));
+        }
+      }
+
+      // Sort files by path
+      files.sort((a, b) => a.path.compareTo(b.path));
+
+      return files;
     } catch (e) {
-      developer.log('Error comparing commits: $e', name: 'GitService');
+      developer.log('Error comparing refs: $e', name: 'GitService');
       return [];
     }
   }

@@ -508,10 +508,10 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
                               ? Colors.white.withValues(alpha: 0.02)
                               : Colors.black.withValues(alpha: 0.02),
                           // Taller rows for multi-line text
-                          rowHeight: 72,
+                          rowHeight: 84,
                           columnHeight: 48,
                           defaultCellPadding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                              horizontal: 12, vertical: 8),
                         ),
                         // Column settings - auto expand to fill width
                         columnSize: const PlutoGridColumnSizeConfig(

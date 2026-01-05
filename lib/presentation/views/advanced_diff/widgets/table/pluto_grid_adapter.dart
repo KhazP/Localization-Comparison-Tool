@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
+import 'package:localizer_app_main/core/utils/diff_utils.dart';
 
 /// Converts comparison diff data to PlutoGrid format.
 class PlutoGridAdapter {
@@ -28,8 +29,8 @@ class PlutoGridAdapter {
         title: '#',
         field: 'index',
         type: PlutoColumnType.number(),
-        width: 80, // Increased to fit checkbox + number
-        minWidth: 60,
+        width: 100, // Increased to fit checkbox + number + padding
+        minWidth: 80,
         frozen: PlutoColumnFrozen.start,
         readOnly: true,
         enableSorting:
@@ -44,8 +45,8 @@ class PlutoGridAdapter {
         title: 'STATUS',
         field: 'status',
         type: PlutoColumnType.text(),
-        width: 90,
-        minWidth: 80,
+        width: 130, // Increased further to fix persistent overflow
+        minWidth: 90,
         frozen: PlutoColumnFrozen.start,
         readOnly: true,
         enableSorting: true,
@@ -123,22 +124,35 @@ class PlutoGridAdapter {
         readOnly: true,
         enableSorting: false,
         renderer: (rendererContext) {
-          final text = rendererContext.cell.value?.toString() ?? '';
-          return Tooltip(
-            message: text,
-            waitDuration: const Duration(milliseconds: 500),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontFamily: 'RobotoMono',
-                  color: theme.textTheme.bodyMedium?.color,
+          final sourceText = rendererContext.cell.value?.toString() ?? '';
+          final targetText =
+              rendererContext.row.cells['target']?.value?.toString() ?? '';
+
+          // Visual distinction: Source has a very subtle cool grey tint
+          return Container(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.grey.withValues(alpha: 0.05),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            alignment: Alignment.topLeft,
+            child: Tooltip(
+              message: sourceText,
+              waitDuration: const Duration(milliseconds: 500),
+              child: RichText(
+                text: TextSpan(
+                  children: DiffUtils.getDiffSpans(
+                    text1: sourceText,
+                    text2: targetText,
+                    baseStyle: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'RobotoMono',
+                      color: theme.textTheme.bodyMedium?.color,
+                    ),
+                    mode: DiffRenderMode.sourceOnly,
+                  ),
                 ),
                 overflow: TextOverflow.ellipsis,
-                maxLines: 3,
+                maxLines: 4,
               ),
             ),
           );
@@ -161,36 +175,48 @@ class PlutoGridAdapter {
             useInlineEditing, // Enable editing mode only for inline
         renderer: (rendererContext) {
           final text = rendererContext.cell.value?.toString() ?? '';
+          final sourceText =
+              rendererContext.row.cells['source']?.value?.toString() ?? '';
           final isModified =
               rendererContext.row.cells['_isModified']?.value == true;
           final rowKey = rendererContext.row.cells['key']?.value as String?;
 
+          // Visual distinction: Target has a white/card background to pop against source
+          // Use slight tint if using inline editing to look like an input field
           Widget content = Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            alignment: Alignment.topLeft,
             decoration: BoxDecoration(
               color: isModified
-                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                  : null,
+                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                  : theme.cardColor,
               border: isModified
                   ? Border(
                       left: BorderSide(
                           color: theme.colorScheme.primary, width: 3))
                   : null,
             ),
-            child: Text(
-              text.isEmpty ? '(empty)' : text,
-              style: TextStyle(
-                fontSize: 12,
-                fontFamily: 'RobotoMono',
-                color: text.isEmpty
-                    ? theme.disabledColor
-                    : theme.textTheme.bodyMedium?.color,
-                fontWeight: isModified ? FontWeight.w500 : FontWeight.normal,
-                fontStyle: text.isEmpty ? FontStyle.italic : FontStyle.normal,
+            child: RichText(
+              text: TextSpan(
+                children: DiffUtils.getDiffSpans(
+                  text1: sourceText,
+                  text2: text,
+                  baseStyle: TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'RobotoMono',
+                    color: text.isEmpty
+                        ? theme.disabledColor
+                        : theme.textTheme.bodyMedium?.color,
+                    fontWeight:
+                        isModified ? FontWeight.w500 : FontWeight.normal,
+                    fontStyle:
+                        text.isEmpty ? FontStyle.italic : FontStyle.normal,
+                  ),
+                  mode: DiffRenderMode.targetOnly,
+                ),
               ),
               overflow: TextOverflow.ellipsis,
-              maxLines: 3,
+              maxLines: 4,
             ),
           );
 

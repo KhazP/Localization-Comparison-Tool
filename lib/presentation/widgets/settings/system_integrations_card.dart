@@ -320,12 +320,49 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Register localizer:// URLs to open this application.',
+                    'Register localizer:// URLs to open this application. '
+                    'Allows opening projects directly from browser links or other apps.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: widget.isDark
                               ? AppThemeV2.darkTextMuted
                               : AppThemeV2.lightTextMuted,
                         ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Status indicator
+                  Builder(
+                    builder: (context) {
+                      final isRegistered = isWindows &&
+                          WindowsIntegrationService
+                              .isProtocolHandlerRegistered();
+                      return Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isRegistered ? Colors.green : Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isRegistered
+                                ? 'Protocol handler is registered'
+                                : 'Protocol handler not registered',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: isRegistered
+                                          ? Colors.green
+                                          : (widget.isDark
+                                              ? AppThemeV2.darkTextMuted
+                                              : AppThemeV2.lightTextMuted),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -341,6 +378,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                     if (success) {
                                       ToastService.showSuccess(context,
                                           'Protocol handler registered!');
+                                      setState(() {});
                                     } else {
                                       ToastService.showError(
                                           context, 'Failed to register');
@@ -364,6 +402,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                     if (success) {
                                       ToastService.showSuccess(
                                           context, 'Protocol handler removed!');
+                                      setState(() {});
                                     } else {
                                       ToastService.showError(
                                           context, 'Failed to remove');

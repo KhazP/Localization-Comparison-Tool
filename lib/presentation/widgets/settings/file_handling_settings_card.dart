@@ -286,12 +286,47 @@ class FileHandlingSettingsCard extends StatelessWidget {
             ),
             SettingsRow(
               label: 'Auto-Backup',
-              description: 'Create backup before overwriting files',
-              control: Switch(
-                value: settings.autoBackup,
-                onChanged: (val) =>
-                    context.read<SettingsBloc>().add(UpdateAutoBackup(val)),
-                activeColor: Theme.of(context).colorScheme.primary,
+              description: 'Creates a backup copy each time you save changes',
+              control: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Switch(
+                    value: settings.autoBackup,
+                    onChanged: (val) =>
+                        context.read<SettingsBloc>().add(UpdateAutoBackup(val)),
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  // Status indicator
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color:
+                              settings.autoBackup ? Colors.green : Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        settings.autoBackup
+                            ? 'Active · Keeping ${settings.backupsToKeep} copies'
+                            : 'Disabled',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: settings.autoBackup
+                                  ? Colors.green
+                                  : SettingsThemeHelper(
+                                          isDark: isDark, isAmoled: isAmoled)
+                                      .textMutedColor,
+                              fontSize: 11,
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               isDark: isDark,
               isAmoled: isAmoled,

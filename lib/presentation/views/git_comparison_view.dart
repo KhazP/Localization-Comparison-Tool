@@ -11,6 +11,9 @@ import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
+import 'package:localizer_app_main/presentation/widgets/common/empty_state_common.dart';
+import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
+import 'package:localizer_app_main/data/models/comparison_history.dart';
 
 import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -214,38 +217,41 @@ class _GitComparisonViewState extends State<GitComparisonView>
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            LucideIcons.gitBranch,
-            size: 64,
-            color:
-                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Select a repository to begin',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: isDark
-                  ? AppThemeV2.darkTextSecondary
-                  : AppThemeV2.lightTextSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Open a local Git repository to compare branches or commits',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color:
-                  isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-            ),
-          ),
-        ],
+    return EmptyStateContainer(
+      icon: LucideIcons.gitBranch,
+      title: 'Ready to Compare Repository',
+      subtitle: 'Open a local Git repository to compare\nbranches or commits.',
+      chips: const [
+        ContextChip(
+            label: 'Branch comparison', tooltip: 'Compare any two branches'),
+        ContextChip(
+            label: 'Commit history', tooltip: 'Compare specific commits'),
+        ContextChip(
+            label: 'Conflict detection',
+            tooltip: 'Detect and resolve merge conflicts'),
+      ],
+      bottomSection: RecentComparisonsList(
+        filterType: ComparisonType.git,
+        onTap: _loadRecentGitComparison,
       ),
     );
+  }
+
+  void _loadRecentGitComparison(ComparisonSession session) {
+    if (session.type != ComparisonType.git) {
+      ToastService.showInfo(context, 'This is not a git comparison.');
+      return;
+    }
+
+    final repoPath = session.gitRepoPath;
+    if (repoPath == null || !Directory(repoPath).existsSync()) {
+      ToastService.showError(
+          context, 'Repository no longer exists at this path.');
+      return;
+    }
+
+    // Open the repository
+    context.read<GitBloc>().add(SelectRepository(repoPath));
   }
 }
 

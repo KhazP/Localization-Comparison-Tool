@@ -15,6 +15,9 @@ import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/data/models/file_pair.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/comparison_result_dialog.dart';
+import 'package:localizer_app_main/presentation/widgets/common/empty_state_common.dart';
+import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
+import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:localizer_app_main/core/di/service_locator.dart';
@@ -605,39 +608,80 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
   }
 
   Widget _buildEmptyState(BuildContext context, {String? message}) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            LucideIcons.folders,
-            size: 64,
-            color:
-                isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message ?? 'Select directories to start comparison',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: isDark
-                  ? AppThemeV2.darkTextSecondary
-                  : AppThemeV2.lightTextSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Drag & drop folders above or use the Browse buttons',
-            style: theme.textTheme.bodySmall?.copyWith(
+    if (message != null) {
+      // Simple message state (e.g., "No files found")
+      final theme = Theme.of(context);
+      final isDark = theme.brightness == Brightness.dark;
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.folders,
+              size: 64,
               color:
                   isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: isDark
+                    ? AppThemeV2.darkTextSecondary
+                    : AppThemeV2.lightTextSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Rich empty state with animated icon and recent history
+    return EmptyStateContainer(
+      icon: LucideIcons.folders,
+      title: 'Ready to Compare Directories',
+      subtitle:
+          'Drop folders above or use the browse buttons\nto select directories for comparison.',
+      chips: const [
+        ContextChip(
+            label: 'Nested folders',
+            tooltip: 'Recursively compares all nested directories'),
+        ContextChip(
+            label: 'File matching',
+            tooltip: 'Automatically pairs files by name'),
+        ContextChip(
+            label: 'Bulk export',
+            tooltip: 'Export all comparison results at once'),
+      ],
+      bottomSection: RecentComparisonsList(
+        filterType: ComparisonType.directory,
+        onTap: _loadRecentDirectoryComparison,
       ),
     );
+  }
+
+  void _loadRecentDirectoryComparison(ComparisonSession session) {
+    if (session.type != ComparisonType.directory) {
+      ToastService.showInfo(context, 'This is not a directory comparison.');
+      return;
+    }
+
+    final sourceDir = session.file1Path;
+    final targetDir = session.file2Path;
+
+    if (!Directory(sourceDir).existsSync() ||
+        !Directory(targetDir).existsSync()) {
+      ToastService.showError(
+          context, 'One or both directories no longer exist.');
+      return;
+    }
+
+    setState(() {
+      _sourceDirectory = sourceDir;
+      _targetDirectory = targetDir;
+    });
+
+    _startDirectoryComparison();
   }
 
   Widget _buildErrorState(BuildContext context, String error) {

@@ -21,6 +21,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/presentation/views/first_run_wizard_view.dart';
 
 class MyHomePage extends StatefulWidget {
   final ComparisonSession? initialSession;
@@ -150,6 +151,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     final colorScheme = Theme.of(context).colorScheme;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final settingsState = context.watch<SettingsBloc>().state;
+
+    // Check for First-Run Wizard condition
+    if (settingsState.status == SettingsStatus.loaded) {
+      final settings = settingsState.appSettings;
+      final isFirstRun = !settings.isOnboardingCompleted &&
+          settings.onboardingStep == 0 &&
+          settings.recentProjects.isEmpty;
+
+      if (isFirstRun) {
+        return FirstRunWizardView(
+          onCompleted: () {
+            // State update handled by Bloc, which triggers rebuild.
+          },
+        );
+      }
+    }
+
     final isAmoled =
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
 

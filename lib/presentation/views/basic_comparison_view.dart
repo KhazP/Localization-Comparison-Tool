@@ -208,6 +208,32 @@ class _BasicComparisonViewState extends State<BasicComparisonView> {
           '[DEV] To restart the onboarding tutorial, run sl<AppCommandService>().emit(const AppCommand(AppCommandType.restartTutorial)); in the Debug Console.');
       return true;
     }());
+    // Check if we have an active comparison from the Wizard or preserved state
+    final comparisonState = context.read<ComparisonBloc>().state;
+    if (comparisonState is ComparisonSuccess) {
+      _file1 = comparisonState.file1;
+      _file2 = comparisonState.file2;
+      _latestComparisonResult = comparisonState.result;
+      _isBilingualMode =
+          comparisonState.file1.path == comparisonState.file2.path;
+      if (_isBilingualMode) {
+        _bilingualFile = comparisonState.file1;
+      }
+      // Prevent auto-loading last project since we have an active comparison
+      _hasAutoLoadedLastProject = true;
+      _isCheckingAutoLoad = false;
+
+      // If we came from Wizard, we might need to trigger Phase 2 tutorial manually
+      // because the listener won't fire for the initial state.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Check onboarding step to decide if we show Phase 2
+        final settings = context.read<SettingsBloc>().state.appSettings;
+        if (settings.onboardingStep >= 3 && !settings.isOnboardingCompleted) {
+          _showTutorialPhase2();
+        }
+      });
+    }
+
     // Check if we should auto-load the last project on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryAutoLoadLastProject();

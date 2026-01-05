@@ -10,6 +10,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
 
 import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -1214,6 +1215,8 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                 : (status == _LineStatus.modified
                     ? _LineStatus.modified
                     : _LineStatus.unchanged)),
+        sourceContent: baseLine ?? '',
+        targetContent: targetLine ?? '',
       ));
 
       targetLines.add(_DiffLine(
@@ -1226,6 +1229,8 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                 : (status == _LineStatus.modified
                     ? _LineStatus.modified
                     : _LineStatus.unchanged)),
+        sourceContent: baseLine ?? '',
+        targetContent: targetLine ?? '',
       ));
     }
 
@@ -1472,21 +1477,50 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                       ),
                     ),
                     Expanded(
-                      child: SelectableText(
-                        line.content.isEmpty ? ' ' : line.content,
-                        style: TextStyle(
-                            fontFamily: fontFamily,
-                            fontSize: fontSize,
-                            fontStyle: line.status == _LineStatus.empty
-                                ? FontStyle.italic
-                                : null,
-                            color: line.status == _LineStatus.empty
-                                ? Theme.of(context)
+                      child: line.content.isEmpty
+                          ? Text(
+                              ' ',
+                              style: TextStyle(
+                                fontFamily: fontFamily,
+                                fontSize: fontSize,
+                                fontStyle: FontStyle.italic,
+                                color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withValues(alpha: 0.3)
-                                : null),
-                      ),
+                                    .withValues(alpha: 0.3),
+                              ),
+                            )
+                          : (line.status == _LineStatus.modified &&
+                                  line.sourceContent != null &&
+                                  line.targetContent != null)
+                              ? DiffHighlighter.buildDiffText(
+                                  line.sourceContent!,
+                                  line.targetContent!,
+                                  isSource: isBase,
+                                  baseStyle: TextStyle(
+                                    fontFamily: fontFamily,
+                                    fontSize: fontSize,
+                                  ),
+                                  deletionColor: removedColor,
+                                  insertionColor: addedColor,
+                                  selectable: true,
+                                )
+                              : SelectableText(
+                                  line.content,
+                                  style: TextStyle(
+                                    fontFamily: fontFamily,
+                                    fontSize: fontSize,
+                                    fontStyle: line.status == _LineStatus.empty
+                                        ? FontStyle.italic
+                                        : null,
+                                    color: line.status == _LineStatus.empty
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.3)
+                                        : null,
+                                  ),
+                                ),
                     ),
                   ],
                 ),
@@ -1536,11 +1570,15 @@ class _DiffLine {
   final int lineNumber;
   final String content;
   final _LineStatus status;
+  final String? sourceContent;
+  final String? targetContent;
 
   _DiffLine({
     required this.lineNumber,
     required this.content,
     required this.status,
+    this.sourceContent,
+    this.targetContent,
   });
 }
 

@@ -6,6 +6,7 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
 
 class ComparisonResultDialog extends StatefulWidget {
   final ComparisonResult result;
@@ -22,10 +23,10 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
   final ScrollController _targetScrollController = ScrollController();
   bool _isSyncingScroll = false;
 
-  // Filter states - Added and Removed are on by default, Modified is off
+  // Filter states - All filters on by default to match Git diff viewer
   bool _showAdded = true;
   bool _showRemoved = true;
-  bool _showModified = false;
+  bool _showModified = true;
 
   @override
   void initState() {
@@ -101,24 +102,10 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
       final sourceValue = widget.result.file1Data[key];
       final targetValue = widget.result.file2Data[key];
 
-      // Check if this entry should be shown based on filters
-      bool shouldShow = true; // Default to showing all
-      switch (detail.status) {
-        case StringComparisonStatus.added:
-          shouldShow = _showAdded;
-          break;
-        case StringComparisonStatus.removed:
-          shouldShow = _showRemoved;
-          break;
-        case StringComparisonStatus.modified:
-          shouldShow = _showModified;
-          break;
-        case StringComparisonStatus.identical:
-          shouldShow = true; // Always show identical entries for context
-          break;
-      }
+      // Status handling moved to highlighting logic below
 
-      if (!shouldShow) continue;
+      // Always show all entries - filters only control highlighting, not visibility
+      // This matches Git diff viewer behavior where all lines are shown for context
 
       lineNumber++;
 
@@ -133,18 +120,25 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
       _LineStatus sourceStatus = _LineStatus.unchanged;
       _LineStatus targetStatus = _LineStatus.unchanged;
 
+      // Only apply status highlighting if the corresponding filter is active
       switch (detail.status) {
         case StringComparisonStatus.added:
-          sourceStatus = _LineStatus.empty;
-          targetStatus = _LineStatus.added;
+          if (_showAdded) {
+            sourceStatus = _LineStatus.empty;
+            targetStatus = _LineStatus.added;
+          }
           break;
         case StringComparisonStatus.removed:
-          sourceStatus = _LineStatus.removed;
-          targetStatus = _LineStatus.empty;
+          if (_showRemoved) {
+            sourceStatus = _LineStatus.removed;
+            targetStatus = _LineStatus.empty;
+          }
           break;
         case StringComparisonStatus.modified:
-          sourceStatus = _LineStatus.modified;
-          targetStatus = _LineStatus.modified;
+          if (_showModified) {
+            sourceStatus = _LineStatus.modified;
+            targetStatus = _LineStatus.modified;
+          }
           break;
         case StringComparisonStatus.identical:
           sourceStatus = _LineStatus.unchanged;
@@ -156,11 +150,15 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
         lineNumber: lineNumber,
         content: sourceText,
         status: sourceStatus,
+        sourceContent: sourceText,
+        targetContent: targetText,
       ));
       targetLines.add(_DiffLine(
         lineNumber: lineNumber,
         content: targetText,
         status: targetStatus,
+        sourceContent: sourceText,
+        targetContent: targetText,
       ));
     }
 
@@ -313,7 +311,10 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
 
   Widget _buildPaneHeader(BuildContext context, {required bool isSource}) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+
+    // Static file description
+    final filePath =
+        isSource ? 'Original/Reference file' : 'Translation/Comparison file';
 
     return Material(
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
@@ -322,45 +323,28 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
         child: Row(
           children: [
             Icon(
-              isSource ? LucideIcons.fileInput : LucideIcons.fileOutput,
+              isSource ? Icons.file_copy_outlined : Icons.file_present_outlined,
               size: 18,
-              color: isSource
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.secondary,
             ),
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: (isSource
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.secondary)
-                    .withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                isSource ? 'SOURCE' : 'TARGET',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                  letterSpacing: 0.5,
-                  color: isSource
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.secondary,
-                ),
+            Text(
+              isSource ? 'BASE' : 'TARGET',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                letterSpacing: 0.5,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                isSource
-                    ? 'Original/Reference file'
-                    : 'Translation/Comparison file',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark
-                      ? AppThemeV2.darkTextMuted
-                      : AppThemeV2.lightTextMuted,
+                filePath,
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurface,
                 ),
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -409,20 +393,16 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
 
               // Determine background color based on status
               Color? bgColor;
-              Color minimapColor = Colors.transparent;
 
               switch (line.status) {
                 case _LineStatus.added:
                   bgColor = addedColor.withValues(alpha: 0.25);
-                  minimapColor = addedColor;
                   break;
                 case _LineStatus.removed:
                   bgColor = removedColor.withValues(alpha: 0.25);
-                  minimapColor = removedColor;
                   break;
                 case _LineStatus.modified:
                   bgColor = modifiedColor.withValues(alpha: 0.25);
-                  minimapColor = modifiedColor;
                   break;
                 case _LineStatus.empty:
                   bgColor = theme.colorScheme.surfaceContainerHighest
@@ -452,17 +432,7 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
                         ),
                       ),
                     ),
-                    // Status indicator bar
-                    Container(
-                      width: 4,
-                      height: fontSize + 4,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: minimapColor,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    // Content
+                    // Content with character-level diff highlighting for modified lines
                     Expanded(
                       child: line.content.isEmpty
                           ? Text(
@@ -475,13 +445,28 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
                                     .withValues(alpha: 0.3),
                               ),
                             )
-                          : SelectableText(
-                              line.content,
-                              style: TextStyle(
-                                fontFamily: fontFamily,
-                                fontSize: fontSize,
-                              ),
-                            ),
+                          : (line.status == _LineStatus.modified &&
+                                  line.sourceContent != null &&
+                                  line.targetContent != null)
+                              ? DiffHighlighter.buildDiffText(
+                                  line.sourceContent!,
+                                  line.targetContent!,
+                                  isSource: isSource,
+                                  baseStyle: TextStyle(
+                                    fontFamily: fontFamily,
+                                    fontSize: fontSize,
+                                  ),
+                                  deletionColor: removedColor,
+                                  insertionColor: addedColor,
+                                  selectable: true,
+                                )
+                              : SelectableText(
+                                  line.content,
+                                  style: TextStyle(
+                                    fontFamily: fontFamily,
+                                    fontSize: fontSize,
+                                  ),
+                                ),
                     ),
                   ],
                 ),
@@ -530,11 +515,15 @@ class _DiffLine {
   final int lineNumber;
   final String content;
   final _LineStatus status;
+  final String? sourceContent;
+  final String? targetContent;
 
   _DiffLine({
     required this.lineNumber,
     required this.content,
     required this.status,
+    this.sourceContent,
+    this.targetContent,
   });
 }
 

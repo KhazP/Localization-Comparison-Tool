@@ -481,7 +481,17 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 items: widget.state.branches
                     .map((b) => DropdownMenuItem(
                           value: b.name,
-                          child: Text(b.name),
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.gitBranch,
+                                  size: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant),
+                              const SizedBox(width: 8),
+                              Text(b.name),
+                            ],
+                          ),
                         ))
                     .toList(),
                 onChanged: (val) {
@@ -507,7 +517,17 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 items: widget.state.branches
                     .map((b) => DropdownMenuItem(
                           value: b.name,
-                          child: Text(b.name),
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.gitBranch,
+                                  size: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant),
+                              const SizedBox(width: 8),
+                              Text(b.name),
+                            ],
+                          ),
                         ))
                     .toList(),
                 onChanged: (val) {
@@ -669,25 +689,34 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
     return commits
         .map((commit) => DropdownMenuItem(
               value: commit.sha,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    commit.message.split('\n').first,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${commit.author} • ${dateFormat.format(commit.date)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                  Icon(LucideIcons.gitCommit,
+                      size: 16, color: colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          commit.message.split('\n').first,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${commit.author} • ${dateFormat.format(commit.date)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1525,6 +1554,17 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                                   color: statusColor,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Status Icon
+                              Icon(
+                                file.status == 'added'
+                                    ? LucideIcons.filePlus
+                                    : (file.status == 'deleted'
+                                        ? LucideIcons.fileMinus
+                                        : LucideIcons.fileEdit),
+                                size: 20,
+                                color: statusColor,
                               ),
                               const SizedBox(width: 12),
 

@@ -148,6 +148,8 @@ TECHNICAL.md
 LocalizerAppMain.md
 archive/
 POLISH_PLAN.md
+screenshots/
+integration_test/
 
 # Flutter Internal / Dev Files
 .metadata

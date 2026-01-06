@@ -127,32 +127,37 @@ class PlutoGridAdapter {
           final sourceText = rendererContext.cell.value?.toString() ?? '';
           final targetText =
               rendererContext.row.cells['target']?.value?.toString() ?? '';
+          final rowKey = rendererContext.row.cells['key']?.value as String?;
+          final isReviewed = rowKey != null && reviewedKeys.contains(rowKey);
 
           // Visual distinction: Source has a very subtle cool grey tint
-          return Container(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.2)
-                : Colors.grey.withValues(alpha: 0.05),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            alignment: Alignment.topLeft,
-            child: Tooltip(
-              message: sourceText,
-              waitDuration: const Duration(milliseconds: 500),
-              child: RichText(
-                text: TextSpan(
-                  children: DiffUtils.getDiffSpans(
-                    text1: sourceText,
-                    text2: targetText,
-                    baseStyle: TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'RobotoMono',
-                      color: theme.textTheme.bodyMedium?.color,
+          return Opacity(
+            opacity: isReviewed ? 0.5 : 1.0,
+            child: Container(
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : Colors.grey.withValues(alpha: 0.05),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              alignment: Alignment.topLeft,
+              child: Tooltip(
+                message: sourceText,
+                waitDuration: const Duration(milliseconds: 500),
+                child: RichText(
+                  text: TextSpan(
+                    children: DiffUtils.getDiffSpans(
+                      text1: sourceText,
+                      text2: targetText,
+                      baseStyle: TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'RobotoMono',
+                        color: theme.textTheme.bodyMedium?.color,
+                      ),
+                      mode: DiffRenderMode.sourceOnly,
                     ),
-                    mode: DiffRenderMode.sourceOnly,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 4,
                 ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 4,
               ),
             ),
           );
@@ -180,6 +185,7 @@ class PlutoGridAdapter {
           final isModified =
               rendererContext.row.cells['_isModified']?.value == true;
           final rowKey = rendererContext.row.cells['key']?.value as String?;
+          final isReviewed = rowKey != null && reviewedKeys.contains(rowKey);
 
           // Visual distinction: Target has a white/card background to pop against source
           // Use slight tint if using inline editing to look like an input field
@@ -218,6 +224,11 @@ class PlutoGridAdapter {
               overflow: TextOverflow.ellipsis,
               maxLines: 4,
             ),
+          );
+
+          content = Opacity(
+            opacity: isReviewed ? 0.5 : 1.0,
+            child: content,
           );
 
           // Wrap with GestureDetector for dialog mode

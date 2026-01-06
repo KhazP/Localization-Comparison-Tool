@@ -49,6 +49,8 @@ class SettingsCardContainer extends StatelessWidget {
   final bool isAmoled;
   final VoidCallback? onReset;
   final Widget? trailing;
+  final IconData? headerIcon;
+  final Color? headerIconColor;
 
   const SettingsCardContainer({
     super.key,
@@ -58,11 +60,15 @@ class SettingsCardContainer extends StatelessWidget {
     this.isAmoled = false,
     this.onReset,
     this.trailing,
+    this.headerIcon,
+    this.headerIconColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
+    final colorScheme = Theme.of(context).colorScheme;
+    final effectiveIconColor = headerIconColor ?? colorScheme.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -78,6 +84,21 @@ class SettingsCardContainer extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
               children: [
+                if (headerIcon != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: effectiveIconColor.withAlpha(20),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(
+                      headerIcon,
+                      size: 14,
+                      color: effectiveIconColor,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
                 Expanded(
                   child: Text(
                     title,

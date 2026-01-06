@@ -875,6 +875,67 @@ class AppThemeV2 {
       trackBorderColor: WidgetStateProperty.all(Colors.transparent),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HELPER METHODS FOR CARD DECORATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Returns a BoxDecoration for cards with optional hover state
+  /// Standardizes card styling across the application
+  static BoxDecoration cardDecoration({
+    required bool isDark,
+    bool isAmoled = false,
+    bool isHovered = false,
+    Color? accentColor,
+    double borderRadius = 12.0,
+  }) {
+    final cardColor = isAmoled
+        ? (isHovered ? amoledCardHover : amoledCard)
+        : (isDark
+            ? (isHovered ? darkCardHover : darkCard)
+            : (isHovered ? lightCardHover : lightCard));
+
+    final borderColor = isHovered && accentColor != null
+        ? accentColor.withAlpha(100)
+        : (isAmoled ? amoledBorder : (isDark ? darkBorder : lightBorder));
+
+    return BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(color: borderColor),
+      boxShadow: isHovered
+          ? [
+              BoxShadow(
+                color: (accentColor ?? (isDark ? Colors.white : Colors.black))
+                    .withAlpha(15),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ]
+          : null,
+    );
+  }
+
+  /// Returns colors for card states
+  static Color getCardColor({
+    required bool isDark,
+    bool isAmoled = false,
+    bool isHovered = false,
+  }) {
+    if (isAmoled) return isHovered ? amoledCardHover : amoledCard;
+    return isDark
+        ? (isHovered ? darkCardHover : darkCard)
+        : (isHovered ? lightCardHover : lightCard);
+  }
+
+  /// Returns border color for card states
+  static Color getBorderColor({
+    required bool isDark,
+    bool isAmoled = false,
+  }) {
+    if (isAmoled) return amoledBorder;
+    return isDark ? darkBorder : lightBorder;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

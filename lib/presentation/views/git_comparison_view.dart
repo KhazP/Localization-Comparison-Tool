@@ -16,6 +16,7 @@ import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 
 import 'package:localizer_app_main/presentation/views/conflict_resolution_view.dart';
+import 'package:localizer_app_main/presentation/widgets/common/visual_components.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
@@ -1497,28 +1498,22 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                             'amoled';
 
                     Color statusColor;
-                    String statusLabel;
 
                     switch (file.status) {
                       case 'added':
                         statusColor = themeState.diffAddedColor;
-                        statusLabel = 'Added';
                         break;
                       case 'deleted':
                         statusColor = themeState.diffRemovedColor;
-                        statusLabel = 'Removed';
                         break;
                       case 'modified':
                         statusColor = themeState.diffModifiedColor;
-                        statusLabel = 'Modified';
                         break;
                       case 'renamed':
                         statusColor = Colors.blue;
-                        statusLabel = 'Renamed';
                         break;
                       default:
                         statusColor = Colors.grey;
-                        statusLabel = file.status;
                     }
 
                     return Container(
@@ -1557,14 +1552,23 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                               ),
                               const SizedBox(width: 12),
                               // Status Icon
-                              Icon(
-                                file.status == 'added'
-                                    ? LucideIcons.filePlus
-                                    : (file.status == 'deleted'
-                                        ? LucideIcons.fileMinus
-                                        : LucideIcons.fileEdit),
-                                size: 20,
-                                color: statusColor,
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withAlpha(20),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  file.status == 'added'
+                                      ? LucideIcons.filePlus
+                                      : (file.status == 'deleted'
+                                          ? LucideIcons.fileMinus
+                                          : (file.status == 'renamed'
+                                              ? LucideIcons.fileEdit
+                                              : LucideIcons.fileEdit)),
+                                  size: 18,
+                                  color: statusColor,
+                                ),
                               ),
                               const SizedBox(width: 12),
 
@@ -1573,24 +1577,32 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      file.path,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w500,
+                                    Row(
+                                      children: [
+                                        FileTypeIcon(
+                                          filePath: file.path,
+                                          size: 14,
+                                          color: isDark
+                                              ? AppThemeV2.darkTextMuted
+                                              : AppThemeV2.lightTextMuted,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            file.path,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      statusLabel,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: statusColor,
-                                          ),
-                                    ),
+                                    const SizedBox(height: 4),
+                                    StatusBadge.fromGitStatus(file.status),
                                   ],
                                 ),
                               ),

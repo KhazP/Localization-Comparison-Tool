@@ -35,6 +35,7 @@ class DeveloperSettingsCard extends StatelessWidget {
       title: 'Developer Options',
       isDark: isDark,
       isAmoled: isAmoled,
+      headerIcon: LucideIcons.code,
       children: [
         _SectionHeader(title: 'Debugging Tools', isDark: isDark),
         SettingsRow(

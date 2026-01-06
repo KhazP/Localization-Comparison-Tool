@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
+import 'package:localizer_app_main/core/utils/time_utils.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
@@ -1201,6 +1202,7 @@ class _HistoryCardState extends State<_HistoryCard> {
     final session = widget.session;
     final formattedDate =
         DateFormat('MMM dd, yyyy • HH:mm').format(session.timestamp);
+    final relativeTime = TimeUtils.timeAgo(session.timestamp);
 
     // simple filename extraction
     final isBilingualSession = session.file1Path == session.file2Path;
@@ -1471,13 +1473,16 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   // Meta Row: Date & Chips
                                   Row(
                                     children: [
-                                      Text(
-                                        formattedDate,
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: isDark
-                                              ? AppThemeV2.darkTextMuted
-                                              : AppThemeV2.lightTextMuted,
+                                      Tooltip(
+                                        message: formattedDate,
+                                        child: Text(
+                                          relativeTime,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            color: isDark
+                                                ? AppThemeV2.darkTextMuted
+                                                : AppThemeV2.lightTextMuted,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(width: 8),

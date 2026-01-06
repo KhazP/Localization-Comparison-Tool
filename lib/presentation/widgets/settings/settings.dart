@@ -5,6 +5,7 @@ library;
 export 'settings_widgets.dart' hide SettingsDropdown;
 export 'settings_constants.dart';
 export 'settings_shared.dart';
+export 'settings_collapsible_section.dart';
 export 'add_ignore_pattern_dialog.dart';
 export 'general_settings_card.dart';
 export 'comparison_settings_card.dart';

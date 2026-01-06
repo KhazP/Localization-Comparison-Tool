@@ -58,6 +58,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
           title: 'File Formats',
           isDark: isDark,
           isAmoled: isAmoled,
+          headerIcon: LucideIcons.fileType,
           onReset: () {
             if (state.isProjectScope) {
               bloc.add(const ResetCategoryToGlobal(
@@ -121,6 +122,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
           title: 'Encoding',
           isDark: isDark,
           isAmoled: isAmoled,
+          headerIcon: LucideIcons.binary,
           trailing: _buildSectionResetButton(context,
               bloc), // Reuse same reset logic for now as they are same category
           children: [
@@ -221,6 +223,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
           // I will proceed with Formats/Encodings overrides.
           isDark: isDark,
           isAmoled: isAmoled,
+          headerIcon: LucideIcons.download,
           children: [
             SettingsRow(
               label: 'Default Export Format',
@@ -271,6 +274,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
           title: 'File Safety',
           isDark: isDark,
           isAmoled: isAmoled,
+          headerIcon: LucideIcons.shieldCheck,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),

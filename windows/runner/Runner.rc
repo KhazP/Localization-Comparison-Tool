@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "localizer_app_main" "\0"
+            VALUE "CompanyName", "Alp Yalay" "\0"
+            VALUE "FileDescription", "Localization Comparison Tool" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "localizer_app_main" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "localizer_app_main.exe" "\0"
-            VALUE "ProductName", "localizer_app_main" "\0"
+            VALUE "InternalName", "localizer_app" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Alp Yalay. All rights reserved." "\0"
+            VALUE "OriginalFilename", "localizer_app.exe" "\0"
+            VALUE "ProductName", "Localization Comparison Tool" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

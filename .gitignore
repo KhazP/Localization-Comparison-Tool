@@ -159,3 +159,23 @@ devtools_options.yaml
 # Developer Scripts
 run_localizer.bat
 run_quick.bat
+
+# Release & Distribution
+dist/
+installer/Output/
+installer/*.exe
+installer/*.zip
+
+# Unused Assets (Mobile/Store)
+assets/logo/Assets.xcassets/
+assets/logo/android/
+assets/logo/appstore.png
+assets/logo/playstore.png
+
+# Outdated Documentation & Context
+CLAUDE.md
+claude.md
+GEMINI.md
+gemini.md
+LocalizerAppMain.md
+POLISH_PLAN.md

@@ -30,7 +30,8 @@ class LocalTranslationCache implements TranslationCache {
       // Move to end (most recently used) for LRU
       _cache.remove(key);
       _cache[key] = cached;
-      debugPrint('Translation cache hit for: ${key.substring(0, key.length.clamp(0, 50))}...');
+      debugPrint(
+          'Translation cache hit for: ${key.substring(0, key.length.clamp(0, 50))}...');
     }
     return cached;
   }

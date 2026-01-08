@@ -16,23 +16,6 @@ class ProjectStats {
   const ProjectStats.empty()
       : translationFileCount = 0,
         detectedLanguages = const {};
-
-  /// Formatted string for UI display, e.g., "12 translation files, 3 languages"
-  String get displayString {
-    if (translationFileCount == 0) return 'Empty project';
-
-    final fileLabel = translationFileCount == 1
-        ? '1 translation file'
-        : '$translationFileCount translation files';
-
-    if (detectedLanguages.isEmpty) return fileLabel;
-
-    final langLabel = detectedLanguages.length == 1
-        ? '1 language'
-        : '${detectedLanguages.length} languages';
-
-    return '$fileLabel, $langLabel';
-  }
 }
 
 /// Service for scanning project folders and calculating statistics.

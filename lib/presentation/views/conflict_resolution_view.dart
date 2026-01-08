@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class ConflictResolutionView extends StatefulWidget {
   final String repoPath;
@@ -86,7 +87,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
         .add(MarkFileResolved(widget.repoPath, _selectedFile!));
     ToastService.showInfo(
       context,
-      'Staging $_selectedFile for commit...',
+      context.t.git.conflicts.stagingFile(file: _selectedFile!),
       duration: const Duration(seconds: 2),
     );
   }
@@ -95,13 +96,12 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
     showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-              title: const Text('Abort Merge?'),
-              content: const Text(
-                  'This will revert all merge changes and return to the state before the merge. This cannot be undone.'),
+              title: Text(context.t.git.conflicts.abortMergeTitle),
+              content: Text(context.t.git.conflicts.abortMergeContent),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel')),
+                    child: Text(context.t.common.cancel)),
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: Colors.red),
                   onPressed: () {
@@ -109,7 +109,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                     context.read<GitBloc>().add(AbortMerge(widget.repoPath));
                     // Close view handled by parent listener usually, but we are inside a full view/dialog?
                   },
-                  child: const Text('Abort Merge'),
+                  child: Text(context.t.git.conflicts.abortMergeAction),
                 ),
               ],
             ));
@@ -140,7 +140,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Merge Conflicts Detected',
+                        context.t.git.conflicts.title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
@@ -149,7 +149,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                             ),
                       ),
                       Text(
-                        'You must resolve these conflicts before you can continue.',
+                        context.t.git.conflicts.description,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
@@ -167,7 +167,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                     foregroundColor: Theme.of(context).colorScheme.onError,
                   ),
                   icon: const Icon(Icons.cancel),
-                  label: const Text('Abort Merge'),
+                  label: Text(context.t.git.conflicts.abortMergeAction),
                 ),
               ],
             ),
@@ -186,7 +186,8 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                       Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                            'Conflicted Files (${widget.conflictedFiles.length})',
+                            context.t.git.conflicts.conflictedFilesCount(
+                                count: widget.conflictedFiles.length),
                             style:
                                 const TextStyle(fontWeight: FontWeight.bold)),
                       ),
@@ -237,7 +238,9 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                 // Details / Resolution Area
                 Expanded(
                   child: _selectedFile == null
-                      ? const Center(child: Text('Select a file to resolve'))
+                      ? Center(
+                          child:
+                              Text(context.t.git.conflicts.selectFileToResolve))
                       : Column(
                           children: [
                             Padding(
@@ -246,7 +249,9 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Resolving: $_selectedFile',
+                                  Text(
+                                      context.t.git.conflicts
+                                          .resolvingFile(file: _selectedFile!),
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium),
@@ -254,14 +259,16 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                                     children: [
                                       OutlinedButton.icon(
                                         icon: const Icon(Icons.undo),
-                                        label: const Text('Keep All Ours'),
+                                        label: Text(context
+                                            .t.git.conflicts.keepAllOurs),
                                         onPressed: () => _resolveFile(
                                             ResolutionStrategy.ours),
                                       ),
                                       const SizedBox(width: 12),
                                       FilledButton.icon(
                                         icon: const Icon(Icons.input),
-                                        label: const Text('Accept All Theirs'),
+                                        label: Text(context
+                                            .t.git.conflicts.acceptAllTheirs),
                                         onPressed: () => _resolveFile(
                                             ResolutionStrategy.theirs),
                                       ),
@@ -297,17 +304,17 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
             Icon(Icons.check_circle_outline,
                 size: 64, color: Colors.green.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
-            const Text('All conflicts in this file have been resolved!',
-                style: TextStyle(fontSize: 16)),
+            Text(context.t.git.conflicts.allResolved,
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _markFileResolved,
               icon: const Icon(Icons.check),
-              label: const Text('Mark as Resolved'),
+              label: Text(context.t.git.conflicts.markResolved),
             ),
             const SizedBox(height: 8),
-            const Text('This will stage the file for commit.',
-                style: TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(context.t.git.conflicts.stageForCommit,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
       );
@@ -329,7 +336,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Conflict #${index + 1}',
+                Text(context.t.git.conflicts.conflictIndex(index: index + 1),
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, color: Colors.grey)),
                 const SizedBox(height: 8),
@@ -347,8 +354,8 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                               color: Colors.blue.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text('OURS (Current)',
-                                style: TextStyle(
+                            child: Text(context.t.git.conflicts.ours,
+                                style: const TextStyle(
                                     fontSize: 12, color: Colors.blue)),
                           ),
                           const SizedBox(height: 8),
@@ -358,7 +365,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                             width: double.infinity,
                             child: Text(
                               marker.ours.trim().isEmpty
-                                  ? '(Empty)'
+                                  ? context.t.git.conflicts.empty
                                   : marker.ours.trim(),
                               style: const TextStyle(fontFamily: 'monospace'),
                             ),
@@ -378,8 +385,8 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                               color: Colors.green.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text('THEIRS (Incoming)',
-                                style: TextStyle(
+                            child: Text(context.t.git.conflicts.theirs,
+                                style: const TextStyle(
                                     fontSize: 12, color: Colors.green)),
                           ),
                           const SizedBox(height: 8),
@@ -389,7 +396,7 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
                             width: double.infinity,
                             child: Text(
                               marker.theirs.trim().isEmpty
-                                  ? '(Empty)'
+                                  ? context.t.git.conflicts.empty
                                   : marker.theirs.trim(),
                               style: const TextStyle(fontFamily: 'monospace'),
                             ),
@@ -415,14 +422,14 @@ class _ConflictResolutionViewState extends State<ConflictResolutionView> {
       children: [
         OutlinedButton.icon(
           icon: const Icon(Icons.check, size: 16),
-          label: const Text('Keep Ours'),
+          label: Text(context.t.git.conflicts.keepOurs),
           onPressed: () =>
               _resolveSingleMarker(marker, ResolutionStrategy.ours),
         ),
         const SizedBox(width: 8),
         FilledButton.icon(
           icon: const Icon(Icons.check, size: 16),
-          label: const Text('Accept Theirs'),
+          label: Text(context.t.git.conflicts.acceptTheirs),
           onPressed: () =>
               _resolveSingleMarker(marker, ResolutionStrategy.theirs),
         ),

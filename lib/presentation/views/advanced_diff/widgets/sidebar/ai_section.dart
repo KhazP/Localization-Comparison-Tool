@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/'
     'advanced_diff_controller.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
@@ -72,11 +73,11 @@ class AiSection extends StatelessWidget {
     return Consumer<AdvancedDiffController>(
       builder: (context, controller, child) {
         final infoLabel = isCloudTranslation
-            ? 'Uses cloud translation to translate empty target values '
-                'from source.'
-            : 'Uses AI to translate empty target values from source.';
-        final settingsLabel =
-            isCloudTranslation ? 'Translation Settings' : 'AI Settings';
+            ? context.t.advancedDiff.sidebar.aiSection.infoCloud
+            : context.t.advancedDiff.sidebar.aiSection.infoAi;
+        final settingsLabel = isCloudTranslation
+            ? context.t.advancedDiff.sidebar.aiSection.translationSettings
+            : context.t.advancedDiff.sidebar.aiSection.aiSettings;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -88,7 +89,7 @@ class AiSection extends StatelessWidget {
                   return Column(
                     children: [
                       _LanguageDropdown(
-                        label: 'Source',
+                        label: context.t.advancedDiff.sidebar.aiSection.source,
                         value: controller.sourceLang,
                         onChanged: controller.setSourceLang,
                       ),
@@ -96,7 +97,7 @@ class AiSection extends StatelessWidget {
                       const Icon(LucideIcons.arrowDown, size: 16),
                       const SizedBox(height: 8),
                       _LanguageDropdown(
-                        label: 'Target',
+                        label: context.t.advancedDiff.sidebar.aiSection.target,
                         value: controller.targetLang,
                         onChanged: controller.setTargetLang,
                       ),
@@ -108,7 +109,7 @@ class AiSection extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _LanguageDropdown(
-                        label: 'Source',
+                        label: context.t.advancedDiff.sidebar.aiSection.source,
                         value: controller.sourceLang,
                         onChanged: controller.setSourceLang,
                       ),
@@ -118,7 +119,7 @@ class AiSection extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _LanguageDropdown(
-                        label: 'Target',
+                        label: context.t.advancedDiff.sidebar.aiSection.target,
                         value: controller.targetLang,
                         onChanged: controller.setTargetLang,
                       ),
@@ -134,7 +135,8 @@ class AiSection extends StatelessWidget {
               LinearProgressIndicator(value: controller.aiProgress),
               const SizedBox(height: 8),
               Text(
-                'Translating... ${(controller.aiProgress * 100).toInt()}%',
+                context.t.advancedDiff.sidebar.aiSection.translatingProgress(
+                    percent: (controller.aiProgress * 100).toInt()),
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -153,8 +155,9 @@ class AiSection extends StatelessWidget {
               ),
               label: Text(
                 controller.isAiProcessing
-                    ? 'Translating...'
-                    : 'Translate All Missing',
+                    ? context.t.advancedDiff.sidebar.aiSection.translating
+                    : context
+                        .t.advancedDiff.sidebar.aiSection.translateAllMissing,
                 style: TextStyle(
                   color: controller.isAiProcessing ? null : Colors.white,
                 ),
@@ -204,33 +207,36 @@ class AiSection extends StatelessWidget {
     final action = await showDialog<_AiBulkAction>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(LucideIcons.sparkles, color: Colors.purple),
-            SizedBox(width: 12),
-            Text('Translate All Missing?'),
+            const Icon(LucideIcons.sparkles, color: Colors.purple),
+            const SizedBox(width: 12),
+            Text(context.t.advancedDiff.sidebar.aiSection.translateAllTitle),
           ],
         ),
         content: Text(
-          'This will use ${isCloudTranslation ? 'cloud translation' : 'AI'} '
-          'to translate all entries with empty target values from '
-          '$sourceLabel to $targetLabel.\n\n'
-          'You can review each suggestion or apply all at once.',
+          context.t.advancedDiff.sidebar.aiSection.translateAllContent(
+              service: isCloudTranslation
+                  ? context.t.advancedDiff.sidebar.cloudTranslation
+                      .toLowerCase()
+                  : context.t.advancedDiff.sidebar.aiTranslation.toLowerCase(),
+              source: sourceLabel,
+              target: targetLabel),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(null),
-            child: const Text('Cancel'),
+            child: Text(context.t.common.cancel),
           ),
           OutlinedButton(
             onPressed: () =>
                 Navigator.of(context).pop(_AiBulkAction.translateAll),
-            child: const Text('Translate All'),
+            child: Text(context.t.advancedDiff.sidebar.aiSection.translateAll),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.of(context).pop(_AiBulkAction.reviewEach),
-            child: const Text('Review Each'),
+            child: Text(context.t.advancedDiff.sidebar.aiSection.reviewEach),
           ),
         ],
       ),
@@ -249,8 +255,10 @@ class AiSection extends StatelessWidget {
         ToastService.showSuccess(
           context,
           isCloudTranslation
-              ? 'Translated $count entries with cloud translation.'
-              : 'Translated $count entries with AI.',
+              ? context.t.advancedDiff.sidebar.aiSection
+                  .cloudTranslated(count: count)
+              : context.t.advancedDiff.sidebar.aiSection
+                  .aiTranslated(count: count),
         );
       }
     } catch (e, stackTrace) {
@@ -275,7 +283,8 @@ class AiSection extends StatelessWidget {
   ) async {
     final missingKeys = controller.getMissingKeys();
     if (missingKeys.isEmpty) {
-      ToastService.showInfo(context, 'No missing entries to translate.');
+      ToastService.showInfo(
+          context, context.t.advancedDiff.sidebar.aiSection.noMissingEntries);
       return;
     }
 
@@ -294,11 +303,12 @@ class AiSection extends StatelessWidget {
             context,
             keyName: key,
             suggestion: suggestion,
-            titleOverride:
-                isCloudTranslation ? 'Cloud Translation' : 'AI Translation',
-            rejectLabel: 'Skip',
+            titleOverride: isCloudTranslation
+                ? context.t.advancedDiff.sidebar.cloudTranslation
+                : context.t.advancedDiff.sidebar.aiTranslation,
+            rejectLabel: context.t.advancedDiff.sidebar.aiSection.skip,
             showStopButton: true,
-            stopLabel: 'Stop',
+            stopLabel: context.t.advancedDiff.sidebar.aiSection.stop,
           );
 
           if (!context.mounted || decision == null) break;
@@ -334,8 +344,10 @@ class AiSection extends StatelessWidget {
       ToastService.showSuccess(
         context,
         isCloudTranslation
-            ? 'Applied $appliedCount suggestions.'
-            : 'Applied $appliedCount AI suggestions.',
+            ? context.t.advancedDiff.sidebar.aiSection
+                .cloudApplied(count: appliedCount)
+            : context.t.advancedDiff.sidebar.aiSection
+                .aiApplied(count: appliedCount),
       );
     }
   }

@@ -9,6 +9,7 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
 import 'package:localizer_app_main/presentation/widgets/common/empty_state_common.dart';
@@ -84,7 +85,7 @@ class _GitComparisonViewState extends State<GitComparisonView>
                       size: 28, color: colorScheme.primary),
                   const SizedBox(width: 12),
                   Text(
-                    'Repository Comparison',
+                    context.t.gitComparison.title,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -140,7 +141,8 @@ class _GitComparisonViewState extends State<GitComparisonView>
                               Icon(LucideIcons.alertCircle,
                                   color: theme.colorScheme.error, size: 48),
                               const SizedBox(height: 16),
-                              Text('Error: ${state.message}',
+                              Text(
+                                  '${context.t.common.error}: ${state.message}',
                                   style:
                                       TextStyle(color: theme.colorScheme.error),
                                   textAlign: TextAlign.center),
@@ -149,7 +151,7 @@ class _GitComparisonViewState extends State<GitComparisonView>
                                   onPressed: () => context
                                       .read<GitBloc>()
                                       .add(LoadBranches()),
-                                  child: const Text('Retry'))
+                                  child: Text(context.t.common.retry))
                             ],
                           ),
                         );
@@ -164,7 +166,8 @@ class _GitComparisonViewState extends State<GitComparisonView>
                                   .firstWhere(
                                       (b) =>
                                           b.name == state.branches.first.name,
-                                      orElse: () => GitBranch('Unknown', ''))
+                                      orElse: () => GitBranch(
+                                          context.t.common.unknown, ''))
                                   .name,
                               branches: state.branches,
                             ),
@@ -181,13 +184,13 @@ class _GitComparisonViewState extends State<GitComparisonView>
                           ],
                         );
                       } else if (state is GitComparisonInProgress) {
-                        return const Center(
+                        return Center(
                             child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text('Comparing...')
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 16),
+                              Text(context.t.compare.comparing)
                             ]));
                       } else if (state is GitConflictsDetected) {
                         return ConflictResolutionView(
@@ -220,16 +223,21 @@ class _GitComparisonViewState extends State<GitComparisonView>
   Widget _buildEmptyState(BuildContext context) {
     return EmptyStateContainer(
       icon: LucideIcons.gitBranch,
-      title: 'Ready to Compare Repository',
-      subtitle: 'Open a local Git repository to compare\nbranches or commits.',
-      chips: const [
+      title: context.t.gitComparison
+          .title, // Reusing title, or create new "Ready" title if needed
+      subtitle: context.t.git
+          .noRepositoriesDescription, // Slightly different context but close enough? Or create new
+      chips: [
         ContextChip(
-            label: 'Branch comparison', tooltip: 'Compare any two branches'),
+            label: context.t.gitComparison.branch,
+            tooltip: context.t.git.compareBranches),
         ContextChip(
-            label: 'Commit history', tooltip: 'Compare specific commits'),
+            label: context.t.gitComparison.commit,
+            tooltip: context.t.git.compareCommits),
         ContextChip(
-            label: 'Conflict detection',
-            tooltip: 'Detect and resolve merge conflicts'),
+            label: context.t.gitComparison.conflictDetection,
+            // NOTE: Git terms (Commit, Branch, Checkout, Merge, Conflict) are intentionally kept in English for Turkish translation
+            tooltip: context.t.gitComparison.conflictDetectionTooltip),
       ],
       bottomSection: RecentComparisonsList(
         filterType: ComparisonType.git,
@@ -240,14 +248,14 @@ class _GitComparisonViewState extends State<GitComparisonView>
 
   void _loadRecentGitComparison(ComparisonSession session) {
     if (session.type != ComparisonType.git) {
-      ToastService.showInfo(context, 'This is not a git comparison.');
+      ToastService.showInfo(context, context.t.gitComparison.notGitComparison);
       return;
     }
 
     final repoPath = session.gitRepoPath;
     if (repoPath == null || !Directory(repoPath).existsSync()) {
       ToastService.showError(
-          context, 'Repository no longer exists at this path.');
+          context, context.t.gitComparison.repositoryNotExist);
       return;
     }
 
@@ -273,7 +281,8 @@ class _RepositorySelector extends StatelessWidget {
 
     return BlocBuilder<GitBloc, GitState>(
       builder: (context, state) {
-        String currentPath = state.repoPath ?? 'No repository selected';
+        String currentPath =
+            state.repoPath ?? context.t.gitComparison.noRepositorySelected;
         bool hasRepo = state.repoPath != null;
 
         return Row(
@@ -293,7 +302,7 @@ class _RepositorySelector extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Create / Open Repository',
+                    context.t.gitComparison.repoSelector,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
@@ -316,7 +325,7 @@ class _RepositorySelector extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => _pickRepository(context),
               icon: const Icon(LucideIcons.folderOpen, size: 18),
-              label: const Text('Open'),
+              label: Text(context.t.gitComparison.open),
               style: FilledButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -359,7 +368,9 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
     if (widget.state.branches.isNotEmpty) {
       // Find main/master
       final mainBranch = widget.state.branches.firstWhere(
-          (b) => b.name == 'main' || b.name == 'master',
+          (b) =>
+              b.name == context.t.gitComparison.mainBranch ||
+              b.name == context.t.gitComparison.masterBranch,
           orElse: () => widget.state.branches.first);
 
       // Branch defaults
@@ -390,16 +401,16 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
           child: Container(
             constraints: const BoxConstraints(maxWidth: 400),
             child: SegmentedButton<ComparisonMode>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: ComparisonMode.branch,
-                  label: Text('Branch Comparison'),
-                  icon: Icon(LucideIcons.gitBranch),
+                  label: Text(context.t.git.compareBranches),
+                  icon: const Icon(LucideIcons.gitBranch),
                 ),
                 ButtonSegment(
                   value: ComparisonMode.commit,
-                  label: Text('Commit Comparison'),
-                  icon: Icon(LucideIcons.history),
+                  label: Text(context.t.git.compareCommits),
+                  icon: const Icon(LucideIcons.history),
                 ),
               ],
               selected: {mode},
@@ -430,8 +441,9 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
           child: FilledButton.icon(
             onPressed: _canCompare() ? _performCompare : null,
             icon: const Icon(LucideIcons.arrowRightLeft),
-            label: const Text('Compare',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            label: Text(context.t.nav.compare,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             style: FilledButton.styleFrom(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -471,13 +483,13 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _baseBranch,
-                decoration: const InputDecoration(
-                  labelText: 'Base Branch',
-                  border: OutlineInputBorder(
+                decoration: InputDecoration(
+                  labelText: context.t.git.baseBranch,
+                  border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 items: widget.state.branches
                     .map((b) => DropdownMenuItem(
@@ -507,13 +519,13 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _targetBranch,
-                decoration: const InputDecoration(
-                  labelText: 'Target Branch',
-                  border: OutlineInputBorder(
+                decoration: InputDecoration(
+                  labelText: context.t.git.compareBranch,
+                  border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 items: widget.state.branches
                     .map((b) => DropdownMenuItem(
@@ -555,8 +567,9 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _filterBranch,
-                decoration: const InputDecoration(
-                  labelText: 'Filter Commits by Branch',
+                decoration: InputDecoration(
+                  // NOTE: Git terms (Commit, Branch, Checkout, Merge, Conflict) are intentionally kept in English for Turkish translation
+                  labelText: context.t.gitComparison.filterCommitsByBranch,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
@@ -590,16 +603,15 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 onPressed: () => context
                     .read<GitBloc>()
                     .add(LoadCommits(branchName: _filterBranch)),
-                tooltip: 'Refresh Commits',
+                tooltip: context.t.gitComparison.refreshCommits,
               ),
           ],
         ),
         const SizedBox(height: 24),
 
         if (commits.isEmpty && !isLoading)
-          const Text(
-            'No commits found or loaded. '
-            'Select a branch to load commits.',
+          Text(
+            context.t.gitComparison.noCommits,
           ),
 
         if (commits.isNotEmpty) ...[
@@ -609,13 +621,13 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 child: DropdownButtonFormField<String>(
                   value: _baseCommitSha,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Base Commit (Older)',
-                    border: OutlineInputBorder(
+                  decoration: InputDecoration(
+                    labelText: context.t.gitComparison.baseCommit,
+                    border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
                   ),
                   items: _buildCommitItems(context, commits),
                   selectedItemBuilder: (ctx) =>
@@ -633,13 +645,13 @@ class _ComparisonControlsState extends State<_ComparisonControls> {
                 child: DropdownButtonFormField<String>(
                   value: _targetCommitSha,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Target Commit (Newer)',
-                    border: OutlineInputBorder(
+                  decoration: InputDecoration(
+                    labelText: context.t.gitComparison.targetCommit,
+                    border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
                   ),
                   items: _buildCommitItems(context, commits),
                   selectedItemBuilder: (ctx) =>
@@ -772,7 +784,7 @@ class _RepoActionsToolbar extends StatelessWidget {
           Icon(LucideIcons.gitBranch, size: 20, color: colorScheme.primary),
           const SizedBox(width: 8),
           Text(
-            'Actions:',
+            context.t.gitComparison.actions,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.primary,
               fontWeight: FontWeight.w600,
@@ -781,19 +793,19 @@ class _RepoActionsToolbar extends StatelessWidget {
           const SizedBox(width: 24),
           _ActionButton(
             icon: LucideIcons.cornerUpRight,
-            label: 'Checkout',
+            label: context.t.gitComparison.checkout,
             onPressed: () => _showCheckoutDialog(context),
           ),
           const SizedBox(width: 12),
           _ActionButton(
             icon: LucideIcons.merge,
-            label: 'Merge',
+            label: context.t.gitComparison.merge,
             onPressed: () => _showMergeDialog(context),
           ),
           const SizedBox(width: 12),
           _ActionButton(
             icon: LucideIcons.download,
-            label: 'Pull',
+            label: context.t.gitComparison.pull,
             onPressed: () => context.read<GitBloc>().add(PullChanges()),
           ),
         ],
@@ -806,7 +818,7 @@ class _RepoActionsToolbar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => _BranchSelectionDialog(
-        title: 'Checkout Branch',
+        title: context.t.gitComparison.checkoutBranch,
         branches: branches,
         onSelected: (branchName) {
           context.read<GitBloc>().add(CheckoutBranch(branchName));
@@ -819,7 +831,7 @@ class _RepoActionsToolbar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => _BranchSelectionDialog(
-        title: 'Merge Branch into Current',
+        title: context.t.gitComparison.mergeBranch,
         branches: branches,
         excludeBranch: currentBranch, // Can't merge self
         onSelected: (branchName) {
@@ -827,13 +839,13 @@ class _RepoActionsToolbar extends StatelessWidget {
           showDialog(
               context: context,
               builder: (c) => AlertDialog(
-                    title: Text('Merge $branchName?'),
-                    content: const Text(
-                        'This will merge changes into your current working branch. Conflicts may occur.'),
+                    title: Text(context.t.gitComparison
+                        .mergeConfirmation(branch: branchName)),
+                    content: Text(context.t.gitComparison.mergeWarning),
                     actions: [
                       TextButton(
                           onPressed: () => Navigator.pop(c),
-                          child: const Text('Cancel')),
+                          child: Text(context.t.common.cancel)),
                       FilledButton(
                           onPressed: () {
                             Navigator.pop(c);
@@ -841,7 +853,7 @@ class _RepoActionsToolbar extends StatelessWidget {
                                 .read<GitBloc>()
                                 .add(MergeBranch(branchName));
                           },
-                          child: const Text('Merge')),
+                          child: Text(context.t.gitComparison.merge)),
                     ],
                   ));
         },
@@ -924,7 +936,7 @@ class _BranchSelectionDialog extends StatelessWidget {
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel')),
+            child: Text(context.t.common.cancel)),
       ],
     );
   }
@@ -976,7 +988,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
 
     // 1. Ask user for directory
     final exportPath = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Export Folder',
+      dialogTitle: context.t.gitComparison.selectExportFolder,
     );
 
     if (exportPath == null) return;
@@ -991,7 +1003,8 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
       await filesDir.create(recursive: true);
     } catch (e) {
       if (mounted) {
-        ToastService.showError(context, 'Failed to create export folder: $e');
+        ToastService.showError(
+            context, context.t.gitComparison.createExportFolderError(error: e));
       }
       return;
     }
@@ -1179,7 +1192,8 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
       if (mounted) {
         _exportDialogSetState = null;
         Navigator.of(context).pop();
-        ToastService.showError(context, 'Export failed: $e');
+        ToastService.showError(
+            context, context.t.directoryComparison.exportFailed(error: e));
       }
     } finally {
       if (mounted) {
@@ -1213,7 +1227,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                 children: [
                   Icon(LucideIcons.download, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
-                  const Text('Exporting Files'),
+                  Text(context.t.gitComparison.exportingFiles),
                 ],
               ),
               content: SizedBox(
@@ -1224,7 +1238,8 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                   children: [
                     if (_currentExportFile != null)
                       Text(
-                        'Processing: $_currentExportFile',
+                        context.t.gitComparison
+                            .processingFile(file: _currentExportFile!),
                         style: theme.textTheme.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1241,7 +1256,8 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '$_exportedCount of $_totalToExport files exported',
+                      context.t.gitComparison.exportProgress(
+                          current: _exportedCount, total: _totalToExport),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isDark
                             ? AppThemeV2.darkTextMuted
@@ -1271,7 +1287,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
             children: [
               Icon(LucideIcons.checkCircle, color: Colors.green.shade400),
               const SizedBox(width: 12),
-              const Text('Export Complete'),
+              Text(context.t.gitComparison.exportComplete),
             ],
           ),
           content: SizedBox(
@@ -1280,11 +1296,11 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                    'Successfully exported $fileCount files with full content.'),
+                Text(context.t.gitComparison
+                    .exportSuccessMessage(count: fileCount)),
                 const SizedBox(height: 8),
                 Text(
-                  'Each file\'s diff is saved in the "files" subfolder.',
+                  context.t.gitComparison.exportDetail,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: isDark
                         ? AppThemeV2.darkTextMuted
@@ -1338,11 +1354,11 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                   Process.run('explorer.exe', [windowsPath], runInShell: true);
                   Navigator.of(dialogContext).pop();
                 },
-                child: const Text('Open Folder'),
+                child: Text(context.t.common.open),
               ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
+              child: Text(context.t.common.close),
             ),
           ],
         );
@@ -1394,7 +1410,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
               IconButton(
                 onPressed: widget.onBack,
                 icon: const Icon(LucideIcons.arrowLeft),
-                tooltip: 'Back to comparison controls',
+                tooltip: context.t.gitComparison.backToControls,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -1402,13 +1418,13 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Comparison Results',
+                      context.t.gitComparison.comparisonResults,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "${widget.mode == ComparisonMode.commit ? 'Commit' : 'Branch'}: "
+                      "${widget.mode == ComparisonMode.commit ? context.t.gitComparison.commit : context.t.gitComparison.branch}: "
                       "${_truncateRef(widget.base)} → ${_truncateRef(widget.target)}",
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: isDark
@@ -1444,19 +1460,19 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
               // Stats chips
               _StatChip(
                   icon: LucideIcons.plus,
-                  label: 'Added',
+                  label: context.t.diff.added,
                   count: added,
                   color: Colors.green),
               const SizedBox(width: 12),
               _StatChip(
                   icon: LucideIcons.pencil,
-                  label: 'Modified',
+                  label: context.t.diff.modified,
                   count: modified,
                   color: Colors.orange),
               const SizedBox(width: 12),
               _StatChip(
                   icon: LucideIcons.minus,
-                  label: 'Deleted',
+                  label: context.t.diff.removed,
                   count: deleted,
                   color: Colors.red),
               const Spacer(),
@@ -1469,7 +1485,9 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(LucideIcons.download, size: 18),
-                label: Text(_isExporting ? 'Exporting...' : 'Export'),
+                label: Text(_isExporting
+                    ? context.t.projects.exporting
+                    : context.t.common.export),
                 style: OutlinedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1481,8 +1499,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
         const SizedBox(height: 8),
         Expanded(
           child: widget.diffFiles.isEmpty
-              ? const Center(
-                  child: Text('No changes found between selected refs.'))
+              ? Center(child: Text(context.t.gitComparison.noChanges))
               : ListView.builder(
                   itemCount: widget.diffFiles.length,
                   itemBuilder: (context, index) {
@@ -1613,7 +1630,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                                   icon: LucideIcons.plus,
                                   count: file.additions,
                                   color: themeState.diffAddedColor,
-                                  tooltip: 'Lines Added',
+                                  tooltip: context.t.gitComparison.linesAdded,
                                 ),
                                 const SizedBox(width: 8),
                               ],
@@ -1623,7 +1640,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                                   icon: LucideIcons.trash2,
                                   count: file.deletions,
                                   color: themeState.diffRemovedColor,
-                                  tooltip: 'Lines Removed',
+                                  tooltip: context.t.gitComparison.linesRemoved,
                                 ),
                                 const SizedBox(width: 8),
                               ],
@@ -1638,7 +1655,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                                   icon: LucideIcons.pencil,
                                   count: 0,
                                   color: themeState.diffModifiedColor,
-                                  tooltip: 'Modified',
+                                  tooltip: context.t.diff.modified,
                                 ),
 
                               if (file.additions == 0 &&
@@ -1651,7 +1668,7 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
                                 onPressed: () =>
                                     _showDiffDialog(context, file.path),
                                 icon: const Icon(LucideIcons.eye, size: 16),
-                                label: const Text('View'),
+                                label: Text(context.t.directoryComparison.view),
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 8),
@@ -1907,7 +1924,9 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
       builder: (ctx) => _SearchableFilePickerDialog(
         files: files,
         currentFile: currentFile,
-        title: isBase ? 'Select Base File' : 'Select Target File',
+        title: isBase
+            ? context.t.gitComparison.selectBaseFile
+            : context.t.gitComparison.selectTargetFile,
         onSelected: (file) {
           setState(() {
             if (isBase) {
@@ -2045,7 +2064,8 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Diff Viewer', style: theme.textTheme.titleLarge),
+                      Text(context.t.gitComparison.diffViewer,
+                          style: theme.textTheme.titleLarge),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -2058,7 +2078,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                                     theme.colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(4)),
                             child: Text(
-                                '${widget.baseRef.substring(0, 7)} (Base)  →  ${widget.targetRef.substring(0, 7)} (Target)',
+                                '${widget.baseRef.substring(0, 7)} (${context.t.gitComparison.base})  →  ${widget.targetRef.substring(0, 7)} (${context.t.gitComparison.target})',
                                 style: theme.textTheme.bodySmall
                                     ?.copyWith(fontFamily: 'monospace')),
                           ),
@@ -2069,7 +2089,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                             icon: LucideIcons.plus,
                             count: addedCount,
                             color: themeState.diffAddedColor,
-                            label: 'Added',
+                            label: context.t.diff.added,
                             isActive: _showAdded,
                             onTap: () =>
                                 setState(() => _showAdded = !_showAdded),
@@ -2079,7 +2099,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                             icon: LucideIcons.trash2,
                             count: removedCount,
                             color: themeState.diffRemovedColor,
-                            label: 'Removed',
+                            label: context.t.diff.removed,
                             isActive: _showRemoved,
                             onTap: () =>
                                 setState(() => _showRemoved = !_showRemoved),
@@ -2089,7 +2109,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                             icon: LucideIcons.pencil,
                             count: modifiedCount,
                             color: themeState.diffModifiedColor,
-                            label: 'Modified',
+                            label: context.t.diff.modified,
                             isActive: _showModified,
                             onTap: () =>
                                 setState(() => _showModified = !_showModified),
@@ -2166,7 +2186,10 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                       : Icons.file_present_outlined,
                   size: 18),
               const SizedBox(width: 8),
-              Text(isBase ? 'BASE' : 'TARGET',
+              Text(
+                  isBase
+                      ? context.t.gitComparison.base
+                      : context.t.gitComparison.target,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
@@ -2199,7 +2222,7 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
   Widget _buildDiffPane(List<_DiffLine> lines, bool isBase,
       AppThemeState themeState, ScrollController scrollController) {
     if (lines.isEmpty) {
-      return const Center(child: Text("No lines to display"));
+      return Center(child: Text(context.t.gitComparison.noLines));
     }
 
     // Get font settings
@@ -2582,7 +2605,7 @@ class _SearchableFilePickerDialogState
                     controller: _searchController,
                     autofocus: true,
                     decoration: InputDecoration(
-                      hintText: 'Search files...',
+                      hintText: context.t.gitComparison.searchFiles,
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8)),
@@ -2600,7 +2623,9 @@ class _SearchableFilePickerDialogState
             Expanded(
               child: _filteredFiles.isEmpty
                   ? Center(
-                      child: Text('No files match "$_searchController.text"',
+                      child: Text(
+                          context.t.gitComparison
+                              .noFilesMatch(query: _searchController.text),
                           style: TextStyle(
                               color: theme.colorScheme.onSurface
                                   .withValues(alpha: 0.6))))
@@ -2637,11 +2662,13 @@ class _SearchableFilePickerDialogState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${_filteredFiles.length} files',
+                  Text(
+                      context.t.gitComparison
+                          .filesCount(count: _filteredFiles.length),
                       style: theme.textTheme.bodySmall),
                   TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel')),
+                      child: Text(context.t.common.cancel)),
                 ],
               ),
             ),

@@ -50,15 +50,7 @@ class SettingsConstants {
   static const List<String> appLanguages = [
     'Auto-Detect',
     'English (US)',
-    'Español (ES)',
-    'Français (FR)',
-    'Deutsch (DE)',
-    'Italiano (IT)',
-    'Português (BR)',
     'Türkçe (TR)',
-    '日本語 (JP)',
-    '中文 (ZH)',
-    '한국어 (KR)',
   ];
 
   static const List<String> defaultViews = [

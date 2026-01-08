@@ -20,6 +20,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/core/services/talker_bloc_observer.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 bool _resolveDarkMode(AppSettings settings) {
   final mode = settings.appThemeMode.toLowerCase();
@@ -71,6 +72,9 @@ Future<void> _applyWindowsVisuals(AppSettings settings) async {
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize locale (use device locale or fallback to English)
+  LocaleSettings.useDeviceLocale();
 
   // Windows: Enforce single instance
   if (Platform.isWindows) {
@@ -165,19 +169,26 @@ Future<void> main(List<String> args) async {
 
   // Initialize bitsdojo_window for custom title bar (desktop only)
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-    doWhenWindowReady(() {
+    doWhenWindowReady(() async {
       final win = appWindow;
       const initialSize = Size(1280, 720);
       win.minSize = const Size(800, 600);
       win.size = initialSize;
       win.alignment = Alignment.center;
       win.title = 'Localizer';
-      unawaited(_applyWindowsVisuals(initialAppSettings));
+
+      // Apply visuals BEFORE showing window to prevent grey flash
+      await _applyWindowsVisuals(initialAppSettings);
+
       if (initialAppSettings.startMinimizedToTray) {
-        unawaited(windowManager.minimize());
+        await windowManager.minimize();
       } else {
         win.show();
-        unawaited(windowManager.focus());
+        await windowManager.focus();
+        // Force a frame to ensure content is rendered
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.scheduleFrame();
+        });
       }
     });
   }

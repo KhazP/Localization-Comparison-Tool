@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Animated icon widget for empty states with floating/pulsing animation.
 /// Uses the theme's primary (accent) color for the gradient.
@@ -277,7 +278,7 @@ class RecentComparisonsList extends StatelessWidget {
               Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
               const SizedBox(height: 12),
               Text(
-                'Recent Comparisons',
+                context.t.history.recentComparisons,
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: textSecondary,
                   fontWeight: FontWeight.w600,
@@ -304,8 +305,8 @@ class RecentComparisonsList extends StatelessWidget {
     ThemeData theme,
     Color textSecondary,
   ) {
-    final title = _getTitle(session);
-    final subtitle = _timeAgo(session.timestamp);
+    final title = _getTitle(context, session);
+    final subtitle = _timeAgo(context, session.timestamp);
 
     return ListTile(
       dense: true,
@@ -328,12 +329,12 @@ class RecentComparisonsList extends StatelessWidget {
     );
   }
 
-  String _getTitle(ComparisonSession session) {
+  String _getTitle(BuildContext context, ComparisonSession session) {
     switch (filterType) {
       case ComparisonType.git:
         final repoName =
             session.gitRepoPath?.split(Platform.pathSeparator).last ??
-                'Unknown';
+                context.t.common.unknown;
         if (session.gitBranch1 != null && session.gitBranch2 != null) {
           return '$repoName: ${session.gitBranch1} → ${session.gitBranch2}';
         }
@@ -341,12 +342,16 @@ class RecentComparisonsList extends StatelessWidget {
       case ComparisonType.directory:
         final source = session.file1Path.split(Platform.pathSeparator).last;
         final target = session.file2Path.split(Platform.pathSeparator).last;
-        return '$source ↔ $target';
+        return context.t.fileComparison
+            .comparisonLabel(source: source, target: target);
       case ComparisonType.file:
         final source = session.file1Path.split(Platform.pathSeparator).last;
         final target = session.file2Path.split(Platform.pathSeparator).last;
         final isBilingual = session.file1Path == session.file2Path;
-        return isBilingual ? 'Bilingual: $source' : '$source ↔ $target';
+        return isBilingual
+            ? context.t.fileComparison.bilingualFileLabel(name: source)
+            : context.t.fileComparison
+                .comparisonLabel(source: source, target: target);
     }
   }
 
@@ -361,18 +366,18 @@ class RecentComparisonsList extends StatelessWidget {
     }
   }
 
-  String _timeAgo(DateTime dateTime) {
+  String _timeAgo(BuildContext context, DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return context.t.history.timeAgo.justNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} min ago';
+      return context.t.history.timeAgo.minutesAgo(count: difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} hours ago';
+      return context.t.history.timeAgo.hoursAgo(count: difference.inHours);
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return context.t.history.timeAgo.daysAgo(count: difference.inDays);
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }

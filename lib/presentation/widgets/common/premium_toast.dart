@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class PremiumToast extends StatelessWidget {
   final String message;
@@ -127,7 +128,7 @@ class PremiumToast extends StatelessWidget {
                       )
                     else if (onUndo != null)
                       _ActionButton(
-                        label: 'Undo',
+                        label: context.t.common.undo,
                         onPressed: onUndo!,
                         foregroundColor: foregroundColor,
                         isDark: isDark,

@@ -3,6 +3,7 @@ import 'package:pluto_grid/pluto_grid.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/core/utils/diff_utils.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Converts comparison diff data to PlutoGrid format.
 class PlutoGridAdapter {
@@ -42,7 +43,7 @@ class PlutoGridAdapter {
       ),
       // Status column
       PlutoColumn(
-        title: 'STATUS',
+        title: context.t.diff.status.toUpperCase(),
         field: 'status',
         type: PlutoColumnType.text(),
         width: 130, // Increased further to fix persistent overflow
@@ -53,12 +54,13 @@ class PlutoGridAdapter {
         textAlign: PlutoColumnTextAlign.center,
         titleTextAlign: PlutoColumnTextAlign.center,
         renderer: (rendererContext) {
-          return _buildStatusBadge(rendererContext.cell.value as String, theme);
+          return _buildStatusBadge(
+              context, rendererContext.cell.value as String, theme);
         },
       ),
       // Key column (frozen)
       PlutoColumn(
-        title: 'KEY',
+        title: context.t.grid.columns.key,
         field: 'key',
         type: PlutoColumnType.text(),
         width: 200,
@@ -115,7 +117,7 @@ class PlutoGridAdapter {
       ),
       // Source column (frozen)
       PlutoColumn(
-        title: 'SOURCE',
+        title: context.t.grid.columns.source,
         field: 'source',
         type: PlutoColumnType.text(),
         width: 400,
@@ -166,8 +168,8 @@ class PlutoGridAdapter {
       // Target column (editable - inline or dialog based on setting)
       PlutoColumn(
         title: useInlineEditing
-            ? 'TARGET (click to edit)'
-            : 'TARGET (click for dialog)',
+            ? context.t.advancedDiff.table.targetClickToEdit
+            : context.t.advancedDiff.table.targetClickForDialog,
         field: 'target',
         type: PlutoColumnType.text(),
         width: 400,
@@ -243,7 +245,9 @@ class PlutoGridAdapter {
           }
 
           return Tooltip(
-            message: text.isEmpty ? '(empty - click to edit)' : text,
+            message: text.isEmpty
+                ? context.t.advancedDiff.table.emptyClickToEdit
+                : text,
             waitDuration: const Duration(milliseconds: 500),
             child: content,
           );
@@ -251,7 +255,7 @@ class PlutoGridAdapter {
       ),
       // Actions column
       PlutoColumn(
-        title: 'ACTIONS',
+        title: context.t.grid.columns.actions,
         field: 'actions',
         type: PlutoColumnType.text(),
         width: 140,
@@ -282,14 +286,16 @@ class PlutoGridAdapter {
                 icon: isReviewed
                     ? Icons.visibility_off
                     : Icons.check_circle_outline,
-                tooltip: isReviewed ? 'Unmark Reviewed' : 'Mark Reviewed',
+                tooltip: isReviewed
+                    ? context.t.advancedDiff.table.unmarkReviewed
+                    : context.t.advancedDiff.table.markReviewed,
                 color: isReviewed ? Colors.green : null,
                 onPressed: () => onMarkReviewed(rowKey),
               ),
               // Primary action: Revert
               _ActionIconButton(
                 icon: Icons.undo,
-                tooltip: 'Revert to Source',
+                tooltip: context.t.advancedDiff.table.revertToSource,
                 onPressed: () => onRevert(rowKey),
               ),
               // Overflow menu with all other actions
@@ -316,6 +322,7 @@ class PlutoGridAdapter {
 
   /// Converts diff entries to PlutoGrid rows.
   static List<PlutoRow> createRows({
+    required BuildContext context,
     required List<MapEntry<String, ComparisonStatusDetail>> entries,
     required Map<String, String> sourceData,
     required Map<String, String> targetData,
@@ -327,7 +334,7 @@ class PlutoGridAdapter {
       final key = entry.key;
       final detail = entry.value;
 
-      final statusLabel = _getStatusLabel(detail);
+      final statusLabel = _getStatusLabel(context, detail);
       final source = sourceData[key] ?? '';
       final target = targetData[key] ?? '';
       final isModified = dirtyKeys.contains(key);
@@ -347,26 +354,28 @@ class PlutoGridAdapter {
     }).toList();
   }
 
-  static String _getStatusLabel(ComparisonStatusDetail detail) {
+  static String _getStatusLabel(
+      BuildContext context, ComparisonStatusDetail detail) {
     switch (detail.status) {
       case StringComparisonStatus.added:
-        return 'ADDED';
+        return context.t.diff.added.toUpperCase();
       case StringComparisonStatus.removed:
-        return 'MISSING';
+        return context.t.diff.missing.toUpperCase();
       case StringComparisonStatus.modified:
         final percent = ((1.0 - (detail.similarity ?? 0)) * 100).toInt();
-        return 'CHG $percent%';
+        return '${context.t.grid.columns.status} $percent%';
       case StringComparisonStatus.identical:
-        return 'SAME';
+        return context.t.historyView.same.toUpperCase();
     }
   }
 
-  static Widget _buildStatusBadge(String label, ThemeData theme) {
+  static Widget _buildStatusBadge(
+      BuildContext context, String label, ThemeData theme) {
     Color barColor;
 
-    if (label == 'ADDED') {
+    if (label == context.t.diff.added.toUpperCase()) {
       barColor = Colors.green;
-    } else if (label == 'MISSING') {
+    } else if (label == context.t.diff.missing.toUpperCase()) {
       barColor = Colors.red;
     } else if (label.startsWith('CHG')) {
       barColor = Colors.amber[700]!;
@@ -426,12 +435,15 @@ Widget _buildOverflowMenu({
   void Function(String key)? onAiRephrase,
 }) {
   final theme = Theme.of(context);
-  final translateLabel =
-      isCloudTranslation ? 'Translate with Cloud' : 'Translate with AI';
-  final rephraseLabel = isCloudTranslation ? 'Rephrase' : 'Rephrase with AI';
+  final translateLabel = isCloudTranslation
+      ? context.t.advancedDiff.table.translateWithCloud
+      : context.t.advancedDiff.table.translateWithAi;
+  final rephraseLabel = isCloudTranslation
+      ? context.t.advancedDiff.table.rephrase
+      : context.t.advancedDiff.table.rephraseWithAi;
 
   return Tooltip(
-    message: 'More actions',
+    message: context.t.advancedDiff.table.moreActions,
     child: SizedBox(
       width: 32,
       height: 32,
@@ -467,13 +479,13 @@ Widget _buildOverflowMenu({
         },
         itemBuilder: (context) => [
           // Edit Action
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _OverflowAction.edit,
             child: Row(
               children: [
-                Icon(Icons.edit_outlined, size: 16),
-                SizedBox(width: 8),
-                Text('Edit Details'),
+                const Icon(Icons.edit_outlined, size: 16),
+                const SizedBox(width: 8),
+                Text(context.t.advancedDiff.table.editDetails),
               ],
             ),
           ),
@@ -495,10 +507,11 @@ Widget _buildOverflowMenu({
             PopupMenuItem(
               value: _OverflowAction.aiSuggest,
               child: Row(
-                children: const [
-                  Icon(LucideIcons.lightbulb, size: 16, color: Colors.amber),
-                  SizedBox(width: 8),
-                  Text('Suggest Translation'),
+                children: [
+                  const Icon(LucideIcons.lightbulb,
+                      size: 16, color: Colors.amber),
+                  const SizedBox(width: 8),
+                  Text(context.t.advancedDiff.table.suggestTranslation),
                 ],
               ),
             ),
@@ -519,24 +532,25 @@ Widget _buildOverflowMenu({
               (hasTarget && onAiRephrase != null))
             const PopupMenuDivider(),
           // Standard actions
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _OverflowAction.addToTM,
             child: Row(
               children: [
-                Icon(Icons.psychology, size: 16),
-                SizedBox(width: 8),
-                Text('Add to TM'),
+                const Icon(Icons.psychology, size: 16),
+                const SizedBox(width: 8),
+                Text(context.t.advancedDiff.table.addToTm),
               ],
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: _OverflowAction.delete,
             child: Row(
               children: [
-                Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Delete Entry', style: TextStyle(color: Colors.red)),
+                const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(context.t.advancedDiff.table.deleteEntry,
+                    style: const TextStyle(color: Colors.red)),
               ],
             ),
           ),

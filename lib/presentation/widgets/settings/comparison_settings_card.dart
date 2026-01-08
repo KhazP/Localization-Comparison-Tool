@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
@@ -50,7 +51,7 @@ class ComparisonSettingsCard extends StatelessWidget {
     return Column(
       children: [
         SettingsCardContainer(
-          title: 'Comparison Behavior',
+          title: context.t.settings.comparison.behavior,
           isDark: isDark,
           isAmoled: isAmoled,
           onReset: () {
@@ -65,8 +66,8 @@ class ComparisonSettingsCard extends StatelessWidget {
             _buildOverridableSettingsRow(
               context: context,
               bloc: bloc,
-              label: 'Ignore Case',
-              description: 'Treat "Key" and "key" as the same',
+              label: context.t.settings.comparison.ignoreCase,
+              description: context.t.settings.comparison.ignoreCaseDescription,
               settingKey: 'ignoreCase',
               control: Switch(
                 key: const Key('settings_ignoreCase_switch'),
@@ -85,8 +86,9 @@ class ComparisonSettingsCard extends StatelessWidget {
             _buildOverridableSettingsRow(
               context: context,
               bloc: bloc,
-              label: 'Ignore Whitespace',
-              description: 'Ignore leading/trailing spaces',
+              label: context.t.settings.comparison.ignoreWhitespace,
+              description:
+                  context.t.settings.comparison.ignoreWhitespaceDescription,
               settingKey: 'ignoreWhitespace',
               control: Switch(
                 key: const Key('settings_ignoreWhitespace_switch'),
@@ -105,9 +107,9 @@ class ComparisonSettingsCard extends StatelessWidget {
             _buildOverridableSettingsRow(
               context: context,
               bloc: bloc,
-              label: 'Similarity Threshold',
+              label: context.t.settings.comparison.similarityThreshold,
               description:
-                  'Minimum similarity for "Modified" detection (${(similarityThreshold * 100).round()}%)',
+                  '${context.t.settings.comparison.similarityThresholdDescription} (${(similarityThreshold * 100).round()}%)',
               settingKey: 'similarityThreshold',
               control: SizedBox(
                 width: 200,
@@ -129,8 +131,8 @@ class ComparisonSettingsCard extends StatelessWidget {
               ),
             ),
             SettingsRow(
-              label: 'Comparison Mode',
-              description: 'How to match entries between files',
+              label: context.t.settings.comparison.mode,
+              description: context.t.settings.comparison.modeDescription,
               control: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -144,23 +146,46 @@ class ComparisonSettingsCard extends StatelessWidget {
                     },
                     isDark: isDark,
                     isAmoled: isAmoled,
+                    itemLabelBuilder: (val) {
+                      switch (val) {
+                        case 'Key-based':
+                          return context.t.settings.comparison.modeKey;
+                        case 'Order-based':
+                          return context.t.settings.comparison.modeOrder;
+                        case 'Smart Match':
+                          return context.t.settings.comparison.modeSmart;
+                        default:
+                          return val;
+                      }
+                    },
                   ),
                   const SizedBox(width: 8),
                   Tooltip(
-                    richMessage: const TextSpan(
+                    richMessage: TextSpan(
                       children: [
                         TextSpan(
-                            text: 'Key-based: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        TextSpan(text: 'Matches by key name (default).\n\n'),
+                            text: '${context.t.settings.comparison.modeKey}: ',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         TextSpan(
-                            text: 'Order-based: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        TextSpan(text: 'Matches by position in file.\n\n'),
+                            text:
+                                '${context.t.settings.comparison.modeKeyDescription}\n\n'),
                         TextSpan(
-                            text: 'Smart Match: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        TextSpan(text: 'Detects moved/renamed keys.'),
+                            text:
+                                '${context.t.settings.comparison.modeOrder}: ',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                            text:
+                                '${context.t.settings.comparison.modeOrderDescription}\n\n'),
+                        TextSpan(
+                            text:
+                                '${context.t.settings.comparison.modeSmart}: ',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                            text: context
+                                .t.settings.comparison.modeSmartDescription),
                       ],
                     ),
                     child: Icon(
@@ -178,7 +203,7 @@ class ComparisonSettingsCard extends StatelessWidget {
           ],
         ),
         SettingsCardContainer(
-          title: 'Ignore Patterns',
+          title: context.t.settings.comparison.ignorePatterns,
           isDark: isDark,
           isAmoled: isAmoled,
           trailing: state.isProjectScope
@@ -196,7 +221,7 @@ class ComparisonSettingsCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'No ignore patterns set.',
+                  context.t.settings.comparison.noIgnorePatterns,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: theme.textMutedColor,
                         fontStyle: FontStyle.italic,
@@ -218,7 +243,7 @@ class ComparisonSettingsCard extends StatelessWidget {
                 key: const Key('settings_addPattern_button'),
                 onPressed: onShowAddPatternDialog,
                 icon: const Icon(LucideIcons.plus, size: 18),
-                label: const Text('Add Pattern'),
+                label: Text(context.t.settings.comparison.addPattern),
                 style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 40)),
               ),
@@ -267,7 +292,7 @@ class ComparisonSettingsCard extends StatelessWidget {
             icon: Icon(LucideIcons.trash2,
                 size: 18,
                 color: AppThemeV2.error,
-                semanticLabel: 'Delete $pattern'),
+                semanticLabel: '${context.t.common.delete} $pattern'),
             onPressed: () {
               if (state.isProjectScope) {
                 final newPatterns = List<String>.from(currentPatterns)
@@ -278,7 +303,7 @@ class ComparisonSettingsCard extends StatelessWidget {
                 bloc.add(RemoveIgnorePattern(pattern));
               }
             },
-            tooltip: 'Remove pattern',
+            tooltip: context.t.common.remove,
           ),
         ],
       ),
@@ -294,9 +319,10 @@ class ComparisonSettingsCard extends StatelessWidget {
       children: SettingsConstants.patternPresets.entries
           .map(
             (entry) => OutlinedButton.icon(
-              icon: const Icon(LucideIcons.plus,
-                  size: 16, semanticLabel: 'Add ignore pattern'),
-              label: Text(entry.key),
+              icon: Icon(LucideIcons.plus,
+                  size: 16,
+                  semanticLabel: context.t.settings.comparison.addPattern),
+              label: Text(_getPatternPresetLabel(context, entry.key)),
               onPressed: () {
                 if (state.isProjectScope) {
                   final newPatterns = List<String>.from(currentPatterns);
@@ -317,6 +343,21 @@ class ComparisonSettingsCard extends StatelessWidget {
           )
           .toList(),
     );
+  }
+
+  String _getPatternPresetLabel(BuildContext context, String key) {
+    switch (key) {
+      case 'Comments':
+        return context.t.settings.comparison.patternPresets.comments;
+      case 'Temp Keys':
+        return context.t.settings.comparison.patternPresets.tempKeys;
+      case 'Placeholders':
+        return context.t.settings.comparison.patternPresets.placeholders;
+      case 'Dev Only':
+        return context.t.settings.comparison.patternPresets.devOnly;
+      default:
+        return key;
+    }
   }
 
   /// Builds a settings row that shows an override indicator when in project scope.
@@ -364,7 +405,7 @@ class ComparisonSettingsCard extends StatelessWidget {
     if (!hasOverrides) return null;
 
     return Tooltip(
-      message: 'Reset all comparison settings to global defaults',
+      message: context.t.settings.comparison.resetToGlobal,
       child: IconButton(
         icon: Icon(
           LucideIcons.refreshCcw,

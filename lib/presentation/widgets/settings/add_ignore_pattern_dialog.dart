@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Dialog for adding a new ignore pattern with live regex testing.
 class AddIgnorePatternDialog extends StatefulWidget {
@@ -53,7 +54,7 @@ class _AddIgnorePatternDialogState extends State<AddIgnorePatternDialog> {
       });
     } catch (_) {
       setState(() {
-        _errorMessage = 'Invalid regex pattern';
+        _errorMessage = context.t.dialogs.addIgnorePattern.invalid;
         _matchResult = null;
       });
     }
@@ -65,7 +66,7 @@ class _AddIgnorePatternDialogState extends State<AddIgnorePatternDialog> {
         _errorMessage == null && _patternController.text.isNotEmpty;
 
     return AlertDialog(
-      title: const Text('Add Ignore Pattern'),
+      title: Text(context.t.dialogs.addIgnorePattern.title),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,8 +75,8 @@ class _AddIgnorePatternDialogState extends State<AddIgnorePatternDialog> {
             key: const Key('addPattern_textField'),
             controller: _patternController,
             decoration: InputDecoration(
-              hintText: 'e.g., ^temp_.*',
-              labelText: 'Pattern (regex)',
+              hintText: context.t.dialogs.addIgnorePattern.hint,
+              labelText: context.t.dialogs.addIgnorePattern.patternLabel,
               errorText: _errorMessage,
             ),
             autofocus: widget.autofocus,
@@ -85,8 +86,8 @@ class _AddIgnorePatternDialogState extends State<AddIgnorePatternDialog> {
           const SizedBox(height: 16),
           TextField(
             decoration: InputDecoration(
-              labelText: 'Test String',
-              hintText: 'Enter a key to test against pattern',
+              labelText: context.t.dialogs.addIgnorePattern.testStringLabel,
+              hintText: context.t.dialogs.addIgnorePattern.testHint,
               suffixIcon: _matchResult == null
                   ? null
                   : Icon(
@@ -104,8 +105,8 @@ class _AddIgnorePatternDialogState extends State<AddIgnorePatternDialog> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 _matchResult!
-                    ? '✓ Pattern matches test string'
-                    : '✗ Pattern does not match',
+                    ? context.t.dialogs.addIgnorePattern.match
+                    : context.t.dialogs.addIgnorePattern.noMatch,
                 style: TextStyle(
                   color: _matchResult! ? Colors.green : Colors.red,
                   fontSize: 12,
@@ -118,12 +119,12 @@ class _AddIgnorePatternDialogState extends State<AddIgnorePatternDialog> {
         TextButton(
           key: const Key('addPattern_cancelButton'),
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.t.dialogs.addIgnorePattern.cancel),
         ),
         FilledButton(
           key: const Key('addPattern_addButton'),
           onPressed: canSubmit ? _submit : null,
-          child: const Text('Add'),
+          child: Text(context.t.dialogs.addIgnorePattern.add),
         ),
       ],
     );

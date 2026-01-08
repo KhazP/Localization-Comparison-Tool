@@ -6,6 +6,7 @@ import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_eve
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Dialog for creating a new Localizer project.
 ///
@@ -39,7 +40,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
 
   Future<void> _pickFolder() async {
     final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Project Folder',
+      dialogTitle: context.t.projects.selection.selectFolder,
     );
 
     if (result != null) {
@@ -57,7 +58,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
   void _createProject() {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedFolderPath == null) {
-      ToastService.showWarning(context, 'Please select a project folder.');
+      ToastService.showWarning(
+          context, context.t.projects.createDialog.selectFolderWarning);
       return;
     }
 
@@ -97,12 +99,13 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           Navigator.of(context).pop();
           ToastService.showSuccess(
             context,
-            'Project "${state.currentProject!.name}" created successfully!',
+            context.t.projects.createDialog
+                .success(name: state.currentProject!.name),
           );
         } else if (state.status == ProjectStatus.error) {
           setState(() => _isCreating = false);
-          ToastService.showError(
-              context, state.errorMessage ?? 'Failed to create project.');
+          ToastService.showError(context,
+              state.errorMessage ?? context.t.projects.createDialog.failure);
         }
       },
       child: AlertDialog(
@@ -110,7 +113,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           children: [
             Icon(Icons.create_new_folder_outlined, color: colorScheme.primary),
             const SizedBox(width: 12),
-            const Text('Create Project'),
+            Text(context.t.projects.createDialog.title),
           ],
         ),
         content: SizedBox(
@@ -122,8 +125,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'A project lets you save custom settings for a specific folder. '
-                  'A ".localizer" folder will be created to store your project configuration.',
+                  context.t.projects.createDialog.description,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -132,7 +134,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
 
                 // Folder Selection
                 Text(
-                  'Project Folder',
+                  context.t.projects.createDialog.folderLabel,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
@@ -159,7 +161,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            _selectedFolderPath ?? 'Click to select folder...',
+                            _selectedFolderPath ??
+                                context.t.projects.createDialog.folderHint,
                             style: TextStyle(
                               color: _selectedFolderPath != null
                                   ? colorScheme.onSurface
@@ -180,23 +183,23 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
 
                 // Project Name
                 Text(
-                  'Project Name',
+                  context.t.projects.createDialog.nameLabel,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
                   enabled: !_isCreating,
-                  decoration: const InputDecoration(
-                    hintText: 'e.g., My App Translations',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    hintText: context.t.projects.createDialog.nameHint,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a project name';
+                      return context.t.projects.createDialog.enterNameError;
                     }
                     if (value.trim().length < 2) {
-                      return 'Name must be at least 2 characters';
+                      return context.t.projects.createDialog.nameLengthError;
                     }
                     return null;
                   },
@@ -209,7 +212,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         actions: [
           TextButton(
             onPressed: _isCreating ? null : () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.t.common.cancel),
           ),
           FilledButton.icon(
             onPressed: _isCreating ? null : _createProject,
@@ -223,7 +226,9 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                     ),
                   )
                 : const Icon(Icons.check, size: 18),
-            label: Text(_isCreating ? 'Creating...' : 'Create Project'),
+            label: Text(_isCreating
+                ? context.t.projects.createDialog.creating
+                : context.t.projects.createDialog.createAction),
           ),
         ],
       ),

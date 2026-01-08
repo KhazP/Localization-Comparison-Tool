@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_scope.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Selector widget for switching between global and project settings scope.
 ///
@@ -52,7 +53,7 @@ class SettingsScopeSelector extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Settings Scope',
+                    context.t.settings.scope.title,
                     style: theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: colorScheme.onSurface.withOpacity(0.9),
@@ -84,10 +85,9 @@ class SettingsScopeSelector extends StatelessWidget {
         onPressed: () async {
           final confirm = await DialogService.showConfirmation(
             context: context,
-            title: 'Reset Project Settings?',
-            content:
-                'This will clear all overrides for this project and revert to global defaults. This action cannot be undone.',
-            confirmText: 'Reset',
+            title: context.t.settings.scope.reset,
+            content: context.t.settings.scope.resetConfirmation,
+            confirmText: context.t.common.reset,
             isDestructive: true,
           );
 
@@ -101,7 +101,7 @@ class SettingsScopeSelector extends StatelessWidget {
           color: colorScheme.error,
         ),
         label: Text(
-          'Reset Project to Global Defaults',
+          context.t.settings.scope.reset,
           style: theme.textTheme.labelMedium?.copyWith(
             color: colorScheme.error,
           ),
@@ -133,7 +133,7 @@ class SettingsScopeSelector extends StatelessWidget {
           Expanded(
             child: _ScopeButton(
               icon: Icons.public_rounded,
-              label: 'Global Defaults',
+              label: context.t.settings.scope.global,
               isSelected: state.scope == SettingsScope.global,
               onTap: () {
                 context.read<SettingsBloc>().add(
@@ -145,7 +145,8 @@ class SettingsScopeSelector extends StatelessWidget {
           Expanded(
             child: _ScopeButton(
               icon: Icons.folder_rounded,
-              label: state.currentProjectName ?? 'Project',
+              label:
+                  state.currentProjectName ?? context.t.settings.scope.project,
               isSelected: state.scope == SettingsScope.project,
               onTap: () {
                 context.read<SettingsBloc>().add(
@@ -166,8 +167,9 @@ class SettingsScopeSelector extends StatelessWidget {
   ) {
     final isProjectScope = state.scope == SettingsScope.project;
     final description = isProjectScope
-        ? 'Changes apply only to "${state.currentProjectName}". Other settings inherit from global defaults.'
-        : 'Changes apply to all projects unless overridden.';
+        ? context.t.settings.scope.projectDescription(
+            name: state.currentProjectName ?? context.t.settings.scope.project)
+        : context.t.settings.scope.globalDescription;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -295,7 +297,7 @@ class NoProjectScopePrompt extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Create a project to customize settings for specific folders',
+              context.t.settings.scope.createPrompt,
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.onSurface.withOpacity(0.5),

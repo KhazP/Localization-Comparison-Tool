@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/data/models/ai_suggestion_result.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// The action a user takes when reviewing an AI suggestion.
 enum AiSuggestionAction {
@@ -189,7 +190,9 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final titleText = widget.titleOverride ??
-        (widget.isRephrase ? 'AI Rephrase' : 'AI Translation');
+        (widget.isRephrase
+            ? context.t.advancedDiff.aiSuggestion.aiRephrase
+            : context.t.advancedDiff.aiSuggestion.aiTranslation);
 
     return AlertDialog(
       title: Row(
@@ -210,7 +213,8 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
                 ),
                 if (widget.showKeyName && widget.keyName.trim().isNotEmpty)
                   Text(
-                    'Key: ${widget.keyName}',
+                    context.t.advancedDiff.aiSuggestion
+                        .key(key: widget.keyName),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                     ),
@@ -235,7 +239,7 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
           children: [
             // Original text
             Text(
-              'Original:',
+              context.t.advancedDiff.aiSuggestion.original,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.hintColor,
               ),
@@ -259,7 +263,7 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
             Row(
               children: [
                 Text(
-                  'Suggestion:',
+                  context.t.advancedDiff.aiSuggestion.suggestion,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.hintColor,
                   ),
@@ -267,7 +271,7 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
                 const Spacer(),
                 if (widget.confidence != null)
                   Tooltip(
-                    message: 'AI Confidence',
+                    message: context.t.advancedDiff.aiSuggestion.confidence,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -292,7 +296,9 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
                     _isEditing ? LucideIcons.x : LucideIcons.pencil,
                     size: 16,
                   ),
-                  tooltip: _isEditing ? 'Cancel edit' : 'Edit suggestion',
+                  tooltip: _isEditing
+                      ? context.t.advancedDiff.aiSuggestion.cancelEdit
+                      : context.t.advancedDiff.aiSuggestion.editSuggestion,
                   onPressed: _toggleEdit,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -334,7 +340,7 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
                 widget.alternatives!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
-                'Alternatives:',
+                context.t.advancedDiff.aiSuggestion.alternatives,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -390,7 +396,7 @@ class _AiSuggestionDialogState extends State<AiSuggestionDialog> {
             Navigator.of(context).pop(AiSuggestionDecision.accept(result));
           },
           icon: const Icon(LucideIcons.check, size: 16),
-          label: const Text('Accept'),
+          label: Text(context.t.advancedDiff.aiSuggestion.accept),
         ),
       ],
     );

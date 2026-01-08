@@ -5,6 +5,7 @@ import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// A widget that displays storage contents for debugging.
 class StorageInspectorSection extends StatefulWidget {
@@ -93,8 +94,8 @@ class _StorageInspectorSectionState extends State<StorageInspectorSection> {
 
     return ExpansionTile(
       leading: Icon(LucideIcons.database, color: colorScheme.primary),
-      title: const Text('Storage Inspector'),
-      subtitle: const Text('View Hive & Secure Storage contents'),
+      title: Text(context.t.settings.developer.storageInspector),
+      subtitle: Text(context.t.settings.developer.storageInspectorDescription),
       children: [
         if (_isLoading)
           const Padding(
@@ -102,13 +103,16 @@ class _StorageInspectorSectionState extends State<StorageInspectorSection> {
             child: CircularProgressIndicator(),
           )
         else ...[
-          _buildSubsection('Hive (AppSettings)', _hiveData),
-          _buildSubsection('Secure Storage (Masked)', _secureStorageData),
+          _buildSubsection(
+              context.t.settings.developer.hiveAppSettings, _hiveData),
+          _buildSubsection(context.t.settings.developer.secureStorageMasked,
+              _secureStorageData),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextButton.icon(
               icon: const Icon(LucideIcons.refreshCw),
-              label: const Text('Refresh'),
+              label: Text(
+                  context.t.settings.developer.storageInspectorSection.refresh),
               onPressed: _loadData,
             ),
           ),

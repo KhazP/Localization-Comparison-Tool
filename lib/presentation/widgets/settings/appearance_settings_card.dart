@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -34,7 +35,7 @@ class AppearanceSettingsCard extends StatelessWidget {
     return Column(
       children: [
         SettingsCardContainer(
-          title: 'Theme',
+          title: context.t.settings.appearance.title,
           isDark: isDark,
           isAmoled: isAmoled,
           onReset: () {
@@ -47,8 +48,8 @@ class AppearanceSettingsCard extends StatelessWidget {
           },
           children: [
             SettingsRow(
-              label: 'Application Theme',
-              description: 'Choose light, dark, or AMOLED',
+              label: context.t.settings.appearance.theme,
+              description: context.t.settings.appearance.themeDescription,
               control: SettingsDropdown(
                 value: settings.appThemeMode,
                 items: themeModes,
@@ -59,13 +60,28 @@ class AppearanceSettingsCard extends StatelessWidget {
                 },
                 isDark: isDark,
                 isAmoled: isAmoled,
+                itemLabelBuilder: (val) {
+                  switch (val) {
+                    case 'System':
+                      return context.t.settings.appearance.themeSystem;
+                    case 'Light':
+                      return context.t.settings.appearance.themeLight;
+                    case 'Dark':
+                      return context.t.settings.appearance.themeDark;
+                    case 'Amoled':
+                      return context.t.settings.appearance.themeAmoled;
+                    default:
+                      return val;
+                  }
+                },
               ),
               isDark: isDark,
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Diff Font Size',
-              description: 'Adjust the font size of the comparison view',
+              label: context.t.settings.appearance.diffFontSize,
+              description:
+                  context.t.settings.appearance.diffFontSizeDescription,
               control: SizedBox(
                 width: 200,
                 child: Row(
@@ -96,8 +112,9 @@ class AppearanceSettingsCard extends StatelessWidget {
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Diff Font Family',
-              description: 'Font for comparison view',
+              label: context.t.settings.appearance.diffFontFamily,
+              description:
+                  context.t.settings.appearance.diffFontFamilyDescription,
               control: SettingsDropdown(
                 value: settings.diffFontFamily.isEmpty
                     ? 'System Default'
@@ -110,12 +127,18 @@ class AppearanceSettingsCard extends StatelessWidget {
                 },
                 isDark: isDark,
                 isAmoled: isAmoled,
+                itemLabelBuilder: (val) {
+                  if (val == 'System Default') {
+                    return context.t.settings.appearance.systemDefault;
+                  }
+                  return val;
+                },
               ),
               isDark: isDark,
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Accent Color',
+              label: context.t.settings.appearance.accentColor,
               control: Row(
                 children: [
                   Container(
@@ -139,9 +162,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                       (color) => context
                           .read<SettingsBloc>()
                           .add(UpdateAccentColor(color.value)),
-                      title: 'Pick Accent Color',
+                      title: context.t.settings.appearance.pickAccentColor,
                     ),
-                    child: const Text('Change'),
+                    child: Text(context.t.common.change),
                   ),
                 ],
               ),
@@ -209,7 +232,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                         child: Column(
                           children: [
                             Text(
-                              'Original',
+                              context.t.common.original,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: isDark
                                     ? AppThemeV2.darkTextMuted
@@ -245,7 +268,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                         child: Column(
                           children: [
                             Text(
-                              'New',
+                              "New",
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
@@ -287,14 +310,14 @@ class AppearanceSettingsCard extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: Text(context.t.common.cancel),
             ),
             FilledButton(
               onPressed: () {
                 onColorSelected(pickerColor);
                 Navigator.of(dialogContext).pop();
               },
-              child: const Text('Apply'),
+              child: Text(context.t.common.apply),
             ),
           ],
         ),
@@ -318,7 +341,7 @@ class DiffColorsSettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCardContainer(
-      title: 'Diff Colors',
+      title: context.t.settings.appearance.diffColors,
       isDark: isDark,
       isAmoled: isAmoled,
       onReset: () {
@@ -328,7 +351,7 @@ class DiffColorsSettingsCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Text(
-            'Presets',
+            context.t.settings.appearance.presetsTitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -345,22 +368,25 @@ class DiffColorsSettingsCard extends StatelessWidget {
           indent: 16,
           endIndent: 16,
         ),
-        _buildColorRow(context, 'Added', Color(settings.diffAddedColor),
+        _buildColorRow(
+            context, context.t.diff.added, Color(settings.diffAddedColor),
             (color) {
           context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.value));
         }),
-        _buildColorRow(context, 'Removed', Color(settings.diffRemovedColor),
+        _buildColorRow(
+            context, context.t.diff.removed, Color(settings.diffRemovedColor),
             (color) {
           context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.value));
         }),
-        _buildColorRow(context, 'Modified', Color(settings.diffModifiedColor),
+        _buildColorRow(
+            context, context.t.diff.modified, Color(settings.diffModifiedColor),
             (color) {
           context
               .read<SettingsBloc>()
               .add(UpdateDiffModifiedColor(color.value));
         }),
-        _buildColorRow(context, 'Identical', Color(settings.diffIdenticalColor),
-            (color) {
+        _buildColorRow(context, context.t.settings.appearance.identical,
+            Color(settings.diffIdenticalColor), (color) {
           context
               .read<SettingsBloc>()
               .add(UpdateDiffIdenticalColor(color.value));
@@ -374,8 +400,30 @@ class DiffColorsSettingsCard extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: _themePresets.entries.map((entry) {
+        String label = entry.key;
+        switch (entry.key) {
+          case 'Default':
+            label = context.t.settings.appearance.presets.presetDefault;
+            break;
+          case 'Colorblind-Friendly':
+            label = context.t.settings.appearance.presets.presetColorblind;
+            break;
+          case 'High Contrast':
+            label = context.t.settings.appearance.presets.presetHighContrast;
+            break;
+          case 'Nord':
+            label = context.t.settings.appearance.presets.presetNord;
+            break;
+          case 'Solarized':
+            label = context.t.settings.appearance.presets.presetSolarized;
+            break;
+          case 'Monokai':
+            label = context.t.settings.appearance.presets.presetMonokai;
+            break;
+        }
+
         return ActionChip(
-          label: Text(entry.key),
+          label: Text(label),
           onPressed: () {
             context.read<SettingsBloc>().add(ApplyThemePreset(
                   added: entry.value.added.value,
@@ -423,9 +471,9 @@ class DiffColorsSettingsCard extends StatelessWidget {
               context,
               color,
               onChanged,
-              title: 'Pick Color for $label',
+              title: context.t.settings.appearance.pickColorFor(label: label),
             ),
-            child: const Text('Change'),
+            child: Text(context.t.common.change),
           ),
         ],
       ),
@@ -524,7 +572,7 @@ class LifePreviewPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Live Preview',
+                  context.t.settings.appearance.livePreview,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.textSecondaryColor,
@@ -540,10 +588,10 @@ class LifePreviewPanel extends StatelessWidget {
               children: [
                 _AnimatedPreviewEntry(
                   lineNumber: 42,
-                  status: 'ADDED',
+                  status: context.t.diff.added.toUpperCase(),
                   color: Color(settings.diffAddedColor),
-                  keyName: 'onboarding.step3.title',
-                  value: '"Connect Your Account"',
+                  keyName: context.t.settings.appearance.preview.step3Title,
+                  value: context.t.settings.appearance.preview.connectAccount,
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,
@@ -552,10 +600,10 @@ class LifePreviewPanel extends StatelessWidget {
                 const SizedBox(height: 8),
                 _AnimatedPreviewEntry(
                   lineNumber: 58,
-                  status: 'REMOVED',
+                  status: context.t.diff.removed.toUpperCase(),
                   color: Color(settings.diffRemovedColor),
-                  keyName: 'deprecated.login_hint_v1',
-                  value: '"Enter credentials"',
+                  keyName: context.t.settings.appearance.preview.loginHint,
+                  value: context.t.settings.appearance.preview.enterCredentials,
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,
@@ -564,10 +612,11 @@ class LifePreviewPanel extends StatelessWidget {
                 const SizedBox(height: 8),
                 _AnimatedPreviewEntry(
                   lineNumber: 73,
-                  status: 'MODIFIED',
+                  status: context.t.diff.modified.toUpperCase(),
                   color: Color(settings.diffModifiedColor),
-                  keyName: 'checkout.cta_button',
-                  value: '"Buy Now" → "Complete Purchase"',
+                  keyName: context.t.settings.appearance.preview.ctaButton,
+                  value:
+                      '${context.t.settings.appearance.preview.buyNow} → ${context.t.settings.appearance.preview.completePurchase}',
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,
@@ -576,10 +625,10 @@ class LifePreviewPanel extends StatelessWidget {
                 const SizedBox(height: 8),
                 _AnimatedPreviewEntry(
                   lineNumber: 89,
-                  status: 'IDENTICAL',
+                  status: context.t.settings.appearance.identical.toUpperCase(),
                   color: Color(settings.diffIdenticalColor),
-                  keyName: 'common.app_name',
-                  value: '"Localizer"',
+                  keyName: context.t.settings.appearance.preview.appNameKey,
+                  value: context.t.settings.appearance.preview.appNameValue,
                   isDark: isDark,
                   isAmoled: isAmoled,
                   fontFamily: actualFontFamily,

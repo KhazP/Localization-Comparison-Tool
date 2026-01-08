@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/sidebar_section.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/status_section.dart';
@@ -22,7 +23,9 @@ class AdvancedDiffSidebar extends StatelessWidget {
     final settings = context.watch<SettingsBloc>().state.appSettings;
     final controller = context.watch<AdvancedDiffController>();
     final isCloud = _isCloudStrategy(settings.translationStrategy);
-    final aiTitle = isCloud ? 'Cloud Translation' : 'AI Translation';
+    final aiTitle = isCloud
+        ? context.t.advancedDiff.sidebar.cloudTranslation
+        : context.t.advancedDiff.sidebar.aiTranslation;
 
     return Container(
       width: 320,
@@ -42,7 +45,7 @@ class AdvancedDiffSidebar extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Widgets',
+                  context.t.advancedDiff.sidebar.widgets,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -59,7 +62,7 @@ class AdvancedDiffSidebar extends StatelessWidget {
             child: TextField(
               focusNode: searchFocusNode,
               decoration: InputDecoration(
-                hintText: 'Search keys & values... (Ctrl+F)',
+                hintText: context.t.advancedDiff.sidebar.searchPlaceholder,
                 prefixIcon: const Icon(LucideIcons.search, size: 18),
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -68,7 +71,8 @@ class AdvancedDiffSidebar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Tooltip(
-                      message: 'Fuzzy Search (typo-tolerant)',
+                      message:
+                          context.t.advancedDiff.sidebar.fuzzySearchTooltip,
                       child: IconButton(
                         icon: Text(
                           '~',
@@ -85,7 +89,8 @@ class AdvancedDiffSidebar extends StatelessWidget {
                       ),
                     ),
                     Tooltip(
-                      message: 'Regex Search',
+                      message:
+                          context.t.advancedDiff.sidebar.regexSearchTooltip,
                       child: IconButton(
                         icon: Text(
                           '.*',
@@ -119,18 +124,25 @@ class AdvancedDiffSidebar extends StatelessWidget {
                   child: AiSection(isCloudTranslation: isCloud),
                 ),
                 const SizedBox(height: 16),
-                const SidebarSection(title: 'Status', child: StatusSection()),
+                SidebarSection(
+                    title: context.t.advancedDiff.sidebar.status,
+                    child: const StatusSection()),
                 const SizedBox(height: 16),
-                const SidebarSection(
-                    title: 'Translation Memory',
-                    child: TranslationMemorySection()),
+                SidebarSection(
+                    title: context.t.advancedDiff.sidebar.tm,
+                    child: const TranslationMemorySection()),
                 const SizedBox(height: 16),
-                const SidebarSection(title: 'Filters', child: FiltersSection()),
+                SidebarSection(
+                    title: context.t.advancedDiff.sidebar.filters,
+                    child: const FiltersSection()),
                 const SizedBox(height: 16),
-                const SidebarSection(title: 'Actions', child: ActionsSection()),
+                SidebarSection(
+                    title: context.t.advancedDiff.sidebar.actions,
+                    child: const ActionsSection()),
                 const SizedBox(height: 16),
-                const SidebarSection(
-                    title: 'Similarity', child: SimilaritySection()),
+                SidebarSection(
+                    title: context.t.advancedDiff.sidebar.similarity,
+                    child: const SimilaritySection()),
               ],
             ),
           ),

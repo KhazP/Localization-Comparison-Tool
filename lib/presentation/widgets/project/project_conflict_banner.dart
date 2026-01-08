@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 
 /// A dismissable warning banner shown when a project uses AI settings
@@ -46,10 +47,10 @@ class _ProjectConflictBannerState extends State<ProjectConflictBanner> {
         if (!_dismissedConflicts.contains(conflictId)) {
           conflicts.add(_ConflictInfo(
             id: conflictId,
-            title: 'Missing API key for $projectService',
-            message:
-                'This project uses $projectService but no API key is configured. '
-                'Add your API key in Settings > AI Services, or the app will use the global default.',
+            title: context.t.projects.conflicts
+                .missingApiKeyTitle(service: projectService),
+            message: context.t.projects.conflicts
+                .missingApiKeyMessage(service: projectService),
             icon: Icons.key_off_rounded,
           ));
         }
@@ -136,7 +137,7 @@ class _ProjectConflictBannerState extends State<ProjectConflictBanner> {
               });
             },
             icon: Icon(Icons.close_rounded, size: 18, color: textColor),
-            tooltip: 'Dismiss',
+            tooltip: context.t.projects.conflicts.dismiss,
             visualDensity: VisualDensity.compact,
           ),
         ],

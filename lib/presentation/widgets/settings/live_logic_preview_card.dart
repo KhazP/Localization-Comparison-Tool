@@ -3,6 +3,7 @@ import 'package:string_similarity/string_similarity.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class LiveLogicPreviewCard extends StatefulWidget {
   final AppSettings settings;
@@ -19,6 +20,8 @@ class LiveLogicPreviewCard extends StatefulWidget {
   @override
   State<LiveLogicPreviewCard> createState() => _LiveLogicPreviewCardState();
 }
+
+enum MatchStatus { identical, similar, ignored, different }
 
 class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
   final TextEditingController _controllerA =
@@ -40,7 +43,7 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
     final result = _calculateResult();
 
     return SettingsCardContainer(
-      title: 'Preview Match',
+      title: context.t.settings.comparison.previewMatch.title,
       isDark: widget.isDark,
       isAmoled: widget.isAmoled,
       children: [
@@ -50,7 +53,7 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Test how your current settings affect matching logic.',
+                context.t.settings.comparison.previewMatch.description,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: theme.textMutedColor,
                     ),
@@ -59,13 +62,19 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
               Row(
                 children: [
                   Expanded(
-                    child:
-                        _buildInput(context, 'String A', _controllerA, theme),
+                    child: _buildInput(
+                        context,
+                        context.t.settings.comparison.previewMatch.stringA,
+                        _controllerA,
+                        theme),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child:
-                        _buildInput(context, 'String B', _controllerB, theme),
+                    child: _buildInput(
+                        context,
+                        context.t.settings.comparison.previewMatch.stringB,
+                        _controllerB,
+                        theme),
                   ),
                 ],
               ),
@@ -101,7 +110,7 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
           style: Theme.of(context).textTheme.bodyMedium,
           decoration: InputDecoration(
             isDense: true,
-            hintText: 'Enter text...',
+            hintText: context.t.settings.comparison.previewMatch.enterText,
             hintStyle: TextStyle(color: theme.textMutedColor),
             filled: true,
             fillColor: theme.surfaceColor.withValues(alpha: 0.5),
@@ -154,7 +163,7 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  result.status,
+                  result.statusLabel,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: statusColor,
                         fontWeight: FontWeight.bold,
@@ -182,7 +191,7 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
                       ),
                 ),
                 Text(
-                  'Similarity',
+                  context.t.settings.comparison.previewMatch.similarity,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: theme.textMutedColor,
                       ),
@@ -203,8 +212,10 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
     if (_matchesPattern(rawA, ignorePatterns) ||
         _matchesPattern(rawB, ignorePatterns)) {
       return _MatchResult(
-        status: 'Ignored',
-        description: 'Input matches an ignore pattern.',
+        status: MatchStatus.ignored,
+        statusLabel: context.t.settings.comparison.previewMatch.ignored,
+        description:
+            context.t.settings.comparison.previewMatch.ignoredDescription,
         similarity: -1,
       );
     }
@@ -226,18 +237,20 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
     // 3. Compare
     if (valA == valB) {
       return _MatchResult(
-        status: 'Identical',
-        description: 'Strings match exactly after normalization.',
+        status: MatchStatus.identical,
+        statusLabel: context.t.settings.comparison.previewMatch.identical,
+        description:
+            context.t.settings.comparison.previewMatch.identicalDescription,
         similarity: 1.0,
       );
     }
 
     if (valA.isEmpty || valB.isEmpty) {
-      // If one is empty and other isn't (since we checked equality above), it's New/Removed
-      // For this preview, let's just say "Different" or "New"
       return _MatchResult(
-        status: 'Different',
-        description: 'One value is empty.',
+        status: MatchStatus.different,
+        statusLabel: context.t.settings.comparison.previewMatch.different,
+        description:
+            context.t.settings.comparison.previewMatch.differentDescription,
         similarity: 0.0,
       );
     }
@@ -247,16 +260,18 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
 
     if (similarity >= threshold) {
       return _MatchResult(
-        status: 'Similar / Modified',
-        description:
-            'Match score is above threshold (${(threshold * 100).round()}%).',
+        status: MatchStatus.similar,
+        statusLabel: context.t.settings.comparison.previewMatch.similarModified,
+        description: context.t.settings.comparison.previewMatch
+            .similarModifiedDescription(threshold: (threshold * 100).round()),
         similarity: similarity,
       );
     } else {
       return _MatchResult(
-        status: 'New / Different',
-        description:
-            'Match score is below threshold (${(threshold * 100).round()}%).',
+        status: MatchStatus.different,
+        statusLabel: context.t.settings.comparison.previewMatch.newDifferent,
+        description: context.t.settings.comparison.previewMatch
+            .newDifferentDescription(threshold: (threshold * 100).round()),
         similarity: similarity,
       );
     }
@@ -273,44 +288,42 @@ class _LiveLogicPreviewCardState extends State<LiveLogicPreviewCard> {
     return false;
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(MatchStatus status) {
     switch (status) {
-      case 'Identical':
+      case MatchStatus.identical:
         return AppThemeV2.success;
-      case 'Similar / Modified':
+      case MatchStatus.similar:
         return AppThemeV2.warning; // Orange/Yellow
-      case 'Ignored':
+      case MatchStatus.ignored:
         return Colors.grey;
-      case 'New / Different':
+      case MatchStatus.different:
         return AppThemeV2.error; // Or a distinct color for "Diff"
-      default:
-        return Theme.of(context).primaryColor;
     }
   }
 
-  IconData _getStatusIcon(String status) {
+  IconData _getStatusIcon(MatchStatus status) {
     switch (status) {
-      case 'Identical':
+      case MatchStatus.identical:
         return Icons.check_circle_rounded;
-      case 'Similar / Modified':
+      case MatchStatus.similar:
         return Icons.change_circle_rounded;
-      case 'Ignored':
+      case MatchStatus.ignored:
         return Icons.visibility_off_rounded;
-      case 'New / Different':
+      case MatchStatus.different:
         return Icons.cancel_rounded;
-      default:
-        return Icons.help_outline_rounded;
     }
   }
 }
 
 class _MatchResult {
-  final String status;
+  final MatchStatus status;
+  final String statusLabel;
   final String description;
   final double similarity;
 
   _MatchResult({
     required this.status,
+    required this.statusLabel,
     required this.description,
     required this.similarity,
   });

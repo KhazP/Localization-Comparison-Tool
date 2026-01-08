@@ -18,6 +18,7 @@ import 'package:localizer_app_main/core/services/project_stats_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/common/shimmer_skeleton.dart';
 import 'package:localizer_app_main/presentation/views/settings_view.dart';
 
@@ -66,7 +67,7 @@ class ProjectsView extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  'Projects',
+                  context.t.projects.title,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -81,7 +82,7 @@ class ProjectsView extends StatelessWidget {
                 _buildActionButton(
                   context,
                   icon: LucideIcons.plus,
-                  label: 'Create New Project',
+                  label: context.t.projects.createNewProject,
                   color: theme.colorScheme.primary,
                   onTap: () => _showCreateProjectDialog(context),
                 ),
@@ -89,7 +90,7 @@ class ProjectsView extends StatelessWidget {
                 _buildActionButton(
                   context,
                   icon: LucideIcons.folderOpen,
-                  label: 'Open Existing Project',
+                  label: context.t.projects.openExistingProject,
                   isOutlined: true,
                   onTap: () => _pickProjectFolder(context),
                 ),
@@ -97,7 +98,7 @@ class ProjectsView extends StatelessWidget {
                 _buildActionButton(
                   context,
                   icon: LucideIcons.upload,
-                  label: 'Import Project Zip',
+                  label: context.t.projects.importProjectZip,
                   isOutlined: true,
                   onTap: () => _importProjectZip(context),
                 ),
@@ -105,7 +106,7 @@ class ProjectsView extends StatelessWidget {
                 _buildActionButton(
                   context,
                   icon: LucideIcons.bookOpen,
-                  label: 'Project Resources',
+                  label: context.t.projects.projectResources,
                   isOutlined: true,
                   onTap: () => _openProjectResources(context),
                 ),
@@ -115,7 +116,7 @@ class ProjectsView extends StatelessWidget {
 
             // Recent Projects List
             Text(
-              'Recent Projects',
+              context.t.projects.recentProjects,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -130,11 +131,11 @@ class ProjectsView extends StatelessWidget {
                     children: [
                       EmptyStateIcon(
                         icon: LucideIcons.history,
-                        text: 'No recent projects',
+                        text: context.t.projects.noRecentProjects,
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No recent projects',
+                        context.t.projects.noRecentProjects,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: isDark
                               ? AppThemeV2.darkTextSecondary
@@ -226,7 +227,7 @@ class ProjectsView extends StatelessWidget {
   Future<void> _importProjectZip(BuildContext context) async {
     final result = await DialogService.pickFile(
       allowedExtensions: ['zip'],
-      dialogTitle: 'Select Project Zip',
+      dialogTitle: context.t.projects.selectProjectZip,
     );
 
     if (result != null &&
@@ -237,12 +238,12 @@ class ProjectsView extends StatelessWidget {
       try {
         // Pick destination
         final destDir = await DialogService.pickFolder(
-          dialogTitle: 'Select Destination Folder for Import',
+          dialogTitle: context.t.projects.selectDestination,
         );
 
         if (destDir == null || !context.mounted) return;
 
-        ToastService.showInfo(context, 'Importing project...');
+        ToastService.showInfo(context, context.t.projects.importing);
 
         final sharingService = ProjectSharingService();
         final importResult = await sharingService.importProject(
@@ -270,10 +271,11 @@ class ProjectsView extends StatelessWidget {
 
           // Open Project
           _openProject(context, importResult.project.rootPath);
-          ToastService.showSuccess(context, 'Project imported successfully');
+          ToastService.showSuccess(context, context.t.projects.importSuccess);
         }
       } catch (e) {
-        ToastService.showError(context, 'Import failed: $e');
+        ToastService.showError(
+            context, context.t.projects.importFailed(error: e));
       }
     }
   }
@@ -312,11 +314,11 @@ class ProjectsView extends StatelessWidget {
     List<String> filePaths,
   ) {
     if (filePaths.isEmpty) {
-      ToastService.showWarning(context, 'No supported files were dropped.');
+      ToastService.showWarning(context, context.t.projects.noSupportedFiles);
       return;
     }
 
-    ToastService.showInfo(context, 'Importing files...');
+    ToastService.showInfo(context, context.t.projects.importingFiles);
     context.read<ProjectBloc>().add(
           ImportFilesToProject(
             projectPath: projectPath,
@@ -331,7 +333,7 @@ class ProjectsView extends StatelessWidget {
     if (!projectState.hasProject) {
       ToastService.showWarning(
         context,
-        'Open a project first to manage its resources.',
+        context.t.projects.openProjectFirst,
       );
       return;
     }
@@ -387,6 +389,21 @@ class _ProjectListTileState extends State<_ProjectListTile> {
         _loadingStats = false;
       });
     }
+  }
+
+  String _getStatsDisplayString(BuildContext context, ProjectStats stats) {
+    if (stats.translationFileCount == 0) return context.t.projects.stats.empty;
+
+    final fileLabel = context.t.projects.stats.files(
+        n: stats.translationFileCount, count: stats.translationFileCount);
+
+    if (stats.detectedLanguages.isEmpty) return fileLabel;
+
+    final langLabel = context.t.projects.stats.languages(
+        n: stats.detectedLanguages.length,
+        count: stats.detectedLanguages.length);
+
+    return '$fileLabel, $langLabel';
   }
 
   @override
@@ -535,7 +552,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
-                                  _stats!.displayString,
+                                  _getStatsDisplayString(context, _stats!),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: isDark
                                         ? AppThemeV2.darkTextSecondary
@@ -567,7 +584,7 @@ class _ProjectListTileState extends State<_ProjectListTile> {
                     IconButton(
                       icon: const Icon(LucideIcons.x, size: 20),
                       onPressed: widget.onRemove,
-                      tooltip: 'Remove from recent',
+                      tooltip: context.t.projects.removeFromRecent,
                     ),
                   const Icon(LucideIcons.chevronRight),
                 ],

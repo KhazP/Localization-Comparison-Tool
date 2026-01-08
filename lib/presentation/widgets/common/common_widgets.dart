@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// A styled loading indicator for consistent loading states
 class LoadingIndicator extends StatelessWidget {
@@ -87,7 +88,7 @@ class ErrorDisplay extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(context.t.common.retry),
               ),
             ],
           ],

@@ -6,6 +6,7 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/services/update_checker_service.dart';
 import 'package:localizer_app_main/data/services/system_info_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
@@ -76,7 +77,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
       final stepsRemaining = 7 - _versionTapCount;
       ToastService.showInfo(
         context,
-        'You are $stepsRemaining steps away from being a developer.',
+        context.t.settings.about.developerSteps(count: stepsRemaining),
         duration: const Duration(milliseconds: 1500),
       );
     }
@@ -84,23 +85,29 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
     if (_versionTapCount >= 7) {
       _versionTapCount = 0;
       context.read<SettingsBloc>().add(const UpdateShowDeveloperOptions(true));
-      ToastService.showSuccess(context, 'You are now a developer!');
+      ToastService.showSuccess(
+          context, context.t.settings.about.developerActivated);
     }
   }
 
-  String _formatLastChecked(String? timestamp) {
-    if (timestamp == null || timestamp.isEmpty) return 'Never';
+  String _formatLastChecked(BuildContext context, String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty)
+      return context.t.settings.about.neverChecked;
     try {
       final dateTime = DateTime.parse(timestamp);
       final now = DateTime.now();
       final difference = now.difference(dateTime);
-      if (difference.inMinutes < 1) return 'Just now';
-      if (difference.inHours < 1) return '${difference.inMinutes} minutes ago';
-      if (difference.inDays < 1) return '${difference.inHours} hours ago';
-      if (difference.inDays < 7) return '${difference.inDays} days ago';
+      if (difference.inMinutes < 1) return context.t.history.timeAgo.justNow;
+      if (difference.inHours < 1)
+        return context.t.history.timeAgo
+            .minutesAgo(count: difference.inMinutes);
+      if (difference.inDays < 1)
+        return context.t.history.timeAgo.hoursAgo(count: difference.inHours);
+      if (difference.inDays < 7)
+        return context.t.history.timeAgo.daysAgo(count: difference.inDays);
       return DateFormat('MMM d, yyyy').format(dateTime);
     } catch (e) {
-      return 'Unknown';
+      return context.t.common.unknown;
     }
   }
 
@@ -112,37 +119,40 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
     return Column(
       children: [
         SettingsCardContainer(
-          title: 'Application Info',
+          title: context.t.settings.about.applicationInfo,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             GestureDetector(
               onTap: () => _handleVersionTap(context),
               behavior: HitTestBehavior.opaque,
-              child: _buildInfoRow(context, 'Version',
-                  widget.packageInfo?.version ?? 'Loading...'),
+              child: _buildInfoRow(context, context.t.settings.about.version,
+                  widget.packageInfo?.version ?? context.t.common.loading),
             ),
             GestureDetector(
               onTap: () => _handleVersionTap(context),
               behavior: HitTestBehavior.opaque,
-              child: _buildInfoRow(context, 'Build',
-                  widget.packageInfo?.buildNumber ?? 'Loading...'),
+              child: _buildInfoRow(
+                  context,
+                  context.t.settings.about.buildNumber,
+                  widget.packageInfo?.buildNumber ?? context.t.common.loading),
             ),
-            _buildInfoRow(context, 'Platform', Platform.operatingSystem,
+            _buildInfoRow(context, context.t.settings.about.platform,
+                Platform.operatingSystem,
                 showDivider: false), // Simplified platform info
           ],
         ),
         SettingsCardContainer(
-          title: 'Update Information',
+          title: context.t.settings.about.updateInformation,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             SettingsRow(
-              label: 'Current Version',
+              label: context.t.settings.about.currentVersion,
               control: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(widget.packageInfo?.version ?? 'Loading...',
+                  Text(widget.packageInfo?.version ?? context.t.common.loading,
                       style: theme.textTheme.bodyMedium?.copyWith(
                           color: widget.isDark
                               ? AppThemeV2.darkTextMuted
@@ -158,7 +168,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                         border: Border.all(
                             color: AppThemeV2.success.withAlpha(100)),
                       ),
-                      child: Text('Update Available!',
+                      child: Text(context.t.settings.about.updateAvailableBadge,
                           style: theme.textTheme.labelSmall?.copyWith(
                               color: AppThemeV2.success,
                               fontWeight: FontWeight.w600)),
@@ -171,7 +181,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
             ),
             if (widget.updateCheckResult != null)
               SettingsRow(
-                label: 'Latest Version',
+                label: context.t.settings.about.latestVersion,
                 control: Text(
                   widget.updateCheckResult!.latestVersion,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -189,9 +199,10 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                 isAmoled: widget.isAmoled,
               ),
             SettingsRow(
-              label: 'Last Checked',
+              label: context.t.settings.about.lastChecked,
               control: Text(
-                  _formatLastChecked(widget.settings.lastUpdateCheckTime),
+                  _formatLastChecked(
+                      context, widget.settings.lastUpdateCheckTime),
                   style: theme.textTheme.bodyMedium?.copyWith(
                       color: widget.isDark
                           ? AppThemeV2.darkTextMuted
@@ -216,8 +227,8 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                                   strokeWidth: 2, color: Colors.white))
                           : const Icon(LucideIcons.refreshCcw, size: 18),
                       label: Text(widget.isCheckingForUpdates
-                          ? 'Checking...'
-                          : 'Check for Updates'),
+                          ? context.t.settings.about.checkingForUpdates
+                          : context.t.settings.about.checkForUpdates),
                     ),
                   ),
                   if (widget.updateCheckResult?.changelog?.isNotEmpty ==
@@ -226,7 +237,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                     OutlinedButton.icon(
                       onPressed: widget.onShowChangelog,
                       icon: const Icon(LucideIcons.fileText, size: 18),
-                      label: const Text("What's New"),
+                      label: Text(context.t.settings.about.whatsNew),
                     ),
                   ],
                   if (widget.updateCheckResult?.updateAvailable == true &&
@@ -236,7 +247,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                       onPressed: () => widget
                           .onLaunchUrl(widget.updateCheckResult!.downloadUrl!),
                       icon: const Icon(LucideIcons.download, size: 18),
-                      label: const Text('Download'),
+                      label: Text(context.t.common.download),
                       style: FilledButton.styleFrom(
                           backgroundColor: AppThemeV2.success),
                     ),
@@ -246,8 +257,9 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
             ),
             const Divider(height: 1, indent: 16, endIndent: 16),
             SettingsRow(
-              label: 'Auto-check for updates',
-              description: 'Check for updates when the app starts',
+              label: context.t.settings.general.autoCheckUpdates,
+              description:
+                  context.t.settings.general.autoCheckUpdatesDescription,
               control: Switch(
                 value: widget.settings.autoCheckForUpdates,
                 onChanged: (val) => bloc.add(UpdateAutoCheckForUpdates(val)),
@@ -260,20 +272,23 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
           ],
         ),
         SettingsCardContainer(
-          title: 'System Information',
+          title: context.t.settings.about.systemInformation,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
-            _buildInfoRow(context, 'Dart Version',
-                widget.systemInfo?.dartVersion ?? 'Loading...'),
-            _buildInfoRow(context, 'Available Disk Space',
-                widget.systemInfo?.availableDiskSpace ?? 'Loading...'),
+            _buildInfoRow(context, context.t.settings.about.dartVersion,
+                widget.systemInfo?.dartVersion ?? context.t.common.loading),
+            _buildInfoRow(
+                context,
+                context.t.settings.about.diskSpace,
+                widget.systemInfo?.availableDiskSpace ??
+                    context.t.common.loading),
             SettingsRow(
-              label: 'Memory Usage',
+              label: context.t.settings.about.memoryUsage,
               control: Text(
                 widget.systemInfo != null
                     ? '${widget.systemInfo!.memoryUsage} / ${widget.systemInfo!.totalMemory}'
-                    : 'Loading...',
+                    : context.t.common.loading,
                 style: theme.textTheme.bodyMedium?.copyWith(
                     color: widget.isDark
                         ? AppThemeV2.darkTextMuted
@@ -288,21 +303,21 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
               child: OutlinedButton.icon(
                 onPressed: widget.onRefreshSystemInfo,
                 icon: const Icon(LucideIcons.refreshCcw, size: 18),
-                label: const Text('Refresh'),
+                label: Text(context.t.common.refresh),
               ),
             ),
           ],
         ),
         SettingsCardContainer(
-          title: 'Privacy & Telemetry',
+          title: context.t.settings.about.privacyTitle,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             SettingsRow(
-              label: 'Anonymous Usage Statistics',
-              description: 'Requires Firebase configuration',
+              label: context.t.settings.about.usageStats,
+              description: context.t.settings.about.requiresFirebase,
               control: Tooltip(
-                message: 'Feature currently unavailable (Requires Firebase)',
+                message: context.t.settings.about.featureUnavailable,
                 child: Switch(
                   value: false, // Force disabled state
                   onChanged: null, // Disable interaction
@@ -312,10 +327,10 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
               isAmoled: widget.isAmoled,
             ),
             SettingsRow(
-              label: 'Crash Reporting',
-              description: 'Requires Firebase configuration',
+              label: context.t.settings.about.crashReporting,
+              description: context.t.settings.about.requiresFirebase,
               control: Tooltip(
-                message: 'Feature currently unavailable (Requires Firebase)',
+                message: context.t.settings.about.featureUnavailable,
                 child: Switch(
                   value: false, // Force disabled state
                   onChanged: null, // Disable interaction
@@ -326,7 +341,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
             ),
             _buildLinkRow(
                 context,
-                'Privacy Policy',
+                context.t.settings.about.privacyPolicy,
                 LucideIcons.shieldAlert,
                 () => widget.onLaunchUrl(
                     'https://github.com/KhazP/LocalizerAppMain/blob/main/PRIVACY.md'),
@@ -334,7 +349,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
           ],
         ),
         SettingsCardContainer(
-          title: 'Settings Management',
+          title: context.t.settings.about.settingsManagement,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
@@ -344,7 +359,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Export your settings to a file to back them up or share with other machines.',
+                    context.t.settings.about.settingsManagementDescription,
                     style: theme.textTheme.bodySmall?.copyWith(
                         color: widget.isDark
                             ? AppThemeV2.darkTextMuted
@@ -356,7 +371,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                       Expanded(
                         child: OutlinedButton.icon(
                           icon: const Icon(LucideIcons.upload, size: 18),
-                          label: const Text('Export'),
+                          label: Text(context.t.common.export),
                           onPressed: widget.onExportSettings,
                         ),
                       ),
@@ -364,7 +379,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                       Expanded(
                         child: OutlinedButton.icon(
                           icon: const Icon(LucideIcons.download, size: 18),
-                          label: const Text('Import'),
+                          label: Text(context.t.common.import),
                           onPressed: widget.onImportSettings,
                         ),
                       ),
@@ -372,7 +387,7 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
                       Expanded(
                         child: OutlinedButton.icon(
                           icon: const Icon(LucideIcons.refreshCcw, size: 18),
-                          label: const Text('Reset All'),
+                          label: Text(context.t.settings.about.resetAll),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppThemeV2.error,
                             side: BorderSide(
@@ -389,24 +404,24 @@ class _AboutSettingsCardState extends State<AboutSettingsCard> {
           ],
         ),
         SettingsCardContainer(
-          title: 'Links',
+          title: context.t.settings.about.links,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             _buildLinkRow(
                 context,
-                'GitHub Repository',
+                context.t.settings.about.githubRepo,
                 LucideIcons.github,
                 () => widget
                     .onLaunchUrl('https://github.com/KhazP/LocalizerAppMain')),
             _buildLinkRow(
                 context,
-                'Report Issue',
+                context.t.menu.reportIssue,
                 LucideIcons.bug,
                 () => widget.onLaunchUrl(
                     'https://github.com/KhazP/LocalizerAppMain/issues')),
-            _buildLinkRow(context, 'Licenses', LucideIcons.fileText,
-                widget.onShowLicenses,
+            _buildLinkRow(context, context.t.settings.about.license,
+                LucideIcons.fileText, widget.onShowLicenses,
                 showDivider: false),
           ],
         ),

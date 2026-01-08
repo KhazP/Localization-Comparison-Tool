@@ -2,29 +2,68 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Onboarding step definitions
 enum OnboardingStep {
-  importFiles('Import Files', 'Load source & target files', LucideIcons.upload),
-  runComparison('Run Comparison', 'Click "Compare Files"', LucideIcons.play),
-  reviewMissing('Review Missing Keys', 'Notice red MISSING items',
-      LucideIcons.alertTriangle),
-  useFilters('Use Filters', 'Filter by type', LucideIcons.filter),
-  searchResults('Search Results', 'Find specific keys', LucideIcons.search),
-  advancedView(
-      'Advanced View', 'Explore detailed analysis', LucideIcons.maximize),
-  editCell('Edit a Cell', 'Click to edit a value', LucideIcons.edit3),
-  exportResults('Export', 'Save your report', LucideIcons.download);
+  importFiles(LucideIcons.upload),
+  runComparison(LucideIcons.play),
+  reviewMissing(LucideIcons.alertTriangle),
+  useFilters(LucideIcons.filter),
+  searchResults(LucideIcons.search),
+  advancedView(LucideIcons.maximize),
+  editCell(LucideIcons.edit3),
+  exportResults(LucideIcons.download);
 
-  final String title;
-  final String description;
   final IconData icon;
 
-  const OnboardingStep(this.title, this.description, this.icon);
+  const OnboardingStep(this.icon);
 
   static OnboardingStep? fromIndex(int index) {
     if (index < 0 || index >= OnboardingStep.values.length) return null;
     return OnboardingStep.values[index];
+  }
+
+  String getTitle(BuildContext context) {
+    switch (this) {
+      case OnboardingStep.importFiles:
+        return context.t.onboarding.steps.importFiles.title;
+      case OnboardingStep.runComparison:
+        return context.t.onboarding.steps.runComparison.title;
+      case OnboardingStep.reviewMissing:
+        return context.t.onboarding.steps.reviewMissing.title;
+      case OnboardingStep.useFilters:
+        return context.t.onboarding.steps.useFilters.title;
+      case OnboardingStep.searchResults:
+        return context.t.onboarding.steps.searchResults.title;
+      case OnboardingStep.advancedView:
+        return context.t.onboarding.steps.advancedView.title;
+      case OnboardingStep.editCell:
+        return context.t.onboarding.steps.editCell.title;
+      case OnboardingStep.exportResults:
+        return context.t.onboarding.steps.exportResults.title;
+    }
+  }
+
+  String getDescription(BuildContext context) {
+    switch (this) {
+      case OnboardingStep.importFiles:
+        return context.t.onboarding.steps.importFiles.description;
+      case OnboardingStep.runComparison:
+        return context.t.onboarding.steps.runComparison.description;
+      case OnboardingStep.reviewMissing:
+        return context.t.onboarding.steps.reviewMissing.description;
+      case OnboardingStep.useFilters:
+        return context.t.onboarding.steps.useFilters.description;
+      case OnboardingStep.searchResults:
+        return context.t.onboarding.steps.searchResults.description;
+      case OnboardingStep.advancedView:
+        return context.t.onboarding.steps.advancedView.description;
+      case OnboardingStep.editCell:
+        return context.t.onboarding.steps.editCell.description;
+      case OnboardingStep.exportResults:
+        return context.t.onboarding.steps.exportResults.description;
+    }
   }
 }
 
@@ -89,13 +128,15 @@ class UserOnboardingChecklist extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Getting Started',
+                                context.t.onboarding.gettingStarted,
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                '${currentStep + 1} of ${OnboardingStep.values.length}',
+                                context.t.onboarding.stepProgress(
+                                    current: currentStep + 1,
+                                    total: OnboardingStep.values.length),
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface
                                       .withValues(alpha: 0.6),
@@ -114,7 +155,7 @@ class UserOnboardingChecklist extends StatelessWidget {
                                 .read<SettingsBloc>()
                                 .add(const UpdateIsOnboardingCompleted(true));
                           },
-                          tooltip: 'Skip Tutorial',
+                          tooltip: context.t.onboarding.skipTutorial,
                           padding: EdgeInsets.zero,
                           constraints:
                               const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -218,7 +259,7 @@ class UserOnboardingChecklist extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  step.title,
+                  step.getTitle(context),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
                     color: isCompleted || isCurrent
@@ -230,7 +271,7 @@ class UserOnboardingChecklist extends StatelessWidget {
                 if (isCurrent) ...[
                   const SizedBox(height: 2),
                   Text(
-                    step.description,
+                    step.getDescription(context),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
@@ -242,8 +283,8 @@ class UserOnboardingChecklist extends StatelessWidget {
                       child: TextButton.icon(
                         onPressed: onLoadSampleData,
                         icon: const Icon(LucideIcons.downloadCloud, size: 14),
-                        label: const Text('Load Sample Data',
-                            style: TextStyle(fontSize: 12)),
+                        label: Text(context.t.onboarding.loadSampleData,
+                            style: const TextStyle(fontSize: 12)),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                         ),

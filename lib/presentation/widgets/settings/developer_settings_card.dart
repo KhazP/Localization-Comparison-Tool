@@ -10,6 +10,7 @@ import 'package:localizer_app_main/data/services/translation_memory_service.dart
 import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/developer/storage_inspector_section.dart';
@@ -32,15 +33,17 @@ class DeveloperSettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCardContainer(
-      title: 'Developer Options',
+      title: context.t.settings.developer.title,
       isDark: isDark,
       isAmoled: isAmoled,
       headerIcon: LucideIcons.code,
       children: [
-        _SectionHeader(title: 'Debugging Tools', isDark: isDark),
+        _SectionHeader(
+            title: context.t.settings.developer.debuggingTools, isDark: isDark),
         SettingsRow(
-          label: 'Performance Overlay',
-          description: 'Show Flutter performance overlay',
+          label: context.t.settings.developer.showPerformanceOverlay,
+          description:
+              context.t.settings.developer.performanceOverlayDescription,
           control: Switch(
             value: settings.showPerformanceOverlay,
             onChanged: (value) => context
@@ -52,8 +55,9 @@ class DeveloperSettingsCard extends StatelessWidget {
           isAmoled: isAmoled,
         ),
         SettingsRow(
-          label: 'Semantics Debugger',
-          description: 'Visualize semantics tree',
+          label: context.t.settings.developer.semanticsDebugger,
+          description:
+              context.t.settings.developer.semanticsDebuggerDescription,
           control: Switch(
             value: settings.showSemanticsDebugger,
             onChanged: (value) => context
@@ -65,8 +69,8 @@ class DeveloperSettingsCard extends StatelessWidget {
           isAmoled: isAmoled,
         ),
         SettingsRow(
-          label: 'Material Grid',
-          description: 'Overlay material layout grid',
+          label: context.t.settings.developer.materialGrid,
+          description: context.t.settings.developer.materialGridDescription,
           control: Switch(
             value: settings.debugShowMaterialGrid,
             onChanged: (value) => context
@@ -78,8 +82,8 @@ class DeveloperSettingsCard extends StatelessWidget {
           isAmoled: isAmoled,
         ),
         SettingsRow(
-          label: 'Raster Cache Images',
-          description: 'Checkerboard raster cache images',
+          label: context.t.settings.developer.rasterCache,
+          description: context.t.settings.developer.rasterCacheDescription,
           control: Switch(
             value: settings.checkerboardRasterCacheImages,
             onChanged: (value) => context
@@ -92,10 +96,11 @@ class DeveloperSettingsCard extends StatelessWidget {
           showDivider: false,
         ),
         const SizedBox(height: 20),
-        _SectionHeader(title: 'Actions', isDark: isDark),
+        _SectionHeader(
+            title: context.t.settings.developer.actions, isDark: isDark),
         _ActionRow(
-          label: 'Show App Logs',
-          description: 'Open Talker debug console',
+          label: context.t.settings.developer.showLogs,
+          description: context.t.settings.developer.showLogsDescription,
           icon: LucideIcons.fileText,
           isDark: isDark,
           isAmoled: isAmoled,
@@ -109,8 +114,8 @@ class DeveloperSettingsCard extends StatelessWidget {
           },
         ),
         _ActionRow(
-          label: 'Restart Onboarding Tutorial',
-          description: 'Reset flags and launch tutorial again',
+          label: context.t.settings.developer.restartTutorial,
+          description: context.t.settings.developer.restartTutorialDescription,
           icon: LucideIcons.playCircle,
           isDark: isDark,
           isAmoled: isAmoled,
@@ -123,26 +128,26 @@ class DeveloperSettingsCard extends StatelessWidget {
                 .emit(const AppCommand(AppCommandType.restartTutorial));
             ToastService.showInfo(
               context,
-              'Tutorial restart requested.',
+              context.t.settings.developer.restartRequested,
             );
           },
         ),
         _ActionRow(
-          label: 'Throw Test Exception',
-          description: 'Trigger a test exception for crash reporting',
+          label: context.t.settings.developer.throwException,
+          description: context.t.settings.developer.throwExceptionDescription,
           icon: LucideIcons.bug,
           isDark: isDark,
           isAmoled: isAmoled,
           isDestructive: true,
           onPressed: () {
             throw Exception(
-              'Test Exception triggered from Developer Options',
+              context.t.settings.developer.testExceptionMessage,
             );
           },
         ),
         _ActionRow(
-          label: 'Clear Translation Memory',
-          description: 'Delete all cached translations',
+          label: context.t.settings.developer.clearTM,
+          description: context.t.settings.developer.clearTMDescription,
           icon: LucideIcons.database,
           isDark: isDark,
           isAmoled: isAmoled,
@@ -150,20 +155,21 @@ class DeveloperSettingsCard extends StatelessWidget {
           onPressed: () async {
             final confirmed = await _showConfirmationDialog(
               context,
-              'Clear Translation Memory?',
-              'This will delete all learned translations. This cannot be undone.',
+              context.t.settings.developer.clearTMConfirmation,
+              context.t.settings.developer.clearTMWarning,
             );
             if (confirmed) {
               await sl<TranslationMemoryService>().clearMemory();
               if (context.mounted) {
-                ToastService.showSuccess(context, 'Translation memory cleared');
+                ToastService.showSuccess(
+                    context, context.t.settings.developer.tmCleared);
               }
             }
           },
         ),
         _ActionRow(
-          label: 'Clear API Keys',
-          description: 'Remove all stored API keys',
+          label: context.t.settings.developer.clearApiKeys,
+          description: context.t.settings.developer.clearApiKeysDescription,
           icon: LucideIcons.key,
           isDark: isDark,
           isAmoled: isAmoled,
@@ -171,22 +177,23 @@ class DeveloperSettingsCard extends StatelessWidget {
           onPressed: () async {
             final confirmed = await _showConfirmationDialog(
               context,
-              'Clear API Keys?',
-              'This will remove all API keys from secure storage.',
+              context.t.settings.developer.clearApiKeysConfirmation,
+              context.t.settings.developer.clearApiKeysWarning,
             );
             if (confirmed) {
               await sl<SecureStorageService>().clearAllKeys();
               if (context.mounted) {
                 // Reload settings to reflect change (keys cleared)
                 context.read<SettingsBloc>().add(LoadSettings());
-                ToastService.showSuccess(context, 'API keys cleared');
+                ToastService.showSuccess(
+                    context, context.t.settings.developer.apiKeysCleared);
               }
             }
           },
         ),
         _ActionRow(
-          label: 'Hide Developer Options',
-          description: 'Disable developer mode (requires 7 taps to re-enable)',
+          label: context.t.settings.developer.hideOptions,
+          description: context.t.settings.developer.hideOptionsDescription,
           icon: LucideIcons.eyeOff,
           isDark: isDark,
           isAmoled: isAmoled,
@@ -195,15 +202,17 @@ class DeveloperSettingsCard extends StatelessWidget {
             context
                 .read<SettingsBloc>()
                 .add(const UpdateShowDeveloperOptions(false));
-            ToastService.showInfo(context, 'Developer options disabled');
+            ToastService.showInfo(
+                context, context.t.settings.developer.optionsDisabled);
           },
           showDivider: false,
         ),
         const SizedBox(height: 20),
-        _SectionHeader(title: 'Danger Zone', isDark: isDark),
+        _SectionHeader(
+            title: context.t.settings.developer.dangerZone, isDark: isDark),
         _ActionRow(
-          label: 'Factory Reset',
-          description: 'Reset all settings and clear data',
+          label: context.t.settings.developer.factoryReset,
+          description: context.t.settings.developer.factoryResetDescription,
           icon: LucideIcons.trash2,
           isDark: isDark,
           isAmoled: isAmoled,
@@ -214,7 +223,9 @@ class DeveloperSettingsCard extends StatelessWidget {
           showDivider: false,
         ),
         const SizedBox(height: 20),
-        _SectionHeader(title: 'Inspection Tools', isDark: isDark),
+        _SectionHeader(
+            title: context.t.settings.developer.inspectionTools,
+            isDark: isDark),
         StorageInspectorSection(isDark: isDark, isAmoled: isAmoled),
         DeviceInfoSection(isDark: isDark, isAmoled: isAmoled),
         ThemePlaygroundSection(isDark: isDark, isAmoled: isAmoled),
@@ -237,14 +248,14 @@ class DeveloperSettingsCard extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
+                child: Text(context.t.common.cancel),
               ),
               TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: AppThemeV2.error,
                 ),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('Confirm'),
+                child: Text(context.t.common.confirm),
               ),
             ],
           ),
@@ -256,15 +267,14 @@ class DeveloperSettingsCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Factory Reset'),
-        content: const Text(
-          'Are you sure you want to reset all settings? '
-          'This action cannot be undone.',
+        title: Text(context.t.settings.developer.factoryReset),
+        content: Text(
+          context.t.settings.developer.factoryResetWarning,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.t.common.cancel),
           ),
           TextButton(
             style: TextButton.styleFrom(
@@ -274,7 +284,7 @@ class DeveloperSettingsCard extends StatelessWidget {
               context.read<SettingsBloc>().add(ResetAllSettings());
               Navigator.of(dialogContext).pop();
             },
-            child: const Text('Reset'),
+            child: Text(context.t.common.reset),
           ),
         ],
       ),
@@ -382,7 +392,9 @@ class _ActionRow extends StatelessWidget {
                       isDestructive ? AppThemeV2.error : colorScheme.primary,
                 ),
                 onPressed: onPressed,
-                child: Text(isDestructive ? 'Execute' : 'Run'),
+                child: Text(isDestructive
+                    ? context.t.common.execute
+                    : context.t.common.run),
               ),
             ],
           ),

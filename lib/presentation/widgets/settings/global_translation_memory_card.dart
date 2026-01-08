@@ -11,6 +11,7 @@ import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:open_file_plus/open_file_plus.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'dart:developer' as developer;
 
 class GlobalTranslationMemoryCard extends StatefulWidget {
@@ -74,8 +75,8 @@ class _GlobalTranslationMemoryCardState
       widget.onRefreshStats();
       if (!mounted) return;
       final message = imported > 0
-          ? 'Imported $imported items into memory.'
-          : 'No items were added.';
+          ? context.t.settings.translationMemory.importedItems(count: imported)
+          : context.t.settings.translationMemory.noItemsAdded;
       ToastService.showInfo(context, message);
     });
   }
@@ -87,7 +88,8 @@ class _GlobalTranslationMemoryCardState
       final stats = await service.getStats();
       if (stats.entryCount == 0) {
         if (mounted) {
-          ToastService.showWarning(context, 'Nothing to export yet.');
+          ToastService.showWarning(
+              context, context.t.settings.translationMemory.nothingToExport);
         }
         return;
       }
@@ -102,7 +104,7 @@ class _GlobalTranslationMemoryCardState
       if (mounted) {
         ToastService.showSuccessWithAction(
           context,
-          'TMX saved',
+          context.t.settings.translationMemory.tmxSaved,
           actionLabel: 'Open',
           onAction: () => OpenFile.open(outputPath),
         );
@@ -117,7 +119,8 @@ class _GlobalTranslationMemoryCardState
       final stats = await service.getStats();
       if (stats.entryCount == 0) {
         if (mounted) {
-          ToastService.showWarning(context, 'Nothing to export yet.');
+          ToastService.showWarning(
+              context, context.t.settings.translationMemory.nothingToExport);
         }
         return;
       }
@@ -132,7 +135,7 @@ class _GlobalTranslationMemoryCardState
       if (mounted) {
         ToastService.showSuccessWithAction(
           context,
-          'CSV saved',
+          context.t.settings.translationMemory.csvSaved,
           actionLabel: 'Open',
           onAction: () => OpenFile.open(outputPath),
         );
@@ -145,10 +148,9 @@ class _GlobalTranslationMemoryCardState
     if (service == null) return;
     final confirm = await DialogService.showConfirmation(
       context: context,
-      title: 'Clear translation memory?',
-      content:
-          'This removes all saved translation pairs on this device. This action cannot be undone.',
-      confirmText: 'Clear Memory',
+      title: context.t.settings.translationMemory.clearConfirmTitle,
+      content: context.t.settings.translationMemory.clearConfirmContent,
+      confirmText: context.t.settings.translationMemory.clearMemory,
       isDestructive: true,
       icon: LucideIcons.trash2,
     );
@@ -160,12 +162,15 @@ class _GlobalTranslationMemoryCardState
         await service.clearMemory();
         widget.onRefreshStats();
         if (mounted) {
-          ToastService.showSuccess(context, 'Translation memory cleared.');
+          ToastService.showSuccess(
+              context, context.t.settings.translationMemory.cleared);
         }
       } catch (e, s) {
         developer.log('Failed to clear translation memory.',
             name: 'translation_memory.clear', error: e, stackTrace: s);
-        if (mounted) ToastService.showError(context, 'Could not clear memory.');
+        if (mounted)
+          ToastService.showError(
+              context, context.t.settings.translationMemory.couldNotClear);
       }
     });
   }
@@ -199,13 +204,14 @@ class _GlobalTranslationMemoryCardState
     final bloc = context.read<SettingsBloc>();
 
     return SettingsCardContainer(
-      title: 'Global Translation Memory',
+      title: context.t.settings.translationMemory.title,
       isDark: widget.isDark,
       isAmoled: widget.isAmoled,
       children: [
         SettingsRow(
-          label: 'Auto-learn',
-          description: 'Save translations to local memory for future reuse',
+          label: context.t.settings.translationMemory.autoLearn,
+          description:
+              context.t.settings.translationMemory.autoLearnDescription,
           control: Switch(
             value: widget.settings.enableTranslationMemory,
             onChanged: (val) => bloc.add(UpdateEnableTranslationMemory(val)),
@@ -214,9 +220,12 @@ class _GlobalTranslationMemoryCardState
           isAmoled: widget.isAmoled,
         ),
         SettingsRow(
-          label: 'Confidence Threshold',
-          description:
-              'Minimum score to auto-apply (${(widget.settings.translationConfidenceThreshold * 100).toInt()}%)',
+          label: context.t.settings.translationMemory.confidenceThreshold,
+          description: context.t.settings.translationMemory
+              .confidenceThresholdDescription(
+                  percent:
+                      (widget.settings.translationConfidenceThreshold * 100)
+                          .toInt()),
           control: SizedBox(
             width: 150,
             child: Slider(
@@ -239,13 +248,16 @@ class _GlobalTranslationMemoryCardState
                 children: [
                   Row(
                     children: [
-                      _buildStatItem('Entries',
-                          stats?.entryCount.toString() ?? '...', context),
+                      _buildStatItem(
+                          context.t.settings.translationMemory.entries,
+                          stats?.entryCount.toString() ?? '...',
+                          context),
                       const SizedBox(width: 24),
                       _buildStatItem(
-                          'Size',
+                          context.t.settings.translationMemory.size,
                           stats != null
-                              ? 'Memory Size: ${_formatMemorySize(stats.storageBytes)}'
+                              ? context.t.settings.translationMemory.memorySize(
+                                  size: _formatMemorySize(stats.storageBytes))
                               : '...',
                           context),
                     ],
@@ -258,23 +270,27 @@ class _GlobalTranslationMemoryCardState
                       FilledButton.icon(
                         onPressed: _busy ? null : () => _import(context),
                         icon: const Icon(LucideIcons.download, size: 18),
-                        label: const Text('Import'),
+                        label:
+                            Text(context.t.settings.translationMemory.import),
                       ),
                       OutlinedButton.icon(
                         onPressed: _busy ? null : () => _exportTmx(context),
                         icon: const Icon(LucideIcons.upload, size: 18),
-                        label: const Text('Export TMX'),
+                        label: Text(
+                            context.t.settings.translationMemory.exportTmx),
                       ),
                       OutlinedButton.icon(
                         onPressed: _busy ? null : () => _exportCsv(context),
                         icon: const Icon(LucideIcons.table, size: 18),
-                        label: const Text('Export CSV'),
+                        label: Text(
+                            context.t.settings.translationMemory.exportCsv),
                       ),
                       OutlinedButton.icon(
                         onPressed: _busy ? null : () => _clear(context),
                         icon: Icon(LucideIcons.trash2,
                             size: 18, color: AppThemeV2.error),
-                        label: Text('Clear Memory',
+                        label: Text(
+                            context.t.settings.translationMemory.clearMemory,
                             style: TextStyle(color: AppThemeV2.error)),
                         style: OutlinedButton.styleFrom(
                             side: BorderSide(

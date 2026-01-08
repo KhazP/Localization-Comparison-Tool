@@ -12,6 +12,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/skeleton_loader.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
@@ -21,7 +22,7 @@ import 'dart:io';
 import 'package:get_it/get_it.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-enum HistoryFilterType { all, file, directory, git }
+enum HistoryFilterType { all, file, directory, git, date }
 
 class HistoryView extends StatefulWidget {
   final Function(int) onNavigateToTab;
@@ -216,7 +217,7 @@ class _HistoryViewState extends State<HistoryView>
     context.read<HistoryBloc>().add(DeleteHistoryItem(session.id));
     ToastService.showSuccess(
       context,
-      'History item deleted',
+      context.t.historyView.deletedMessage,
       onUndo: () {
         context.read<HistoryBloc>().add(UndoDeleteHistoryItem());
       },
@@ -266,7 +267,7 @@ class _HistoryViewState extends State<HistoryView>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Comparison History',
+                      context.t.historyView.title,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -274,7 +275,7 @@ class _HistoryViewState extends State<HistoryView>
                   ),
                   // Clear all button
                   Tooltip(
-                    message: 'Clear all history',
+                    message: context.t.historyView.clearAll,
                     child: IconButton(
                       color: isDark
                           ? AppThemeV2.darkTextMuted
@@ -307,7 +308,7 @@ class _HistoryViewState extends State<HistoryView>
                       child: TextField(
                         controller: _filterController,
                         decoration: InputDecoration(
-                          hintText: 'Search by file name...',
+                          hintText: context.t.historyView.searchPlaceholder,
                           prefixIcon: Icon(
                             LucideIcons.search,
                             color: isDark
@@ -345,7 +346,7 @@ class _HistoryViewState extends State<HistoryView>
                     ),
                     child: PopupMenuButton<String>(
                       onSelected: _setSort,
-                      tooltip: 'Sort by',
+                      tooltip: context.t.historyView.sortBy,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       child: Padding(
@@ -377,11 +378,15 @@ class _HistoryViewState extends State<HistoryView>
                         ),
                       ),
                       itemBuilder: (context) => [
+                        _buildSortMenuItem('timestamp',
+                            context.t.historyView.sortDate, LucideIcons.clock),
                         _buildSortMenuItem(
-                            'timestamp', 'Date', LucideIcons.clock),
+                            'file1Path',
+                            context.t.historyView.sortSource,
+                            LucideIcons.fileInput),
                         _buildSortMenuItem(
-                            'file1Path', 'Source File', LucideIcons.fileInput),
-                        _buildSortMenuItem('file2Path', 'Target File',
+                            'file2Path',
+                            context.t.historyView.sortTarget,
                             LucideIcons.arrowRightLeft),
                       ],
                     ),
@@ -391,8 +396,8 @@ class _HistoryViewState extends State<HistoryView>
                   if (isProjectLoaded) ...[
                     Tooltip(
                       message: _showOnlyCurrentProject
-                          ? 'Showing: Current Project'
-                          : 'Showing: All History',
+                          ? context.t.historyView.showCurrentProject
+                          : context.t.historyView.showAllHistory,
                       child: IconButton(
                         onPressed: () {
                           setState(() {
@@ -417,8 +422,8 @@ class _HistoryViewState extends State<HistoryView>
                   // Group by folder toggle
                   Tooltip(
                     message: _groupByFolder
-                        ? 'Disable folder grouping'
-                        : 'Group by folder',
+                        ? context.t.historyView.disableGrouping
+                        : context.t.historyView.groupByFolder,
                     child: IconButton(
                       onPressed: () =>
                           setState(() => _groupByFolder = !_groupByFolder),
@@ -443,15 +448,23 @@ class _HistoryViewState extends State<HistoryView>
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildFilterChip('All', HistoryFilterType.all),
+                    _buildFilterChip(
+                        context.t.historyView.filterAll, HistoryFilterType.all),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Files', HistoryFilterType.file,
+                    _buildFilterChip(context.t.historyView.filterFiles,
+                        HistoryFilterType.file,
                         icon: LucideIcons.arrowRightLeft),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Directories', HistoryFilterType.directory,
+                    _buildFilterChip(context.t.historyView.filterDirectories,
+                        HistoryFilterType.directory,
                         icon: LucideIcons.folder),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Git', HistoryFilterType.git,
+                    _buildFilterChip(
+                        context.t.historyView.sortDate, HistoryFilterType.date,
+                        icon: LucideIcons.calendar),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                        context.t.historyView.filterGit, HistoryFilterType.git,
                         icon: LucideIcons.gitBranch),
                   ],
                 ),
@@ -526,11 +539,11 @@ class _HistoryViewState extends State<HistoryView>
   String _getSortLabel() {
     switch (_sortBy) {
       case 'file1Path':
-        return 'Source';
+        return context.t.historyView.sortSource;
       case 'file2Path':
-        return 'Target';
+        return context.t.historyView.sortTarget;
       default:
-        return 'Date';
+        return context.t.historyView.sortDate;
     }
   }
 
@@ -832,16 +845,16 @@ class _HistoryViewState extends State<HistoryView>
         String projectName;
         IconData projectIcon;
         if (projectId == null) {
-          projectName = 'Unassigned';
+          projectName = context.t.historyView.unassigned;
           projectIcon = LucideIcons.folderMinus;
         } else if (projectId == currentProjectId) {
           projectName = _projectNames[projectId] ??
               projectState.currentProject?.name ??
-              'Current Project';
+              context.t.historyView.currentProject;
           projectIcon = LucideIcons.star;
         } else {
           projectName = _projectNames[projectId] ??
-              'Project ${projectId.substring(0, 8)}...';
+              '${context.t.historyView.project} ${projectId.substring(0, 8)}...';
           projectIcon = LucideIcons.folder;
         }
 
@@ -1049,7 +1062,7 @@ class _HistoryViewState extends State<HistoryView>
           ),
           const SizedBox(height: 16),
           Text(
-            'No comparison history yet',
+            context.t.historyView.noHistory,
             style: theme.textTheme.titleMedium?.copyWith(
               color: isDark
                   ? AppThemeV2.darkTextSecondary
@@ -1058,7 +1071,7 @@ class _HistoryViewState extends State<HistoryView>
           ),
           const SizedBox(height: 8),
           Text(
-            'Your file comparisons will appear here',
+            context.t.historyView.historyDescription,
             style: theme.textTheme.bodyMedium?.copyWith(
               color:
                   isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
@@ -1085,7 +1098,7 @@ class _HistoryViewState extends State<HistoryView>
           ),
           const SizedBox(height: 16),
           Text(
-            'No results found',
+            context.t.historyView.noResults,
             style: theme.textTheme.titleMedium?.copyWith(
               color: isDark
                   ? AppThemeV2.darkTextSecondary
@@ -1094,7 +1107,7 @@ class _HistoryViewState extends State<HistoryView>
           ),
           const SizedBox(height: 8),
           Text(
-            'Try adjusting your search',
+            context.t.historyView.adjustSearch,
             style: theme.textTheme.bodyMedium?.copyWith(
               color:
                   isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
@@ -1108,10 +1121,9 @@ class _HistoryViewState extends State<HistoryView>
   Future<void> _showClearConfirmation(BuildContext context) async {
     final confirmed = await DialogService.showConfirmation(
       context: context,
-      title: 'Clear All History?',
-      content:
-          'This will permanently delete all comparison history. This action cannot be undone.',
-      confirmText: 'Clear All',
+      title: context.t.historyView.clearConfirmationTitle,
+      content: context.t.historyView.clearConfirmationContent,
+      confirmText: context.t.historyView.clearAction,
       isDestructive: true,
       icon: LucideIcons.trash2,
     );
@@ -1195,6 +1207,72 @@ class _HistoryCard extends StatefulWidget {
 class _HistoryCardState extends State<_HistoryCard> {
   bool _isHovered = false;
 
+  String _getLocalizedTimeAgo(BuildContext context, DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.isNegative) {
+      return context.t.history.timeAgo.inTheFuture;
+    }
+
+    if (difference.inSeconds < 30) {
+      return context.t.history.timeAgo.justNow;
+    }
+
+    if (difference.inMinutes < 1) {
+      return context.t.history.timeAgo.secondsAgo(count: difference.inSeconds);
+    }
+
+    if (difference.inMinutes == 1) {
+      return context.t.history.timeAgo.oneMinuteAgo;
+    }
+
+    if (difference.inMinutes < 60) {
+      return context.t.history.timeAgo.minutesAgo(count: difference.inMinutes);
+    }
+
+    if (difference.inHours == 1) {
+      return context.t.history.timeAgo.oneHourAgo;
+    }
+
+    if (difference.inHours < 24) {
+      return context.t.history.timeAgo.hoursAgo(count: difference.inHours);
+    }
+
+    if (difference.inDays == 1) {
+      return context.t.history.timeAgo.yesterday;
+    }
+
+    if (difference.inDays < 7) {
+      return context.t.history.timeAgo.daysAgo(count: difference.inDays);
+    }
+
+    if (difference.inDays < 14) {
+      return context.t.history.timeAgo.oneWeekAgo;
+    }
+
+    if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).floor();
+      return context.t.history.timeAgo.weeksAgo(count: weeks);
+    }
+
+    if (difference.inDays < 60) {
+      return context.t.history.timeAgo.oneMonthAgo;
+    }
+
+    if (difference.inDays < 365) {
+      final months = (difference.inDays / 30).floor();
+      return context.t.history.timeAgo.monthsAgo(count: months);
+    }
+
+    if (difference.inDays < 730) {
+      return context.t.history.timeAgo.oneYearAgo;
+    }
+
+    final years = (difference.inDays / 365).floor();
+    return context.t.history.timeAgo.yearsAgo(count: years);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1202,7 +1280,6 @@ class _HistoryCardState extends State<_HistoryCard> {
     final session = widget.session;
     final formattedDate =
         DateFormat('MMM dd, yyyy • HH:mm').format(session.timestamp);
-    final relativeTime = TimeUtils.timeAgo(session.timestamp);
 
     // simple filename extraction
     final isBilingualSession = session.file1Path == session.file2Path;
@@ -1217,15 +1294,15 @@ class _HistoryCardState extends State<_HistoryCard> {
         name1 = session.file1Path.split(Platform.pathSeparator).last;
         name2 = session.file2Path.split(Platform.pathSeparator).last;
         typeIcon = LucideIcons.folderInput;
-        typeLabel = 'Directory';
+        typeLabel = context.t.historyView.directory;
         break;
       case ComparisonType.git:
         // Use repo name if possible or path
-        name1 =
-            session.gitRepoPath?.split(Platform.pathSeparator).last ?? 'Repo';
+        name1 = session.gitRepoPath?.split(Platform.pathSeparator).last ??
+            context.t.historyView.repo;
         name2 = ''; // Unused in main title for Git
         typeIcon = LucideIcons.gitBranch;
-        typeLabel = 'Git';
+        typeLabel = context.t.historyView.git;
         break;
       case ComparisonType.file:
       default:
@@ -1234,7 +1311,9 @@ class _HistoryCardState extends State<_HistoryCard> {
         typeIcon = isBilingualSession
             ? LucideIcons.languages
             : LucideIcons.arrowRightLeft;
-        typeLabel = isBilingualSession ? 'Bilingual' : 'File Pair';
+        typeLabel = isBilingualSession
+            ? context.t.historyView.bilingual
+            : context.t.historyView.filePair;
         break;
     }
 
@@ -1476,7 +1555,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                                       Tooltip(
                                         message: formattedDate,
                                         child: Text(
-                                          relativeTime,
+                                          _getLocalizedTimeAgo(
+                                              context, session.timestamp),
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                             color: isDark
@@ -1533,7 +1613,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                                         )
                                       else
                                         Text(
-                                          'No changes',
+                                          context.t.historyView.noChanges,
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                             fontStyle: FontStyle.italic,
@@ -1574,7 +1654,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                           const SizedBox(height: 16),
                           if (session.type == ComparisonType.git)
                             _FilePathRow(
-                              label: 'Repository',
+                              label: context.t.historyView.repo,
                               path: session.gitRepoPath ?? session.file1Path,
                               icon: LucideIcons.gitBranch,
                               color: Theme.of(context).colorScheme.primary,
@@ -1582,7 +1662,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                           else if (isBilingualSession &&
                               session.type == ComparisonType.file)
                             _FilePathRow(
-                              label: 'Bilingual file',
+                              label: context.t.historyView.bilingual,
                               path: session.file1Path,
                               icon: LucideIcons.languages,
                               color: Theme.of(context).colorScheme.primary,
@@ -1590,8 +1670,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                           else ...[
                             _FilePathRow(
                               label: session.type == ComparisonType.directory
-                                  ? 'Source Dir'
-                                  : 'Source',
+                                  ? context.t.historyView.sourceDir
+                                  : context.t.historyView.source,
                               path: session.file1Path,
                               icon: LucideIcons.fileInput,
                               color: Theme.of(context).colorScheme.primary,
@@ -1599,8 +1679,8 @@ class _HistoryCardState extends State<_HistoryCard> {
                             const SizedBox(height: 8),
                             _FilePathRow(
                               label: session.type == ComparisonType.directory
-                                  ? 'Target Dir'
-                                  : 'Target',
+                                  ? context.t.historyView.targetDir
+                                  : context.t.historyView.target,
                               path: session.file2Path,
                               icon: LucideIcons.arrowRightLeft,
                               color: Theme.of(context).colorScheme.secondary,
@@ -1621,35 +1701,35 @@ class _HistoryCardState extends State<_HistoryCard> {
                             children: [
                               if (session.stringsAdded > 0)
                                 _StatChip(
-                                  label: 'Added',
+                                  label: context.t.historyView.added,
                                   count: session.stringsAdded,
                                   color: themeState.diffAddedColor,
                                   icon: LucideIcons.plusCircle,
                                 ),
                               if (session.stringsRemoved > 0)
                                 _StatChip(
-                                  label: 'Removed',
+                                  label: context.t.historyView.removed,
                                   count: session.stringsRemoved,
                                   color: themeState.diffRemovedColor,
                                   icon: LucideIcons.minusCircle,
                                 ),
                               if (session.stringsModified > 0)
                                 _StatChip(
-                                  label: 'Modified',
+                                  label: context.t.historyView.modified,
                                   count: session.stringsModified,
                                   color: themeState.diffModifiedColor,
                                   icon: LucideIcons.refreshCw,
                                 ),
                               if (session.stringsIdentical > 0)
                                 _StatChip(
-                                  label: 'Same',
+                                  label: context.t.historyView.same,
                                   count: session.stringsIdentical,
                                   color: neutralStatColor,
                                   icon: LucideIcons.checkCircle,
                                 ),
                               if (totalStrings > 0)
                                 _StatChip(
-                                  label: 'Total',
+                                  label: context.t.historyView.total,
                                   count: totalStrings,
                                   color: neutralStatColor,
                                   icon: LucideIcons.list,
@@ -1658,7 +1738,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                                   session.stringsRemoved == 0 &&
                                   session.stringsModified == 0)
                                 Text(
-                                  'No changes detected',
+                                  context.t.historyView.noChanges,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: isDark
                                         ? AppThemeV2.darkTextMuted
@@ -1678,7 +1758,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                                 onPressed: widget.onDelete,
                                 icon: Icon(LucideIcons.trash2,
                                     size: 18, color: AppThemeV2.error),
-                                label: Text('Delete',
+                                label: Text(context.t.historyView.delete,
                                     style: TextStyle(color: AppThemeV2.error)),
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
@@ -1689,7 +1769,7 @@ class _HistoryCardState extends State<_HistoryCard> {
                               FilledButton.icon(
                                 onPressed: widget.onView,
                                 icon: const Icon(LucideIcons.eye, size: 18),
-                                label: const Text('View Details'),
+                                label: Text(context.t.historyView.viewDetails),
                                 style: FilledButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 8),
@@ -1803,7 +1883,7 @@ class _FilePathRow extends StatelessWidget {
         ),
         // Open Location button
         Tooltip(
-          message: 'Open file location',
+          message: context.t.historyView.openLocation,
           child: IconButton(
             icon: Icon(
               LucideIcons.folderOpen,

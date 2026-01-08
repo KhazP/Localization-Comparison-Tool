@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:localizer_app_main/i18n/translations.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 
 /// A widget for managing feature flag overrides.
@@ -15,28 +16,12 @@ class FeatureFlagsSection extends StatelessWidget {
     required this.featureFlagOverrides,
   });
 
-  // Define all available feature flags
-  static const List<_FeatureFlagDef> _availableFlags = [
-    _FeatureFlagDef(
-      key: 'experimental_ai_batch',
-      name: 'Experimental AI Batch',
-      description: 'Enable batch AI translation for multiple rows',
-    ),
-    _FeatureFlagDef(
-      key: 'new_diff_algorithm',
-      name: 'New Diff Algorithm',
-      description: 'Use improved diffing algorithm for comparisons',
-    ),
-    _FeatureFlagDef(
-      key: 'enhanced_search',
-      name: 'Enhanced Search',
-      description: 'Enable fuzzy search in translation files',
-    ),
-    _FeatureFlagDef(
-      key: 'auto_save',
-      name: 'Auto Save',
-      description: 'Automatically save changes after edits',
-    ),
+  // Define all available feature flags keys
+  static const List<String> _availableFlagKeys = [
+    'experimental_ai_batch',
+    'new_diff_algorithm',
+    'enhanced_search',
+    'auto_save',
   ];
 
   @override
@@ -45,8 +30,8 @@ class FeatureFlagsSection extends StatelessWidget {
 
     return ExpansionTile(
       leading: Icon(LucideIcons.toggleRight, color: colorScheme.primary),
-      title: const Text('Feature Flags'),
-      subtitle: const Text('Override experimental features'),
+      title: Text(context.t.settings.developer.featureFlags.title),
+      subtitle: Text(context.t.settings.developer.featureFlags.subtitle),
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -54,7 +39,7 @@ class FeatureFlagsSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Local Overrides',
+                context.t.settings.developer.featureFlags.overrides,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: isDark
@@ -64,15 +49,16 @@ class FeatureFlagsSection extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Toggle feature flags locally for testing. These overrides persist across app restarts.',
+                context.t.settings.developer.featureFlags.description,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 12),
-              ..._availableFlags.map((flag) => _buildFlagToggle(context, flag)),
+              ..._availableFlagKeys
+                  .map((key) => _buildFlagToggle(context, key)),
               const Divider(),
               TextButton.icon(
                 icon: const Icon(LucideIcons.rotateCcw),
-                label: const Text('Reset All Flags'),
+                label: Text(context.t.settings.developer.featureFlags.reset),
                 onPressed: null,
               ),
             ],
@@ -82,8 +68,9 @@ class FeatureFlagsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFlagToggle(BuildContext context, _FeatureFlagDef flag) {
-    final currentValue = featureFlagOverrides[flag.key];
+  Widget _buildFlagToggle(BuildContext context, String flagKey) {
+    final currentValue = featureFlagOverrides[flagKey];
+    final flagInfo = _getFlagInfo(context, flagKey);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -94,11 +81,11 @@ class FeatureFlagsSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  flag.name,
+                  flagInfo.name,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 Text(
-                  flag.description,
+                  flagInfo.description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isDark
                             ? AppThemeV2.darkTextSecondary
@@ -110,11 +97,18 @@ class FeatureFlagsSection extends StatelessWidget {
           ),
           DropdownButton<bool?>(
             value: currentValue,
-            hint: const Text('Default'),
-            items: const [
-              DropdownMenuItem(value: null, child: Text('Default')),
-              DropdownMenuItem(value: true, child: Text('ON')),
-              DropdownMenuItem(value: false, child: Text('OFF')),
+            hint: Text(context.t.settings.developer.featureFlags.defaultVal),
+            items: [
+              DropdownMenuItem(
+                  value: null,
+                  child: Text(
+                      context.t.settings.developer.featureFlags.defaultVal)),
+              DropdownMenuItem(
+                  value: true,
+                  child: Text(context.t.settings.developer.featureFlags.on)),
+              DropdownMenuItem(
+                  value: false,
+                  child: Text(context.t.settings.developer.featureFlags.off)),
             ],
             onChanged: null,
           ),
@@ -122,16 +116,35 @@ class FeatureFlagsSection extends StatelessWidget {
       ),
     );
   }
+
+  ({String name, String description}) _getFlagInfo(
+      BuildContext context, String key) {
+    final flags = context.t.settings.developer.featureFlags.flags;
+    switch (key) {
+      case 'experimental_ai_batch':
+        return (
+          name: flags.experimental_ai_batch.name,
+          description: flags.experimental_ai_batch.description
+        );
+      case 'new_diff_algorithm':
+        return (
+          name: flags.new_diff_algorithm.name,
+          description: flags.new_diff_algorithm.description
+        );
+      case 'enhanced_search':
+        return (
+          name: flags.enhanced_search.name,
+          description: flags.enhanced_search.description
+        );
+      case 'auto_save':
+        return (
+          name: flags.auto_save.name,
+          description: flags.auto_save.description
+        );
+      default:
+        return (name: key, description: '');
+    }
+  }
 }
 
-class _FeatureFlagDef {
-  final String key;
-  final String name;
-  final String description;
-
-  const _FeatureFlagDef({
-    required this.key,
-    required this.name,
-    required this.description,
-  });
-}
+// Removed _FeatureFlagDef class as it is no longer used

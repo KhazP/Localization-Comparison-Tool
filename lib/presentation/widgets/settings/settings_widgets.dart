@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// A styled card container for settings sections
 class SettingsCard extends StatelessWidget {
@@ -138,7 +139,7 @@ class SettingsDropdown extends StatelessWidget {
           style: TextStyle(fontSize: 14, color: dropdownTextColor),
           icon: Icon(Icons.arrow_drop_down,
               color: dropdownTextColor.withValues(alpha: 0.7),
-              semanticLabel: 'Dropdown arrow'),
+              semanticLabel: context.t.common.dropdownArrow),
         ),
       ),
     );

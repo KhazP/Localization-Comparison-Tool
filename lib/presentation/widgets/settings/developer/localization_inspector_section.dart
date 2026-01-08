@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// A widget that allows toggling localization key visibility for debugging.
 class LocalizationInspectorSection extends StatelessWidget {
@@ -23,8 +24,9 @@ class LocalizationInspectorSection extends StatelessWidget {
 
     return ExpansionTile(
       leading: Icon(LucideIcons.languages, color: colorScheme.primary),
-      title: const Text('Localization Inspector'),
-      subtitle: const Text('Debug translation strings'),
+      title: Text(context.t.settings.developer.localizationInspector),
+      subtitle:
+          Text(context.t.settings.developer.localizationInspectorDescription),
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
@@ -32,7 +34,7 @@ class LocalizationInspectorSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Show Localization Keys',
+                context.t.settings.developer.showLocalizationKeys,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: isDark
@@ -42,14 +44,18 @@ class LocalizationInspectorSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'When enabled, all translated text will show their localization keys instead of the translated value. Useful for verifying which key is used where.',
+                context.t.settings.developer.localizationKeysDescription,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text('Show Keys Instead of Values'),
-                subtitle: Text(
-                    showLocalizationKeys ? 'Keys visible' : 'Normal display'),
+                title: Text(context.t.settings.developer
+                    .localizationInspectorSection.showKeys),
+                subtitle: Text(showLocalizationKeys
+                    ? context.t.settings.developer.localizationInspectorSection
+                        .keysVisible
+                    : context.t.settings.developer.localizationInspectorSection
+                        .normalDisplay),
                 value: showLocalizationKeys,
                 onChanged: (value) {
                   context
@@ -60,7 +66,7 @@ class LocalizationInspectorSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Note: This feature requires app localization to use a wrapper that respects this setting.',
+                context.t.settings.developer.localizationInspectorSection.note,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontStyle: FontStyle.italic,
                       color: isDark

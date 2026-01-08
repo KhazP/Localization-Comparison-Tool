@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -36,7 +37,7 @@ class GeneralSettingsCard extends StatelessWidget {
       children: [
         if (isProjectLoaded)
           SettingsCardContainer(
-            title: 'Project Actions',
+            title: context.t.settings.projectSettings,
             isDark: isDark,
             isAmoled: isAmoled,
             children: [
@@ -49,7 +50,7 @@ class GeneralSettingsCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Export Project',
+                            context.t.projects.exportProject,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -59,7 +60,7 @@ class GeneralSettingsCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Create a portable zip file containing source files, configuration, and history.',
+                            context.t.projects.exportDescription,
                             style: Theme.of(context)
                                 .textTheme
                                 .bodyMedium
@@ -77,7 +78,7 @@ class GeneralSettingsCard extends StatelessWidget {
                     FilledButton.icon(
                       onPressed: () => _handleExport(context, projectState),
                       icon: const Icon(LucideIcons.package),
-                      label: const Text('Export'),
+                      label: Text(context.t.common.export),
                     ),
                   ],
                 ),
@@ -85,13 +86,13 @@ class GeneralSettingsCard extends StatelessWidget {
             ],
           ),
         SettingsCardContainer(
-          title: 'Application',
+          title: context.t.settings.general.application,
           isDark: isDark,
           isAmoled: isAmoled,
           children: [
             SettingsRow(
-              label: 'Language',
-              description: 'Application interface language',
+              label: context.t.settings.general.language,
+              description: context.t.settings.general.languageDescription,
               control: SettingsDropdown(
                 value: settings.appLanguage,
                 items: SettingsConstants.appLanguages,
@@ -102,13 +103,19 @@ class GeneralSettingsCard extends StatelessWidget {
                 },
                 isDark: isDark,
                 isAmoled: isAmoled,
+                itemLabelBuilder: (val) {
+                  if (val == 'Auto-Detect') {
+                    return context.t.settings.general.languageAuto;
+                  }
+                  return val;
+                },
               ),
               isDark: isDark,
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Default View',
-              description: 'View to show on startup',
+              label: context.t.settings.general.defaultView,
+              description: context.t.settings.general.defaultViewDescription,
               control: SettingsDropdown(
                 value: settings.defaultViewOnStartup,
                 items: SettingsConstants.defaultViews,
@@ -121,13 +128,30 @@ class GeneralSettingsCard extends StatelessWidget {
                 },
                 isDark: isDark,
                 isAmoled: isAmoled,
+                itemLabelBuilder: (val) {
+                  switch (val) {
+                    case 'Basic Comparison':
+                      return context.t.settings.general.viewBasic;
+                    case 'History View':
+                      return context.t.settings.general.viewHistory;
+                    case 'Quality Dashboard':
+                      return context.t.settings.general.viewDashboard;
+                    case 'Files':
+                      return context.t.settings.general.viewDirectory;
+                    case 'Last Used View':
+                      return context.t.settings.general.viewLastUsed;
+                    default:
+                      return val;
+                  }
+                },
               ),
               isDark: isDark,
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Auto-Check Updates',
-              description: 'Check for updates on startup',
+              label: context.t.settings.general.autoCheckUpdates,
+              description:
+                  context.t.settings.general.autoCheckUpdatesDescription,
               control: Switch(
                 value: settings.autoCheckForUpdates,
                 onChanged: (val) => context
@@ -142,7 +166,7 @@ class GeneralSettingsCard extends StatelessWidget {
           ],
         ),
         SettingsCardContainer(
-          title: 'Startup Options',
+          title: context.t.settings.general.startupOptions,
           isDark: isDark,
           isAmoled: isAmoled,
           onReset: () {
@@ -150,8 +174,9 @@ class GeneralSettingsCard extends StatelessWidget {
           },
           children: [
             SettingsRow(
-              label: 'Remember Window Position',
-              description: 'Restore window size and position on startup',
+              label: context.t.settings.general.rememberWindowPosition,
+              description:
+                  context.t.settings.general.rememberWindowPositionDescription,
               control: Switch(
                 value: settings.rememberWindowPosition,
                 onChanged: (val) => context
@@ -163,8 +188,9 @@ class GeneralSettingsCard extends StatelessWidget {
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Open Last Project',
-              description: 'Automatically load the last comparison on startup',
+              label: context.t.settings.general.openLastProject,
+              description:
+                  context.t.settings.general.openLastProjectDescription,
               control: Switch(
                 value: settings.openLastProjectOnStartup,
                 onChanged: (val) => context
@@ -176,8 +202,8 @@ class GeneralSettingsCard extends StatelessWidget {
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Start Minimized to Tray',
-              description: 'Minimize window to system tray on startup',
+              label: context.t.settings.general.startMinimized,
+              description: context.t.settings.general.startMinimizedDescription,
               control: Switch(
                 value: settings.startMinimizedToTray,
                 onChanged: (val) => context
@@ -202,7 +228,7 @@ class GeneralSettingsCard extends StatelessWidget {
 
     // Select destination
     final outputPath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Export Project',
+      dialogTitle: context.t.projects.exportProject,
       fileName: '${project.name.replaceAll(' ', '_')}_export.zip',
       allowedExtensions: ['zip'],
       type: FileType.custom,
@@ -228,7 +254,7 @@ class GeneralSettingsCard extends StatelessWidget {
     }
 
     try {
-      ToastService.showInfo(context, 'Exporting project...');
+      ToastService.showInfo(context, context.t.projects.exporting);
 
       final sharingService = ProjectSharingService();
       await sharingService.exportProject(
@@ -240,14 +266,15 @@ class GeneralSettingsCard extends StatelessWidget {
       if (context.mounted) {
         ToastService.showSuccessWithAction(
           context,
-          'Project exported',
-          actionLabel: 'Open',
+          context.t.projects.exportSuccess,
+          actionLabel: context.t.common.open,
           onAction: () => OpenFile.open(finalPath),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ToastService.showError(context, 'Export failed: $e');
+        ToastService.showError(
+            context, context.t.projects.exportError(error: e));
       }
     }
   }

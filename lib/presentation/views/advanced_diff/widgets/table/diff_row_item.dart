@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/'
     'settings_bloc.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/common/'
     'diff_highlighter.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
@@ -125,9 +126,12 @@ class _DiffRowItemState extends State<DiffRowItem> {
     final isCloud = _isCloudTranslation(
       context.watch<SettingsBloc>().state.appSettings.translationStrategy,
     );
-    final translateLabel =
-        isCloud ? 'Translate with Cloud' : 'Translate with AI';
-    final rephraseLabel = isCloud ? 'Rephrase' : 'Rephrase with AI';
+    final translateLabel = isCloud
+        ? context.t.advancedDiff.table.translateWithCloud
+        : context.t.advancedDiff.table.translateWithAi;
+    final rephraseLabel = isCloud
+        ? context.t.advancedDiff.table.rephrase
+        : context.t.advancedDiff.table.rephraseWithAi;
 
     return Material(
       type: MaterialType.transparency,
@@ -210,12 +214,12 @@ class _DiffRowItemState extends State<DiffRowItem> {
                           right: 4,
                           child: IconButton(
                             icon: const Icon(Icons.copy, size: 16),
-                            tooltip: 'Copy source text',
+                            tooltip: context.t.advancedDiff.diffRow.copySource,
                             onPressed: () {
                               Clipboard.setData(
                                   ClipboardData(text: widget.oldValue));
                               ToastService.showSuccess(
-                                  context, 'Copied to clipboard');
+                                  context, context.t.common.copied);
                             },
                             style: IconButton.styleFrom(
                               backgroundColor: Theme.of(context)
@@ -263,7 +267,7 @@ class _DiffRowItemState extends State<DiffRowItem> {
                 width: 40,
                 child: PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, size: 18),
-                  tooltip: 'Actions',
+                  tooltip: context.t.advancedDiff.diffRow.actions,
                   itemBuilder: (context) => [
                     // AI Actions
                     if (widget.onAiTranslate != null)
@@ -298,7 +302,8 @@ class _DiffRowItemState extends State<DiffRowItem> {
                             Icon(LucideIcons.lightbulb,
                                 size: 18, color: Colors.amber),
                             const SizedBox(width: 8),
-                            const Text('Suggest Translation'),
+                            Text(context
+                                .t.advancedDiff.table.suggestTranslation),
                           ],
                         ),
                       ),
@@ -306,13 +311,13 @@ class _DiffRowItemState extends State<DiffRowItem> {
                         widget.onAiRephrase != null ||
                         widget.onAiSuggest != null)
                       const PopupMenuDivider(),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'addToTM',
                       child: Row(
                         children: [
                           Icon(Icons.psychology, size: 18),
                           SizedBox(width: 8),
-                          Text('Add to TM'),
+                          Text(context.t.advancedDiff.table.addToTm),
                         ],
                       ),
                     ),
@@ -327,29 +332,29 @@ class _DiffRowItemState extends State<DiffRowItem> {
                               size: 18),
                           const SizedBox(width: 8),
                           Text(widget.isReviewed
-                              ? 'Unmark Reviewed'
-                              : 'Mark as Reviewed'),
+                              ? context.t.advancedDiff.table.unmarkReviewed
+                              : context.t.advancedDiff.table.markReviewed),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'revert',
                       child: Row(
                         children: [
                           Icon(Icons.undo, size: 18),
                           SizedBox(width: 8),
-                          Text('Revert to Source'),
+                          Text(context.t.advancedDiff.table.revertToSource),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       child: Row(
                         children: [
                           Icon(Icons.delete_outline,
                               size: 18, color: Colors.red),
                           SizedBox(width: 8),
-                          Text('Delete Entry',
+                          Text(context.t.advancedDiff.table.deleteEntry,
                               style: TextStyle(color: Colors.red)),
                         ],
                       ),
@@ -429,20 +434,20 @@ class _DiffRowItemState extends State<DiffRowItem> {
     switch (widget.detail.status) {
       case StringComparisonStatus.added:
         barColor = Colors.green;
-        label = 'ADDED';
+        label = context.t.advancedDiff.status.added;
         break;
       case StringComparisonStatus.removed:
         barColor = Colors.red;
-        label = 'MISSING';
+        label = context.t.advancedDiff.status.missing;
         break;
       case StringComparisonStatus.modified:
         barColor = Colors.amber[700]!;
         int percent = ((1.0 - (widget.detail.similarity ?? 0)) * 100).toInt();
-        label = 'CHG $percent%';
+        label = context.t.advancedDiff.status.changed(percent: percent);
         break;
       default:
         barColor = Colors.grey[400]!;
-        label = 'SAME';
+        label = context.t.advancedDiff.status.same;
     }
 
     return Row(

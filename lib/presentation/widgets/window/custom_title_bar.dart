@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// A custom title bar widget that replaces the native window title bar.
 ///
@@ -47,12 +48,12 @@ class CustomTitleBar extends StatelessWidget {
                           Icons.translate,
                           size: 18,
                           color: foregroundColor,
-                          semanticLabel: 'Localizer App Icon',
+                          semanticLabel: context.t.common.appName,
                         ),
                         const SizedBox(width: 8),
                         // App Title
                         Text(
-                          'Localizer',
+                          context.t.app.name,
                           style: TextStyle(
                             color: foregroundColor,
                             fontSize: 13,

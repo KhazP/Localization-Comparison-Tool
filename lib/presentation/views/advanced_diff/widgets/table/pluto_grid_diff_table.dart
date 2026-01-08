@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/'
     'advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/'
@@ -113,6 +114,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     );
 
     _rows = PlutoGridAdapter.createRows(
+      context: context,
       entries: controller.processedEntries,
       sourceData: controller.sourceData,
       targetData: controller.targetData,
@@ -124,7 +126,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     final source = controller.getSourceValue(key);
     final target = controller.getTargetValue(key);
     controller.addToTM(key, source, target);
-    ToastService.showSuccess(context, 'Added to Translation Memory');
+    ToastService.showSuccess(context, context.t.advancedDiff.table.addedToTM);
   }
 
   void _handleMarkReviewed(AdvancedDiffController controller, String key) {
@@ -133,22 +135,25 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     _refreshGrid(controller);
     // Provide immediate visual feedback
     if (!wasReviewed) {
-      ToastService.showSuccess(context, 'Marked as reviewed ✓');
+      ToastService.showSuccess(
+          context, context.t.advancedDiff.table.markedReviewed);
     } else {
-      ToastService.showInfo(context, 'Unmarked review');
+      ToastService.showInfo(
+          context, context.t.advancedDiff.table.unmarkedReview);
     }
   }
 
   void _handleRevert(AdvancedDiffController controller, String key) {
     controller.revertEntry(key);
     _refreshGrid(controller);
-    ToastService.showSuccess(context, 'Reverted to source value');
+    ToastService.showSuccess(context, context.t.advancedDiff.table.reverted);
   }
 
   void _handleDelete(AdvancedDiffController controller, String key) {
     controller.deleteEntry(key);
     _refreshGrid(controller);
-    ToastService.showSuccess(context, 'Entry deleted');
+    ToastService.showSuccess(
+        context, context.t.advancedDiff.table.entryDeleted);
   }
 
   void _refreshGrid(AdvancedDiffController controller) {
@@ -194,7 +199,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   }) async {
     final sourceValue = controller.getSourceValue(key);
     if (sourceValue.trim().isEmpty) {
-      ToastService.showInfo(context, 'No source text to translate.');
+      ToastService.showInfo(context, context.t.advancedDiff.table.noSourceText);
       return;
     }
 
@@ -243,7 +248,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   ) async {
     final targetValue = controller.getTargetValue(key);
     if (targetValue.trim().isEmpty) {
-      ToastService.showInfo(context, 'No target text to rephrase.');
+      ToastService.showInfo(context, context.t.advancedDiff.table.noTargetText);
       return;
     }
 
@@ -328,7 +333,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     final checkedRows = _stateManager?.checkedRows ?? [];
 
     if (checkedRows.isEmpty) {
-      ToastService.showInfo(context, 'Check rows using checkboxes first');
+      ToastService.showInfo(
+          context, context.t.advancedDiff.table.checkRowsFirst);
       return;
     }
 
@@ -343,7 +349,9 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     _stateManager?.toggleAllRowChecked(false);
     _refreshGrid(controller);
     ToastService.showSuccess(
-        context, 'Marked ${checkedRows.length} rows as reviewed');
+        context,
+        context.t.advancedDiff.table
+            .markedRowsReviewed(count: checkedRows.length));
   }
 
   void _handleBulkRevert() {
@@ -352,7 +360,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     final checkedRows = _stateManager?.checkedRows ?? [];
 
     if (checkedRows.isEmpty) {
-      ToastService.showInfo(context, 'Check rows using checkboxes first');
+      ToastService.showInfo(
+          context, context.t.advancedDiff.table.checkRowsFirst);
       return;
     }
 
@@ -366,7 +375,8 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
     // Uncheck all rows after action
     _stateManager?.toggleAllRowChecked(false);
     _refreshGrid(controller);
-    ToastService.showSuccess(context, 'Reverted ${checkedRows.length} rows');
+    ToastService.showSuccess(context,
+        context.t.advancedDiff.table.revertedRows(count: checkedRows.length));
   }
 
   @override
@@ -395,6 +405,7 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
         );
 
         _rows = PlutoGridAdapter.createRows(
+          context: context,
           entries: controller.processedEntries,
           sourceData: controller.sourceData,
           targetData: controller.targetData,
@@ -414,20 +425,22 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
               child: Row(
                 children: [
                   Text(
-                    '${controller.processedEntries.length} entries',
+                    context.t.advancedDiff.table.entriesCount(
+                        count: controller.processedEntries.length),
                     style: theme.textTheme.bodySmall,
                   ),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: _handleBulkMarkReviewed,
                     icon: const Icon(Icons.check_circle_outline, size: 16),
-                    label: const Text('Mark Selected Reviewed'),
+                    label:
+                        Text(context.t.advancedDiff.table.markSelectedReviewed),
                   ),
                   const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: _handleBulkRevert,
                     icon: const Icon(Icons.undo, size: 16),
-                    label: const Text('Revert Selected'),
+                    label: Text(context.t.advancedDiff.table.revertSelected),
                   ),
                 ],
               ),
@@ -446,14 +459,14 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No differences found',
+                            context.t.advancedDiff.table.noDifferences,
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: theme.disabledColor,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Try adjusting your filters',
+                            context.t.advancedDiff.table.adjustFilters,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.disabledColor,
                             ),
@@ -547,22 +560,32 @@ class _PlutoGridDiffTableState extends State<PlutoGridDiffTable> {
   }
 
   String _translationTitle(bool isCloud) {
-    return isCloud ? 'Cloud Translation' : 'AI Translation';
+    return isCloud
+        ? context.t.advancedDiff.sidebar.cloudTranslation
+        : context.t.advancedDiff.sidebar.aiTranslation;
   }
 
   String _rephraseTitle(bool isCloud) {
-    return isCloud ? 'Rephrase' : 'AI Rephrase';
+    return isCloud
+        ? context.t.advancedDiff.table.rephrase
+        : context.t.advancedDiff.table.aiRephrase;
   }
 
   String _translationAppliedMessage(bool isCloud) {
-    return isCloud ? 'Cloud translation applied.' : 'AI translation applied.';
+    return isCloud
+        ? context.t.advancedDiff.table.cloudTranslationApplied
+        : context.t.advancedDiff.table.aiTranslationApplied;
   }
 
   String _suggestionAppliedMessage(bool isCloud) {
-    return isCloud ? 'Suggestion applied.' : 'AI suggestion applied.';
+    return isCloud
+        ? context.t.advancedDiff.table.suggestionApplied
+        : context.t.advancedDiff.table.aiSuggestionApplied;
   }
 
   String _rephraseAppliedMessage(bool isCloud) {
-    return isCloud ? 'Rephrase applied.' : 'AI rephrase applied.';
+    return isCloud
+        ? context.t.advancedDiff.table.rephraseApplied
+        : context.t.advancedDiff.table.aiRephraseApplied;
   }
 }

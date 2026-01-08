@@ -42,6 +42,8 @@ import 'package:localizer_app_main/core/input/app_shortcuts.dart';
 import 'package:localizer_app_main/core/input/app_actions.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 class MyApp extends StatelessWidget {
   final AppSettings initialAppSettings;
@@ -145,9 +147,11 @@ class MyApp extends StatelessWidget {
             )..add(const LoadLastProject()),
           ),
         ],
-        child: _WindowAwareApp(
-          openLastProject: initialAppSettings.openLastProjectOnStartup,
-          talkerService: talkerService,
+        child: TranslationProvider(
+          child: _WindowAwareApp(
+            openLastProject: initialAppSettings.openLastProjectOnStartup,
+            talkerService: talkerService,
+          ),
         ),
       ),
     );
@@ -313,7 +317,11 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
                         settingsState.appSettings.checkerboardRasterCacheImages,
                     checkerboardOffscreenLayers:
                         settingsState.appSettings.checkerboardOffscreenLayers,
-                    title: 'Localization Comparison Tool',
+                    title: context.t.app.title,
+                    locale: TranslationProvider.of(context).flutterLocale,
+                    supportedLocales: AppLocaleUtils.supportedLocales,
+                    localizationsDelegates:
+                        GlobalMaterialLocalizations.delegates,
                     theme: AppThemeV2.createLightTheme(themeState.accentColor),
                     darkTheme: darkTheme,
                     themeMode: themeState.themeMode,
@@ -370,7 +378,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
         label: 'Localizer',
         menus: [
           PlatformMenuItem(
-            label: 'About Localizer',
+            label: context.t.menu.about(appName: context.t.app.name),
             onSelected: () {
               showAboutDialog(
                 context: context,
@@ -401,10 +409,10 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
       ),
       // File Menu
       PlatformMenu(
-        label: 'File',
+        label: context.t.menu.file,
         menus: [
           PlatformMenuItem(
-            label: 'Open Files...',
+            label: context.t.menu.openFiles,
             shortcut:
                 const SingleActivator(LogicalKeyboardKey.keyO, meta: true),
             onSelected: () {
@@ -412,7 +420,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
             },
           ),
           PlatformMenuItem(
-            label: 'Open Folder...',
+            label: context.t.menu.openFolder,
             shortcut: const SingleActivator(LogicalKeyboardKey.keyO,
                 meta: true, shift: true),
             onSelected: () {
@@ -421,7 +429,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
           ),
           const PlatformMenuItemGroup(members: []),
           PlatformMenuItem(
-            label: 'Export Results...',
+            label: context.t.menu.exportResults,
             shortcut:
                 const SingleActivator(LogicalKeyboardKey.keyE, meta: true),
             onSelected: () {
@@ -434,37 +442,41 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
       // Note: Some PlatformProvidedMenuItemType values (undo, redo, cut, copy, paste)
       // are only available in newer Flutter versions. Using custom items for compatibility.
       PlatformMenu(
-        label: 'Edit',
+        label: context.t.menu.edit,
         menus: [
-          const PlatformMenuItem(
-            label: 'Undo',
-            shortcut: SingleActivator(LogicalKeyboardKey.keyZ, meta: true),
+          PlatformMenuItem(
+            label: context.t.menu.undo,
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyZ, meta: true),
             onSelected: null, // System handles this
           ),
-          const PlatformMenuItem(
-            label: 'Redo',
+          PlatformMenuItem(
+            label: context.t.menu.redo,
             shortcut: SingleActivator(LogicalKeyboardKey.keyZ,
                 meta: true, shift: true),
             onSelected: null,
           ),
           const PlatformMenuItemGroup(members: []),
-          const PlatformMenuItem(
-            label: 'Cut',
-            shortcut: SingleActivator(LogicalKeyboardKey.keyX, meta: true),
+          PlatformMenuItem(
+            label: context.t.menu.cut,
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyX, meta: true),
             onSelected: null,
           ),
-          const PlatformMenuItem(
-            label: 'Copy',
-            shortcut: SingleActivator(LogicalKeyboardKey.keyC, meta: true),
+          PlatformMenuItem(
+            label: context.t.common.copyText,
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyC, meta: true),
             onSelected: null,
           ),
-          const PlatformMenuItem(
-            label: 'Paste',
-            shortcut: SingleActivator(LogicalKeyboardKey.keyV, meta: true),
+          PlatformMenuItem(
+            label: context.t.menu.paste,
+            shortcut:
+                const SingleActivator(LogicalKeyboardKey.keyV, meta: true),
             onSelected: null,
           ),
-          const PlatformMenuItem(
-            label: 'Select All',
+          PlatformMenuItem(
+            label: context.t.menu.selectAll,
             shortcut: SingleActivator(LogicalKeyboardKey.keyA, meta: true),
             onSelected: null,
           ),
@@ -472,14 +484,14 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
       ),
       // View Menu
       PlatformMenu(
-        label: 'View',
+        label: context.t.menu.view,
         menus: [
           if (Platform.isMacOS)
             const PlatformProvidedMenuItem(
               type: PlatformProvidedMenuItemType.toggleFullScreen,
             ),
           PlatformMenuItem(
-            label: 'Zoom In',
+            label: context.t.menu.zoomIn,
             shortcut:
                 const SingleActivator(LogicalKeyboardKey.equal, meta: true),
             onSelected: () {
@@ -487,7 +499,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
             },
           ),
           PlatformMenuItem(
-            label: 'Zoom Out',
+            label: context.t.menu.zoomOut,
             shortcut:
                 const SingleActivator(LogicalKeyboardKey.minus, meta: true),
             onSelected: () {
@@ -495,7 +507,7 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
             },
           ),
           PlatformMenuItem(
-            label: 'Reset Zoom',
+            label: context.t.menu.resetZoom,
             shortcut:
                 const SingleActivator(LogicalKeyboardKey.digit0, meta: true),
             onSelected: () {
@@ -506,16 +518,16 @@ class _WindowAwareAppState extends State<_WindowAwareApp> with WindowListener {
       ),
       // Help Menu
       PlatformMenu(
-        label: 'Help',
+        label: context.t.menu.help,
         menus: [
           PlatformMenuItem(
-            label: 'Documentation',
+            label: context.t.menu.documentation,
             onSelected: () {
               debugPrint('Documentation triggered');
             },
           ),
           PlatformMenuItem(
-            label: 'Report an Issue',
+            label: context.t.menu.reportIssue,
             onSelected: () {
               debugPrint('Report Issue triggered');
             },

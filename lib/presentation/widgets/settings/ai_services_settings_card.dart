@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/translation_memory_service.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
@@ -120,13 +121,13 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     return Column(
       children: [
         SettingsCardContainer(
-          title: 'Translation Strategy',
+          title: context.t.settings.ai.translationStrategy,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             SettingsRow(
-              label: 'Strategy',
-              description: 'Select how you want to translate strings',
+              label: context.t.settings.ai.strategy,
+              description: context.t.settings.ai.strategyDescription,
               control: SettingsDropdown<String>(
                 value: widget.settings.translationStrategy,
                 items: const ['Generative AI (LLM)', 'Cloud Translation'],
@@ -135,14 +136,22 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                 },
                 isDark: widget.isDark,
                 isAmoled: widget.isAmoled,
+                itemLabelBuilder: (val) {
+                  if (val == 'Generative AI (LLM)') {
+                    return context.t.settings.ai.strategyLLM;
+                  }
+                  if (val == 'Cloud Translation') {
+                    return context.t.settings.ai.strategyCloud;
+                  }
+                  return val;
+                },
               ),
               isDark: widget.isDark,
               isAmoled: widget.isAmoled,
             ),
             SettingsRow(
-              label: 'Enable AI Translation',
-              description:
-                  'Allow the app to use AI for translation suggestions',
+              label: context.t.settings.ai.enableAiTranslation,
+              description: context.t.settings.ai.enableAiTranslationDescription,
               control: Switch(
                 value: widget.settings.enableAiTranslation,
                 onChanged: (val) => bloc.add(UpdateEnableAiTranslation(val)),
@@ -156,7 +165,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
         ),
         if (widget.settings.translationStrategy == 'Generative AI (LLM)') ...[
           SettingsCardContainer(
-            title: 'LLM Service Provider',
+            title: context.t.settings.ai.llmProvider,
             isDark: widget.isDark,
             isAmoled: widget.isAmoled,
             trailing: _buildSectionResetButton(context, bloc),
@@ -164,8 +173,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               _buildOverridableSettingsRow(
                 context: context,
                 bloc: bloc,
-                label: 'Service',
-                description: 'Provider for Generative AI',
+                label: context.t.settings.ai.service,
+                description: context.t.settings.ai.serviceDescription,
                 settingKey: 'aiTranslationService',
                 control: SettingsDropdown<String>(
                   value: widget.state.isProjectScope
@@ -186,12 +195,19 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   },
                   isDark: widget.isDark,
                   isAmoled: widget.isAmoled,
+                  itemLabelBuilder: (val) {
+                    if (val == 'Google Gemini')
+                      return context.t.settings.ai.providerGemini;
+                    if (val == 'OpenAI')
+                      return context.t.settings.ai.providerOpenAI;
+                    return val;
+                  },
                 ),
               ),
               if (widget.settings.aiTranslationService == 'Google Gemini')
                 _buildApiKeyField(
                   context,
-                  'Gemini API Key',
+                  context.t.settings.ai.geminiApiKey,
                   ApiProvider.gemini,
                   _apiKeyControllers[ApiProvider.gemini]!,
                   _apiKeyFocusNodes[ApiProvider.gemini]!,
@@ -200,7 +216,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               if (widget.settings.aiTranslationService == 'OpenAI')
                 _buildApiKeyField(
                   context,
-                  'OpenAI API Key',
+                  context.t.settings.ai.openAiApiKey,
                   ApiProvider.openAi,
                   _apiKeyControllers[ApiProvider.openAi]!,
                   _apiKeyFocusNodes[ApiProvider.openAi]!,
@@ -209,8 +225,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               _buildOverridableSettingsRow(
                 context: context,
                 bloc: bloc,
-                label: 'Model',
-                description: 'Select which model to use',
+                label: context.t.settings.ai.model,
+                description: context.t.settings.ai.modelDescription,
                 settingKey: 'defaultAiModel',
                 showDivider: false,
                 control: SettingsDropdown<String>(
@@ -244,13 +260,13 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             ],
           ),
           SettingsCardContainer(
-            title: 'Advanced Parameters',
+            title: context.t.settings.ai.advancedParameters,
             isDark: widget.isDark,
             isAmoled: widget.isAmoled,
             children: [
               ListTile(
-                title: const Text('Parameters'),
-                subtitle: const Text('Temperature, Context, and more'),
+                title: Text(context.t.settings.ai.parameters),
+                subtitle: Text(context.t.settings.ai.parametersDescription),
                 trailing: IconButton(
                   icon: Icon(_showAdvancedParameters
                       ? LucideIcons.chevronUp
@@ -261,8 +277,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               ),
               if (_showAdvancedParameters) ...[
                 SettingsRow(
-                  label: 'Temperature',
-                  description: 'Higher values make output more creative',
+                  label: context.t.settings.ai.temperature,
+                  description: context.t.settings.ai.temperatureDescription,
                   control: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -290,8 +306,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   isAmoled: widget.isAmoled,
                 ),
                 SettingsRow(
-                  label: 'Max Tokens',
-                  description: 'Limit context window length',
+                  label: context.t.settings.ai.maxTokens,
+                  description: context.t.settings.ai.maxTokensDescription,
                   control: SizedBox(
                     width: 150,
                     child: SettingsDropdown<int>(
@@ -319,7 +335,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                           child: Row(
                             children: [
                               Text(
-                                'System Context / Instructions',
+                                context.t.settings.ai.systemContext,
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
@@ -362,11 +378,9 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                         decoration: InputDecoration(
                           labelText: widget.state.isProjectScope
                               ? null
-                              : 'System Context / Instructions',
-                          hintText:
-                              'You are a professional localizer. Maintain the tone and intent of the source string...',
-                          helperText:
-                              'Provide specific instructions to the AI about your project\'s style and terminology.',
+                              : context.t.settings.ai.systemContext,
+                          hintText: context.t.settings.ai.systemContextHint,
+                          helperText: context.t.settings.ai.systemContextHelper,
                           helperMaxLines: 2,
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8)),
@@ -374,9 +388,9 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                       ),
                       const SizedBox(height: 16),
                       SettingsRow(
-                        label: 'Context Strings',
+                        label: context.t.settings.ai.contextStrings,
                         description:
-                            'Include surrounding strings for better context',
+                            context.t.settings.ai.contextStringsDescription,
                         control: Switch(
                           value: widget.settings.includeContextStrings,
                           onChanged: (val) =>
@@ -388,9 +402,9 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                       ),
                       if (widget.settings.includeContextStrings)
                         SettingsRow(
-                          label: 'Context Count',
+                          label: context.t.settings.ai.contextCount,
                           description:
-                              'Number of surrounding strings to include',
+                              context.t.settings.ai.contextCountDescription,
                           control: SettingsDropdown<int>(
                             value: widget.settings.contextStringsCount,
                             items: const [1, 2, 3, 5, 10],
@@ -413,13 +427,13 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
           ),
         ] else ...[
           SettingsCardContainer(
-            title: 'Cloud Translation Services',
+            title: context.t.settings.ai.cloudServices,
             isDark: widget.isDark,
             isAmoled: widget.isAmoled,
             children: [
               _buildApiKeyField(
                 context,
-                'Google Translate API Key',
+                context.t.settings.ai.googleTranslateApiKey,
                 ApiProvider.googleTranslate,
                 _apiKeyControllers[ApiProvider.googleTranslate]!,
                 _apiKeyFocusNodes[ApiProvider.googleTranslate]!,
@@ -427,7 +441,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               ),
               _buildApiKeyField(
                 context,
-                'DeepL API Key',
+                context.t.settings.ai.deeplApiKey,
                 ApiProvider.deepl,
                 _apiKeyControllers[ApiProvider.deepl]!,
                 _apiKeyFocusNodes[ApiProvider.deepl]!,
@@ -485,7 +499,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                       onChanged: onChanged,
                       obscureText: true,
                       decoration: InputDecoration(
-                        hintText: 'Enter API Key',
+                        hintText: context.t.settings.ai.apiKeyPlaceholder,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 12),
@@ -520,7 +534,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                             height: 20,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.white))
-                        : const Text('Test'),
+                        : Text(context.t.settings.ai.test),
                   ),
                 ),
               ),
@@ -636,7 +650,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
     if (!hasAnyOverrides) return null;
 
     return Tooltip(
-      message: 'Reset all AI settings to global defaults',
+      message: context.t.settings.ai.resetToGlobal,
       child: IconButton(
         icon: Icon(
           LucideIcons.refreshCcw,

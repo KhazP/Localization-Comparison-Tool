@@ -13,6 +13,7 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/data/models/file_pair.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/views/comparison_result_dialog.dart';
 import 'package:localizer_app_main/presentation/widgets/common/empty_state_common.dart';
@@ -91,7 +92,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
           );
     } else {
       ToastService.showWarning(
-          context, 'Please select both a source and target directory.');
+          context, context.t.directoryComparison.selectBothDirectories);
     }
   }
 
@@ -104,14 +105,14 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
 
   Future<void> _openFoldersFromCommand() async {
     final source = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Source Folder',
+      dialogTitle: context.t.directoryComparison.selectSourceFolder,
     );
     if (!mounted || source == null) {
       return;
     }
 
     final target = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Target Folder',
+      dialogTitle: context.t.directoryComparison.selectTargetFolder,
     );
     if (!mounted || target == null) {
       return;
@@ -170,7 +171,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Directory Comparison',
+                    context.t.directoryComparison.title,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -186,8 +187,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                 Expanded(
                   child: _buildDirectoryDropZone(
                     context: context,
-                    title: 'Source Directory',
-                    subtitle: 'Original/Reference files',
+                    title: context.t.directoryComparison.sourceDirectory,
+                    subtitle: context.t.directoryComparison.sourceSubtitle,
                     directory: _sourceDirectory,
                     isDragging: _isDraggingSource,
                     icon: LucideIcons.folderInput,
@@ -218,8 +219,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                 Expanded(
                   child: _buildDirectoryDropZone(
                     context: context,
-                    title: 'Target Directory',
-                    subtitle: 'Translation/Comparison files',
+                    title: context.t.directoryComparison.targetDirectory,
+                    subtitle: context.t.directoryComparison.targetSubtitle,
                     directory: _targetDirectory,
                     isDragging: _isDraggingTarget,
                     icon: LucideIcons.folderOutput,
@@ -279,7 +280,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                     Expanded(
                       child: _ActionButton(
                         icon: LucideIcons.search,
-                        label: 'Discover Files',
+                        label: context.t.directoryComparison.discoverFiles,
                         onPressed:
                             hasDirectories ? _startDirectoryComparison : null,
                         isPrimary: !canCompare,
@@ -289,7 +290,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                     Expanded(
                       child: _ActionButton(
                         icon: LucideIcons.arrowRightLeft,
-                        label: 'Compare All',
+                        label: context.t.directoryComparison.compareAll,
                         onPressed: canCompare
                             ? () {
                                 final settingsState =
@@ -301,7 +302,9 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                                             settingsState.appSettings),
                                       );
                                   ToastService.showInfo(
-                                      context, 'Comparison started...');
+                                      context,
+                                      context.t.directoryComparison
+                                          .comparisonStarted);
                                 }
                               }
                             : null,
@@ -312,7 +315,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                     Expanded(
                       child: _ActionButton(
                         icon: LucideIcons.download,
-                        label: 'Export All',
+                        label: context.t.directoryComparison.exportAll,
                         onPressed: canExport && !_isExporting
                             ? () => _exportAllResults(
                                 pairedFiles, comparisonResults)
@@ -356,7 +359,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Discovering files...',
+                                context.t.directoryComparison.discoveringFiles,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: isDark
                                       ? AppThemeV2.darkTextSecondary
@@ -373,7 +376,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                             state.unmatchedTargetFiles.isEmpty) {
                           return _buildEmptyState(context,
                               message:
-                                  'No files found in selected directories.');
+                                  context.t.directoryComparison.noFilesFound);
                         }
                         return _buildResultsList(context, state);
                       }
@@ -549,7 +552,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                     child: Text(
                       hasDirectory
                           ? _formatPath(directory)
-                          : 'Drop folder here or browse...',
+                          : context.t.directoryComparison.dropFolderHere,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: hasDirectory
                             ? null
@@ -582,7 +585,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
               child: OutlinedButton.icon(
                 onPressed: onBrowse,
                 icon: const Icon(LucideIcons.folderOpen, size: 18),
-                label: const Text('Browse'),
+                label: Text(context.t.common.browse),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   side: BorderSide(
@@ -639,19 +642,18 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
     // Rich empty state with animated icon and recent history
     return EmptyStateContainer(
       icon: LucideIcons.folders,
-      title: 'Ready to Compare Directories',
-      subtitle:
-          'Drop folders above or use the browse buttons\nto select directories for comparison.',
-      chips: const [
+      title: context.t.directoryComparison.readyToCompare,
+      subtitle: context.t.directoryComparison.readyToCompareDesc,
+      chips: [
         ContextChip(
-            label: 'Nested folders',
-            tooltip: 'Recursively compares all nested directories'),
+            label: context.t.directoryComparison.nestedFolders,
+            tooltip: context.t.directoryComparison.nestedFoldersTooltip),
         ContextChip(
-            label: 'File matching',
-            tooltip: 'Automatically pairs files by name'),
+            label: context.t.directoryComparison.fileMatching,
+            tooltip: context.t.directoryComparison.fileMatchingTooltip),
         ContextChip(
-            label: 'Bulk export',
-            tooltip: 'Export all comparison results at once'),
+            label: context.t.directoryComparison.bulkExport,
+            tooltip: context.t.directoryComparison.bulkExportTooltip),
       ],
       bottomSection: RecentComparisonsList(
         filterType: ComparisonType.directory,
@@ -662,7 +664,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
 
   void _loadRecentDirectoryComparison(ComparisonSession session) {
     if (session.type != ComparisonType.directory) {
-      ToastService.showInfo(context, 'This is not a directory comparison.');
+      ToastService.showInfo(
+          context, context.t.directoryComparison.notDirectoryComparison);
       return;
     }
 
@@ -672,7 +675,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
     if (!Directory(sourceDir).existsSync() ||
         !Directory(targetDir).existsSync()) {
       ToastService.showError(
-          context, 'One or both directories no longer exist.');
+          context, context.t.directoryComparison.directoriesNotExist);
       return;
     }
 
@@ -698,7 +701,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
           ),
           const SizedBox(height: 16),
           Text(
-            'Error occurred',
+            context.t.directoryComparison.errorOccurred,
             style: theme.textTheme.titleMedium?.copyWith(
               color: AppThemeV2.error,
               fontWeight: FontWeight.w600,
@@ -735,7 +738,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
         if (state.unmatchedSourceFiles.isNotEmpty)
           _buildUnmatchedFilesSection(
             context,
-            'Unmatched Source Files',
+            context.t.directoryComparison.unmatchedSourceFiles,
             state.unmatchedSourceFiles,
             state.unmatchedTargetFiles,
             AppThemeV2.warning,
@@ -743,7 +746,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
         if (state.unmatchedTargetFiles.isNotEmpty)
           _buildUnmatchedFilesSection(
             context,
-            'Unmatched Target Files',
+            context.t.directoryComparison.unmatchedTargetFiles,
             state.unmatchedTargetFiles,
             null,
             AppThemeV2.info,
@@ -800,25 +803,25 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                   : AppThemeV2.lightTextSecondary),
           const SizedBox(width: 8),
           Text(
-            '${pairs.length} file pairs',
+            context.t.directoryComparison.filePairs(count: pairs.length),
             style: theme.textTheme.titleMedium,
           ),
           const Spacer(),
           _StatChip(
               icon: LucideIcons.plus,
-              tooltip: 'Added',
+              tooltip: context.t.diff.extra,
               count: totalAdded,
               color: themeState.diffAddedColor),
           const SizedBox(width: 8),
           _StatChip(
               icon: LucideIcons.trash2,
-              tooltip: 'Removed',
+              tooltip: context.t.diff.missing,
               count: totalRemoved,
               color: themeState.diffRemovedColor),
           const SizedBox(width: 8),
           _StatChip(
               icon: LucideIcons.pencil,
-              tooltip: 'Modified',
+              tooltip: context.t.diff.modified,
               count: totalModified,
               color: themeState.diffModifiedColor),
         ],
@@ -845,7 +848,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
               Icon(LucideIcons.link, size: 18, color: AppThemeV2.success),
               const SizedBox(width: 8),
               Text(
-                'Paired Files (${pairs.length})',
+                context.t.directoryComparison.pairedFiles(count: pairs.length),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -924,19 +927,19 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                 if (result != null) ...[
                   _StatChip(
                       icon: LucideIcons.plus,
-                      tooltip: 'Added',
+                      tooltip: context.t.diff.extra,
                       count: added,
                       color: themeState.diffAddedColor),
                   const SizedBox(width: 4),
                   _StatChip(
                       icon: LucideIcons.trash2,
-                      tooltip: 'Removed',
+                      tooltip: context.t.diff.missing,
                       count: removed,
                       color: themeState.diffRemovedColor),
                   const SizedBox(width: 4),
                   _StatChip(
                       icon: LucideIcons.pencil,
-                      tooltip: 'Modified',
+                      tooltip: context.t.diff.modified,
                       count: modified,
                       color: themeState.diffModifiedColor),
                   const SizedBox(width: 8),
@@ -948,7 +951,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                       );
                     },
                     icon: const Icon(LucideIcons.eye, size: 16),
-                    label: const Text('View'),
+                    label: Text(context.t.directoryComparison.view),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
@@ -967,7 +970,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Failed',
+                          context.t.directoryComparison.failed,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: AppThemeV2.error,
                             fontWeight: FontWeight.w600,
@@ -1059,7 +1062,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                     ),
-                    child: const Text('Pair...'),
+                    child: Text(context.t.directoryComparison.pair),
                   ),
               ],
             ),
@@ -1081,7 +1084,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Pair "${p.basename(sourceFile.path)}" with:'),
+          title: Text(context.t.directoryComparison
+              .pairDialogTitle(name: p.basename(sourceFile.path))),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
@@ -1119,7 +1123,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(context.t.common.cancel),
               onPressed: () => Navigator.of(dialogContext).pop(),
             ),
           ],
@@ -1139,15 +1143,15 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
 
     if (pairsWithResults.isEmpty) {
       if (mounted) {
-        ToastService.showWarning(context,
-            'No comparison results to export. Run "Compare All" first.');
+        ToastService.showWarning(
+            context, context.t.directoryComparison.noResultsToExport);
       }
       return;
     }
 
     // Ask user to select export directory
     final exportPath = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Export Folder',
+      dialogTitle: context.t.directoryComparison.selectExportFolder,
     );
 
     if (exportPath == null) return; // User cancelled
@@ -1160,7 +1164,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
       await exportDir.create(recursive: true);
     } catch (e) {
       if (mounted) {
-        ToastService.showError(context, 'Failed to create export folder: $e');
+        ToastService.showError(context,
+            context.t.directoryComparison.createExportFolderError(error: e));
       }
       return;
     }
@@ -1242,7 +1247,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
       if (mounted) {
         _exportDialogSetState = null;
         Navigator.of(context).pop(); // Close progress dialog
-        ToastService.showError(context, 'Export failed: $e');
+        ToastService.showError(
+            context, context.t.directoryComparison.exportFailed(error: e));
       }
     } finally {
       setState(() {
@@ -1356,7 +1362,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                   Icon(Icons.download_rounded,
                       color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 12),
-                  const Text('Exporting Results'),
+                  Text(context.t.directoryComparison.exportingResults),
                 ],
               ),
               content: SizedBox(
@@ -1367,7 +1373,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                   children: [
                     if (_currentExportFile != null)
                       Text(
-                        'Processing: $_currentExportFile',
+                        context.t.directoryComparison
+                            .processingFile(file: _currentExportFile!),
                         style: Theme.of(context).textTheme.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1385,7 +1392,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '$_exportedCount of $_totalToExport files exported',
+                      context.t.directoryComparison.exportProgress(
+                          current: _exportedCount, total: _totalToExport),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color:
                                 Theme.of(context).brightness == Brightness.dark
@@ -1415,7 +1423,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
             children: [
               Icon(Icons.check_circle_rounded, color: AppThemeV2.success),
               const SizedBox(width: 12),
-              const Text('Export Complete'),
+              Text(context.t.directoryComparison.exportComplete),
             ],
           ),
           content: SizedBox(
@@ -1425,7 +1433,8 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Successfully exported $fileCount comparison files plus summary.',
+                  context.t.directoryComparison
+                      .exportSuccessMessage(count: fileCount),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
@@ -1470,7 +1479,7 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
+              child: Text(context.t.directoryComparison.close),
             ),
           ],
         );

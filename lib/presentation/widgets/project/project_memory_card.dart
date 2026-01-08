@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
 import 'package:localizer_app_main/data/models/translation_memory_reference.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
@@ -44,17 +45,16 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
     return Column(
       children: [
         SettingsCard(
-          title: 'Translation Memories',
+          title: context.t.projects.tm.title,
           children: [
-            const SettingsDescription(
-              'Manage translation memory sources for this project.',
+            SettingsDescription(
+              context.t.projects.tm.description,
             ),
             const SizedBox(height: 16),
             // Global TM Toggle
             SwitchListTile(
-              title: const Text('Global Translation Memory'),
-              subtitle: const Text(
-                  'Use the shared translation memory from your app settings'),
+              title: Text(context.t.projects.tm.globalTm),
+              subtitle: Text(context.t.projects.tm.globalTmDescription),
               value: settings.enableTranslationMemory,
               onChanged: (val) {
                 context
@@ -66,10 +66,10 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
             const Divider(),
             const SizedBox(height: 8),
             Text(
-              'Linked Files (Project Specific)',
+              context.t.projects.tm.linkedFiles,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
             ),
             const SizedBox(height: 8),
@@ -86,11 +86,11 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurfaceVariant
-                            .withOpacity(0.5),
+                            .withValues(alpha: 0.5),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'No project-specific files linked.',
+                        context.t.projects.tm.noLinkedFiles,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color:
                                 Theme.of(context).colorScheme.onSurfaceVariant),
@@ -100,7 +100,7 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
                       FilledButton.icon(
                         onPressed: () => _addTM(context),
                         icon: const Icon(Icons.add),
-                        label: const Text('Add TM File'),
+                        label: Text(context.t.projects.tm.addTmFile),
                       ),
                       // If Global TM is NOT enabled, show the suggestion button
                       if (!settings.enableTranslationMemory) ...[
@@ -108,7 +108,7 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
                         OutlinedButton.icon(
                           onPressed: () => _enableGlobalTM(context),
                           icon: const Icon(Icons.public),
-                          label: const Text('Use Global TM'),
+                          label: Text(context.t.projects.tm.useGlobalTm),
                         ),
                       ],
                     ],
@@ -137,7 +137,7 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => _addTM(context),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add TM File'),
+                  label: Text(context.t.projects.tm.addTmFile),
                 ),
               ),
             ],
@@ -150,7 +150,7 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
   void _addTM(BuildContext context) async {
     final file = await DialogService.pickFile(
       allowedExtensions: ['tmx', 'json', 'xml'],
-      dialogTitle: 'Select Translation Memory',
+      dialogTitle: context.t.projects.tm.selectTm,
     );
 
     if (file != null &&
@@ -193,9 +193,9 @@ class ProjectTranslationMemoryCard extends StatelessWidget {
   void _enableGlobalTM(BuildContext context) {
     context.read<SettingsBloc>().add(const UpdateEnableTranslationMemory(true));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Global Translation Memory enabled'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(context.t.projects.tm.globalTmEnabled),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

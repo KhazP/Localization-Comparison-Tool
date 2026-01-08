@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Helper functions for theming shared across all settings cards
 class SettingsThemeHelper {
@@ -111,7 +112,7 @@ class SettingsCardContainer extends StatelessWidget {
                 if (trailing != null) trailing!,
                 if (onReset != null)
                   Tooltip(
-                    message: 'Reset to defaults',
+                    message: context.t.settings.developer.resetToDefault,
                     child: InkWell(
                       onTap: onReset,
                       borderRadius: BorderRadius.circular(4),
@@ -121,7 +122,7 @@ class SettingsCardContainer extends StatelessWidget {
                           Icons.refresh_rounded,
                           size: 16,
                           color: theme.textMutedColor,
-                          semanticLabel: 'Reset to defaults',
+                          semanticLabel: context.t.common.resetToDefaults,
                         ),
                       ),
                     ),
@@ -242,6 +243,7 @@ class SettingsDropdown<T> extends StatelessWidget {
   final ValueChanged<T?> onChanged;
   final bool isDark;
   final bool isAmoled;
+  final String Function(T)? itemLabelBuilder;
 
   const SettingsDropdown({
     super.key,
@@ -250,6 +252,7 @@ class SettingsDropdown<T> extends StatelessWidget {
     required this.onChanged,
     this.isDark = false,
     this.isAmoled = false,
+    this.itemLabelBuilder,
   });
 
   @override
@@ -267,8 +270,9 @@ class SettingsDropdown<T> extends StatelessWidget {
         child: DropdownButton<T>(
           value: items.contains(value) ? value : items.first,
           items: items
-              .map((item) =>
-                  DropdownMenuItem(value: item, child: Text(item.toString())))
+              .map((item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(itemLabelBuilder?.call(item) ?? item.toString())))
               .toList(),
           onChanged: onChanged,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -454,7 +458,7 @@ class SettingsLinkRow extends StatelessWidget {
                   Icons.open_in_new_rounded,
                   size: 16,
                   color: theme.textMutedColor,
-                  semanticLabel: 'Opens in new window',
+                  semanticLabel: context.t.common.openInNewWindow,
                 ),
               ],
             ),

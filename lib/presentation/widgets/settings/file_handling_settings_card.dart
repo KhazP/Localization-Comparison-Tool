@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/setting_override_indicator.dart';
@@ -55,7 +56,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
     return Column(
       children: [
         SettingsCardContainer(
-          title: 'File Formats',
+          title: context.t.settings.fileHandling.fileFormats,
           isDark: isDark,
           isAmoled: isAmoled,
           headerIcon: LucideIcons.fileType,
@@ -75,7 +76,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
               context: context,
               bloc: bloc,
               settingKey: 'defaultSourceFormat',
-              label: 'Source Format',
+              label: context.t.settings.fileHandling.sourceFormat,
               control: SettingsDropdown(
                 value: defaultSourceFormat,
                 items: ['Auto', ...SettingsConstants.fileFormats],
@@ -91,13 +92,17 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 },
                 isDark: isDark,
                 isAmoled: isAmoled,
+                itemLabelBuilder: (val) {
+                  if (val == 'Auto') return context.t.common.auto;
+                  return val;
+                },
               ),
             ),
             _buildOverridableSettingsRow(
               context: context,
               bloc: bloc,
               settingKey: 'defaultTargetFormat',
-              label: 'Target Format',
+              label: context.t.settings.fileHandling.targetFormat,
               control: SettingsDropdown(
                 value: defaultTargetFormat,
                 items: ['Auto', ...SettingsConstants.fileFormats],
@@ -113,13 +118,17 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 },
                 isDark: isDark,
                 isAmoled: isAmoled,
+                itemLabelBuilder: (val) {
+                  if (val == 'Auto') return context.t.common.auto;
+                  return val;
+                },
               ),
               showDivider: false,
             ),
           ],
         ),
         SettingsCardContainer(
-          title: 'Encoding',
+          title: context.t.settings.fileHandling.encoding,
           isDark: isDark,
           isAmoled: isAmoled,
           headerIcon: LucideIcons.binary,
@@ -130,7 +139,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
               context: context,
               bloc: bloc,
               settingKey: 'defaultSourceEncoding',
-              label: 'Source Encoding',
+              label: context.t.settings.fileHandling.sourceEncoding,
               control: SettingsDropdown(
                 value: defaultSourceEncoding,
                 items: SettingsConstants.encodings,
@@ -152,7 +161,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
               context: context,
               bloc: bloc,
               settingKey: 'defaultTargetEncoding',
-              label: 'Target Encoding',
+              label: context.t.settings.fileHandling.targetEncoding,
               control: SettingsDropdown(
                 value: defaultTargetEncoding,
                 items: SettingsConstants.encodings,
@@ -174,8 +183,9 @@ class FileHandlingSettingsCard extends StatelessWidget {
               context: context,
               bloc: bloc,
               settingKey: 'autoDetectEncoding',
-              label: 'Auto-Detect',
-              description: 'Automatically detect file encoding',
+              label: context.t.settings.fileHandling.autoDetect,
+              description:
+                  context.t.settings.fileHandling.autoDetectEncodingDescription,
               control: Switch(
                 value: autoDetectEncoding,
                 onChanged: (val) {
@@ -193,7 +203,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
           ],
         ),
         SettingsCardContainer(
-          title: 'Export Settings',
+          title: context.t.settings.fileHandling.exportSettings,
           // Default to global settings for Export/Safety as per spec they might not be overridable?
           // Task description says: "Export settings (String, bool...), Backup settings (bool, String...)"
           // BUT ProjectSettings.dart I maintained only added format/encoding fields based on my edit.
@@ -226,7 +236,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
           headerIcon: LucideIcons.download,
           children: [
             SettingsRow(
-              label: 'Default Export Format',
+              label: context.t.settings.fileHandling.defaultExportFormat,
               control: SettingsDropdown(
                 value: settings.defaultExportFormat,
                 items: const ['CSV', 'JSON', 'Excel'],
@@ -244,8 +254,9 @@ class FileHandlingSettingsCard extends StatelessWidget {
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Include UTF-8 BOM',
-              description: 'Required for Excel compatibility',
+              label: context.t.settings.fileHandling.includeUtf8Bom,
+              description:
+                  context.t.settings.fileHandling.includeUtf8BomDescription,
               control: Switch(
                 value: settings.includeUtf8Bom,
                 onChanged: (val) =>
@@ -256,7 +267,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Open Folder After Export',
+              label: context.t.settings.fileHandling.openFolderAfterExport,
               control: Switch(
                 value: settings.openFolderAfterExport,
                 onChanged: (val) => context
@@ -271,7 +282,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
           ],
         ),
         SettingsCardContainer(
-          title: 'File Safety',
+          title: context.t.settings.fileHandling.fileSafety,
           isDark: isDark,
           isAmoled: isAmoled,
           headerIcon: LucideIcons.shieldCheck,
@@ -279,7 +290,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Text(
-                'Automatic local copies for disaster recovery.',
+                context.t.settings.fileHandling.fileSafetyDescription,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: SettingsThemeHelper(
                               isDark: isDark, isAmoled: isAmoled)
@@ -289,8 +300,8 @@ class FileHandlingSettingsCard extends StatelessWidget {
               ),
             ),
             SettingsRow(
-              label: 'Auto-Backup',
-              description: 'Creates a backup copy each time you save changes',
+              label: context.t.settings.backup.title,
+              description: context.t.settings.backup.enabledDescription,
               control: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
@@ -317,8 +328,9 @@ class FileHandlingSettingsCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         settings.autoBackup
-                            ? 'Active · Keeping ${settings.backupsToKeep} copies'
-                            : 'Disabled',
+                            ? context.t.settings.backup
+                                .activeStatus(count: settings.backupsToKeep)
+                            : context.t.common.disabled,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: settings.autoBackup
                                   ? Colors.green
@@ -336,8 +348,8 @@ class FileHandlingSettingsCard extends StatelessWidget {
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Backup Folder',
-              description: 'Leave empty to use the same folder',
+              label: context.t.settings.backup.folder,
+              description: context.t.settings.backup.folderDescription,
               control: SizedBox(
                 width: 320,
                 child: Row(
@@ -350,7 +362,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
                             .read<SettingsBloc>()
                             .add(UpdateBackupDirectory(value)),
                         decoration: InputDecoration(
-                          hintText: 'Use original file folder',
+                          hintText: context.t.settings.backup.useOriginalFolder,
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
@@ -363,7 +375,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
                     OutlinedButton.icon(
                       onPressed: () => _pickBackupDirectory(context),
                       icon: const Icon(LucideIcons.folderOpen, size: 18),
-                      label: const Text('Browse'),
+                      label: Text(context.t.common.browse),
                     ),
                   ],
                 ),
@@ -372,8 +384,8 @@ class FileHandlingSettingsCard extends StatelessWidget {
               isAmoled: isAmoled,
             ),
             SettingsRow(
-              label: 'Backups to Keep',
-              description: 'Number of backup copies to retain',
+              label: context.t.settings.backup.maxCopies,
+              description: context.t.settings.backup.maxCopiesDescription,
               control: SizedBox(
                 width: 150,
                 child: Slider(
@@ -444,7 +456,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
     if (!hasOverrides) return null;
 
     return Tooltip(
-      message: 'Reset all file handling settings to global defaults',
+      message: context.t.settings.fileHandling.resetToGlobal,
       child: IconButton(
         icon: Icon(
           LucideIcons.refreshCcw,

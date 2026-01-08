@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:localizer_app_main/data/models/project.dart';
 import 'package:localizer_app_main/data/models/project_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:intl/intl.dart';
 
@@ -51,7 +52,7 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Review Project Import',
+                    context.t.importReview.title,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -74,17 +75,18 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoRow(context, 'Project Name', widget.project.name),
+                    _buildInfoRow(context, context.t.importReview.projectName,
+                        widget.project.name),
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       context,
-                      'Created',
+                      context.t.importReview.created,
                       DateFormat.yMMMd().format(widget.project.createdAt),
                     ),
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       context,
-                      'History Items',
+                      context.t.importReview.historyItems,
                       widget.historyItemCount.toString(),
                     ),
                   ],
@@ -96,7 +98,7 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
               // Settings Warning
               if (overrides.isNotEmpty) ...[
                 Text(
-                  'Custom Settings Detected',
+                  context.t.importReview.customSettingsTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.error,
@@ -104,7 +106,7 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'This project contains custom settings that will override your defaults while this project is open.',
+                  context.t.importReview.customSettingsWarning,
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
@@ -147,11 +149,10 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
               ] else ...[
                 Row(
                   children: [
-                    Icon(Icons.check_circle_outline, color: Colors.green),
+                    const Icon(Icons.check_circle_outline, color: Colors.green),
                     const SizedBox(width: 8),
                     Expanded(
-                        child: Text(
-                            "This project uses standard global settings.")),
+                        child: Text(context.t.importReview.standardSettings)),
                   ],
                 )
               ],
@@ -164,13 +165,13 @@ class _ImportReviewDialogState extends State<ImportReviewDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Cancel Import'),
+                    child: Text(context.t.importReview.cancelImport),
                   ),
                   const SizedBox(width: 16),
                   FilledButton.icon(
                     onPressed: () => Navigator.of(context).pop(true),
                     icon: const Icon(Icons.file_open_rounded),
-                    label: const Text('Trust & Open Project'),
+                    label: Text(context.t.importReview.trustOpen),
                   ),
                 ],
               ),

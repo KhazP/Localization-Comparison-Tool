@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class TranslationMemorySection extends StatelessWidget {
   const TranslationMemorySection({super.key});
@@ -17,7 +18,9 @@ class TranslationMemorySection extends StatelessWidget {
               children: [
                 const Icon(Icons.psychology, size: 16, color: Colors.grey),
                 const SizedBox(width: 8),
-                const Expanded(child: Text('Enable TM Fill')),
+                Expanded(
+                    child: Text(
+                        context.t.advancedDiff.sidebar.tmSection.enableTmFill)),
                 Switch(
                   value: controller.enableTM,
                   onChanged: (val) {
@@ -46,22 +49,26 @@ class TranslationMemorySection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text('Auto-apply above minimum',
+                Text(
+                    context
+                        .t.advancedDiff.sidebar.tmSection.autoApplyAboveMinimum,
                     style: TextStyle(
                         color: controller.enableTM ? null : Colors.grey)),
               ],
             ),
 
             const SizedBox(height: 12),
-            const Text('Match Settings',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(context.t.advancedDiff.sidebar.tmSection.matchSettings,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 8),
 
             // Min Match Slider
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Min match:', style: TextStyle(fontSize: 12)),
+                Text(context.t.advancedDiff.sidebar.tmSection.minMatch,
+                    style: const TextStyle(fontSize: 12)),
                 Text('${(controller.minMatch * 100).toInt()}%',
                     style: const TextStyle(fontSize: 12)),
               ],
@@ -93,7 +100,8 @@ class TranslationMemorySection extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Limit:', style: TextStyle(fontSize: 12)),
+                    Text(context.t.advancedDiff.sidebar.tmSection.limit,
+                        style: const TextStyle(fontSize: 12)),
                     const SizedBox(width: 8),
                     SizedBox(
                       width: 60,
@@ -137,7 +145,8 @@ class TranslationMemorySection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Text('Exact', style: TextStyle(fontSize: 12)),
+                    Text(context.t.advancedDiff.sidebar.tmSection.exact,
+                        style: const TextStyle(fontSize: 12)),
                   ],
                 ),
               ],

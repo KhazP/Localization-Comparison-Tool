@@ -14,6 +14,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/'
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/utils/ai_error_mapper.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/'
     'advanced_diff_controller.dart';
@@ -104,7 +105,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
   Future<void> _handleAiTranslate() async {
     if (_isAiLoading) return;
     if (widget.sourceValue.trim().isEmpty) {
-      ToastService.showInfo(context, 'No source text to translate.');
+      ToastService.showInfo(context, context.t.advancedDiff.table.noSourceText);
       return;
     }
 
@@ -122,7 +123,9 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
         context,
         keyName: widget.keyName,
         suggestion: suggestion,
-        titleOverride: isCloud ? 'Cloud Translation' : 'AI Translation',
+        titleOverride: isCloud
+            ? context.t.advancedDiff.sidebar.cloudTranslation
+            : context.t.advancedDiff.sidebar.aiTranslation,
       );
 
       if (!mounted || decision == null) return;
@@ -131,7 +134,9 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
         _targetController.text = decision.text!;
         ToastService.showSuccess(
           context,
-          isCloud ? 'Translation suggestion added.' : 'AI suggestion added.',
+          isCloud
+              ? context.t.advancedDiff.detailEdit.translationAdded
+              : context.t.advancedDiff.detailEdit.aiSuggestionAdded,
         );
       }
     } catch (e, stackTrace) {
@@ -184,7 +189,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Edit: ${widget.keyName}',
+              context.t.advancedDiff.detailEdit.title(key: widget.keyName),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -200,7 +205,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
             Row(
               children: [
                 Text(
-                  'SOURCE (Original)',
+                  context.t.advancedDiff.detailEdit.sourceLabel,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.disabledColor,
                   ),
@@ -251,7 +256,7 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
 
             // Target (Editable)
             Text(
-              'TARGET (Translation)',
+              context.t.advancedDiff.detailEdit.targetLabel,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.primary,
               ),
@@ -295,27 +300,28 @@ class _DetailEditDialogState extends State<DetailEditDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.t.common.cancel),
         ),
         OutlinedButton.icon(
           onPressed: _isAiLoading ? null : _handleAiTranslate,
           icon: const Icon(LucideIcons.sparkles, size: 16),
           label: Text(
             _isAiLoading
-                ? 'Translating...'
+                ? context.t.advancedDiff.detailEdit.translating
                 : isCloud
-                    ? 'Translate with Cloud'
-                    : 'Translate with AI',
+                    ? context.t.advancedDiff.detailEdit.translateWithCloud
+                    : context.t.advancedDiff.detailEdit.translateWithAi,
           ),
         ),
         FilledButton.icon(
           onPressed: () {
             widget.onSave(_targetController.text);
             Navigator.of(context).pop();
-            ToastService.showSuccess(context, 'Entry applied & added to TM');
+            ToastService.showSuccess(
+                context, context.t.advancedDiff.detailEdit.entryApplied);
           },
           icon: const Icon(Icons.check),
-          label: const Text('Apply'),
+          label: Text(context.t.advancedDiff.detailEdit.applyAndTm),
         ),
       ],
     );

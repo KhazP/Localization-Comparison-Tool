@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_enums.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class FiltersSection extends StatelessWidget {
   const FiltersSection({super.key});
@@ -14,35 +15,37 @@ class FiltersSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('View Filters',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(context.t.advancedDiff.sidebar.filtersSection.viewFilters,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 8),
             _buildCheckbox(
-              'Show All',
+              context.t.advancedDiff.sidebar.filtersSection.showAll,
               controller.selectedFilters.contains(AdvancedDiffFilter.all),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.all),
             ),
             _buildCheckbox(
-              'Added',
+              context.t.advancedDiff.sidebar.filtersSection.added,
               controller.selectedFilters.contains(AdvancedDiffFilter.added),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.added),
             ),
             _buildCheckbox(
-              'Removed',
+              context.t.advancedDiff.sidebar.filtersSection.removed,
               controller.selectedFilters.contains(AdvancedDiffFilter.removed),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.removed),
             ),
             _buildCheckbox(
-              'Modified',
+              context.t.advancedDiff.sidebar.filtersSection.modified,
               controller.selectedFilters.contains(AdvancedDiffFilter.modified),
               (v) => controller.toggleViewFilter(AdvancedDiffFilter.modified),
             ),
             const Divider(height: 24),
-            const Text('Action Scope',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(context.t.advancedDiff.sidebar.filtersSection.actionScope,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 8),
             _buildCheckbox(
-              'Apply to Added',
+              context.t.advancedDiff.sidebar.filtersSection.applyToAdded,
               controller.applyToAdded,
               (v) {
                 controller.applyToAdded = v;
@@ -50,7 +53,7 @@ class FiltersSection extends StatelessWidget {
               },
             ),
             _buildCheckbox(
-              'Apply to Modified',
+              context.t.advancedDiff.sidebar.filtersSection.applyToModified,
               controller.applyToModified,
               (v) {
                 controller.applyToModified = v;
@@ -58,7 +61,8 @@ class FiltersSection extends StatelessWidget {
               },
             ),
             _buildCheckbox(
-              'Only fill empty targets',
+              context
+                  .t.advancedDiff.sidebar.filtersSection.onlyFillEmptyTargets,
               controller.onlyFillEmpty,
               (v) {
                 controller.onlyFillEmpty = v;
@@ -66,7 +70,7 @@ class FiltersSection extends StatelessWidget {
               },
             ),
             _buildCheckbox(
-              'Limit to visible',
+              context.t.advancedDiff.sidebar.filtersSection.limitToVisible,
               controller.limitToVisible,
               (v) {
                 controller.limitToVisible = v;
@@ -74,14 +78,17 @@ class FiltersSection extends StatelessWidget {
               },
             ),
             const Divider(height: 24),
-            const Text('Edit Mode',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            Text(context.t.advancedDiff.sidebar.filtersSection.editMode,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Dialog', style: TextStyle(fontSize: 12)),
+                    label: Text(
+                        context.t.advancedDiff.sidebar.filtersSection.dialog,
+                        style: const TextStyle(fontSize: 12)),
                     selected: !controller.useInlineEditing,
                     onSelected: (_) {
                       controller.setInlineEditing(false);
@@ -96,7 +103,9 @@ class FiltersSection extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Inline', style: TextStyle(fontSize: 12)),
+                    label: Text(
+                        context.t.advancedDiff.sidebar.filtersSection.inline,
+                        style: const TextStyle(fontSize: 12)),
                     selected: controller.useInlineEditing,
                     onSelected: (_) {
                       controller.setInlineEditing(true);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/data/models/quality_metrics.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Shows detailed quality issues in a dialog.
 /// Shows detailed quality issues in a dialog.
@@ -90,7 +91,9 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Showing ${visibleItems.length} of ${_filteredItems.length} issues',
+                          context.t.issueDetails.showingIssues(
+                              count: visibleItems.length,
+                              total: _filteredItems.length),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface
                                 .withValues(alpha: 0.6),
@@ -110,7 +113,7 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
                 controller: _searchController,
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
-                  hintText: 'Search by key, text, or error...',
+                  hintText: context.t.issueDetails.searchPlaceholder,
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: theme.colorScheme.surfaceContainerHighest
@@ -129,8 +132,8 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
                   child: Center(
                     child: Text(
                       _searchController.text.isEmpty
-                          ? 'No details available.'
-                          : 'No matches found.',
+                          ? context.t.issueDetails.noDetails
+                          : context.t.issueDetails.noMatches,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color:
                             theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -151,7 +154,7 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
                             padding: const EdgeInsets.all(8.0),
                             child: OutlinedButton(
                               onPressed: _showMore,
-                              child: const Text('Show More'),
+                              child: Text(context.t.issueDetails.showMore),
                             ),
                           ),
                         );
@@ -171,12 +174,13 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
                   TextButton.icon(
                     onPressed: () => _copyAll(context),
                     icon: const Icon(Icons.copy_all),
-                    label: Text('Copy ${_filteredItems.length} Items'),
+                    label: Text(context.t.issueDetails
+                        .copyItems(count: _filteredItems.length)),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
+                    child: Text(context.t.issueDetails.close),
                   ),
                 ],
               ),
@@ -188,48 +192,55 @@ class _IssueDetailsDialogState extends State<IssueDetailsDialog> {
   }
 
   void _copyIssue(BuildContext context, QualityIssue issue) {
-    Clipboard.setData(ClipboardData(text: _formatIssue(issue)));
+    Clipboard.setData(ClipboardData(text: _formatIssue(context, issue)));
     ToastService.showSuccess(
       context,
-      'Copied to clipboard',
+      context.t.issueDetails.copied,
       duration: const Duration(seconds: 1),
     );
   }
 
   void _copyAll(BuildContext context) {
     if (_filteredItems.isEmpty) return;
-    final text = _filteredItems.map(_formatIssue).join('\n\n');
+    final text = _filteredItems
+        .map((issue) => _formatIssue(context, issue))
+        .join('\n\n');
     Clipboard.setData(ClipboardData(text: text));
-    ToastService.showSuccess(context, 'Copied ${_filteredItems.length} items');
+    ToastService.showSuccess(context,
+        context.t.issueDetails.copiedCount(count: _filteredItems.length));
   }
 
-  String _formatIssue(QualityIssue issue) {
+  String _formatIssue(BuildContext context, QualityIssue issue) {
     if (issue.type == QualityIssueType.duplicateValue &&
         issue.relatedKeys != null &&
         issue.relatedKeys!.isNotEmpty) {
       final keys = issue.relatedKeys!.join(', ');
       final buffer = StringBuffer()
-        ..writeln('Value: ${issue.targetValue}')
-        ..writeln('Found in ${issue.relatedKeys!.length} keys:')
+        ..writeln('${context.t.fileComparison.value}: ${issue.targetValue}')
+        ..writeln(context.t.issueDetails.duplicateValue.affectedKeys(
+            count: issue.relatedKeys!.length)) // TODO: Check if message fits
         ..writeln(keys)
-        ..writeln('Note: Same translation is used for different keys.');
+        ..writeln(
+            '${context.t.issueDetails.standard.note}: ${context.t.issueDetails.notes.duplicateValue}');
       return buffer.toString().trim();
     }
 
     final sourceText = _displayValue(
       issue.sourceValue,
-      _sourceFallback(issue.type),
+      _sourceFallback(context, issue.type),
     );
     final targetText = _displayValue(
       issue.targetValue,
-      _targetFallback(issue.type),
+      _targetFallback(context, issue.type),
     );
     final buffer = StringBuffer()
-      ..writeln('Key: ${issue.key}')
-      ..writeln('Source: $sourceText')
-      ..writeln('Translation: $targetText')
-      ..writeln('Specific Error: ${issue.description}')
-      ..writeln('Note: ${_noteForIssue(issue.type)}');
+      ..writeln('${context.t.diff.key}: ${issue.key}')
+      ..writeln('${context.t.issueDetails.standard.sourceText}: $sourceText')
+      ..writeln('${context.t.issueDetails.standard.translation}: $targetText')
+      ..writeln(
+          '${context.t.issueDetails.standard.errorDetails}: ${issue.description}')
+      ..writeln(
+          '${context.t.issueDetails.standard.note}: ${_noteForIssue(context, issue.type)}');
     return buffer.toString().trim();
   }
 }
@@ -286,7 +297,7 @@ class _IssueCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _issueTitle(issue.type),
+                  _issueTitle(context, issue.type),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -297,7 +308,7 @@ class _IssueCard extends StatelessWidget {
               IconButton(
                 onPressed: onCopy,
                 icon: const Icon(Icons.copy_rounded, size: 16),
-                tooltip: 'Copy details',
+                tooltip: context.t.common.copyText,
                 visualDensity: VisualDensity.compact,
               ),
             ],
@@ -307,8 +318,8 @@ class _IssueCard extends StatelessWidget {
           if (issue.type != QualityIssueType.duplicateValue) ...[
             const SizedBox(height: 16),
             _LabeledField(
-              label: 'NOTE',
-              value: _noteForIssue(issue.type),
+              label: context.t.issueDetails.standard.note,
+              value: _noteForIssue(context, issue.type),
               labelStyle: labelStyle,
               valueStyle: theme.textTheme.bodySmall?.copyWith(
                 fontStyle: FontStyle.italic,
@@ -342,7 +353,7 @@ class _IssueCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _LabeledField(
-          label: 'REPEATED TRANSLATION',
+          label: context.t.issueDetails.duplicateValue.label,
           value: issue.targetValue ?? '',
           labelStyle: labelStyle,
           valueStyle: theme.textTheme.bodyLarge?.copyWith(
@@ -366,7 +377,7 @@ class _IssueCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Different source texts use this same translation. Check context.',
+                    context.t.issueDetails.duplicateValue.warning,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.orange.shade800,
                       fontWeight: FontWeight.w500,
@@ -380,12 +391,13 @@ class _IssueCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'AFFECTED KEYS (${relatedKeys.length})',
+              context.t.issueDetails.duplicateValue
+                  .affectedKeys(count: relatedKeys.length),
               style: labelStyle,
             ),
             if (!hasContextMismatch && relatedSources.isNotEmpty)
               Text(
-                'Identical Sources',
+                context.t.issueDetails.duplicateValue.identicalSources,
                 style: labelStyle?.copyWith(color: theme.colorScheme.primary),
               ),
           ],
@@ -444,7 +456,8 @@ class _IssueCard extends StatelessWidget {
                       .withValues(alpha: 0.3),
                   child: Center(
                     child: Text(
-                      '+$remaining more keys',
+                      context.t.issueDetails.duplicateValue
+                          .moreKeys(count: remaining),
                       style: monoStyle?.copyWith(
                         fontSize: 11,
                         color:
@@ -506,7 +519,7 @@ class _IssueCard extends StatelessWidget {
           children: [
             Expanded(
               child: _LengthBar(
-                label: 'SOURCE',
+                label: context.t.issueDetails.lengthOutlier.source,
                 text: issue.sourceValue,
                 length: sourceLen,
                 fraction: sourceLen / safeMax,
@@ -517,7 +530,7 @@ class _IssueCard extends StatelessWidget {
             const SizedBox(width: 24),
             Expanded(
               child: _LengthBar(
-                label: 'TRANSLATION',
+                label: context.t.issueDetails.lengthOutlier.translation,
                 text: issue.targetValue,
                 length: targetLen,
                 fraction: targetLen / safeMax,
@@ -569,18 +582,18 @@ class _IssueCard extends StatelessWidget {
   ) {
     final sourceText = _displayValue(
       issue.sourceValue,
-      _sourceFallback(issue.type),
+      _sourceFallback(context, issue.type),
     );
     final targetText = _displayValue(
       issue.targetValue,
-      _targetFallback(issue.type),
+      _targetFallback(context, issue.type),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _LabeledField(
-          label: 'KEY',
+          label: context.t.issueDetails.standard.key,
           value: issue.key,
           labelStyle: labelStyle,
           valueStyle: monoStyle,
@@ -591,7 +604,7 @@ class _IssueCard extends StatelessWidget {
           children: [
             Expanded(
               child: _LabeledField(
-                label: 'SOURCE TEXT',
+                label: context.t.issueDetails.standard.sourceText,
                 value: sourceText,
                 labelStyle: labelStyle,
                 valueStyle: bodyStyle,
@@ -600,7 +613,7 @@ class _IssueCard extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(
               child: _LabeledField(
-                label: 'TRANSLATION',
+                label: context.t.issueDetails.standard.translation,
                 value: targetText,
                 labelStyle: labelStyle,
                 valueStyle: bodyStyle,
@@ -610,7 +623,7 @@ class _IssueCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _LabeledField(
-          label: 'ERROR DETAILS',
+          label: context.t.issueDetails.standard.errorDetails,
           value: issue.description,
           labelStyle: labelStyle,
           valueStyle:
@@ -649,14 +662,14 @@ class _IssueCard extends StatelessWidget {
     );
   }
 
-  String _issueTitle(QualityIssueType type) {
+  String _issueTitle(BuildContext context, QualityIssueType type) {
     switch (type) {
       case QualityIssueType.duplicateValue:
-        return 'Duplicate Values';
+        return context.t.issueDetails.types.duplicateValue;
       case QualityIssueType.lengthOutlier:
-        return 'Length Mismatch';
+        return context.t.issueDetails.types.lengthOutlier;
       case QualityIssueType.placeholderMismatch:
-        return 'Broken Placeholders';
+        return context.t.issueDetails.types.placeholderMismatch;
     }
   }
 }
@@ -684,7 +697,7 @@ class _ReviewBadge extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            'Review',
+            context.t.issueDetails.review,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.error,
               fontWeight: FontWeight.bold,
@@ -729,7 +742,7 @@ class _LengthBar extends StatelessWidget {
           children: [
             Text(label, style: labelStyle),
             Text(
-              '$length chars',
+              context.t.issueDetails.lengthOutlier.chars(count: length),
               style: theme.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isHighlight ? color : theme.colorScheme.onSurface,
@@ -808,27 +821,27 @@ String _displayValue(String? value, String fallback) {
   return trimmed;
 }
 
-String _sourceFallback(QualityIssueType type) {
+String _sourceFallback(BuildContext context, QualityIssueType type) {
   if (type == QualityIssueType.duplicateValue) {
-    return 'Multiple source texts';
+    return context.t.issueDetails.fallbacks.multipleSources;
   }
-  return 'Source text not available';
+  return context.t.issueDetails.fallbacks.sourceNotAvailable;
 }
 
-String _targetFallback(QualityIssueType type) {
+String _targetFallback(BuildContext context, QualityIssueType type) {
   if (type == QualityIssueType.duplicateValue) {
-    return 'Shared translation not available';
+    return context.t.issueDetails.fallbacks.sharedTranslationNotAvailable;
   }
-  return 'Translation not available';
+  return context.t.issueDetails.fallbacks.translationNotAvailable;
 }
 
-String _noteForIssue(QualityIssueType type) {
+String _noteForIssue(BuildContext context, QualityIssueType type) {
   switch (type) {
     case QualityIssueType.placeholderMismatch:
-      return 'Markers like {name} should match the source.';
+      return context.t.issueDetails.notes.placeholderMismatch;
     case QualityIssueType.lengthOutlier:
-      return 'Big length changes can affect how text fits on screen.';
+      return context.t.issueDetails.notes.lengthOutlier;
     case QualityIssueType.duplicateValue:
-      return 'Same translation is used for different keys.';
+      return context.t.issueDetails.notes.duplicateValue;
   }
 }

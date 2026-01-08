@@ -8,6 +8,7 @@ import 'package:localizer_app_main/data/models/project_settings.dart';
 import 'package:localizer_app_main/data/repositories/settings_repository.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_scope.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
@@ -187,6 +188,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       // Sync global debug flags
       _syncGlobalDebugFlags(settings);
 
+      // Apply saved locale preference
+      _applyLocaleFromAppLanguage(settings.appLanguage);
+
       emit(
           state.copyWith(appSettings: settings, status: SettingsStatus.loaded));
     } catch (e) {
@@ -289,7 +293,35 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final newSettings =
         state.appSettings.copyWith(appLanguage: event.appLanguage);
     await _saveSettingsToRepository(newSettings);
+
+    // Update slang locale based on the selected language
+    _applyLocaleFromAppLanguage(event.appLanguage);
+
     emit(state.copyWith(appSettings: newSettings));
+  }
+
+  /// Maps appLanguage display name to slang AppLocale and applies it
+  void _applyLocaleFromAppLanguage(String appLanguage) {
+    if (appLanguage == 'Auto-Detect') {
+      LocaleSettings.useDeviceLocale();
+      return;
+    }
+
+    // Map display names to locale codes
+    final localeCode = switch (appLanguage) {
+      'English (US)' => 'en',
+      'Türkçe (TR)' => 'tr',
+      _ => 'en', // Default to English for unsupported languages
+    };
+
+    // Try to find matching AppLocale
+    try {
+      final locale = AppLocaleUtils.parse(localeCode);
+      LocaleSettings.setLocale(locale);
+    } catch (_) {
+      // Fallback to English if parsing fails
+      LocaleSettings.setLocale(AppLocale.en);
+    }
   }
 
   Future<void> _onUpdateDefaultViewOnStartup(

@@ -6,6 +6,7 @@ import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_eve
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/data/models/project.dart';
 import 'package:localizer_app_main/data/repositories/project_repository.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/project/create_project_dialog.dart';
 import 'package:localizer_app_main/core/services/project_sharing_service.dart';
 import 'package:localizer_app_main/presentation/widgets/dialogs/import_review_dialog.dart';
@@ -53,7 +54,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
   Future<void> _pickAndOpenProject() async {
     final String? selectedDirectory =
         await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Project Folder',
+      dialogTitle: context.t.projects.selection.selectFolder,
       lockParentWindow: true,
     );
 
@@ -68,7 +69,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['zip'],
-      dialogTitle: 'Select Project Archive',
+      dialogTitle: context.t.projects.selection.selectArchive,
     );
 
     if (result == null || result.files.single.path == null) return;
@@ -78,7 +79,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
 
     // 2. Pick Destination
     final destDir = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select Destination Folder for Import',
+      dialogTitle: context.t.projects.selectDestination,
       lockParentWindow: true,
     );
 
@@ -86,7 +87,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
     if (!mounted) return;
 
     try {
-      ToastService.showInfo(context, 'Importing project...');
+      ToastService.showInfo(context, context.t.projects.importing);
 
       final sharingService = ProjectSharingService();
       // 3. Unzip & Validate
@@ -120,12 +121,13 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
 
         if (mounted) {
           Navigator.pop(context); // Close selection dialog
-          ToastService.showSuccess(context, 'Project imported successfully');
+          ToastService.showSuccess(context, context.t.projects.importSuccess);
         }
       }
     } catch (e) {
       if (mounted) {
-        ToastService.showError(context, 'Import failed: $e');
+        ToastService.showError(
+            context, context.t.projects.importFailed(error: e));
       }
     }
   }
@@ -136,7 +138,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
     final colorScheme = theme.colorScheme;
 
     return AlertDialog(
-      title: const Text('Open Project'),
+      title: Text(context.t.projects.selection.openProject),
       content: SizedBox(
         width: 400,
         child: Column(
@@ -152,7 +154,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
             else if (_recentProjects != null &&
                 _recentProjects!.isNotEmpty) ...[
               Text(
-                'Recent Projects',
+                context.t.projects.recentProjects,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: colorScheme.primary,
                   fontWeight: FontWeight.bold,
@@ -190,10 +192,10 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
               ),
               const Divider(height: 24),
             ] else
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
                 child: Center(
-                  child: Text('No recent projects found'),
+                  child: Text(context.t.projects.noRecentProjects),
                 ),
               ),
             Row(
@@ -202,7 +204,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
                   child: OutlinedButton.icon(
                     onPressed: _pickAndOpenProject,
                     icon: const Icon(Icons.folder_open),
-                    label: const Text('Browse Folder...'),
+                    label: Text(context.t.projects.selection.browseFolder),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -213,7 +215,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
                       CreateProjectDialog.show(context);
                     },
                     icon: const Icon(Icons.create_new_folder),
-                    label: const Text('Create New'),
+                    label: Text(context.t.projects.selection.createNew),
                   ),
                 ),
               ],
@@ -224,7 +226,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
               child: OutlinedButton.icon(
                 onPressed: _importProject,
                 icon: const Icon(Icons.unarchive),
-                label: const Text('Import from Zip...'),
+                label: Text(context.t.projects.selection.importFromZip),
               ),
             ),
           ],
@@ -233,7 +235,7 @@ class _ProjectSelectionDialogState extends State<ProjectSelectionDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.t.common.cancel),
         ),
       ],
     );

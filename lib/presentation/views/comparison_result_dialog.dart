@@ -7,6 +7,7 @@ import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class ComparisonResultDialog extends StatefulWidget {
   final ComparisonResult result;
@@ -178,7 +179,8 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Diff Viewer', style: theme.textTheme.titleLarge),
+                      Text(context.t.dialogs.diffViewer.title,
+                          style: theme.textTheme.titleLarge),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -186,7 +188,7 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
                             icon: LucideIcons.plus,
                             count: addedCount,
                             color: themeState.diffAddedColor,
-                            label: 'Added',
+                            label: context.t.dialogs.diffViewer.added,
                             isActive: _showAdded,
                             onTap: () =>
                                 setState(() => _showAdded = !_showAdded),
@@ -196,7 +198,7 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
                             icon: LucideIcons.trash2,
                             count: removedCount,
                             color: themeState.diffRemovedColor,
-                            label: 'Removed',
+                            label: context.t.dialogs.diffViewer.removed,
                             isActive: _showRemoved,
                             onTap: () =>
                                 setState(() => _showRemoved = !_showRemoved),
@@ -206,7 +208,7 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
                             icon: LucideIcons.pencil,
                             count: modifiedCount,
                             color: themeState.diffModifiedColor,
-                            label: 'Modified',
+                            label: context.t.dialogs.diffViewer.modified,
                             isActive: _showModified,
                             onTap: () =>
                                 setState(() => _showModified = !_showModified),
@@ -289,7 +291,7 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No entries match the current filters',
+            context.t.dialogs.diffViewer.noMatches,
             style: theme.textTheme.titleMedium?.copyWith(
               color: isDark
                   ? AppThemeV2.darkTextSecondary
@@ -298,7 +300,7 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Click the badges above to toggle filters',
+            context.t.dialogs.diffViewer.clickToggle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color:
                   isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted,
@@ -313,8 +315,9 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
     final theme = Theme.of(context);
 
     // Static file description
-    final filePath =
-        isSource ? 'Original/Reference file' : 'Translation/Comparison file';
+    final filePath = isSource
+        ? context.t.dialogs.diffViewer.originalFile
+        : context.t.dialogs.diffViewer.translationFile;
 
     return Material(
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
@@ -328,7 +331,9 @@ class _ComparisonResultDialogState extends State<ComparisonResultDialog> {
             ),
             const SizedBox(width: 8),
             Text(
-              isSource ? 'BASE' : 'TARGET',
+              isSource
+                  ? context.t.dialogs.diffViewer.base
+                  : context.t.dialogs.diffViewer.target,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 11,

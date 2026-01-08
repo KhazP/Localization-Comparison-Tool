@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// A widget that displays the current theme's colors and typography.
 class ThemePlaygroundSection extends StatelessWidget {
@@ -20,31 +21,62 @@ class ThemePlaygroundSection extends StatelessWidget {
 
     return ExpansionTile(
       leading: Icon(LucideIcons.palette, color: colorScheme.primary),
-      title: const Text('Theme Playground'),
-      subtitle: const Text('Color palette & typography'),
+      title: Text(context.t.settings.developer.themePlayground),
+      subtitle: Text(context.t.settings.developer.themePlaygroundDescription),
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCategory('Color Palette', isDark),
+              _buildCategory(
+                  context.t.settings.developer.themePlaygroundSection.colors,
+                  isDark),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _ColorChip(label: 'Primary', color: colorScheme.primary),
-                  _ColorChip(label: 'On Primary', color: colorScheme.onPrimary),
-                  _ColorChip(label: 'Secondary', color: colorScheme.secondary),
                   _ColorChip(
-                      label: 'On Secondary', color: colorScheme.onSecondary),
-                  _ColorChip(label: 'Surface', color: colorScheme.surface),
-                  _ColorChip(label: 'On Surface', color: colorScheme.onSurface),
-                  _ColorChip(label: 'Error', color: colorScheme.error),
-                  _ColorChip(label: 'On Error', color: colorScheme.onError),
-                  _ColorChip(label: 'Outline', color: colorScheme.outline),
-                  _ColorChip(label: 'Shadow', color: colorScheme.shadow),
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.primary,
+                      color: colorScheme.primary),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.onPrimary,
+                      color: colorScheme.onPrimary),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.secondary,
+                      color: colorScheme.secondary),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.onSecondary,
+                      color: colorScheme.onSecondary),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.surface,
+                      color: colorScheme.surface),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.onSurface,
+                      color: colorScheme.onSurface),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.error,
+                      color: colorScheme.error),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.onError,
+                      color: colorScheme.onError),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.outline,
+                      color: colorScheme.outline),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.shadow,
+                      color: colorScheme.shadow),
                 ],
               ),
               const Divider(height: 24),
@@ -54,14 +86,29 @@ class ThemePlaygroundSection extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _ColorChip(label: 'Success', color: AppThemeV2.success),
-                  _ColorChip(label: 'Warning', color: AppThemeV2.warning),
-                  _ColorChip(label: 'Error', color: AppThemeV2.error),
-                  _ColorChip(label: 'Info', color: AppThemeV2.info),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.success,
+                      color: AppThemeV2.success),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.warning,
+                      color: AppThemeV2.warning),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.error,
+                      color: AppThemeV2.error),
+                  _ColorChip(
+                      label: context.t.settings.developer.themePlaygroundSection
+                          .palette.info,
+                      color: AppThemeV2.info),
                 ],
               ),
               const Divider(height: 24),
-              _buildCategory('Typography', isDark),
+              _buildCategory(
+                  context
+                      .t.settings.developer.themePlaygroundSection.typography,
+                  isDark),
               const SizedBox(height: 8),
               _TypographyRow(
                   name: 'headlineLarge', style: textTheme.headlineLarge),

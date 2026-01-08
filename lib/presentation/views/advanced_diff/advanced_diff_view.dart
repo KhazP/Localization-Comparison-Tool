@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/sidebar/advanced_diff_sidebar.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -45,17 +46,17 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Save All Changes?'),
-        content: Text(
-            'This will save all ${controller.dirtyKeys.length} modified entries to the target file. This action cannot be undone.'),
+        title: Text(context.t.advancedDiff.saveAllChanges),
+        content: Text(context.t.advancedDiff
+            .saveConfirmation(count: controller.dirtyKeys.length)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.t.common.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Save'),
+            child: Text(context.t.common.save),
           ),
         ],
       ),
@@ -65,7 +66,7 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
       final settings = context.read<SettingsBloc>().state.appSettings;
       await controller.saveChanges(widget.targetFile, settings);
       if (context.mounted) {
-        ToastService.showSuccess(context, 'Changes saved successfully.');
+        ToastService.showSuccess(context, context.t.advancedDiff.changesSaved);
       }
     }
   }
@@ -76,8 +77,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
     if (path != null && context.mounted) {
       ToastService.showSuccessWithAction(
         context,
-        'CSV exported',
-        actionLabel: 'Open',
+        context.t.advancedDiff.csvExported,
+        actionLabel: context.t.common.open,
         onAction: () => OpenFile.open(path),
       );
     }
@@ -149,19 +150,19 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                     final shouldPop = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('Unsaved Changes'),
-                        content: const Text(
-                            'You have unsaved changes. Are you sure you want to discard them?'),
+                        title: Text(context.t.advancedDiff.unsavedChanges),
+                        content:
+                            Text(context.t.advancedDiff.unsavedChangesWarning),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(false),
-                            child: const Text('Cancel'),
+                            child: Text(context.t.common.cancel),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(true),
                             style: TextButton.styleFrom(
                                 foregroundColor: Colors.red),
-                            child: const Text('Discard Changes'),
+                            child: Text(context.t.advancedDiff.discardChanges),
                           ),
                         ],
                       ),
@@ -187,11 +188,11 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                             IconButton(
                               icon: const Icon(LucideIcons.arrowLeft, size: 24),
                               onPressed: () => Navigator.maybePop(context),
-                              tooltip: 'Go back',
+                              tooltip: context.t.advancedDiff.goBack,
                               padding: const EdgeInsets.all(8),
                             ),
                             const SizedBox(width: 4),
-                            const Text('Home  >  Editor'),
+                            Text(context.t.advancedDiff.breadcrumbs),
                             const Spacer(),
                             // Unsaved changes indicator
                             if (controller.dirtyKeys.isNotEmpty)
@@ -219,7 +220,8 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      '${controller.dirtyKeys.length} unsaved',
+                                      context.t.advancedDiff.unsaved(
+                                          count: controller.dirtyKeys.length),
                                       style: TextStyle(
                                         color: Colors.orange[800],
                                         fontSize: 12,
@@ -246,7 +248,9 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                                         size: 14, color: Colors.green[600]),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${controller.reviewedKeys.length} reviewed',
+                                      context.t.advancedDiff.reviewed(
+                                          count:
+                                              controller.reviewedKeys.length),
                                       style: TextStyle(
                                         color: Colors.green[700],
                                         fontSize: 12,
@@ -256,23 +260,24 @@ class _AdvancedDiffViewState extends State<AdvancedDiffView> {
                                 ),
                               ),
                             Tooltip(
-                              message: 'Save All Changes (Ctrl+S)',
+                              message: context.t.advancedDiff.saveAllTooltip,
                               child: FilledButton(
                                   onPressed: controller.dirtyKeys.isEmpty
                                       ? null
                                       : () => _handleSaveChanges(
                                           context, controller),
                                   child: Text(controller.dirtyKeys.isEmpty
-                                      ? 'All Saved'
-                                      : 'Save All (${controller.dirtyKeys.length})')),
+                                      ? context.t.advancedDiff.allSaved
+                                      : context.t.advancedDiff.saveAll(
+                                          count: controller.dirtyKeys.length))),
                             ),
                             const SizedBox(width: 8),
                             Tooltip(
-                              message: 'Export Data (Ctrl+E)',
+                              message: context.t.advancedDiff.exportTooltip,
                               child: OutlinedButton(
                                   onPressed: () =>
                                       _handleExport(context, controller),
-                                  child: const Text('Export')),
+                                  child: Text(context.t.common.export)),
                             ),
                           ],
                         ),

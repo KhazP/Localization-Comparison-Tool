@@ -4,6 +4,7 @@ import 'package:localizer_app_main/presentation/widgets/common/premium_toast.dar
 import 'package:toastification/toastification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Types of toast notifications
 enum ToastType { success, error, info, warning }
@@ -97,7 +98,7 @@ class ToastService {
       message: fullMessage,
       type: ToastType.error,
       duration: duration,
-      actionLabel: onRetry != null ? 'Retry' : null,
+      actionLabel: onRetry != null ? context.t.common.retry : null,
       onAction: onRetry,
       forceExpanded: onRetry != null,
     );

@@ -7,7 +7,7 @@ class AdvancedComparisonView extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: Implement advanced side-by-side comparison view
     return const Center(
-      child: Text('Advanced Comparison View - Placeholder'),
+      child: Text(context.t.advancedComparison.placeholder),
     );
   }
 }

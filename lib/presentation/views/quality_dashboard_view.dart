@@ -22,6 +22,7 @@ import 'package:localizer_app_main/core/services/quality_report_exporter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 enum DashboardChartMode { words, coverage, burnUp }
@@ -114,14 +115,14 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
       if (mounted) {
         ToastService.showError(
           context,
-          'Could not build the report. Please try again.',
+          context.t.quality.exportError,
         );
       }
       return;
     }
     if (data == null) {
       if (mounted) {
-        ToastService.showInfo(context, 'No data to export');
+        ToastService.showInfo(context, context.t.quality.noDataToExport);
       }
       return;
     }
@@ -129,7 +130,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
     final bytes = _exporter.toExcelBytes(data);
     if (bytes.isEmpty) {
       if (mounted) {
-        ToastService.showError(context, 'Export failed');
+        ToastService.showError(context, context.t.quality.exportFailed);
       }
       return;
     }
@@ -138,7 +139,7 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
     final fileName = 'quality_report_$timestamp.xlsx';
 
     final result = await FilePicker.platform.saveFile(
-      dialogTitle: 'Export Quality Report',
+      dialogTitle: context.t.quality.exportDialogTitle,
       fileName: fileName,
       allowedExtensions: ['xlsx'],
       type: FileType.custom,
@@ -154,8 +155,8 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
       if (mounted) {
         ToastService.showSuccessWithAction(
           context,
-          'Report saved',
-          actionLabel: 'Open',
+          context.t.quality.reportSaved,
+          actionLabel: context.t.common.open,
           onAction: () => OpenFile.open(file.path),
         );
       }
@@ -228,12 +229,12 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
     required Color borderColor,
   }) {
     if (state is HistoryLoading && _dashboardFuture == null) {
-      return const LoadingIndicator(message: 'Loading dashboard...');
+      return LoadingIndicator(message: context.t.quality.loading);
     }
 
     if (state is HistoryError) {
       return ErrorDisplay(
-        message: 'We could not load your history. Try again.',
+        message: context.t.quality.errorLoading,
         onRetry: () => _refreshDashboard(reloadHistory: true),
       );
     }
@@ -241,28 +242,28 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
     if (_history.isEmpty) {
       return EmptyStateDisplay(
         icon: Icons.insights_outlined,
-        message: 'Run a comparison to see your dashboard.',
+        message: context.t.quality.emptyState,
         action: OutlinedButton.icon(
           onPressed: () => _refreshDashboard(reloadHistory: true),
           icon: const Icon(Icons.refresh),
-          label: const Text('Refresh'),
+          label: Text(context.t.quality.refresh),
         ),
       );
     }
 
     if (_dashboardFuture == null) {
-      return const LoadingIndicator(message: 'Building insights...');
+      return LoadingIndicator(message: context.t.quality.buildingInsights);
     }
 
     return FutureBuilder<QualityDashboardData>(
       future: _dashboardFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingIndicator(message: 'Crunching the numbers...');
+          return LoadingIndicator(message: context.t.quality.crunchingNumbers);
         }
         if (snapshot.hasError) {
           return ErrorDisplay(
-            message: 'We could not build the dashboard. Try again.',
+            message: context.t.quality.errorBuilding,
             onRetry: () => _refreshDashboard(reloadHistory: true),
           );
         }
@@ -271,11 +272,11 @@ class _QualityDashboardViewState extends State<QualityDashboardView>
         if (data == null || data.languages.isEmpty) {
           return EmptyStateDisplay(
             icon: Icons.insights_outlined,
-            message: 'No usable data was found yet.',
+            message: context.t.quality.noUsableData,
             action: OutlinedButton.icon(
               onPressed: () => _refreshDashboard(reloadHistory: true),
               icon: const Icon(LucideIcons.refreshCcw),
-              label: const Text('Refresh'),
+              label: Text(context.t.quality.refresh),
             ),
           );
         }
@@ -379,14 +380,14 @@ class _DashboardHeader extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            'Quality Dashboard',
+            context.t.quality.title,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
         Tooltip(
-          message: 'Refresh',
+          message: context.t.quality.refresh,
           child: IconButton(
             onPressed: onRefresh,
             icon: const Icon(LucideIcons.refreshCcw),
@@ -396,8 +397,8 @@ class _DashboardHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Tooltip(
             message: showProjectFilter
-                ? 'Showing: Current Project'
-                : 'Showing: All History',
+                ? context.t.quality.showingCurrentProject
+                : context.t.quality.showingAllHistory,
             child: IconButton(
               onPressed: onToggleProjectFilter,
               icon: Icon(
@@ -413,7 +414,7 @@ class _DashboardHeader extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onExport,
           icon: const Icon(LucideIcons.download, size: 18),
-          label: const Text('Export'),
+          label: Text(context.t.quality.export),
         ),
       ],
     );
@@ -434,17 +435,17 @@ class _SummaryRow extends StatelessWidget {
         final isCompact = constraints.maxWidth < 780;
         final cards = [
           _SummaryCard(
-            title: 'Languages',
+            title: context.t.quality.languages,
             value: data.totalLanguages.toString(),
             icon: LucideIcons.languages,
           ),
           _SummaryCard(
-            title: 'Average coverage',
+            title: context.t.quality.averageCoverage,
             value: '${avgCoverage.toStringAsFixed(1)}%',
             icon: LucideIcons.percent,
           ),
           _SummaryCard(
-            title: 'Potential issues',
+            title: context.t.quality.potentialIssues,
             value: data.totalIssues.toString(),
             icon: LucideIcons.alertTriangle,
           ),
@@ -593,7 +594,7 @@ class _AiUsageSection extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'AI & Translation Usage',
+                  context.t.quality.aiUsage,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -673,7 +674,10 @@ class _AiUsageCard extends StatelessWidget {
         lastUsed != null ? DateFormat('MMM d, h:mm a').format(lastUsed) : null;
 
     // Primary metric - tokens or characters depending on provider type
-    final primaryLabel = summary.isCharacterBased ? 'Characters' : 'Tokens';
+    // NOTE: API metric terms (Requests, Tokens, Characters, Prompt, Completion) are intentionally kept in English for Turkish translation to avoid confusion
+    final primaryLabel = summary.isCharacterBased
+        ? context.t.quality.characters
+        : context.t.quality.tokens;
     final primaryValue = summary.isCharacterBased
         ? _formatNumber(summary.totalCharacters)
         : _formatNumber(summary.totalTokens);
@@ -753,7 +757,7 @@ class _AiUsageCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MetricTile(
-                    label: 'Requests',
+                    label: context.t.quality.requests,
                     value: summary.requestCount.toString(),
                     accentColor: accentColor,
                   ),
@@ -770,7 +774,7 @@ class _AiUsageCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _MetricTile(
-                      label: 'Est. Cost',
+                      label: context.t.quality.estCost,
                       value: _formatCost(summary.estimatedCostUsd!),
                       accentColor: accentColor,
                       highlight: true,
@@ -808,7 +812,7 @@ class _AiUsageCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Last used $lastUsedLabel',
+                    context.t.quality.lastUsed(date: lastUsedLabel),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withOpacity(0.5),
                       fontSize: 11,
@@ -1034,7 +1038,7 @@ class _CoverageSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Translation coverage',
+            context.t.quality.translationCoverage,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -1081,8 +1085,9 @@ class _CoverageSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${coverage.translatedKeyCount} of '
-                    '${coverage.sourceKeyCount} entries translated',
+                    context.t.quality.entriesTranslated(
+                        translated: coverage.translatedKeyCount,
+                        total: coverage.sourceKeyCount),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
@@ -1127,13 +1132,13 @@ class _MainChartSection extends StatelessWidget {
     String title;
     switch (mode) {
       case DashboardChartMode.words:
-        title = 'Words added over time';
+        title = context.t.quality.wordsAddedOverTime;
         break;
       case DashboardChartMode.coverage:
-        title = 'Translation Coverage';
+        title = context.t.quality.translationCoverage; // Reuse existing key
         break;
       case DashboardChartMode.burnUp:
-        title = 'Completion vs Scope';
+        title = context.t.quality.completionVsScope;
         break;
     }
 
@@ -1158,33 +1163,33 @@ class _MainChartSection extends StatelessWidget {
             children: [
               if (mode == DashboardChartMode.burnUp)
                 Text(
-                  'Scope vs Progress',
+                  context.t.quality.scopeVsProgress,
                   style: theme.textTheme.bodySmall,
                 )
               else
                 Text(
                   mode == DashboardChartMode.coverage
-                      ? 'Coverage %'
-                      : 'Words Added',
+                      ? context.t.quality.coveragePercent
+                      : context.t.quality.wordsAdded,
                   style: theme.textTheme.bodySmall,
                 ),
               const Spacer(),
               SegmentedButton<DashboardChartMode>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: DashboardChartMode.words,
-                    label: Text('Words'),
-                    icon: Icon(LucideIcons.type),
+                    label: Text(context.t.quality.words),
+                    icon: const Icon(LucideIcons.type),
                   ),
                   ButtonSegment(
                     value: DashboardChartMode.coverage,
-                    label: Text('Coverage'),
-                    icon: Icon(LucideIcons.percent),
+                    label: Text(context.t.quality.coverage),
+                    icon: const Icon(LucideIcons.percent),
                   ),
                   ButtonSegment(
                     value: DashboardChartMode.burnUp,
-                    label: Text('Scope'),
-                    icon: Icon(LucideIcons.trendingUp),
+                    label: Text(context.t.quality.scope),
+                    icon: const Icon(LucideIcons.trendingUp),
                   ),
                 ],
                 selected: {mode},
@@ -1325,16 +1330,16 @@ class _TrendSummaryRow extends StatelessWidget {
 
     switch (mode) {
       case DashboardChartMode.words:
-        mainLabel = 'Latest';
-        changeLabel = 'Added';
+        mainLabel = context.t.quality.latest;
+        changeLabel = context.t.quality.added;
         break;
       case DashboardChartMode.coverage:
-        mainLabel = 'Latest';
-        changeLabel = 'Change';
+        mainLabel = context.t.quality.latest;
+        changeLabel = context.t.quality.change;
         break;
       case DashboardChartMode.burnUp:
-        mainLabel = 'Total Scope';
-        changeLabel = 'Scope Growth';
+        mainLabel = context.t.quality.totalScope;
+        changeLabel = context.t.quality.scopeGrowth;
         break;
     }
 
@@ -1355,7 +1360,7 @@ class _TrendSummaryRow extends StatelessWidget {
                 delta >= 0 ? LucideIcons.trendingUp : LucideIcons.trendingDown,
           ),
           _TrendStatChip(
-            label: 'Range',
+            label: context.t.quality.range,
             value: dateRange,
             icon: LucideIcons.calendar,
           ),
@@ -1717,14 +1722,17 @@ class _IssuesSection extends StatelessWidget {
     );
 
     final placeholderSamples = _collectSamples(
+      context,
       data.languages,
       (report) => report.issues.placeholderMismatchIssues,
     );
     final lengthSamples = _collectSamples(
+      context,
       data.languages,
       (report) => report.issues.lengthOutlierIssues,
     );
     final duplicateSamples = _collectSamples(
+      context,
       data.languages,
       (report) => report.issues.duplicateValueIssues,
     );
@@ -1740,7 +1748,7 @@ class _IssuesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Potential issues',
+            context.t.quality.potentialIssues,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -1748,54 +1756,52 @@ class _IssuesSection extends StatelessWidget {
           const SizedBox(height: 12),
           if (data.totalIssues == 0)
             Text(
-              'No issues found in the latest comparisons.',
+              context.t.quality.noIssuesFound,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             )
           else ...[
             _IssueRow(
-              title: 'Placeholder mismatches',
-              description: 'Markers like {name} do not match.',
+              title: context.t.quality.placeholderMismatches,
+              description: context.t.quality.placeholderMismatchesDesc,
               count: placeholderCount,
               samples: placeholderSamples,
               onTap: () => showDialog(
                 context: context,
                 builder: (context) => IssueDetailsDialog(
-                  title: 'Placeholder Mismatches',
-                  description: 'These translations have different '
-                      'placeholders ({name}) than the source.',
+                  title: context.t.quality.placeholderDialogTitle,
+                  description: context.t.quality.placeholderDialogDesc,
                   items: placeholderIssues,
                 ),
               ),
             ),
             const SizedBox(height: 12),
             _IssueRow(
-              title: 'Very short or long translations',
-              description: 'Length looks unusual compared to the source.',
+              title: context.t.quality.lengthOutliers,
+              description: context.t.quality.lengthOutliersDesc,
               count: lengthCount,
               samples: lengthSamples,
               onTap: () => showDialog(
                 context: context,
                 builder: (context) => IssueDetailsDialog(
-                  title: 'Length Outliers',
-                  description: 'These translations are significantly shorter '
-                      'or longer than the source.',
+                  title: context.t.quality.lengthDialogTitle,
+                  description: context.t.quality.lengthDialogDesc,
                   items: lengthIssues,
                 ),
               ),
             ),
             const SizedBox(height: 12),
             _IssueRow(
-              title: 'Duplicate values',
-              description: 'The same translation is used many times.',
+              title: context.t.quality.duplicateValues,
+              description: context.t.quality.duplicateValuesDesc,
               count: duplicateCount,
               samples: duplicateSamples,
               onTap: () => showDialog(
                 context: context,
                 builder: (context) => IssueDetailsDialog(
-                  title: 'Duplicate Values',
-                  description: 'These translations appear multiple times.',
+                  title: context.t.quality.duplicateDialogTitle,
+                  description: context.t.quality.duplicateDialogDesc,
                   items: duplicateIssues,
                 ),
               ),
@@ -1818,6 +1824,7 @@ class _IssuesSection extends StatelessWidget {
   }
 
   List<String> _collectSamples(
+    BuildContext context,
     List<LanguageQualityReport> reports,
     List<QualityIssue> Function(LanguageQualityReport) picker, {
     int limit = 3,
@@ -1828,18 +1835,19 @@ class _IssuesSection extends StatelessWidget {
         if (samples.length >= limit) {
           return samples;
         }
-        samples.add(_formatSample(report.languageLabel, issue));
+        samples.add(_formatSample(context, report.languageLabel, issue));
       }
     }
     return samples;
   }
 
-  String _formatSample(String languageLabel, QualityIssue issue) {
+  String _formatSample(
+      BuildContext context, String languageLabel, QualityIssue issue) {
     var description = issue.description.trim();
     if (issue.type == QualityIssueType.duplicateValue) {
       final value = issue.targetValue?.trim();
       if (value != null && value.isNotEmpty) {
-        description = 'Duplicate: "$value"';
+        description = context.t.quality.duplicateSample(value: value);
       }
     }
     if (description.isEmpty) {
@@ -2069,17 +2077,17 @@ class _ActivityTrendSection extends StatelessWidget {
                 children: [
                   _TrendLegendItem(
                     color: const Color(0xFF4ADE80), // Accent green
-                    label: 'Added',
+                    label: context.t.dialogs.diffViewer.added,
                   ),
                   const SizedBox(width: 16),
                   _TrendLegendItem(
                     color: Colors.amber,
-                    label: 'Modified',
+                    label: context.t.dialogs.diffViewer.modified,
                   ),
                   const SizedBox(width: 16),
                   _TrendLegendItem(
                     color: Colors.redAccent,
-                    label: 'Removed',
+                    label: context.t.dialogs.diffViewer.removed,
                   ),
                 ],
               ),

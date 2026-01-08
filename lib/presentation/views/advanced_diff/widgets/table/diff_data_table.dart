@@ -38,7 +38,7 @@ class DiffDataTable extends StatelessWidget {
                   const SizedBox(
                       width: 48,
                       child: Center(
-                          child: Text('#',
+                          child: Text(context.t.diffTable.columns.id,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
@@ -48,7 +48,7 @@ class DiffDataTable extends StatelessWidget {
                   const SizedBox(
                       width: 80,
                       child: Center(
-                          child: Text('STATUS',
+                          child: Text(context.t.diffTable.columns.status,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
@@ -59,7 +59,7 @@ class DiffDataTable extends StatelessWidget {
                       flex: 2,
                       child: Padding(
                           padding: EdgeInsets.only(left: 8),
-                          child: Text('STRING KEY',
+                          child: Text(context.t.diffTable.columns.key,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
@@ -70,7 +70,7 @@ class DiffDataTable extends StatelessWidget {
                       flex: 3,
                       child: Padding(
                           padding: EdgeInsets.only(left: 8),
-                          child: Text('SOURCE',
+                          child: Text(context.t.diffTable.columns.source,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
@@ -81,7 +81,7 @@ class DiffDataTable extends StatelessWidget {
                       flex: 3,
                       child: Padding(
                           padding: EdgeInsets.only(left: 8),
-                          child: Text('TARGET (click to edit)',
+                          child: Text(context.t.diffTable.columns.target,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   const SizedBox(width: 40), // Actions column spacer
@@ -91,7 +91,7 @@ class DiffDataTable extends StatelessWidget {
             // List
             Expanded(
               child: visibleEntries.isEmpty
-                  ? const Center(child: Text('No entries found'))
+                  ? Center(child: Text(context.t.diffTable.empty))
                   : ListView.builder(
                       itemCount: visibleEntries.length,
                       itemBuilder: (context, index) {
@@ -120,8 +120,9 @@ class DiffDataTable extends StatelessWidget {
                           onAddToTM: () {
                             controller.addToTM(key, oldVal, newVal);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Added to Translation Memory'),
+                              SnackBar(
+                                  content: Text(
+                                      context.t.diffTable.messages.addedToTM),
                                   behavior: SnackBarBehavior.floating,
                                   width: 300),
                             );
@@ -132,8 +133,9 @@ class DiffDataTable extends StatelessWidget {
                           onRevert: () {
                             controller.revertEntry(key);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Reverted to source value'),
+                              SnackBar(
+                                  content: Text(
+                                      context.t.diffTable.messages.reverted),
                                   behavior: SnackBarBehavior.floating,
                                   width: 300),
                             );
@@ -141,8 +143,9 @@ class DiffDataTable extends StatelessWidget {
                           onDelete: () {
                             controller.deleteEntry(key);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Deleted entry'),
+                              SnackBar(
+                                  content: Text(
+                                      context.t.diffTable.messages.deleted),
                                   behavior: SnackBarBehavior.floating,
                                   width: 300),
                             );
@@ -162,7 +165,7 @@ class DiffDataTable extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Text('Show: '),
+                  Text(context.t.diffTable.pagination.show),
                   DropdownButton<int>(
                     value: controller.itemsPerPage,
                     underline: const SizedBox(),
@@ -233,7 +236,7 @@ class DiffDataTable extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Edit Translation: $key'),
+          title: Text(context.t.diffTable.editDialog.title(key: key)),
           contentPadding: const EdgeInsets.all(24),
           content: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 600, maxWidth: 800),
@@ -241,8 +244,8 @@ class DiffDataTable extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Source (Original):',
-                    style: TextStyle(
+                Text(context.t.diffTable.editDialog.sourceLabel,
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold, color: Colors.grey)),
                 const SizedBox(height: 8),
                 Container(
@@ -260,8 +263,8 @@ class DiffDataTable extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text('Target (Translation):',
-                    style: TextStyle(
+                Text(context.t.diffTable.editDialog.targetLabel,
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold, color: Colors.grey)),
                 const SizedBox(height: 8),
                 TextField(
@@ -269,10 +272,10 @@ class DiffDataTable extends StatelessWidget {
                   maxLines: 8,
                   minLines: 3,
                   autofocus: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter translation...',
-                    contentPadding: EdgeInsets.all(12),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    hintText: context.t.diffTable.editDialog.hint,
+                    contentPadding: const EdgeInsets.all(12),
                   ),
                   style:
                       const TextStyle(fontFamily: 'RobotoMono', fontSize: 14),
@@ -283,7 +286,7 @@ class DiffDataTable extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(context.t.diffTable.editDialog.cancel),
             ),
             const SizedBox(width: 8),
             OutlinedButton.icon(
@@ -292,15 +295,15 @@ class DiffDataTable extends StatelessWidget {
                 controller.addToTM(key, source, textController.text);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Entry applied & added to TM'),
+                  SnackBar(
+                    content: Text(context.t.diffTable.messages.appliedAndAdded),
                     behavior: SnackBarBehavior.floating,
                     width: 300,
                   ),
                 );
               },
               icon: const Icon(Icons.psychology, size: 16),
-              label: const Text('Apply & Add to TM'),
+              label: Text(context.t.diffTable.editDialog.applyAndAdd),
             ),
             const SizedBox(width: 8),
             FilledButton(
@@ -308,7 +311,7 @@ class DiffDataTable extends StatelessWidget {
                 controller.updateEntry(key, textController.text);
                 Navigator.of(context).pop();
               },
-              child: const Text('Apply'),
+              child: Text(context.t.diffTable.editDialog.apply),
             ),
           ],
         );

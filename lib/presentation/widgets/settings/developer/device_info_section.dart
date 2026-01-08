@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// A widget that displays device and environment information.
 class DeviceInfoSection extends StatefulWidget {
@@ -29,11 +30,19 @@ class _DeviceInfoSectionState extends State<DeviceInfoSection> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _loadAllInfo();
   }
 
   Future<void> _loadAllInfo() async {
-    setState(() => _isLoading = true);
+    // Determine if we should show loading state only if no data
+    if (_deviceInfo.isEmpty) {
+      setState(() => _isLoading = true);
+    }
 
     // Load package info
     final packageInfo = await PackageInfo.fromPlatform();
@@ -45,7 +54,8 @@ class _DeviceInfoSectionState extends State<DeviceInfoSection> {
     try {
       if (Platform.isWindows) {
         final windowsInfo = await deviceInfoPlugin.windowsInfo;
-        deviceData['Computer Name'] = windowsInfo.computerName;
+        deviceData[context.t.settings.developer.deviceInfoSection
+            .computerName] = windowsInfo.computerName;
         deviceData['Product Name'] = windowsInfo.productName;
         deviceData['Build Number'] = '${windowsInfo.buildNumber}';
         deviceData['Edition'] = windowsInfo.displayVersion;
@@ -55,9 +65,10 @@ class _DeviceInfoSectionState extends State<DeviceInfoSection> {
             '${(windowsInfo.systemMemoryInMegabytes / 1024).toStringAsFixed(1)}';
       } else if (Platform.isMacOS) {
         final macInfo = await deviceInfoPlugin.macOsInfo;
-        deviceData['Computer Name'] = macInfo.computerName;
+        deviceData[context.t.settings.developer.deviceInfoSection
+            .computerName] = macInfo.computerName;
         deviceData['Model'] = macInfo.model;
-        deviceData['OS Version'] =
+        deviceData[context.t.settings.developer.deviceInfoSection.osVersion] =
             '${macInfo.majorVersion}.${macInfo.minorVersion}.${macInfo.patchVersion}';
         deviceData['Architecture'] = macInfo.arch;
         deviceData['Cores'] = '${macInfo.activeCPUs}';
@@ -74,11 +85,13 @@ class _DeviceInfoSectionState extends State<DeviceInfoSection> {
       deviceData['Error'] = e.toString();
     }
 
-    setState(() {
-      _packageInfo = packageInfo;
-      _deviceInfo = deviceData;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _packageInfo = packageInfo;
+        _deviceInfo = deviceData;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -88,8 +101,8 @@ class _DeviceInfoSectionState extends State<DeviceInfoSection> {
 
     return ExpansionTile(
       leading: Icon(LucideIcons.monitor, color: colorScheme.primary),
-      title: const Text('Device & Environment'),
-      subtitle: const Text('Screen, platform, and build info'),
+      title: Text(context.t.settings.developer.deviceEnvironment),
+      subtitle: Text(context.t.settings.developer.deviceEnvironmentDescription),
       children: [
         if (_isLoading)
           const Padding(
@@ -139,7 +152,8 @@ class _DeviceInfoSectionState extends State<DeviceInfoSection> {
                 const SizedBox(height: 8),
                 TextButton.icon(
                   icon: const Icon(LucideIcons.refreshCw, size: 16),
-                  label: const Text('Refresh'),
+                  label: Text(
+                      context.t.settings.developer.deviceInfoSection.refresh),
                   onPressed: _loadAllInfo,
                 ),
               ],

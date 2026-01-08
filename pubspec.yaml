@@ -12,6 +12,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:  # For Flutter's built-in localizations
+    sdk: flutter
+  slang: ^4.11.1  # Type-safe internationalization
+  slang_flutter: ^4.11.0  # Flutter integration for slang
   flutter_bloc: ^8.1.3 # For BLoC state management
   equatable: ^2.0.5 # For value equality in Bloc states
   freezed_annotation: ^2.4.1 # Runtime annotations for Freezed
@@ -86,6 +90,7 @@ dev_dependencies:
   freezed: ^2.4.6 # Code generator for Freezed models
   bloc_test: ^9.1.0   # Or your current/latest compatible version
   mocktail: ^1.0.0    # Or your current/latest compatible version
+  slang_build_runner: ^4.11.0  # Slang code generation
 
 flutter:
   uses-material-design: true

@@ -12,6 +12,7 @@ import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
 import 'package:localizer_app_main/data/services/translation_memory_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -205,7 +206,7 @@ class _SettingsViewState extends State<SettingsView>
         backgroundColor: Colors.transparent,
         appBar: widget.showBackButton
             ? AppBar(
-                title: const Text('Settings'),
+                title: Text(context.t.settings.title),
                 leading: IconButton(
                   icon: const Icon(LucideIcons.arrowLeft),
                   onPressed: () => Navigator.of(context).maybePop(),
@@ -248,7 +249,8 @@ class _SettingsViewState extends State<SettingsView>
                 _saveConfirmationTimer =
                     Timer(const Duration(milliseconds: 800), () {
                   if (mounted) {
-                    ToastService.showSuccess(context, 'Settings saved');
+                    ToastService.showSuccess(
+                        context, context.t.settings.settingsView.settingsSaved);
                   }
                 });
               }
@@ -288,7 +290,7 @@ class _SettingsViewState extends State<SettingsView>
                           Icon(LucideIcons.alertCircle,
                               size: 48, color: AppThemeV2.error),
                           const SizedBox(height: 16),
-                          Text('Error loading settings',
+                          Text(context.t.settings.settingsView.errorLoading,
                               style: theme.textTheme.titleMedium),
                         ],
                       ),
@@ -312,6 +314,53 @@ class _SettingsViewState extends State<SettingsView>
     );
   }
 
+  String _getCategoryTitle(BuildContext context, SettingsCategory category) {
+    switch (category) {
+      case SettingsCategory.general:
+        return context.t.settings.settingsView.categories.general;
+      case SettingsCategory.comparisonEngine:
+        return context.t.settings.settingsView.categories.comparisonEngine;
+      case SettingsCategory.appearance:
+        return context.t.settings.settingsView.categories.appearance;
+      case SettingsCategory.fileHandling:
+        return context.t.settings.settingsView.categories.fileHandling;
+      case SettingsCategory.aiServices:
+        return context.t.settings.settingsView.categories.aiServices;
+      case SettingsCategory.systemIntegrations:
+        return context.t.settings.settingsView.categories.systemIntegrations;
+      case SettingsCategory.projectResources:
+        return context.t.settings.settingsView.categories.projectResources;
+      case SettingsCategory.developer:
+        return context.t.settings.settingsView.categories.developer;
+      case SettingsCategory.about:
+        return context.t.settings.settingsView.categories.about;
+    }
+  }
+
+  String _getCategoryLabel(BuildContext context, SettingsCategory category) {
+    switch (category) {
+      case SettingsCategory.general:
+        return context.t.settings.settingsView.categoryLabels.general;
+      case SettingsCategory.comparisonEngine:
+        return context.t.settings.settingsView.categoryLabels.comparisonEngine;
+      case SettingsCategory.appearance:
+        return context.t.settings.settingsView.categoryLabels.appearance;
+      case SettingsCategory.fileHandling:
+        return context.t.settings.settingsView.categoryLabels.fileHandling;
+      case SettingsCategory.aiServices:
+        return context.t.settings.settingsView.categoryLabels.aiServices;
+      case SettingsCategory.systemIntegrations:
+        return context
+            .t.settings.settingsView.categoryLabels.systemIntegrations;
+      case SettingsCategory.projectResources:
+        return context.t.settings.settingsView.categoryLabels.projectResources;
+      case SettingsCategory.developer:
+        return context.t.settings.settingsView.categoryLabels.developer;
+      case SettingsCategory.about:
+        return context.t.settings.settingsView.categoryLabels.about;
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // SETTINGS SEARCH DATA
   // ═══════════════════════════════════════════════════════════════════════════
@@ -324,7 +373,24 @@ class _SettingsViewState extends State<SettingsView>
     final query = _searchQuery.toLowerCase();
     final results = <SettingsCategory, List<String>>{};
 
-    for (final entry in SettingsConstants.searchableSettings.entries) {
+    // Build the map from localized keys
+    final localizedSearchMap = <SettingsCategory, List<String>>{
+      SettingsCategory.general: context.t.settings.searchKeywords.general,
+      SettingsCategory.comparisonEngine:
+          context.t.settings.searchKeywords.comparisonEngine,
+      SettingsCategory.appearance: context.t.settings.searchKeywords.appearance,
+      SettingsCategory.fileHandling:
+          context.t.settings.searchKeywords.fileHandling,
+      SettingsCategory.aiServices: context.t.settings.searchKeywords.aiServices,
+      SettingsCategory.systemIntegrations:
+          context.t.settings.searchKeywords.systemIntegrations,
+      SettingsCategory.projectResources:
+          context.t.settings.searchKeywords.projectResources,
+      SettingsCategory.about: context.t.settings.searchKeywords.about,
+      SettingsCategory.developer: context.t.settings.searchKeywords.developer,
+    };
+
+    for (final entry in localizedSearchMap.entries) {
       final matches = entry.value
           .where((setting) => setting.toLowerCase().contains(query))
           .toList();
@@ -402,7 +468,7 @@ class _SettingsViewState extends State<SettingsView>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Settings',
+                  context.t.settings.title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -417,7 +483,7 @@ class _SettingsViewState extends State<SettingsView>
               controller: _searchController,
               style: Theme.of(context).textTheme.bodyMedium,
               decoration: InputDecoration(
-                hintText: 'Search settings...',
+                hintText: context.t.settings.developer.searchHint,
                 hintStyle: TextStyle(
                   color: isDark
                       ? AppThemeV2.darkTextMuted
@@ -594,7 +660,7 @@ class _SettingsViewState extends State<SettingsView>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    SettingsConstants.getCategoryLabel(category),
+                    _getCategoryLabel(context, category),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -680,7 +746,7 @@ class _SettingsViewState extends State<SettingsView>
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  SettingsConstants.getCategoryTitle(_selectedCategory),
+                  _getCategoryTitle(context, _selectedCategory),
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -696,7 +762,7 @@ class _SettingsViewState extends State<SettingsView>
                           ? AppThemeV2.darkTextMuted
                           : AppThemeV2.lightTextMuted),
                   label: Text(
-                    'Reset',
+                    context.t.common.reset,
                     style: TextStyle(
                         color: isDark
                             ? AppThemeV2.darkTextMuted
@@ -849,10 +915,10 @@ class _SettingsViewState extends State<SettingsView>
       BuildContext context, SettingsCategory category) async {
     final confirmed = await DialogService.showConfirmation(
       context: context,
-      title: 'Reset ${SettingsConstants.getCategoryTitle(category)}?',
-      content:
-          'This will reset all settings in this category to their default values.',
-      confirmText: 'Reset',
+      title: context.t.settings.settingsView
+          .resetCategoryTitle(category: _getCategoryTitle(context, category)),
+      content: context.t.settings.settingsView.resetCategoryContent,
+      confirmText: context.t.common.reset,
       isDestructive: true,
       icon: Icons.restore_rounded,
     );
@@ -893,18 +959,19 @@ class _SettingsViewState extends State<SettingsView>
         case SettingsCategory.developer:
           break;
       }
-      ToastService.showSuccess(context,
-          '${SettingsConstants.getCategoryTitle(category)} reset to defaults');
+      ToastService.showSuccess(
+          context,
+          context.t.settings.settingsView
+              .resetSuccess(category: _getCategoryTitle(context, category)));
     }
   }
 
   void _showResetAllSettingsDialog(BuildContext context) async {
     final confirmed = await DialogService.showConfirmation(
       context: context,
-      title: 'Reset All Settings?',
-      content:
-          'This will permanently reset all settings to their factory defaults. This action cannot be undone.',
-      confirmText: 'Reset All',
+      title: context.t.settings.settingsView.resetAllTitle,
+      content: context.t.settings.settingsView.resetAllContent,
+      confirmText: context.t.settings.settingsView.resetAll,
       isDestructive: true,
       icon: Icons.delete_forever_rounded,
     );
@@ -940,9 +1007,12 @@ class _SettingsViewState extends State<SettingsView>
           ToastService.showError(context, friendlyError.toString());
         } else if (result.updateAvailable) {
           ToastService.showSuccess(
-              context, 'Update available: v${result.latestVersion}');
+              context,
+              context.t.settings.settingsView
+                  .updateAvailable(version: result.latestVersion));
         } else {
-          ToastService.showInfo(context, 'You are using the latest version');
+          ToastService.showInfo(
+              context, context.t.settings.settingsView.latestVersion);
         }
       }
     } catch (e) {
@@ -969,7 +1039,8 @@ class _SettingsViewState extends State<SettingsView>
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 12),
-            Text("What's New in v${_updateCheckResult!.latestVersion}"),
+            Text(context.t.settings.settingsView
+                .whatsNew(version: _updateCheckResult!.latestVersion)),
           ],
         ),
         content: SizedBox(
@@ -989,14 +1060,14 @@ class _SettingsViewState extends State<SettingsView>
                 _launchUrl(_updateCheckResult!.downloadUrl!);
               },
               icon: const Icon(Icons.download_rounded, size: 18),
-              label: const Text('Download Update'),
+              label: Text(context.t.settings.settingsView.downloadUpdate),
               style: FilledButton.styleFrom(
                 backgroundColor: AppThemeV2.success,
               ),
             ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(context.t.common.close),
           ),
         ],
       ),
@@ -1014,7 +1085,7 @@ class _SettingsViewState extends State<SettingsView>
       final defaultFileName = 'localizer_settings_$timestamp.json';
 
       final result = await FilePicker.platform.saveFile(
-        dialogTitle: 'Export Settings',
+        dialogTitle: context.t.settings.settingsView.exportSettings,
         fileName: defaultFileName,
         type: FileType.custom,
         allowedExtensions: ['json'],
@@ -1027,8 +1098,8 @@ class _SettingsViewState extends State<SettingsView>
         if (context.mounted) {
           ToastService.showSuccessWithAction(
             context,
-            'Settings exported',
-            actionLabel: 'Open',
+            context.t.settings.settingsView.settingsExported,
+            actionLabel: context.t.common.open,
             onAction: () => OpenFile.open(result),
           );
         }
@@ -1037,7 +1108,7 @@ class _SettingsViewState extends State<SettingsView>
       developer.log('Error exporting settings: $e');
       if (context.mounted) {
         ToastService.showError(
-            context, 'Failed to export settings: ${e.toString()}');
+            context, context.t.settings.settingsView.exportFail(error: e));
       }
     }
   }
@@ -1045,7 +1116,7 @@ class _SettingsViewState extends State<SettingsView>
   Future<void> _importSettings(BuildContext context) async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        dialogTitle: 'Import Settings',
+        dialogTitle: context.t.settings.settingsView.importSettings,
         type: FileType.custom,
         allowedExtensions: ['json'],
         allowMultiple: false,
@@ -1063,7 +1134,7 @@ class _SettingsViewState extends State<SettingsView>
         final knownKeys = AppSettings.defaultSettings().toJson().keys.toSet();
         final hasKnownKey = jsonMap.keys.any(knownKeys.contains);
         if (!hasKnownKey) {
-          throw const FormatException('Invalid settings file format');
+          throw FormatException(context.t.settings.settingsView.invalidFormat);
         }
 
         // Show confirmation dialog
@@ -1071,25 +1142,24 @@ class _SettingsViewState extends State<SettingsView>
           final confirmed = await showDialog<bool>(
             context: context,
             builder: (dialogContext) => AlertDialog(
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.amber),
-                  SizedBox(width: 12),
-                  Text('Import Settings?'),
+                  const Icon(Icons.warning_amber_rounded, color: Colors.amber),
+                  const SizedBox(width: 12),
+                  Text(context.t.settings.settingsView.importTitle),
                 ],
               ),
-              content: const Text(
-                'This will replace all your current settings with the imported ones. '
-                'This action cannot be undone.',
+              content: Text(
+                context.t.settings.settingsView.importContent,
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(context.t.common.cancel),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: const Text('Import'),
+                  child: Text(context.t.common.import),
                 ),
               ],
             ),
@@ -1107,7 +1177,7 @@ class _SettingsViewState extends State<SettingsView>
 
           if (context.mounted) {
             ToastService.showSuccess(
-                context, 'Settings imported successfully!');
+                context, context.t.settings.settingsView.importSuccess);
           }
         }
       }
@@ -1115,7 +1185,7 @@ class _SettingsViewState extends State<SettingsView>
       developer.log('Error importing settings: $e');
       if (context.mounted) {
         ToastService.showError(
-            context, 'Failed to import settings: ${e.toString()}');
+            context, context.t.settings.settingsView.importFail(error: e));
       }
     }
   }

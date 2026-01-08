@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
 import 'package:localizer_app_main/data/models/glossary_item.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
 import 'package:localizer_app_main/core/services/dialog_service.dart';
@@ -19,10 +20,10 @@ class ProjectGlossaryCard extends StatelessWidget {
     if (project == null) return const SizedBox.shrink();
 
     return SettingsCard(
-      title: 'Project Glossary',
+      title: context.t.projects.glossary.title,
       children: [
-        const SettingsDescription(
-          'Define terms that should be treated consistently or never translated.',
+        SettingsDescription(
+          context.t.projects.glossary.description,
         ),
         const SizedBox(height: 16),
 
@@ -40,23 +41,23 @@ class ProjectGlossaryCard extends StatelessWidget {
                     color: Theme.of(context)
                         .colorScheme
                         .onSurfaceVariant
-                        .withOpacity(0.5),
+                        .withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'No glossary terms yet.',
+                    context.t.projects.glossary.noTerms,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add terms that should stay consistent across translations,\nor mark brand names that should never be translated.',
+                    context.t.projects.glossary.noTermsDesc,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context)
                             .colorScheme
                             .onSurfaceVariant
-                            .withOpacity(0.7)),
+                            .withValues(alpha: 0.7)),
                   ),
                 ],
               ),
@@ -73,8 +74,9 @@ class ProjectGlossaryCard extends StatelessWidget {
               return ListTile(
                 title: Text(item.term),
                 subtitle: Text(item.forbidTranslation
-                    ? 'Do not translate'
-                    : (item.preferredTranslation ?? 'No specific translation')),
+                    ? context.t.projects.glossary.doNotTranslate
+                    : (item.preferredTranslation ??
+                        context.t.projects.glossary.noSpecificTranslation)),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () => _deleteTerm(context, item.id),
@@ -89,7 +91,7 @@ class ProjectGlossaryCard extends StatelessWidget {
           child: FilledButton.icon(
             onPressed: () => _addTerm(context),
             icon: const Icon(Icons.add),
-            label: const Text('Add Term'),
+            label: Text(context.t.projects.glossary.addTerm),
           ),
         ),
       ],
@@ -147,30 +149,33 @@ class ProjectGlossaryCard extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Term' : 'Add Term'),
+          title: Text(isEditing
+              ? context.t.projects.glossary.editTerm
+              : context.t.projects.glossary.addTerm),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: termController,
-                  decoration: const InputDecoration(
-                    labelText: 'Term',
-                    hintText: 'e.g., brand name, specialized term',
+                  decoration: InputDecoration(
+                    labelText: context.t.projects.glossary.term,
+                    hintText: context.t.projects.glossary.termHint,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: definitionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Definition (Optional)',
-                    hintText: 'Context for the translator',
+                  decoration: InputDecoration(
+                    labelText: context.t.projects.glossary.definition,
+                    hintText: context.t.projects.glossary.definitionHint,
                   ),
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Do Not Translate'),
-                  subtitle: const Text('Keep term exactly as is in target'),
+                  title: Text(context.t.projects.glossary.doNotTranslateLabel),
+                  subtitle:
+                      Text(context.t.projects.glossary.doNotTranslateDesc),
                   value: forbidTranslation,
                   onChanged: (val) => setState(() => forbidTranslation = val),
                   contentPadding: EdgeInsets.zero,
@@ -178,12 +183,13 @@ class ProjectGlossaryCard extends StatelessWidget {
                 if (!forbidTranslation)
                   TextField(
                     controller: translationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Preferred Translation',
+                    decoration: InputDecoration(
+                      labelText:
+                          context.t.projects.glossary.preferredTranslation,
                     ),
                   ),
                 SwitchListTile(
-                  title: const Text('Case Sensitive'),
+                  title: Text(context.t.projects.glossary.caseSensitive),
                   value: caseSensitive,
                   onChanged: (val) => setState(() => caseSensitive = val),
                   contentPadding: EdgeInsets.zero,
@@ -194,7 +200,7 @@ class ProjectGlossaryCard extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(context.t.common.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -211,7 +217,7 @@ class ProjectGlossaryCard extends StatelessWidget {
                 );
                 Navigator.pop(context, newItem);
               },
-              child: const Text('Save'),
+              child: Text(context.t.common.save),
             ),
           ],
         ),

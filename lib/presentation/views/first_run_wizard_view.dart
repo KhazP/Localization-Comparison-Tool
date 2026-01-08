@@ -11,6 +11,7 @@ import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:flutter/services.dart'; // For rootBundle
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:path/path.dart' as path;
 
 class FirstRunWizardView extends StatefulWidget {
@@ -43,7 +44,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
 
   void _onCompare() {
     if (_file1 == null || _file2 == null) {
-      ToastService.showWarning(context, 'Please select both files.');
+      ToastService.showWarning(context, context.t.fileComparison.pickTwoFiles);
       return;
     }
 
@@ -96,7 +97,8 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
       _onCompare();
     } catch (e) {
       if (mounted) {
-        ToastService.showError(context, 'Failed to load sample data: $e');
+        ToastService.showError(
+            context, context.t.wizards.firstRun.error(error: e));
       }
     }
   }
@@ -129,7 +131,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Welcome to Localizer',
+                      context.t.wizards.firstRun.welcome,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.bold,
@@ -138,7 +140,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Compare your localization files in seconds.',
+                      context.t.wizards.firstRun.description,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: colorScheme.onSurfaceVariant,
@@ -153,7 +155,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                         Expanded(
                           child: _buildDropZone(
                             context: context,
-                            title: 'Source File',
+                            title: context.t.wizards.firstRun.sourceFile,
                             file: _file1,
                             isSource: true,
                             isDragging: _isDraggingOverSource,
@@ -163,7 +165,17 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                         Expanded(
                           child: _buildDropZone(
                             context: context,
-                            title: 'Target File',
+                            title: context.t.wizards.firstRun.sourceFile,
+                            file: _file1,
+                            isSource: true,
+                            isDragging: _isDraggingOverSource,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: _buildDropZone(
+                            context: context,
+                            title: context.t.wizards.firstRun.targetFile,
                             file: _file2,
                             isSource: false,
                             isDragging: _isDraggingOverTarget,
@@ -190,8 +202,8 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                               borderRadius: BorderRadius.circular(25),
                             ),
                           ),
-                          child: const Text(
-                            'Compare Now',
+                          child: Text(
+                            context.t.wizards.firstRun.compareNow,
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),
@@ -206,7 +218,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                       children: [
                         TextButton(
                           onPressed: _loadSampleData,
-                          child: const Text('Try with Sample Data'),
+                          child: Text(context.t.wizards.firstRun.trySample),
                         ),
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -217,7 +229,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                         TextButton(
                           onPressed: _skipWizard,
                           child: Text(
-                            'Skip Setup',
+                            context.t.wizards.firstRun.skip,
                             style:
                                 TextStyle(color: colorScheme.onSurfaceVariant),
                           ),
@@ -348,7 +360,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
               if (file == null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Click to browse',
+                  context.t.wizards.firstRun.browse,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),

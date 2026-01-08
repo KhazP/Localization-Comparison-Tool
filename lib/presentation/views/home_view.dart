@@ -21,6 +21,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/views/first_run_wizard_view.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -217,49 +218,49 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       index: 0,
                       icon: LucideIcons.layoutGrid,
                       selectedIcon: LucideIcons.layoutGrid,
-                      label: 'Projects',
+                      label: context.t.nav.projects,
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
                       index: 1,
                       icon: LucideIcons.fileDiff,
                       selectedIcon: LucideIcons.fileDiff,
-                      label: 'File',
+                      label: context.t.nav.compare,
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
                       index: 2,
                       icon: LucideIcons.clock3,
                       selectedIcon: LucideIcons.clock3,
-                      label: 'History',
+                      label: context.t.nav.history,
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
                       index: 3,
                       icon: LucideIcons.barChart3,
                       selectedIcon: LucideIcons.barChart3,
-                      label: 'Dashboard',
+                      label: context.t.nav.dashboard,
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
                       index: 4,
                       icon: LucideIcons.folders,
                       selectedIcon: LucideIcons.folders,
-                      label: 'Directory',
+                      label: context.t.nav.directory,
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
                       index: 5,
                       icon: LucideIcons.gitBranch,
                       selectedIcon: LucideIcons.gitBranch,
-                      label: 'Repository',
+                      label: context.t.nav.repository,
                       colorScheme: colorScheme,
                     ),
                     _buildNavDestination(
                       index: 6,
                       icon: LucideIcons.settings,
                       selectedIcon: LucideIcons.settings,
-                      label: 'Settings',
+                      label: context.t.nav.settings,
                       colorScheme: colorScheme,
                     ),
                   ],
@@ -276,8 +277,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             const SizedBox(height: 12),
                             // Theme toggle button
                             Tooltip(
-                              message:
-                                  'Toggle Theme (Light > Dark > AMOLED > System)',
+                              message: context.t.nav.tooltipThemeToggle,
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(
@@ -320,7 +320,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                             if (kDebugMode && widget.talkerService != null) ...[
                               const SizedBox(height: 8),
                               Tooltip(
-                                message: 'Debug Console',
+                                message: context.t.nav.tooltipDebugConsole,
                                 child: Material(
                                   color: Colors.transparent,
                                   child: InkWell(

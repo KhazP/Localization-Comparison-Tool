@@ -6,6 +6,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_b
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:localizer_app_main/core/services/windows_integration_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -40,7 +41,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
 
   Widget _buildUnsupportedPlatform(BuildContext context) {
     return SettingsCardContainer(
-      title: 'Platform Notice',
+      title: context.t.settings.integrations.platformNotice,
       isDark: widget.isDark,
       isAmoled: widget.isAmoled,
       children: [
@@ -53,7 +54,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'System integrations are not available for this platform.',
+                  context.t.settings.integrations.platformNoticeDescription,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
@@ -71,14 +72,13 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
     return Column(
       children: [
         SettingsCardContainer(
-          title: 'Visual Effects',
+          title: context.t.settings.integrations.visualEffects,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             SettingsRow(
-              label: 'Use Mica Effect',
-              description:
-                  'Enable Windows 11 Mica transparency (requires restart)',
+              label: context.t.settings.appearance.useMicaEffect,
+              description: context.t.settings.appearance.micaDescription,
               control: Switch(
                 value: settings.useMicaEffect,
                 onChanged: isWindows
@@ -95,7 +95,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
           ],
         ),
         SettingsCardContainer(
-          title: 'Explorer Integration',
+          title: context.t.settings.integrations.explorerIntegration,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
@@ -105,7 +105,8 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Add "Open with Localizer" to the Windows Explorer right-click menu for folders.',
+                    context
+                        .t.settings.integrations.explorerIntegrationDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: widget.isDark
                               ? AppThemeV2.darkTextMuted
@@ -125,16 +126,21 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   if (context.mounted) {
                                     if (success) {
                                       ToastService.showSuccess(
-                                          context, 'Context menu added!');
+                                          context,
+                                          context.t.settings.integrations
+                                              .contextMenuAdded);
                                     } else {
-                                      ToastService.showError(context,
-                                          'Failed to add context menu');
+                                      ToastService.showError(
+                                          context,
+                                          context.t.settings.integrations
+                                              .contextMenuAddError);
                                     }
                                   }
                                 }
                               : null,
                           icon: const Icon(LucideIcons.plus, size: 18),
-                          label: const Text('Add to Context Menu'),
+                          label: Text(
+                              context.t.settings.integrations.addToContextMenu),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -148,16 +154,20 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   if (context.mounted) {
                                     if (success) {
                                       ToastService.showSuccess(
-                                          context, 'Context menu removed!');
+                                          context,
+                                          context.t.settings.integrations
+                                              .contextMenuRemoved);
                                     } else {
-                                      ToastService.showError(context,
-                                          'Failed to remove context menu');
+                                      ToastService.showError(
+                                          context,
+                                          context.t.settings.integrations
+                                              .contextMenuRemoveError);
                                     }
                                   }
                                 }
                               : null,
                           icon: const Icon(LucideIcons.minus, size: 18),
-                          label: const Text('Remove'),
+                          label: Text(context.t.common.remove),
                         ),
                       ),
                     ],
@@ -168,14 +178,14 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
           ],
         ),
         SettingsCardContainer(
-          title: 'File Associations',
+          title: context.t.settings.integrations.fileAssociations,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                'Register file types to open with Localizer when double-clicked in Explorer.',
+                context.t.settings.integrations.fileAssociationsDescription,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: widget.isDark
                           ? AppThemeV2.darkTextMuted
@@ -208,7 +218,9 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      isRegistered ? 'Registered' : 'Not Registered',
+                      isRegistered
+                          ? context.t.settings.integrations.registered
+                          : context.t.settings.integrations.notRegistered,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: widget.isDark
                                 ? AppThemeV2.darkTextMuted
@@ -230,11 +242,17 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   ToastService.showSuccess(
                                       context,
                                       val
-                                          ? '$ext registered!'
-                                          : '$ext unregistered!');
+                                          ? context.t.settings.integrations
+                                              .extRegistered(ext: ext)
+                                          : context.t.settings.integrations
+                                              .extUnregistered(ext: ext));
                                 } else {
-                                  ToastService.showError(context,
-                                      'Failed to ${val ? 'register' : 'unregister'} $ext');
+                                  ToastService.showError(
+                                      context,
+                                      context.t.settings.integrations.extError(
+                                          action:
+                                              val ? 'register' : 'unregister',
+                                          ext: ext));
                                 }
                                 // Trigger rebuild to update status
                                 setState(() {});
@@ -264,8 +282,10 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                               final successCount =
                                   results.values.where((v) => v).length;
                               if (context.mounted) {
-                                final message =
-                                    'Registered $successCount of ${results.length} file types';
+                                final message = context.t.settings.integrations
+                                    .registerAllResult(
+                                        success: successCount,
+                                        total: results.length);
                                 if (successCount == results.length) {
                                   ToastService.showSuccess(context, message);
                                 } else {
@@ -276,7 +296,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                             }
                           : null,
                       icon: const Icon(LucideIcons.checkCircle, size: 18),
-                      label: const Text('Register All'),
+                      label: Text(context.t.settings.integrations.registerAll),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -289,8 +309,10 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                               final successCount =
                                   results.values.where((v) => v).length;
                               if (context.mounted) {
-                                final message =
-                                    'Unregistered $successCount of ${results.length} file types';
+                                final message = context.t.settings.integrations
+                                    .unregisterAllResult(
+                                        success: successCount,
+                                        total: results.length);
                                 if (successCount == results.length) {
                                   ToastService.showSuccess(context, message);
                                 } else {
@@ -301,7 +323,8 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                             }
                           : null,
                       icon: const Icon(LucideIcons.minusCircle, size: 18),
-                      label: const Text('Unregister All'),
+                      label:
+                          Text(context.t.settings.integrations.unregisterAll),
                     ),
                   ),
                 ],
@@ -310,7 +333,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
           ],
         ),
         SettingsCardContainer(
-          title: 'Protocol Handler',
+          title: context.t.settings.integrations.protocolHandler,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
@@ -320,8 +343,7 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Register localizer:// URLs to open this application. '
-                    'Allows opening projects directly from browser links or other apps.',
+                    context.t.settings.integrations.protocolHandlerDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: widget.isDark
                               ? AppThemeV2.darkTextMuted
@@ -348,8 +370,10 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                           const SizedBox(width: 8),
                           Text(
                             isRegistered
-                                ? 'Protocol handler is registered'
-                                : 'Protocol handler not registered',
+                                ? context
+                                    .t.settings.integrations.protocolRegistered
+                                : context.t.settings.integrations
+                                    .protocolNotRegistered,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: isRegistered
@@ -376,18 +400,23 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                           .registerProtocolHandler();
                                   if (context.mounted) {
                                     if (success) {
-                                      ToastService.showSuccess(context,
-                                          'Protocol handler registered!');
+                                      ToastService.showSuccess(
+                                          context,
+                                          context.t.settings.integrations
+                                              .protocolRegisteredSuccess);
                                       setState(() {});
                                     } else {
                                       ToastService.showError(
-                                          context, 'Failed to register');
+                                          context,
+                                          context.t.settings.integrations
+                                              .protocolRegisterError);
                                     }
                                   }
                                 }
                               : null,
                           icon: const Icon(LucideIcons.globe, size: 18),
-                          label: const Text('Register Protocol'),
+                          label: Text(
+                              context.t.settings.integrations.registerProtocol),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -401,17 +430,22 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
                                   if (context.mounted) {
                                     if (success) {
                                       ToastService.showSuccess(
-                                          context, 'Protocol handler removed!');
+                                          context,
+                                          context.t.settings.integrations
+                                              .protocolRemovedSuccess);
                                       setState(() {});
                                     } else {
                                       ToastService.showError(
-                                          context, 'Failed to remove');
+                                          context,
+                                          context.t.settings.integrations
+                                              .protocolRemoveError);
                                     }
                                   }
                                 }
                               : null,
                           icon: const Icon(LucideIcons.unlink, size: 18),
-                          label: const Text('Unregister'),
+                          label:
+                              Text(context.t.settings.integrations.unregister),
                         ),
                       ),
                     ],
@@ -430,25 +464,32 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
     final isMacOS = Platform.isMacOS;
 
     // Available window materials
-    const materials = [
-      ('sidebar', 'Sidebar'),
-      ('menu', 'Menu'),
-      ('popover', 'Popover'),
-      ('titlebar', 'Titlebar'),
-      ('underPageBackground', 'Page Background'),
-      ('contentBackground', 'Content'),
+    final materials = [
+      ('sidebar', context.t.settings.integrations.materials.sidebar),
+      ('menu', context.t.settings.integrations.materials.menu),
+      ('popover', context.t.settings.integrations.materials.popover),
+      ('titlebar', context.t.settings.integrations.materials.titlebar),
+      (
+        'underPageBackground',
+        context.t.settings.integrations.materials.underPageBackground
+      ),
+      (
+        'contentBackground',
+        context.t.settings.integrations.materials.contentBackground
+      ),
     ];
 
     return Column(
       children: [
         SettingsCardContainer(
-          title: 'Visual Effects',
+          title: context.t.settings.integrations.visualEffects,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             SettingsRow(
-              label: 'Window Material',
-              description: 'Select the macOS vibrancy material style',
+              label: context.t.settings.integrations.windowMaterial,
+              description:
+                  context.t.settings.integrations.windowMaterialDescription,
               control: DropdownButton<String>(
                 value: settings.macosWindowMaterial,
                 underline: const SizedBox(),
@@ -476,14 +517,14 @@ class _SystemIntegrationsCardState extends State<SystemIntegrationsCard> {
           ],
         ),
         SettingsCardContainer(
-          title: 'Dock Integration',
+          title: context.t.settings.integrations.dockIntegration,
           isDark: widget.isDark,
           isAmoled: widget.isAmoled,
           children: [
             SettingsRow(
-              label: 'Show Untranslated Count',
+              label: context.t.settings.integrations.showDockBadge,
               description:
-                  'Display untranslated string count on the dock icon badge',
+                  context.t.settings.integrations.showDockBadgeDescription,
               control: Switch(
                 value: settings.showDockBadge,
                 onChanged: isMacOS

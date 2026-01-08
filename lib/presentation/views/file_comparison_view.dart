@@ -26,6 +26,7 @@ import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_blo
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_view.dart';
 // import 'package:localizer_app_main/presentation/views/ai_translation_settings_view.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/core/services/backup_service.dart';
@@ -72,7 +73,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       widget.onNavigateToTab!(5);
     } else {
       // Fallback if callback not provided
-      ToastService.showInfo(context, 'Navigation to AI Settings not available');
+      ToastService.showInfo(
+          context, context.t.fileComparison.aiSettingsNotAvailable);
     }
   }
 
@@ -108,8 +110,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     if (hasUnsupported) {
       ToastService.showError(
         context,
-        'Some files are not supported.',
-        recoverySuggestion: 'Pick supported localization files only.',
+        context.t.fileComparison.someFilesUnsupported,
+        recoverySuggestion: context.t.fileComparison.pickSupportedFiles,
       );
       return;
     }
@@ -124,7 +126,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       if (picked.length < 2) {
         ToastService.showWarning(
           context,
-          'Pick two files to compare.',
+          context.t.fileComparison.pickTwoFiles,
         );
         return;
       }
@@ -148,7 +150,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
   Future<void> _exportFromCommand() async {
     if (!mounted) return;
     if (_latestComparisonResult == null) {
-      ToastService.showInfo(context, 'No results to export yet.');
+      ToastService.showInfo(
+          context, context.t.fileComparison.noResultsToExport);
       return;
     }
     await _exportResult();
@@ -316,8 +319,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     if (path == null || !_isValidFileType(path)) {
       ToastService.showError(
         context,
-        'Unsupported file type.',
-        recoverySuggestion: 'Please select a supported localization file.',
+        context.t.fileComparison.unsupportedFileType,
+        recoverySuggestion:
+            context.t.fileComparison.unsupportedFileTypeSuggestion,
       );
       return false;
     }
@@ -345,7 +349,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     if (!isDev) {
       ToastService.showInfo(
         context,
-        'Tutorial restart is available in developer mode only.',
+        context.t.fileComparison.restartTutorialDevOnly,
       );
       return;
     }
@@ -491,13 +495,15 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       // Update Step to 1 (Compare)
       context.read<SettingsBloc>().add(const UpdateOnboardingStep(1));
 
-      ToastService.showSuccess(context, 'Sample data loaded successfully');
+      ToastService.showSuccess(
+          context, context.t.fileComparison.sampleDataLoaded);
 
       // Auto start comparison
       _startComparison();
     } catch (e) {
       if (!mounted) return;
-      ToastService.showError(context, 'Failed to load sample data: $e');
+      ToastService.showError(
+          context, context.t.fileComparison.loadSampleDataError(error: e));
     }
   }
 
@@ -554,7 +560,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         context.read<SettingsBloc>().add(const UpdateOnboardingStep(1));
       }
     } else {
-      ToastService.showWarning(context, 'Please select two files to compare.');
+      ToastService.showWarning(context, context.t.fileComparison.pickTwoFiles);
     }
   }
 
@@ -580,7 +586,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       }
     } else {
       ToastService.showWarning(
-          context, 'Please select a bilingual file to compare.');
+          context, context.t.fileComparison.pickBilingualFile);
     }
   }
 
@@ -634,11 +640,14 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       // Show success message
       final fileName = file.path.split(Platform.pathSeparator).last;
       final selectionLabel = fileNumber == 1
-          ? 'Source file'
+          ? context.t.fileComparison.sourceFile
           : fileNumber == 2
-              ? 'Target file'
-              : 'Bilingual file';
-      ToastService.showSuccess(context, '$selectionLabel selected: $fileName');
+              ? context.t.fileComparison.targetFile
+              : context.t.fileComparison.bilingualFile;
+      ToastService.showSuccess(
+          context,
+          context.t.fileComparison
+              .fileSelected(label: selectionLabel, fileName: fileName));
 
       // Update Onboarding Step to 1 (Compare) if current step is 0, since a file is selected
       if (context.read<SettingsBloc>().state.appSettings.onboardingStep == 0) {
@@ -648,8 +657,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       // Show error for invalid file type
       ToastService.showError(
         context,
-        'Invalid file type.',
-        recoverySuggestion: 'Please select a supported localization file.',
+        context.t.fileComparison.invalidFileType,
+        recoverySuggestion:
+            context.t.fileComparison.unsupportedFileTypeSuggestion,
       );
     }
   }
@@ -678,8 +688,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         ),
       );
     } else {
-      ToastService.showInfo(context,
-          'Please perform a comparison first to see advanced details.');
+      ToastService.showInfo(
+          context, context.t.fileComparison.performComparisonFirstEditor);
     }
   }
 
@@ -692,10 +702,11 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     final eta = state.estimatedTimeRemaining;
     if (eta != null && eta.inSeconds > 0) {
       if (eta.inSeconds < 60) {
-        timeEstimate = '${eta.inSeconds}s remaining';
+        timeEstimate =
+            context.t.fileComparison.remaining(time: '${eta.inSeconds}s');
       } else {
         final minutes = (eta.inSeconds / 60).ceil();
-        timeEstimate = '$minutes min remaining';
+        timeEstimate = context.t.fileComparison.remaining(time: '$minutes min');
       }
     }
 
@@ -731,7 +742,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Processing...',
+                  context.t.fileComparison.processing,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -848,8 +859,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                 if (_latestComparisonResult != null) {
                   _exportResult();
                 } else {
-                  ToastService.showInfo(context,
-                      'Perform a comparison first to save/export results.');
+                  ToastService.showInfo(
+                      context, context.t.fileComparison.performComparisonFirst);
                 }
                 return null;
               },
@@ -860,7 +871,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                   _exportResult();
                 } else {
                   ToastService.showInfo(
-                      context, 'Perform a comparison first to export results.');
+                      context, context.t.fileComparison.performComparisonFirst);
                 }
                 return null;
               },
@@ -916,8 +927,12 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                     listener: (context, state) {
                       if (state is FileChangedDetected) {
                         // Show a toast notification about file change
-                        ToastService.showInfo(context,
-                            'File changed: ${state.changedFilePath.split(Platform.pathSeparator).last}. Recomparing...');
+                        ToastService.showInfo(
+                            context,
+                            context.t.fileComparison.fileChanged(
+                                fileName: state.changedFilePath
+                                    .split(Platform.pathSeparator)
+                                    .last));
 
                         // Trigger automatic recomparison
                         final settingsStateForReload =
@@ -978,7 +993,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                   children: [
                                     _buildFilePicker(
                                       context: context,
-                                      title: 'Bilingual File',
+                                      title: context
+                                          .t.fileComparison.bilingualFile,
                                       file: _bilingualFile,
                                       fileNumber: 3,
                                       onPressed: () => _pickFile(3),
@@ -998,7 +1014,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                       key: _keySourceFilePicker,
                                       child: _buildFilePicker(
                                         context: context,
-                                        title: 'Source File',
+                                        title:
+                                            context.t.fileComparison.sourceFile,
                                         file: _file1,
                                         fileNumber: 1,
                                         onPressed: () => _pickFile(1),
@@ -1012,7 +1029,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                       key: _keyTargetFilePicker,
                                       child: _buildFilePicker(
                                         context: context,
-                                        title: 'Target File',
+                                        title:
+                                            context.t.fileComparison.targetFile,
                                         file: _file2,
                                         fileNumber: 2,
                                         onPressed: () => _pickFile(2),
@@ -1032,8 +1050,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                           LucideIcons.arrowRightLeft,
                                           size: 18),
                                       label: Text(_isBilingualMode
-                                          ? 'Compare File'
-                                          : 'Compare Files'),
+                                          ? context.t.fileComparison.compareFile
+                                          : context
+                                              .t.fileComparison.compareFiles),
                                       onPressed: _isBilingualMode
                                           ? (_bilingualFile != null
                                               ? _startComparison
@@ -1048,8 +1067,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                     icon: const Icon(LucideIcons.languages,
                                         size: 18),
                                     label: Text(_isBilingualMode
-                                        ? 'Two Files'
-                                        : 'Bilingual Mode'),
+                                        ? context.t.fileComparison.twoFilesMode
+                                        : context
+                                            .t.fileComparison.bilingualMode),
                                     onPressed: _toggleComparisonMode,
                                   ),
                                 ],
@@ -1225,7 +1245,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                               // Optionally, clear _file1, _file2, _latestComparisonResult if a history load failed?
                               // Or just show the error via ProgressBloc/Snackbar
                               ToastService.showError(
-                                  context, 'Comparison failed: ${state.error}');
+                                  context,
+                                  context.t.fileComparison
+                                      .comparisonFailed(error: state.error));
                             }
                           },
                           builder: (context, state) {
@@ -1237,9 +1259,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                   key: ValueKey('checking'),
                                   child: CircularProgressIndicator());
                             } else if (state is ComparisonLoading) {
-                              content = const Center(
-                                  key: ValueKey('loading'),
-                                  child: Text('Comparison in progress...'));
+                              content = Center(
+                                  key: const ValueKey('loading'),
+                                  child: Text(context
+                                      .t.fileComparison.comparisonInProgress));
                             } else if (state is ComparisonSuccess) {
                               var diffEntries =
                                   state.result.diff.entries.toList();
@@ -1357,14 +1380,18 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                 .withAlpha(100)),
                                         const SizedBox(height: 12),
                                         Text(
-                                          'No matches found for "$_searchQuery"',
+                                          context.t.fileComparison
+                                              .noMatches(query: _searchQuery),
                                           style: TextStyle(
                                               color: theme.colorScheme.onSurface
                                                   .withAlpha(150)),
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          'Showing 0 of $totalBeforeSearch entries',
+                                          context.t.fileComparison
+                                              .showingEntries(
+                                                  count: 0,
+                                                  total: totalBeforeSearch),
                                           style: TextStyle(
                                               fontSize: 12,
                                               color: theme.colorScheme.onSurface
@@ -1377,9 +1404,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                     !state.result.diff.values.any((e) =>
                                         e.status !=
                                         StringComparisonStatus.identical)) {
-                                  content = const Center(
-                                      key: ValueKey('identical'),
-                                      child: Text('Files are identical.'));
+                                  content = Center(
+                                      key: const ValueKey('identical'),
+                                      child: Text(context
+                                          .t.fileComparison.filesIdentical));
                                 } else if (diffEntries.isEmpty &&
                                     hiddenIdenticalCount > 0) {
                                   // If we hid everything (e.g. only identicals existed and we hid them)
@@ -1388,7 +1416,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                          '$hiddenIdenticalCount identical entries hidden',
+                                          context.t.fileComparison
+                                              .hiddenIdentical(
+                                                  count: hiddenIdenticalCount),
                                           style: TextStyle(
                                               color: theme.colorScheme.onSurface
                                                   .withAlpha(150))),
@@ -1399,16 +1429,16 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                               const UpdateShowIdenticalEntries(
                                                   true));
                                         },
-                                        child: const Text(
-                                            'Show Identical Entries'),
+                                        child: Text(context
+                                            .t.fileComparison.showIdentical),
                                       )
                                     ],
                                   );
                                 } else {
-                                  content = const Center(
-                                      key: ValueKey('no_diff'),
+                                  content = Center(
+                                      key: const ValueKey('no_diff'),
                                       child: Text(
-                                          'No differences found based on keys.'));
+                                          context.t.fileComparison.noDiff));
                                 }
                               } else {
                                 content = Column(
@@ -1441,7 +1471,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                     .onSurfaceVariant),
                                             const SizedBox(width: 8),
                                             Text(
-                                              '$hiddenIdenticalCount identical entries hidden',
+                                              context.t.fileComparison
+                                                  .hiddenIdentical(
+                                                      count:
+                                                          hiddenIdenticalCount),
                                               style: theme.textTheme.bodySmall
                                                   ?.copyWith(
                                                 fontStyle: FontStyle.italic,
@@ -1463,7 +1496,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                     const UpdateShowIdenticalEntries(
                                                         true));
                                               },
-                                              child: const Text('Show'),
+                                              child: Text(context
+                                                  .t.fileComparison.show),
                                             ),
                                           ],
                                         ),
@@ -1475,7 +1509,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 4, vertical: 8),
                                         child: Text(
-                                          'Showing ${diffEntries.length} of $totalBeforeSearch entries',
+                                          context.t.fileComparison
+                                              .showingEntries(
+                                                  count: diffEntries.length,
+                                                  total: totalBeforeSearch),
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
@@ -1629,7 +1666,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                       horizontal: 16),
                                               child: Row(
                                                 children: [
-                                                  Text('Show: ',
+                                                  Text(
+                                                      '${context.t.fileComparison.show}: ',
                                                       style: theme
                                                           .textTheme.bodySmall),
                                                   DropdownButton<int>(
@@ -1640,7 +1678,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                     items: _availablePageSizes
                                                         .map((e) {
                                                       final text = e == -1
-                                                          ? 'All'
+                                                          ? context
+                                                              .t
+                                                              .fileComparison
+                                                              .showAll
                                                           : '$e';
                                                       return DropdownMenuItem(
                                                           value: e,
@@ -1741,7 +1782,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                               content = Center(
                                   key: const ValueKey('failure'),
                                   child: Text(
-                                      'Comparison Failed: ${state.error}',
+                                      context.t.fileComparison
+                                          .comparisonFailed(error: state.error),
                                       style: TextStyle(
                                           color: Theme.of(context)
                                               .colorScheme
@@ -2027,13 +2069,14 @@ class _FileComparisonViewState extends State<FileComparisonView> {
 
             ToastService.showSuccessWithAction(
               context,
-              'Excel saved',
-              actionLabel: 'Open',
+              context.t.fileComparison.saved(format: 'Excel'),
+              actionLabel: context.t.common.open,
               onAction: () => OpenFile.open(outputPath),
             );
           }
         } else if (mounted) {
-          ToastService.showError(context, 'Failed to save Excel file.');
+          ToastService.showError(
+              context, context.t.fileComparison.saveError(format: 'Excel'));
         }
 
         // Clear taskbar progress on success
@@ -2052,7 +2095,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         }
 
         if (mounted) {
-          ToastService.showError(context, 'Failed to save Excel: $e');
+          ToastService.showError(
+              context,
+              context.t.fileComparison
+                  .saveErrorDetailed(format: 'Excel', error: e));
         }
       }
     }
@@ -2062,7 +2108,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     final jsonString = _buildJsonString();
 
     String? outputPath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Save JSON Report',
+      dialogTitle: context.t.fileComparison.exportReport(format: 'JSON'),
       fileName: 'comparison_report.json',
       type: FileType.custom,
       allowedExtensions: ['json'],
@@ -2087,8 +2133,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
           }
           ToastService.showSuccessWithAction(
             context,
-            'JSON saved',
-            actionLabel: 'Open',
+            context.t.fileComparison.saved(format: 'JSON'),
+            actionLabel: context.t.common.open,
             onAction: () => OpenFile.open(outputPath),
           );
         }
@@ -2108,7 +2154,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         }
 
         if (mounted) {
-          ToastService.showError(context, 'Failed to save JSON: $e');
+          ToastService.showError(
+              context,
+              context.t.fileComparison
+                  .saveErrorDetailed(format: 'JSON', error: e));
         }
       }
     }
@@ -2119,7 +2168,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     final settings = context.read<SettingsBloc>().state.appSettings;
 
     String? outputPath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Save CSV Report',
+      dialogTitle: context.t.fileComparison.exportReport(format: 'CSV'),
       fileName: 'comparison_report.csv',
       type: FileType.custom,
       allowedExtensions: ['csv'],
@@ -2143,8 +2192,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
           }
           ToastService.showSuccessWithAction(
             context,
-            'CSV saved',
-            actionLabel: 'Open',
+            context.t.fileComparison.saved(format: 'CSV'),
+            actionLabel: context.t.common.open,
             onAction: () => OpenFile.open(outputPath),
           );
         }
@@ -2164,7 +2213,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         }
 
         if (mounted) {
-          ToastService.showError(context, 'Failed to save CSV: $e');
+          ToastService.showError(
+              context,
+              context.t.fileComparison
+                  .saveErrorDetailed(format: 'CSV', error: e));
         }
       }
     }
@@ -2204,8 +2256,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         displayText = fileName;
       }
     } else {
-      displayText =
-          isDraggingOver ? 'Drop file here' : 'Drop file or click to browse';
+      displayText = isDraggingOver
+          ? context.t.fileComparison.dropFileHere
+          : context.t.fileComparison.dropFileOrBrowse;
     }
 
     Color borderColor = isDraggingOver
@@ -2331,8 +2384,11 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                 : theme.colorScheme.primary
                                     .withValues(alpha: 0.5)),
                         size: hasFile ? 20 : 24,
-                        semanticLabel:
-                            hasFile ? 'File selected' : 'Upload file',
+                        semanticLabel: hasFile
+                            ? context.t.fileComparison
+                                .fileSelected(label: '', fileName: '')
+                                .split(':')[0]
+                            : context.t.fileComparison.fileUpload,
                       ),
                       const SizedBox(width: 12),
                       // Text content
@@ -2405,7 +2461,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                           size: 18,
                           color: theme.colorScheme.onSurface
                               .withValues(alpha: 0.4),
-                          semanticLabel: 'Change file',
+                          semanticLabel: context.t.fileComparison.changeFile,
                         ),
                       ],
                     ],
@@ -2519,7 +2575,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                   _buildStatsChart(
                       addedCount, removedCount, modifiedCount, themeState),
                   const SizedBox(width: 16),
-                  _buildCompactStat('Total', totalKeys,
+                  _buildCompactStat(context.t.fileComparison.total, totalKeys,
                       theme.colorScheme.onSurface.withAlpha(180)),
                   const SizedBox(width: 16),
                   _buildCompactStat(
@@ -2629,30 +2685,30 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               children: [
                 _buildFilterChip(
                   BasicDiffFilter.added,
-                  'Extra',
+                  context.t.diff.extra,
                   context.watch<ThemeBloc>().state.diffAddedColor,
-                  'Show Extra',
+                  context.t.diff.extra,
                 ),
                 const SizedBox(width: 4),
                 _buildFilterChip(
                   BasicDiffFilter.removed,
-                  'Missing',
+                  context.t.diff.missing,
                   context.watch<ThemeBloc>().state.diffRemovedColor,
-                  'Show Missing',
+                  context.t.diff.missing,
                 ),
                 const SizedBox(width: 4),
                 _buildFilterChip(
                   BasicDiffFilter.modified,
-                  'Changed',
+                  context.t.diff.modified,
                   context.watch<ThemeBloc>().state.diffModifiedColor,
-                  'Show Changed',
+                  context.t.diff.modified,
                 ),
                 const SizedBox(width: 4),
                 _buildFilterChip(
                   BasicDiffFilter.problems,
-                  'Problems',
+                  context.t.quality.issues,
                   Colors.orange,
-                  'Show Problems',
+                  context.t.quality.issues,
                 ),
                 const SizedBox(width: 8),
                 // Toggle Identical Logic
@@ -2667,8 +2723,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                     size: 20,
                   ),
                   tooltip: settingsState.appSettings.showIdenticalEntries
-                      ? 'Hide identical entries'
-                      : 'Show identical entries',
+                      ? context.t.fileComparison.hideIdentical
+                      : context.t.fileComparison.showIdentical,
                   onPressed: () {
                     context.read<SettingsBloc>().add(UpdateShowIdenticalEntries(
                         !settingsState.appSettings.showIdenticalEntries));
@@ -2677,7 +2733,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                 // Show All reset
                 IconButton(
                   icon: const Icon(LucideIcons.filterX, size: 20),
-                  tooltip: 'Show All',
+                  tooltip: context.t.fileComparison.showAll,
                   onPressed: _currentFilter != BasicDiffFilter.all
                       ? () =>
                           setState(() => _currentFilter = BasicDiffFilter.all)
@@ -2702,18 +2758,18 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               _buildExportActionButton(
                 key: _keyExportButton,
                 icon: LucideIcons.download,
-                label: 'Export',
+                label: context.t.common.export,
                 onPressed: _exportResult,
                 color: theme.colorScheme.onSurface,
-                tooltip: 'Export Results (Ctrl+S)',
+                tooltip: context.t.common.export,
               ),
               const SizedBox(width: 8),
               Tooltip(
-                message: 'Open Editor',
+                message: context.t.common.edit,
                 child: FilledButton.icon(
                   key: _keyAdvancedButton,
                   icon: const Icon(LucideIcons.maximize, size: 16),
-                  label: const Text('Editor'),
+                  label: Text(context.t.common.edit),
                   onPressed: _navigateToAdvancedView,
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
@@ -2775,7 +2831,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     if (total == 0) return const SizedBox.shrink();
 
     return Tooltip(
-      message: 'Added: $added\nRemoved: $removed\nModified: $modified',
+      message:
+          '${context.t.dialogs.diffViewer.added}: $added\n${context.t.dialogs.diffViewer.removed}: $removed\n${context.t.dialogs.diffViewer.modified}: $modified',
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -2948,8 +3005,10 @@ class _FileComparisonViewState extends State<FileComparisonView> {
             watcherState is FileWatcherActive && watcherState.isEnabled;
 
         return Tooltip(
-          message:
-              'File Watching: ${isWatching ? "ON" : "OFF"}\nAutomatically recompare when files change on disk',
+          message: context.t.fileComparison.watchingTooltip(
+              status: isWatching
+                  ? context.t.common.enabled
+                  : context.t.common.disabled),
           waitDuration: const Duration(milliseconds: 500),
           child: InputChip(
             avatar: isWatching
@@ -2960,7 +3019,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                     color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
                   ),
             label: Text(
-              isWatching ? 'Watching' : 'Watch Off',
+              isWatching
+                  ? context.t.fileComparison.watching
+                  : context.t.fileComparison.watchOff,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isWatching ? FontWeight.bold : FontWeight.normal,
@@ -3009,22 +3070,22 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       case StringComparisonStatus.added:
         statusColor = themeState.diffAddedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = 'EXTRA';
+        statusLabel = context.t.diff.extra.toUpperCase();
         break;
       case StringComparisonStatus.removed:
         statusColor = themeState.diffRemovedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = 'MISSING';
+        statusLabel = context.t.diff.missing.toUpperCase();
         break;
       case StringComparisonStatus.modified:
         statusColor = themeState.diffModifiedColor;
         bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = 'CHANGED';
+        statusLabel = context.t.diff.modified.toUpperCase();
         break;
       case StringComparisonStatus.identical:
         statusColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
         bgColor = Colors.transparent;
-        statusLabel = 'IDENTICAL';
+        statusLabel = context.t.settings.appearance.identical.toUpperCase();
     }
 
     final borderColor = isAmoled
@@ -3169,7 +3230,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Source',
+                                        context.t.fileComparison.source,
                                         style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.w600,
@@ -3225,7 +3286,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Target',
+                                        context.t.fileComparison.target,
                                         style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.w600,
@@ -3255,7 +3316,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Source: ',
+                              Text('${context.t.fileComparison.source}: ',
                                   style: TextStyle(
                                       fontSize: 11,
                                       color: textMuted,
@@ -3278,7 +3339,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Value: ',
+                              Text('${context.t.fileComparison.value}: ',
                                   style: TextStyle(
                                       fontSize: 11,
                                       color: textMuted,
@@ -3300,7 +3361,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Value: ',
+                              Text('${context.t.fileComparison.value}: ',
                                   style: TextStyle(
                                       fontSize: 11,
                                       color: textMuted,
@@ -3357,7 +3418,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               const SizedBox(height: 24),
               // Headline
               Text(
-                'Ready to Compare Files',
+                context.t.fileComparison.readyToCompare,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
@@ -3366,7 +3427,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               const SizedBox(height: 8),
               // Description
               Text(
-                'Drop localization files above or use the browse buttons\nto select files for comparison.',
+                context.t.fileComparison.readyToCompareDesc,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: textSecondary,
@@ -3395,7 +3456,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                             color: theme.dividerColor.withValues(alpha: 0.5)),
                         const SizedBox(height: 12),
                         Text(
-                          'Recent Comparisons',
+                          context.t.fileComparison.recentComparisons,
                           style: theme.textTheme.titleSmall?.copyWith(
                             color: textSecondary,
                             fontWeight: FontWeight.w600,
@@ -3424,8 +3485,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     final targetName = session.file2Path.split(Platform.pathSeparator).last;
     final isBilingualSession = session.file1Path == session.file2Path;
     final title = isBilingualSession
-        ? 'Bilingual file: $sourceName'
-        : '$sourceName ↔ $targetName';
+        ? context.t.fileComparison.bilingualFileLabel(name: sourceName)
+        : context.t.fileComparison
+            .comparisonLabel(source: sourceName, target: targetName);
 
     return ListTile(
       dense: true,
@@ -3465,8 +3527,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
 
     final shouldCheckBoth = !isBilingualSession;
     if (!file1.existsSync() || (shouldCheckBoth && !file2.existsSync())) {
-      ToastService.showError(
-          context, 'One or both files from this session no longer exist.');
+      ToastService.showError(context, context.t.fileComparison.fileNotExist);
       return;
     }
 
@@ -3487,13 +3548,13 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     final difference = now.difference(dateTime);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return context.t.history.timeAgo.justNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} min ago';
+      return context.t.history.timeAgo.minutesAgo(count: difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} hours ago';
+      return context.t.history.timeAgo.hoursAgo(count: difference.inHours);
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return context.t.history.timeAgo.daysAgo(count: difference.inDays);
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
@@ -3550,15 +3611,14 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Large File Detected'),
+              title: Text(context.t.fileComparison.largeFileTitle),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'The comparison result contains ${state.count} entries.\n'
-                    'Displaying all of them might cause performance issues.\n\n'
-                    'Do you want to proceed?',
+                    context.t.fileComparison
+                        .largeFileContent(count: state.count),
                   ),
                   const SizedBox(height: 16),
                   CheckboxListTile(
@@ -3568,9 +3628,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                         dontShowAgain = value ?? false;
                       });
                     },
-                    title: const Text(
-                      "Don't show again for this file",
-                      style: TextStyle(fontSize: 14),
+                    title: Text(
+                      context.t.fileComparison.dontShowAgain,
+                      style: const TextStyle(fontSize: 14),
                     ),
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
@@ -3583,7 +3643,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                   onPressed: () {
                     Navigator.of(dialogContext).pop();
                   },
-                  child: const Text('Cancel'),
+                  child: Text(context.t.common.cancel),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -3600,7 +3660,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                         state.result, state.file1, state.file2,
                         wasLoadedFromHistory: state.wasLoadedFromHistory));
                   },
-                  child: const Text('Proceed'),
+                  child: Text(context.t.fileComparison.proceed),
                 ),
               ],
             );

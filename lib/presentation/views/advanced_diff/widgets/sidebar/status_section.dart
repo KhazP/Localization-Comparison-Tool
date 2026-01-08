@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class StatusSection extends StatelessWidget {
   const StatusSection({super.key});
@@ -15,22 +16,26 @@ class StatusSection extends StatelessWidget {
           runSpacing: 8,
           children: [
             _StatusBadge(
-              label: '${stats['total']} total',
+              label: context.t.advancedDiff.sidebar.statusSection
+                  .total(count: stats['total'] ?? 0),
               color: Colors.blueGrey.withValues(alpha: 0.2),
               textColor: Colors.blueGrey,
             ),
             _StatusBadge(
-              label: '${stats['added']} extra',
+              label: context.t.advancedDiff.sidebar.statusSection
+                  .extra(count: stats['added'] ?? 0),
               color: Colors.green.withValues(alpha: 0.2),
               textColor: Colors.green,
             ),
             _StatusBadge(
-              label: '${stats['removed']} missing',
+              label: context.t.advancedDiff.sidebar.statusSection
+                  .missing(count: stats['removed'] ?? 0),
               color: Colors.red.withValues(alpha: 0.2),
               textColor: Colors.red,
             ),
             _StatusBadge(
-              label: '${stats['modified']} changed',
+              label: context.t.advancedDiff.sidebar.statusSection
+                  .changed(count: stats['modified'] ?? 0),
               color: Colors.amber.withValues(alpha: 0.2),
               textColor: Colors.amber[800]!,
             ),

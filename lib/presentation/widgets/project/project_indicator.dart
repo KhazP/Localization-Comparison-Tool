@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_state.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 import 'package:localizer_app_main/presentation/widgets/project/project_selection_dialog.dart';
 
@@ -31,7 +32,7 @@ class ProjectIndicator extends StatelessWidget {
 
   Widget _buildNoProject(BuildContext context, ColorScheme colorScheme) {
     return Tooltip(
-      message: 'Create a project to save custom settings for a folder',
+      message: context.t.projects.indicator.tooltipNoProject,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -60,7 +61,8 @@ class ProjectIndicator extends StatelessWidget {
   Widget _buildProjectOpen(
       BuildContext context, ProjectState state, ColorScheme colorScheme) {
     return Tooltip(
-      message: 'Project: ${state.projectName}\nClick to see options',
+      message: context.t.projects.indicator.tooltipProject(
+          name: state.projectName ?? context.t.historyView.project),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -98,7 +100,7 @@ class ProjectIndicator extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                state.projectName ?? 'Project',
+                state.projectName ?? context.t.historyView.project,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -112,15 +114,15 @@ class ProjectIndicator extends StatelessWidget {
               _buildInfoRow(
                 context,
                 Icons.folder_outlined,
-                'Location',
+                context.t.projects.indicator.location,
                 state.currentProject!.rootPath,
               ),
               const SizedBox(height: 8),
               _buildInfoRow(
                 context,
                 Icons.calendar_today_outlined,
-                'Created',
-                _formatDate(state.currentProject!.createdAt),
+                context.t.projects.indicator.created,
+                _formatDate(context, state.currentProject!.createdAt),
               ),
             ],
           ],
@@ -132,7 +134,7 @@ class ProjectIndicator extends StatelessWidget {
               _showNoProjectOptions(context);
             },
             icon: const Icon(Icons.swap_horiz, size: 18),
-            label: const Text('Switch Project'),
+            label: Text(context.t.projects.indicator.switchProject),
           ),
           TextButton.icon(
             onPressed: () {
@@ -140,11 +142,11 @@ class ProjectIndicator extends StatelessWidget {
               context.read<ProjectBloc>().add(const CloseProject());
             },
             icon: const Icon(Icons.close, size: 18),
-            label: const Text('Close Project'),
+            label: Text(context.t.projects.closeProject),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Done'),
+            child: Text(context.t.projects.indicator.done),
           ),
         ],
       ),
@@ -181,16 +183,16 @@ class ProjectIndicator extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays == 0) {
-      return 'Today';
+      return 'Today'; // TODO: Add to translations if needed or use intl
     } else if (difference.inDays == 1) {
-      return 'Yesterday';
+      return 'Yesterday'; // TODO: Add to translations if needed or use intl
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return context.t.history.timeAgo.daysAgo(count: difference.inDays);
     } else {
       return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     }

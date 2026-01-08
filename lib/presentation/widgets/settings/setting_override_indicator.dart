@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Shows whether a setting is inherited from global or customized for the project.
 ///
@@ -77,7 +78,7 @@ class SettingOverrideIndicator extends StatelessWidget {
         if (onReset != null) ...[
           const SizedBox(width: 4),
           Tooltip(
-            message: 'Reset to global default',
+            message: context.t.settings.developer.resetToGlobal,
             child: InkWell(
               onTap: onReset,
               borderRadius: BorderRadius.circular(12),

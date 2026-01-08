@@ -102,6 +102,9 @@ app.*.symbols
 *.freezed.dart
 *.mocks.dart
 
+# Exception: Keep slang i18n generated files for reproducible builds
+!lib/i18n/*.g.dart
+
 # Environment files
 .env
 .env.*

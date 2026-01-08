@@ -4,9 +4,9 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 5
-/// Strings: 6861 (1372 per locale)
+/// Strings: 6865 (1373 per locale)
 ///
-/// Built on 2026-01-08 at 22:46 UTC
+/// Built on 2026-01-08 at 22:51 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint, unused_import
@@ -18,10 +18,10 @@ import 'package:slang/generated.dart';
 import 'package:slang_flutter/slang_flutter.dart';
 export 'package:slang_flutter/slang_flutter.dart';
 
-import 'strings_de.g.dart' deferred as l_de;
-import 'strings_es.g.dart' deferred as l_es;
-import 'strings_fr.g.dart' deferred as l_fr;
-import 'strings_tr.g.dart' deferred as l_tr;
+import 'strings_de.g.dart' as l_de;
+import 'strings_es.g.dart' as l_es;
+import 'strings_fr.g.dart' as l_fr;
+import 'strings_tr.g.dart' as l_tr;
 part 'strings_en.g.dart';
 
 /// Supported locales.
@@ -53,42 +53,11 @@ enum AppLocale with BaseAppLocale<AppLocale, Translations> {
 		PluralResolver? cardinalResolver,
 		PluralResolver? ordinalResolver,
 	}) async {
-		switch (this) {
-			case AppLocale.en:
-				return TranslationsEn(
-					overrides: overrides,
-					cardinalResolver: cardinalResolver,
-					ordinalResolver: ordinalResolver,
-				);
-			case AppLocale.de:
-				await l_de.loadLibrary();
-				return l_de.TranslationsDe(
-					overrides: overrides,
-					cardinalResolver: cardinalResolver,
-					ordinalResolver: ordinalResolver,
-				);
-			case AppLocale.es:
-				await l_es.loadLibrary();
-				return l_es.TranslationsEs(
-					overrides: overrides,
-					cardinalResolver: cardinalResolver,
-					ordinalResolver: ordinalResolver,
-				);
-			case AppLocale.fr:
-				await l_fr.loadLibrary();
-				return l_fr.TranslationsFr(
-					overrides: overrides,
-					cardinalResolver: cardinalResolver,
-					ordinalResolver: ordinalResolver,
-				);
-			case AppLocale.tr:
-				await l_tr.loadLibrary();
-				return l_tr.TranslationsTr(
-					overrides: overrides,
-					cardinalResolver: cardinalResolver,
-					ordinalResolver: ordinalResolver,
-				);
-		}
+		return buildSync(
+			overrides: overrides,
+			cardinalResolver: cardinalResolver,
+			ordinalResolver: ordinalResolver,
+		);
 	}
 
 	@override
@@ -180,7 +149,7 @@ extension BuildContextTranslationsExtension on BuildContext {
 class LocaleSettings extends BaseFlutterLocaleSettings<AppLocale, Translations> {
 	LocaleSettings._() : super(
 		utils: AppLocaleUtils.instance,
-		lazy: true,
+		lazy: false,
 	);
 
 	static final instance = LocaleSettings._();

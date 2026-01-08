@@ -6,7 +6,42 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 /// Progress callback for reporting diff calculation progress.
 typedef DiffProgressCallback = void Function(int processed, int total);
 
+/// Cache for string similarity calculations to avoid redundant computation.
+/// This is especially important for Smart Match mode which can have O(n²) comparisons.
+class _SimilarityCache {
+  final Map<String, double> _cache = {};
+  static const int _maxSize = 50000;
+
+  String _makeKey(String a, String b) {
+    // Ensure consistent key regardless of order
+    return a.hashCode < b.hashCode ? '$a\n---\n$b' : '$b\n---\n$a';
+  }
+
+  double? get(String a, String b) => _cache[_makeKey(a, b)];
+
+  void set(String a, String b, double similarity) {
+    if (_cache.length >= _maxSize) {
+      // Clear half the cache when full
+      final keysToRemove = _cache.keys.take(_maxSize ~/ 2).toList();
+      for (final key in keysToRemove) {
+        _cache.remove(key);
+      }
+    }
+    _cache[_makeKey(a, b)] = similarity;
+  }
+
+  void clear() => _cache.clear();
+}
+
 class DiffCalculator {
+  // Similarity cache for avoiding redundant calculations
+  static final _similarityCache = _SimilarityCache();
+
+  /// Clears the similarity cache. Call when starting a new comparison.
+  static void clearCache() {
+    _similarityCache.clear();
+  }
+
   /// Calculates diff between two data maps based on the comparison mode.
   ///
   /// - `Key-based`: Matches entries by key name (traditional approach).
@@ -20,6 +55,9 @@ class DiffCalculator {
     required AppSettings settings,
     DiffProgressCallback? onProgress,
   }) {
+    // Clear cache at start of new comparison
+    _similarityCache.clear();
+
     final mode = settings.comparisonMode;
 
     switch (mode) {
@@ -214,6 +252,7 @@ class DiffCalculator {
         .toList();
 
     // Phase 3: Try to match by value similarity (detect renames)
+    // Uses cached similarity to avoid O(n²) redundant calculations
     final usedKeys2 = <String>{};
     for (final key1 in unmatchedKeys1) {
       String? value1 =
@@ -227,7 +266,8 @@ class DiffCalculator {
             _normalizeValue(targetData[key2], ignoreCase, ignoreWhitespace);
 
         if (value1 != null && value2 != null) {
-          final similarity = value1.similarityTo(value2);
+          // Use cached similarity calculation
+          final similarity = _getCachedSimilarity(value1, value2);
           if (similarity >= similarityThreshold &&
               similarity > bestSimilarity) {
             bestSimilarity = similarity;
@@ -292,10 +332,24 @@ class DiffCalculator {
     } else if (value1 != null && value2 == null) {
       return ComparisonStatusDetail.removed();
     } else if (value1 != value2) {
-      final similarityScore = value1!.similarityTo(value2!);
+      final similarityScore = _getCachedSimilarity(value1!, value2!);
       return ComparisonStatusDetail.modified(similarityScore);
     } else {
       return ComparisonStatusDetail.identical();
     }
+  }
+
+  /// Gets similarity score with caching to avoid redundant calculations.
+  static double _getCachedSimilarity(String value1, String value2) {
+    // Check cache first
+    final cached = _similarityCache.get(value1, value2);
+    if (cached != null) {
+      return cached;
+    }
+
+    // Calculate and cache
+    final similarity = value1.similarityTo(value2);
+    _similarityCache.set(value1, value2, similarity);
+    return similarity;
   }
 }

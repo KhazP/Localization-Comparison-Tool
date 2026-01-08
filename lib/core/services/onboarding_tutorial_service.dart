@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+import 'package:localizer_app_main/i18n/strings.g.dart';
+
 /// Service for managing the onboarding tutorial using tutorial_coach_mark.
 ///
 /// Phase 1 targets (source, target, compare) use async callbacks so that the
@@ -58,9 +60,8 @@ class OnboardingTutorialService {
           identify: 'source_file',
           keyTarget: keySourceFilePicker,
           icon: LucideIcons.upload,
-          title: '1. Import Source File',
-          description:
-              'Use the button below to browse for a file, or drag & drop onto the highlighted area.',
+          title: context.t.tutorial.steps.importSource.title,
+          description: context.t.tutorial.steps.importSource.description,
           align: ContentAlign.bottom,
           context: context,
           // Disable target tap to prevent auto-advance; use buttons instead.
@@ -72,9 +73,8 @@ class OnboardingTutorialService {
           identify: 'target_file',
           keyTarget: keyTargetFilePicker,
           icon: LucideIcons.fileInput,
-          title: '2. Import Target File',
-          description:
-              'Use the button below to browse for a file, or drag & drop onto the highlighted area.',
+          title: context.t.tutorial.steps.importTarget.title,
+          description: context.t.tutorial.steps.importTarget.description,
           align: ContentAlign.bottom,
           context: context,
           enableTargetTap: false,
@@ -85,15 +85,14 @@ class OnboardingTutorialService {
           identify: 'compare_button',
           keyTarget: keyCompareButton,
           icon: LucideIcons.arrowRightLeft,
-          title: '3. Compare Files',
-          description:
-              'Tap the button below to run the comparison and see the results.',
+          title: context.t.tutorial.steps.compare.title,
+          description: context.t.tutorial.steps.compare.description,
           align: ContentAlign.bottom,
           context: context,
           enableTargetTap: false,
           enableOverlayTap: false,
           actionButton: _buildCompareActions(context),
-          hintText: 'Next: filters, search, advanced view, and export.',
+          hintText: context.t.tutorial.hintPhase2,
         ),
       ],
     );
@@ -111,7 +110,7 @@ class OnboardingTutorialService {
               onLoadSampleData?.call();
             },
             icon: const Icon(LucideIcons.downloadCloud, size: 16),
-            label: const Text('Load Sample Data'),
+            label: Text(context.t.tutorial.loadSampleData),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
@@ -124,7 +123,7 @@ class OnboardingTutorialService {
             await _onSourcePicked?.call();
           },
           icon: const Icon(LucideIcons.folderOpen, size: 16),
-          label: const Text('Browse Source File'),
+          label: Text(context.t.tutorial.browseSourceFile),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             side: const BorderSide(color: Colors.white70),
@@ -134,7 +133,7 @@ class OnboardingTutorialService {
         OutlinedButton.icon(
           onPressed: () => _controller?.next(),
           icon: const Icon(LucideIcons.arrowRight, size: 16),
-          label: const Text('Next'),
+          label: Text(context.t.tutorial.next),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             side: const BorderSide(color: Colors.white54),
@@ -154,7 +153,7 @@ class OnboardingTutorialService {
             await _onTargetPicked?.call();
           },
           icon: const Icon(LucideIcons.folderOpen, size: 16),
-          label: const Text('Browse Target File'),
+          label: Text(context.t.tutorial.browseTargetFile),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             side: const BorderSide(color: Colors.white70),
@@ -164,7 +163,7 @@ class OnboardingTutorialService {
         OutlinedButton.icon(
           onPressed: () => _controller?.next(),
           icon: const Icon(LucideIcons.arrowRight, size: 16),
-          label: const Text('Next'),
+          label: Text(context.t.tutorial.next),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             side: const BorderSide(color: Colors.white54),
@@ -185,7 +184,7 @@ class OnboardingTutorialService {
             _tutorialCoachMark.finish();
           },
           icon: const Icon(LucideIcons.arrowRightLeft, size: 16),
-          label: const Text('Compare Files'),
+          label: Text(context.t.tutorial.compareFiles),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
@@ -210,9 +209,8 @@ class OnboardingTutorialService {
           identify: 'filter_chips',
           keyTarget: keyFilterChips,
           icon: LucideIcons.filter,
-          title: '4. Filter Results',
-          description:
-              'Use these filters to view Added, Removed, or Modified strings.',
+          title: context.t.tutorial.steps.filter.title,
+          description: context.t.tutorial.steps.filter.description,
           align: ContentAlign.bottom,
           radius: 8,
           context: context,
@@ -221,8 +219,8 @@ class OnboardingTutorialService {
           identify: 'search_bar',
           keyTarget: keySearchBar,
           icon: LucideIcons.search,
-          title: '5. Search Results',
-          description: 'Find specific keys or values using the search bar.',
+          title: context.t.tutorial.steps.search.title,
+          description: context.t.tutorial.steps.search.description,
           align: ContentAlign.bottom,
           radius: 8,
           context: context,
@@ -231,9 +229,8 @@ class OnboardingTutorialService {
           identify: 'advanced_button',
           keyTarget: keyAdvancedButton,
           icon: LucideIcons.maximize,
-          title: '6. Advanced View',
-          description:
-              'Open the detailed diff view with editing, AI translation, and more.',
+          title: context.t.tutorial.steps.advanced.title,
+          description: context.t.tutorial.steps.advanced.description,
           align: ContentAlign.top,
           radius: 8,
           context: context,
@@ -242,8 +239,8 @@ class OnboardingTutorialService {
           identify: 'export_button',
           keyTarget: keyExportButton,
           icon: LucideIcons.download,
-          title: '7. Export Results',
-          description: 'Save your comparison as CSV, JSON, or Excel file.',
+          title: context.t.tutorial.steps.export.title,
+          description: context.t.tutorial.steps.export.description,
           align: ContentAlign.top,
           radius: 8,
           isLast: true,
@@ -262,7 +259,7 @@ class OnboardingTutorialService {
       targets: targets,
       colorShadow: Colors.black,
       opacityShadow: 0.85,
-      textSkip: 'SKIP TUTORIAL',
+      textSkip: context.t.tutorial.skipTutorial,
       textStyleSkip: const TextStyle(
         color: Colors.white70,
         fontWeight: FontWeight.w500,
@@ -408,10 +405,10 @@ class OnboardingTutorialService {
                   Icon(LucideIcons.partyPopper,
                       color: Colors.green[300], size: 20),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      "You're all set! Tap anywhere to finish.",
-                      style: TextStyle(color: Colors.white, fontSize: 13),
+                      context.t.tutorial.finishMessage,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
                     ),
                   ),
                 ],

@@ -311,6 +311,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final localeCode = switch (appLanguage) {
       'English (US)' => 'en',
       'Türkçe (TR)' => 'tr',
+      'Español (ES)' => 'es',
+      'Français (FR)' => 'fr',
+      'Deutsch (DE)' => 'de',
       _ => 'en', // Default to English for unsupported languages
     };
 

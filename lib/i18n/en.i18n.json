@@ -1518,5 +1518,139 @@
             "status": "Status",
             "actions": "Actions"
         }
+    },
+    "tutorial": {
+        "skipTutorial": "SKIP TUTORIAL",
+        "finishMessage": "You're all set! Tap anywhere to finish.",
+        "next": "Next",
+        "loadSampleData": "Load Sample Data",
+        "browseSourceFile": "Browse Source File",
+        "browseTargetFile": "Browse Target File",
+        "compareFiles": "Compare Files",
+        "hintPhase2": "Next: filters, search, advanced view, and export.",
+        "steps": {
+            "importSource": {
+                "title": "1. Import Source File",
+                "description": "Use the button below to browse for a file, or drag & drop onto the highlighted area."
+            },
+            "importTarget": {
+                "title": "2. Import Target File",
+                "description": "Use the button below to browse for a file, or drag & drop onto the highlighted area."
+            },
+            "compare": {
+                "title": "3. Compare Files",
+                "description": "Tap the button below to run the comparison and see the results."
+            },
+            "filter": {
+                "title": "4. Filter Results",
+                "description": "Use these filters to view Added, Removed, or Modified strings."
+            },
+            "search": {
+                "title": "5. Search Results",
+                "description": "Find specific keys or values using the search bar."
+            },
+            "advanced": {
+                "title": "6. Advanced View",
+                "description": "Open the detailed diff view with editing, AI translation, and more."
+            },
+            "export": {
+                "title": "7. Export Results",
+                "description": "Save your comparison as CSV, JSON, or Excel file."
+            }
+        }
+    },
+    "friendlyErrors": {
+        "fileNotFound": {
+            "message": "The file or folder could not be found.",
+            "suggestion": "Check if the file was moved or deleted."
+        },
+        "accessDenied": {
+            "message": "Access to the file was denied.",
+            "suggestion": "Try running the app as administrator or check file permissions."
+        },
+        "isDirectory": {
+            "message": "A folder was selected instead of a file.",
+            "suggestion": "Please select a valid file."
+        },
+        "fileAccess": {
+            "message": "There was a problem accessing the file.",
+            "suggestion": "Try closing other programs that might be using it."
+        },
+        "unsupportedFormat": {
+            "message": "This file format or operation is not supported.",
+            "suggestion": "Check the file extension or try a different format."
+        },
+        "networkError": {
+            "message": "Could not connect to the server.",
+            "suggestion": "Check your internet connection and try again."
+        },
+        "notGitRepo": {
+            "message": "This folder is not a Git project.",
+            "suggestion": "Navigate to a folder that contains a .git directory."
+        },
+        "mergeConflict": {
+            "message": "There are merge conflicts in the repository.",
+            "suggestion": "Resolve the conflicts before continuing."
+        },
+        "gitAuthFailed": {
+            "message": "Git authentication failed.",
+            "suggestion": "Check your credentials in Settings > Version Control."
+        },
+        "gitOperationFailed": {
+            "message": "A Git operation failed.",
+            "suggestion": "Check the Git view for more details."
+        },
+        "invalidJson": {
+            "message": "The file format is invalid or corrupted.",
+            "suggestion": "Ensure the file contains valid JSON content."
+        },
+        "rateLimitReached": {
+            "message": "Translation limit reached.",
+            "suggestion": "Wait a few minutes or check your API plan limits."
+        },
+        "invalidApiKey": {
+            "message": "Invalid API key.",
+            "suggestion": "Go to Settings > AI Translation to update your API key."
+        },
+        "translationServiceError": {
+            "message": "Translation service error.",
+            "suggestion": "Check your API key and internet connection."
+        },
+        "outOfMemory": {
+            "message": "Not enough memory to complete this operation.",
+            "suggestion": "Try closing other applications or using smaller files."
+        },
+        "genericError": {
+            "message": "Something went wrong.",
+            "suggestion": "Please try again. If the problem persists, restart the app."
+        }
+    },
+    "systemTray": {
+        "showLocalizer": "Show Localizer",
+        "exit": "Exit"
+    },
+    "validation": {
+        "connected": "Connected.",
+        "connectionTimeout": "Connection timed out. Please try again.",
+        "couldNotConnect": "Could not connect. Please try again.",
+        "checkKeyAndTryAgain": "Could not connect. Please check the key and try again.",
+        "tryAgainLater": "Could not connect right now. Please try again later.",
+        "serviceUnavailable": "Service is unavailable right now. Please try again later.",
+        "enterKeyFirst": "Please enter a key first.",
+        "checking": "Checking...",
+        "deeplUsage": "Usage: ${used} / ${limit} characters."
+    },
+    "status": {
+        "startingComparison": "Starting comparison...",
+        "loadingFromHistory": "Loading files from history...",
+        "comparisonComplete": "Comparison complete",
+        "couldNotImportFiles": "Could not import the files. Please try again.",
+        "historyFilesNotFound": "One or both files from history not found at original paths."
+    },
+    "aiServices": {
+        "geminiEmptyResponse": "Gemini returned empty response",
+        "geminiStreamingEmpty": "Gemini streaming returned empty response",
+        "geminiRephraseEmpty": "Gemini returned empty response for rephrase",
+        "openaiEmptyResponse": "OpenAI returned empty or failed response"
     }
 }

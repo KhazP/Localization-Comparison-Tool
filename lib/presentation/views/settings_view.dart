@@ -1004,7 +1004,8 @@ class _SettingsViewState extends State<SettingsView>
         if (result.error != null) {
           final friendlyError =
               FriendlyErrorService.getFriendlyMessage(result.error);
-          ToastService.showError(context, friendlyError.toString());
+          ToastService.showError(
+              context, friendlyError.toLocalizedString(context));
         } else if (result.updateAvailable) {
           ToastService.showSuccess(
               context,
@@ -1021,7 +1022,8 @@ class _SettingsViewState extends State<SettingsView>
           _isCheckingForUpdates = false;
         });
         final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
-        ToastService.showError(context, friendlyError.toString());
+        ToastService.showError(
+            context, friendlyError.toLocalizedString(context));
       }
     }
   }

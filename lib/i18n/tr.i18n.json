@@ -1514,5 +1514,139 @@
             "actions": "İŞLEMLER",
             "status": "#"
         }
+    },
+    "tutorial": {
+        "skipTutorial": "ÖĞRETİCİYİ ATLA",
+        "finishMessage": "Hazırsınız! Bitirmek için herhangi bir yere dokunun.",
+        "next": "İleri",
+        "loadSampleData": "Örnek Veri Yükle",
+        "browseSourceFile": "Kaynak Dosya Seç",
+        "browseTargetFile": "Hedef Dosya Seç",
+        "compareFiles": "Dosyaları Karşılaştır",
+        "hintPhase2": "Sonraki: filtreler, arama, gelişmiş görünüm ve dışa aktarma.",
+        "steps": {
+            "importSource": {
+                "title": "1. Kaynak Dosyayı İçe Aktar",
+                "description": "Dosya seçmek için aşağıdaki düğmeyi kullanın veya vurgulanan alana sürükleyip bırakın."
+            },
+            "importTarget": {
+                "title": "2. Hedef Dosyayı İçe Aktar",
+                "description": "Dosya seçmek için aşağıdaki düğmeyi kullanın veya vurgulanan alana sürükleyip bırakın."
+            },
+            "compare": {
+                "title": "3. Dosyaları Karşılaştır",
+                "description": "Karşılaştırmayı çalıştırmak ve sonuçları görmek için aşağıdaki düğmeye dokunun."
+            },
+            "filter": {
+                "title": "4. Sonuçları Filtrele",
+                "description": "Eklenen, Kaldırılan veya Değiştirilen dizileri görüntülemek için bu filtreleri kullanın."
+            },
+            "search": {
+                "title": "5. Sonuçlarda Ara",
+                "description": "Arama çubuğunu kullanarak belirli anahtarları veya değerleri bulun."
+            },
+            "advanced": {
+                "title": "6. Gelişmiş Görünüm",
+                "description": "Düzenleme, yapay zeka çevirisi ve daha fazlası ile ayrıntılı fark görünümünü açın."
+            },
+            "export": {
+                "title": "7. Sonuçları Dışa Aktar",
+                "description": "Karşılaştırmanızı CSV, JSON veya Excel dosyası olarak kaydedin."
+            }
+        }
+    },
+    "friendlyErrors": {
+        "fileNotFound": {
+            "message": "Dosya veya klasör bulunamadı.",
+            "suggestion": "Dosyanın taşınmış veya silinmiş olup olmadığını kontrol edin."
+        },
+        "accessDenied": {
+            "message": "Dosyaya erişim reddedildi.",
+            "suggestion": "Uygulamayı yönetici olarak çalıştırmayı veya dosya izinlerini kontrol etmeyi deneyin."
+        },
+        "isDirectory": {
+            "message": "Dosya yerine bir klasör seçildi.",
+            "suggestion": "Lütfen geçerli bir dosya seçin."
+        },
+        "fileAccess": {
+            "message": "Dosyaya erişimde bir sorun oluştu.",
+            "suggestion": "Dosyayı kullanıyor olabilecek diğer programları kapatmayı deneyin."
+        },
+        "unsupportedFormat": {
+            "message": "Bu dosya formatı veya işlem desteklenmiyor.",
+            "suggestion": "Dosya uzantısını kontrol edin veya farklı bir format deneyin."
+        },
+        "networkError": {
+            "message": "Sunucuya bağlanılamadı.",
+            "suggestion": "İnternet bağlantınızı kontrol edin ve tekrar deneyin."
+        },
+        "notGitRepo": {
+            "message": "Bu klasör bir Git projesi değil.",
+            "suggestion": ".git dizini içeren bir klasöre gidin."
+        },
+        "mergeConflict": {
+            "message": "Depoda birleştirme çakışmaları var.",
+            "suggestion": "Devam etmeden önce çakışmaları çözün."
+        },
+        "gitAuthFailed": {
+            "message": "Git kimlik doğrulaması başarısız oldu.",
+            "suggestion": "Ayarlar > Sürüm Kontrolü'nde kimlik bilgilerinizi kontrol edin."
+        },
+        "gitOperationFailed": {
+            "message": "Bir Git işlemi başarısız oldu.",
+            "suggestion": "Daha fazla ayrıntı için Git görünümünü kontrol edin."
+        },
+        "invalidJson": {
+            "message": "Dosya formatı geçersiz veya bozuk.",
+            "suggestion": "Dosyanın geçerli JSON içeriği içerdiğinden emin olun."
+        },
+        "rateLimitReached": {
+            "message": "Çeviri limiti aşıldı.",
+            "suggestion": "Birkaç dakika bekleyin veya API plan limitinizi kontrol edin."
+        },
+        "invalidApiKey": {
+            "message": "Geçersiz API anahtarı.",
+            "suggestion": "API anahtarınızı güncellemek için Ayarlar > Yapay Zeka Çevirisi'ne gidin."
+        },
+        "translationServiceError": {
+            "message": "Çeviri servisi hatası.",
+            "suggestion": "API anahtarınızı ve internet bağlantınızı kontrol edin."
+        },
+        "outOfMemory": {
+            "message": "Bu işlemi tamamlamak için yeterli bellek yok.",
+            "suggestion": "Diğer uygulamaları kapatmayı veya daha küçük dosyalar kullanmayı deneyin."
+        },
+        "genericError": {
+            "message": "Bir şeyler yanlış gitti.",
+            "suggestion": "Lütfen tekrar deneyin. Sorun devam ederse uygulamayı yeniden başlatın."
+        }
+    },
+    "systemTray": {
+        "showLocalizer": "Localizer'ı Göster",
+        "exit": "Çıkış"
+    },
+    "validation": {
+        "connected": "Bağlandı.",
+        "connectionTimeout": "Bağlantı zaman aşımına uğradı. Lütfen tekrar deneyin.",
+        "couldNotConnect": "Bağlanılamadı. Lütfen tekrar deneyin.",
+        "checkKeyAndTryAgain": "Bağlanılamadı. Lütfen anahtarı kontrol edin ve tekrar deneyin.",
+        "tryAgainLater": "Şu anda bağlanılamıyor. Lütfen daha sonra tekrar deneyin.",
+        "serviceUnavailable": "Servis şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+        "enterKeyFirst": "Lütfen önce bir anahtar girin.",
+        "checking": "Kontrol ediliyor...",
+        "deeplUsage": "Kullanım: ${used} / ${limit} karakter."
+    },
+    "status": {
+        "startingComparison": "Karşılaştırma başlatılıyor...",
+        "loadingFromHistory": "Geçmişten dosyalar yükleniyor...",
+        "comparisonComplete": "Karşılaştırma tamamlandı",
+        "couldNotImportFiles": "Dosyalar içe aktarılamadı. Lütfen tekrar deneyin.",
+        "historyFilesNotFound": "Geçmişteki dosyalardan biri veya her ikisi orijinal yollarında bulunamadı."
+    },
+    "aiServices": {
+        "geminiEmptyResponse": "Gemini boş yanıt döndürdü",
+        "geminiStreamingEmpty": "Gemini akışı boş yanıt döndürdü",
+        "geminiRephraseEmpty": "Gemini yeniden ifadelendirme için boş yanıt döndürdü",
+        "openaiEmptyResponse": "OpenAI boş veya başarısız yanıt döndürdü"
     }
 }

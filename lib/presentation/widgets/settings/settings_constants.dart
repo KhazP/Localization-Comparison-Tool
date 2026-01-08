@@ -51,6 +51,9 @@ class SettingsConstants {
     'Auto-Detect',
     'English (US)',
     'Türkçe (TR)',
+    'Español (ES)',
+    'Français (FR)',
+    'Deutsch (DE)',
   ];
 
   static const List<String> defaultViews = [

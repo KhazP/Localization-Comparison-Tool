@@ -1,4 +1,5 @@
 // TODO: Implement with Hive for local persistence
+import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 abstract class TranslationCache {
@@ -9,21 +10,27 @@ abstract class TranslationCache {
   Future<void> clearCache();
 }
 
+/// In-memory translation cache with LRU eviction.
+///
+/// Caches translation results to avoid redundant API calls.
+/// Uses LRU (Least Recently Used) eviction when cache is full.
 class LocalTranslationCache implements TranslationCache {
-  // This will use Hive for storage.
-  // For MVP, we can use a simple in-memory map or return null.
-  final Map<String, String> _cache =
-      {}; // Key: "sourceLang:targetLang:sourceText"
+  // LinkedHashMap maintains insertion order for efficient LRU
+  final LinkedHashMap<String, String> _cache = LinkedHashMap();
+
+  /// Maximum number of cached translations (prevents unbounded memory growth)
+  static const int _maxCacheSize = 5000;
 
   @override
   Future<String?> getCachedTranslation(
       String sourceText, String sourceLang, String targetLang) async {
-    // TODO: Implement Hive retrieval with expiration logic
     final key = '$sourceLang:$targetLang:$sourceText';
     final cached = _cache[key];
     if (cached != null) {
-      debugPrint('Translation found in in-memory cache for key: $key');
-      // TODO: Check timestamp if implementing expiration with in-memory for now
+      // Move to end (most recently used) for LRU
+      _cache.remove(key);
+      _cache[key] = cached;
+      debugPrint('Translation cache hit for: ${key.substring(0, key.length.clamp(0, 50))}...');
     }
     return cached;
   }
@@ -31,16 +38,30 @@ class LocalTranslationCache implements TranslationCache {
   @override
   Future<void> cacheTranslation(String sourceText, String sourceLang,
       String targetLang, String translatedText) async {
-    // TODO: Implement Hive storage with timestamp for expiration
     final key = '$sourceLang:$targetLang:$sourceText';
+
+    // Remove if exists to update position
+    _cache.remove(key);
+
+    // Evict LRU entries if full
+    while (_cache.length >= _maxCacheSize) {
+      final oldestKey = _cache.keys.first;
+      _cache.remove(oldestKey);
+    }
+
     _cache[key] = translatedText;
-    debugPrint('Translation cached in-memory for key: $key');
+    debugPrint('Translation cached (${_cache.length}/$_maxCacheSize entries)');
   }
 
   @override
   Future<void> clearCache() async {
-    // TODO: Implement Hive clear
     _cache.clear();
-    debugPrint('In-memory translation cache cleared');
+    debugPrint('Translation cache cleared');
   }
+
+  /// Returns cache statistics for debugging
+  Map<String, dynamic> get stats => {
+        'size': _cache.length,
+        'maxSize': _maxCacheSize,
+      };
 }

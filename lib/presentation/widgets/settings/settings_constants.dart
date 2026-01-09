@@ -56,8 +56,10 @@ class SettingsConstants {
     'Deutsch (DE)',
     'Italiano (IT)',
     'Português (BR)',
+    'Русский (RU)',
     '日本語 (JP)',
     '한국어 (KO)',
+    '简体中文 (CN)',
   ];
 
   static const List<String> defaultViews = [

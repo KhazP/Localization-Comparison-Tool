@@ -348,8 +348,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       'Deutsch (DE)' => 'de',
       'Italiano (IT)' => 'it',
       'Português (BR)' => 'pt-BR',
+      'Русский (RU)' => 'ru',
       '日本語 (JP)' => 'ja',
       '한국어 (KO)' => 'ko',
+      '简体中文 (CN)' => 'zh-CN',
       _ => 'en', // Default to English for unsupported languages
     };
 

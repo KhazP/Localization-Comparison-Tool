@@ -50,7 +50,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     super.initState();
     final settingsBloc = context.read<SettingsBloc>();
     _selectedIndex = _getInitialTabIndex(
-        settingsBloc.state.appSettings.defaultViewOnStartup);
+      settingsBloc.state.appSettings.defaultViewOnStartup,
+    );
     _tabService = sl<AppTabService>();
     _tabService.selectedIndex.addListener(_handleTabServiceChange);
     _tabService.select(_selectedIndex);
@@ -207,174 +208,216 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-                child: NavigationRail(
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: _onDestinationSelected,
-                  backgroundColor: Colors.transparent,
-                  indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
-                  labelType: NavigationRailLabelType.all,
-                  destinations: [
-                    _buildNavDestination(
-                      index: 0,
-                      icon: LucideIcons.layoutGrid,
-                      selectedIcon: LucideIcons.layoutGrid,
-                      label: context.t.nav.projects,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildNavDestination(
-                      index: 1,
-                      icon: LucideIcons.fileDiff,
-                      selectedIcon: LucideIcons.fileDiff,
-                      label: context.t.nav.compare,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildNavDestination(
-                      index: 2,
-                      icon: LucideIcons.clock3,
-                      selectedIcon: LucideIcons.clock3,
-                      label: context.t.nav.history,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildNavDestination(
-                      index: 3,
-                      icon: LucideIcons.barChart3,
-                      selectedIcon: LucideIcons.barChart3,
-                      label: context.t.nav.dashboard,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildNavDestination(
-                      index: 4,
-                      icon: LucideIcons.folders,
-                      selectedIcon: LucideIcons.folders,
-                      label: context.t.nav.directory,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildNavDestination(
-                      index: 5,
-                      icon: LucideIcons.gitBranch,
-                      selectedIcon: LucideIcons.gitBranch,
-                      label: context.t.nav.repository,
-                      colorScheme: colorScheme,
-                    ),
-                    _buildNavDestination(
-                      index: 6,
-                      icon: LucideIcons.settings,
-                      selectedIcon: LucideIcons.settings,
-                      label: context.t.nav.settings,
-                      colorScheme: colorScheme,
-                    ),
-                  ],
-                  trailing: Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Project indicator/create button
-                            const ProjectIndicator(),
-                            const SizedBox(height: 12),
-                            // Theme toggle button
-                            Tooltip(
-                              message: context.t.nav.tooltipThemeToggle,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: _toggleTheme,
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.surface,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Theme.of(context).dividerColor,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: IntrinsicHeight(
+                          child: NavigationRail(
+                            selectedIndex: _selectedIndex,
+                            onDestinationSelected: _onDestinationSelected,
+                            backgroundColor: Colors.transparent,
+                            indicatorColor: colorScheme.primary.withValues(
+                              alpha: 0.15,
+                            ),
+                            labelType: NavigationRailLabelType.all,
+                            destinations: [
+                              _buildNavDestination(
+                                index: 0,
+                                icon: LucideIcons.layoutGrid,
+                                selectedIcon: LucideIcons.layoutGrid,
+                                label: context.t.nav.projects,
+                                colorScheme: colorScheme,
+                              ),
+                              _buildNavDestination(
+                                index: 1,
+                                icon: LucideIcons.fileDiff,
+                                selectedIcon: LucideIcons.fileDiff,
+                                label: context.t.nav.compare,
+                                colorScheme: colorScheme,
+                              ),
+                              _buildNavDestination(
+                                index: 2,
+                                icon: LucideIcons.clock3,
+                                selectedIcon: LucideIcons.clock3,
+                                label: context.t.nav.history,
+                                colorScheme: colorScheme,
+                              ),
+                              _buildNavDestination(
+                                index: 3,
+                                icon: LucideIcons.barChart3,
+                                selectedIcon: LucideIcons.barChart3,
+                                label: context.t.nav.dashboard,
+                                colorScheme: colorScheme,
+                              ),
+                              _buildNavDestination(
+                                index: 4,
+                                icon: LucideIcons.folders,
+                                selectedIcon: LucideIcons.folders,
+                                label: context.t.nav.directory,
+                                colorScheme: colorScheme,
+                              ),
+                              _buildNavDestination(
+                                index: 5,
+                                icon: LucideIcons.gitBranch,
+                                selectedIcon: LucideIcons.gitBranch,
+                                label: context.t.nav.repository,
+                                colorScheme: colorScheme,
+                              ),
+                              _buildNavDestination(
+                                index: 6,
+                                icon: LucideIcons.settings,
+                                selectedIcon: LucideIcons.settings,
+                                label: context.t.nav.settings,
+                                colorScheme: colorScheme,
+                              ),
+                            ],
+                            trailing: Expanded(
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: 12.0,
+                                    top: 12.0,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Project indicator/create button
+                                      const ProjectIndicator(),
+                                      const SizedBox(height: 12),
+                                      // Theme toggle button
+                                      Tooltip(
+                                        message:
+                                            context.t.nav.tooltipThemeToggle,
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            onTap: _toggleTheme,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: colorScheme.surface,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).dividerColor,
+                                                ),
+                                              ),
+                                              child: AnimatedSwitcher(
+                                                duration: const Duration(
+                                                  milliseconds: 200,
+                                                ),
+                                                transitionBuilder:
+                                                    (child, animation) {
+                                                  return RotationTransition(
+                                                    turns: Tween(
+                                                      begin: 0.5,
+                                                      end: 1.0,
+                                                    ).animate(animation),
+                                                    child: FadeTransition(
+                                                      opacity: animation,
+                                                      child: child,
+                                                    ),
+                                                  );
+                                                },
+                                                child: Icon(
+                                                  isDarkMode
+                                                      ? LucideIcons.sun
+                                                      : LucideIcons.moon,
+                                                  key: ValueKey(isDarkMode),
+                                                  size: 20,
+                                                  color: colorScheme.primary,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    child: AnimatedSwitcher(
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      transitionBuilder: (child, animation) {
-                                        return RotationTransition(
-                                          turns: Tween(begin: 0.5, end: 1.0)
-                                              .animate(animation),
-                                          child: FadeTransition(
-                                              opacity: animation, child: child),
-                                        );
-                                      },
-                                      child: Icon(
-                                        isDarkMode
-                                            ? LucideIcons.sun
-                                            : LucideIcons.moon,
-                                        key: ValueKey(isDarkMode),
-                                        size: 20,
-                                        color: colorScheme.primary,
-                                      ),
-                                    ),
+                                      // Debug Console button (only in debug mode)
+                                      if (kDebugMode &&
+                                          widget.talkerService != null) ...[
+                                        const SizedBox(height: 8),
+                                        Tooltip(
+                                          message:
+                                              context.t.nav.tooltipDebugConsole,
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        TalkerScreen(
+                                                      talker: widget
+                                                          .talkerService!
+                                                          .talker,
+                                                      theme: TalkerScreenTheme(
+                                                        backgroundColor:
+                                                            Theme.of(
+                                                          context,
+                                                        ).scaffoldBackgroundColor,
+                                                        textColor: colorScheme
+                                                            .onSurface,
+                                                        cardColor: Theme.of(
+                                                          context,
+                                                        ).cardColor,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  10,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: colorScheme.surface,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).dividerColor,
+                                                  ),
+                                                ),
+                                                child: Icon(
+                                                  LucideIcons.terminal,
+                                                  size: 20,
+                                                  color: colorScheme.tertiary,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                            // Debug Console button (only in debug mode)
-                            if (kDebugMode && widget.talkerService != null) ...[
-                              const SizedBox(height: 8),
-                              Tooltip(
-                                message: context.t.nav.tooltipDebugConsole,
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) => TalkerScreen(
-                                            talker:
-                                                widget.talkerService!.talker,
-                                            theme: TalkerScreenTheme(
-                                              backgroundColor: Theme.of(context)
-                                                  .scaffoldBackgroundColor,
-                                              textColor: colorScheme.onSurface,
-                                              cardColor:
-                                                  Theme.of(context).cardColor,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.surface,
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Theme.of(context).dividerColor,
-                                        ),
-                                      ),
-                                      child: Icon(
-                                        LucideIcons.terminal,
-                                        size: 20,
-                                        color: colorScheme.tertiary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
               // Main content - using IndexedStack to preserve widget state across tab switches
               // This prevents heavy views from being recreated when navigating tabs
               Expanded(
-                child: IndexedStack(
-                  index: _selectedIndex,
-                  children: _pages,
-                ),
+                child: IndexedStack(index: _selectedIndex, children: _pages),
               ),
             ],
           ),
@@ -429,7 +472,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
 
     return NavigationRailDestination(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       icon: buildIconWidget(icon, forSelected: false),
       selectedIcon: buildIconWidget(selectedIcon, forSelected: true),
       label: MouseRegion(

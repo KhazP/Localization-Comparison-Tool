@@ -44,7 +44,7 @@ class SettingsConstants {
     'resx',
     'lang',
     'txt',
-    'docx'
+    'docx',
   ];
 
   static const List<String> appLanguages = [
@@ -54,6 +54,9 @@ class SettingsConstants {
     'Español (ES)',
     'Français (FR)',
     'Deutsch (DE)',
+    'Italiano (IT)',
+    'Português (BR)',
+    '日本語 (JP)',
   ];
 
   static const List<String> defaultViews = [
@@ -61,7 +64,7 @@ class SettingsConstants {
     'History View',
     'Quality Dashboard',
     'Files',
-    'Last Used View'
+    'Last Used View',
   ];
 
   static const List<String> encodings = [
@@ -70,7 +73,7 @@ class SettingsConstants {
     'UTF-16BE',
     'UTF-16LE',
     'ASCII',
-    'ISO-8859-1'
+    'ISO-8859-1',
   ];
 
   static const List<String> themeModes = ['System', 'Light', 'Dark', 'Amoled'];
@@ -78,7 +81,7 @@ class SettingsConstants {
   static const List<String> comparisonModes = [
     'Key-based',
     'Order-based',
-    'Smart Match'
+    'Smart Match',
   ];
 
   static const List<String> fontFamilies = [

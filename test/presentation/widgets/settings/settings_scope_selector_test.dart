@@ -7,6 +7,7 @@ import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_s
 import 'package:localizer_app_main/data/models/project_settings.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_scope_selector.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
@@ -21,9 +22,11 @@ void main() {
   Widget createWidgetUnderTest() {
     return MaterialApp(
       home: Scaffold(
-        body: BlocProvider<SettingsBloc>.value(
-          value: mockSettingsBloc,
-          child: const SettingsScopeSelector(),
+        body: TranslationProvider(
+          child: BlocProvider<SettingsBloc>.value(
+            value: mockSettingsBloc,
+            child: const SettingsScopeSelector(),
+          ),
         ),
       ),
     );
@@ -112,7 +115,7 @@ void main() {
       await tester.tap(find.text('Reset Project to Global Defaults'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Reset Project Settings?'), findsOneWidget);
+      expect(find.text('Reset Project to Global Defaults'), findsNWidgets(2));
       expect(find.text('Reset'), findsOneWidget);
     });
 

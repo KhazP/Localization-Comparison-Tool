@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
-import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Helper functions for theming shared across all settings cards
 class SettingsThemeHelper {
@@ -50,8 +49,6 @@ class SettingsCardContainer extends StatelessWidget {
   final bool isAmoled;
   final VoidCallback? onReset;
   final Widget? trailing;
-  final IconData? headerIcon;
-  final Color? headerIconColor;
 
   const SettingsCardContainer({
     super.key,
@@ -61,17 +58,14 @@ class SettingsCardContainer extends StatelessWidget {
     this.isAmoled = false,
     this.onReset,
     this.trailing,
-    this.headerIcon,
-    this.headerIconColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
-    final colorScheme = Theme.of(context).colorScheme;
-    final effectiveIconColor = headerIconColor ?? colorScheme.primary;
 
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: theme.cardColor,
@@ -80,26 +74,12 @@ class SettingsCardContainer extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
               children: [
-                if (headerIcon != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: effectiveIconColor.withAlpha(20),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(
-                      headerIcon,
-                      size: 14,
-                      color: effectiveIconColor,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
                 Expanded(
                   child: Text(
                     title,
@@ -112,7 +92,7 @@ class SettingsCardContainer extends StatelessWidget {
                 if (trailing != null) trailing!,
                 if (onReset != null)
                   Tooltip(
-                    message: context.t.settings.developer.resetToDefault,
+                    message: 'Reset to defaults',
                     child: InkWell(
                       onTap: onReset,
                       borderRadius: BorderRadius.circular(4),
@@ -122,7 +102,7 @@ class SettingsCardContainer extends StatelessWidget {
                           Icons.refresh_rounded,
                           size: 16,
                           color: theme.textMutedColor,
-                          semanticLabel: context.t.common.resetToDefaults,
+                          semanticLabel: 'Reset to defaults',
                         ),
                       ),
                     ),
@@ -163,75 +143,58 @@ class SettingsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 320;
-        final labelSection = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final labelSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 4,
           children: [
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                if (trailing != null) trailing!,
-              ],
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (description != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                description!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: theme.textMutedColor,
-                    ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+        if (description != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            description!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: theme.textMutedColor,
+                ),
+          ),
+        ],
+      ],
+    );
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(child: labelSection),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: control,
+                ),
               ),
             ],
-          ],
-        );
-        final content = isNarrow
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  labelSection,
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: control,
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(child: labelSection),
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: control,
-                    ),
-                  ),
-                ],
-              );
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: content,
-            ),
-            if (showDivider)
-              Divider(
-                color: theme.borderColor,
-                height: 1,
-                indent: 16,
-                endIndent: 16,
-              ),
-          ],
-        );
-      },
+          ),
+        ),
+        if (showDivider)
+          Divider(
+            color: theme.borderColor,
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+          ),
+      ],
     );
   }
 }
@@ -243,7 +206,6 @@ class SettingsDropdown<T> extends StatelessWidget {
   final ValueChanged<T?> onChanged;
   final bool isDark;
   final bool isAmoled;
-  final String Function(T)? itemLabelBuilder;
 
   const SettingsDropdown({
     super.key,
@@ -252,7 +214,6 @@ class SettingsDropdown<T> extends StatelessWidget {
     required this.onChanged,
     this.isDark = false,
     this.isAmoled = false,
-    this.itemLabelBuilder,
   });
 
   @override
@@ -269,10 +230,17 @@ class SettingsDropdown<T> extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: items.contains(value) ? value : items.first,
+          isExpanded: true,
           items: items
-              .map((item) => DropdownMenuItem(
+              .map(
+                (item) => DropdownMenuItem(
                   value: item,
-                  child: Text(itemLabelBuilder?.call(item) ?? item.toString())))
+                  child: Text(
+                    item.toString(),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
               .toList(),
           onChanged: onChanged,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -458,7 +426,7 @@ class SettingsLinkRow extends StatelessWidget {
                   Icons.open_in_new_rounded,
                   size: 16,
                   color: theme.textMutedColor,
-                  semanticLabel: context.t.common.openInNewWindow,
+                  semanticLabel: 'Opens in new window',
                 ),
               ],
             ),

@@ -1660,5 +1660,73 @@
         "geminiStreamingEmpty": "Gemini streaming devolvió respuesta vacía",
         "geminiRephraseEmpty": "Gemini devolvió respuesta vacía para refraseo",
         "openaiEmptyResponse": "OpenAI devolvió respuesta vacía o fallida"
+    },
+    "diffTable": {
+        "columns": {
+            "id": "#",
+            "status": "Status",
+            "key": "Key",
+            "source": "Source",
+            "target": "Target"
+        },
+        "empty": "No entries to display",
+        "pagination": {
+            "show": "Show"
+        },
+        "messages": {
+            "addedToTM": "Added to Translation Memory",
+            "reverted": "Entry reverted",
+            "deleted": "Entry deleted",
+            "appliedAndAdded": "Applied and added to Translation Memory"
+        },
+        "editDialog": {
+            "title": "Edit: ${key}",
+            "sourceLabel": "Source",
+            "targetLabel": "Target",
+            "hint": "Enter translation...",
+            "cancel": "Cancel",
+            "applyAndAdd": "Apply & Add to TM",
+            "apply": "Apply"
+        }
+    },
+    "onboarding": {
+        "gettingStarted": "Getting Started",
+        "stepProgress": "Step ${current} of ${total}",
+        "skipTutorial": "Skip Tutorial",
+        "loadSampleData": "Load Sample Data",
+        "steps": {
+            "importFiles": {
+                "title": "Import Files",
+                "description": "Load your source and target localization files to compare"
+            },
+            "runComparison": {
+                "title": "Run Comparison",
+                "description": "Start comparing files to find differences and missing keys"
+            },
+            "reviewMissing": {
+                "title": "Review Missing",
+                "description": "Check entries that are missing in the target file"
+            },
+            "useFilters": {
+                "title": "Use Filters",
+                "description": "Filter results by status, category, or search term"
+            },
+            "searchResults": {
+                "title": "Search Results",
+                "description": "Use the search bar to find specific keys or translations"
+            },
+            "advancedView": {
+                "title": "Advanced View",
+                "description": "Switch to advanced view for detailed side-by-side comparison"
+            },
+            "editCell": {
+                "title": "Edit Entries",
+                "description": "Click on a cell to edit translations directly"
+            },
+            "exportResults": {
+                "title": "Export Results",
+                "description": "Save your changes or export comparison results"
+            }
+        }
     }
 }

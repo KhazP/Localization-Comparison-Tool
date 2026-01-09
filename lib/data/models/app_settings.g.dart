@@ -64,6 +64,17 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       fuzzyFillMatchLimit: fields[63] == null ? 3 : fields[63] as int,
       fuzzyFillExactMatchesOnly:
           fields[64] == null ? false : fields[64] as bool,
+      defaultGitRepositoryPath: fields[25] == null ? '' : fields[25] as String,
+      autoCommitOnSave: fields[26] == null ? false : fields[26] as bool,
+      gitUserName: fields[27] == null ? '' : fields[27] as String,
+      gitUserEmail: fields[28] == null ? '' : fields[28] as String,
+      enableGitIntegration: fields[29] == null ? false : fields[29] as bool,
+      defaultBranch: fields[65] == null ? 'main' : fields[65] as String,
+      defaultRemote: fields[66] == null ? 'origin' : fields[66] as String,
+      commitMessageTemplate: fields[67] == null
+          ? 'Update localization: {files}'
+          : fields[67] as String,
+      sshKeyPath: fields[68] == null ? '' : fields[68] as String,
       showIdenticalEntries: fields[36] == null ? true : fields[36] as bool,
       startMinimizedToTray: fields[38] == null ? false : fields[38] as bool,
       openLastProjectOnStartup: fields[39] == null ? false : fields[39] as bool,
@@ -122,7 +133,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
   @override
   void write(BinaryWriter writer, AppSettings obj) {
     writer
-      ..writeByte(83)
+      ..writeByte(92)
       ..writeByte(0)
       ..write(obj.defaultSourceFormat)
       ..writeByte(1)
@@ -201,6 +212,24 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
       ..write(obj.fuzzyFillMatchLimit)
       ..writeByte(64)
       ..write(obj.fuzzyFillExactMatchesOnly)
+      ..writeByte(25)
+      ..write(obj.defaultGitRepositoryPath)
+      ..writeByte(26)
+      ..write(obj.autoCommitOnSave)
+      ..writeByte(27)
+      ..write(obj.gitUserName)
+      ..writeByte(28)
+      ..write(obj.gitUserEmail)
+      ..writeByte(29)
+      ..write(obj.enableGitIntegration)
+      ..writeByte(65)
+      ..write(obj.defaultBranch)
+      ..writeByte(66)
+      ..write(obj.defaultRemote)
+      ..writeByte(67)
+      ..write(obj.commitMessageTemplate)
+      ..writeByte(68)
+      ..write(obj.sshKeyPath)
       ..writeByte(36)
       ..write(obj.showIdenticalEntries)
       ..writeByte(38)

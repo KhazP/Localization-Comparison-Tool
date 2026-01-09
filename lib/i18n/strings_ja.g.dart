@@ -122,6 +122,12 @@ class TranslationsJa
   @override
   late final _TranslationsAiServicesJa aiServices =
       _TranslationsAiServicesJa._(_root);
+  @override
+  late final _TranslationsDiffTableJa diffTable =
+      _TranslationsDiffTableJa._(_root);
+  @override
+  late final _TranslationsOnboardingJa onboarding =
+      _TranslationsOnboardingJa._(_root);
 }
 
 // Path: app
@@ -1629,6 +1635,50 @@ class _TranslationsAiServicesJa implements TranslationsAiServicesEn {
   String get geminiRephraseEmpty => 'Gemini が言い換えに対して空の応答を返しました';
   @override
   String get openaiEmptyResponse => 'OpenAI が空の応答または失敗の応答を返しました';
+}
+
+// Path: diffTable
+class _TranslationsDiffTableJa implements TranslationsDiffTableEn {
+  _TranslationsDiffTableJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  late final _TranslationsDiffTableColumnsJa columns =
+      _TranslationsDiffTableColumnsJa._(_root);
+  @override
+  String get empty => 'No entries to display';
+  @override
+  late final _TranslationsDiffTablePaginationJa pagination =
+      _TranslationsDiffTablePaginationJa._(_root);
+  @override
+  late final _TranslationsDiffTableMessagesJa messages =
+      _TranslationsDiffTableMessagesJa._(_root);
+  @override
+  late final _TranslationsDiffTableEditDialogJa editDialog =
+      _TranslationsDiffTableEditDialogJa._(_root);
+}
+
+// Path: onboarding
+class _TranslationsOnboardingJa implements TranslationsOnboardingEn {
+  _TranslationsOnboardingJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get gettingStarted => 'Getting Started';
+  @override
+  String stepProgress({required Object current, required Object total}) =>
+      'Step ${current} of ${total}';
+  @override
+  String get skipTutorial => 'Skip Tutorial';
+  @override
+  String get loadSampleData => 'Load Sample Data';
+  @override
+  late final _TranslationsOnboardingStepsJa steps =
+      _TranslationsOnboardingStepsJa._(_root);
 }
 
 // Path: settings.appearance
@@ -3601,6 +3651,113 @@ class _TranslationsFriendlyErrorsGenericErrorJa
   String get suggestion => 'もう一度お試しください。問題が解決しない場合は、アプリを再起動してください。';
 }
 
+// Path: diffTable.columns
+class _TranslationsDiffTableColumnsJa
+    implements TranslationsDiffTableColumnsEn {
+  _TranslationsDiffTableColumnsJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get id => '#';
+  @override
+  String get status => 'Status';
+  @override
+  String get key => 'Key';
+  @override
+  String get source => 'Source';
+  @override
+  String get target => 'Target';
+}
+
+// Path: diffTable.pagination
+class _TranslationsDiffTablePaginationJa
+    implements TranslationsDiffTablePaginationEn {
+  _TranslationsDiffTablePaginationJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get show => 'Show';
+}
+
+// Path: diffTable.messages
+class _TranslationsDiffTableMessagesJa
+    implements TranslationsDiffTableMessagesEn {
+  _TranslationsDiffTableMessagesJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get addedToTM => 'Added to Translation Memory';
+  @override
+  String get reverted => 'Entry reverted';
+  @override
+  String get deleted => 'Entry deleted';
+  @override
+  String get appliedAndAdded => 'Applied and added to Translation Memory';
+}
+
+// Path: diffTable.editDialog
+class _TranslationsDiffTableEditDialogJa
+    implements TranslationsDiffTableEditDialogEn {
+  _TranslationsDiffTableEditDialogJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String title({required Object key}) => 'Edit: ${key}';
+  @override
+  String get sourceLabel => 'Source';
+  @override
+  String get targetLabel => 'Target';
+  @override
+  String get hint => 'Enter translation...';
+  @override
+  String get cancel => 'Cancel';
+  @override
+  String get applyAndAdd => 'Apply & Add to TM';
+  @override
+  String get apply => 'Apply';
+}
+
+// Path: onboarding.steps
+class _TranslationsOnboardingStepsJa implements TranslationsOnboardingStepsEn {
+  _TranslationsOnboardingStepsJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  late final _TranslationsOnboardingStepsImportFilesJa importFiles =
+      _TranslationsOnboardingStepsImportFilesJa._(_root);
+  @override
+  late final _TranslationsOnboardingStepsRunComparisonJa runComparison =
+      _TranslationsOnboardingStepsRunComparisonJa._(_root);
+  @override
+  late final _TranslationsOnboardingStepsReviewMissingJa reviewMissing =
+      _TranslationsOnboardingStepsReviewMissingJa._(_root);
+  @override
+  late final _TranslationsOnboardingStepsUseFiltersJa useFilters =
+      _TranslationsOnboardingStepsUseFiltersJa._(_root);
+  @override
+  late final _TranslationsOnboardingStepsSearchResultsJa searchResults =
+      _TranslationsOnboardingStepsSearchResultsJa._(_root);
+  @override
+  late final _TranslationsOnboardingStepsAdvancedViewJa advancedView =
+      _TranslationsOnboardingStepsAdvancedViewJa._(_root);
+  @override
+  late final _TranslationsOnboardingStepsEditCellJa editCell =
+      _TranslationsOnboardingStepsEditCellJa._(_root);
+  @override
+  late final _TranslationsOnboardingStepsExportResultsJa exportResults =
+      _TranslationsOnboardingStepsExportResultsJa._(_root);
+}
+
 // Path: settings.appearance.presets
 class _TranslationsSettingsAppearancePresetsJa
     implements TranslationsSettingsAppearancePresetsEn {
@@ -4254,6 +4411,123 @@ class _TranslationsTutorialStepsExportJa
   String get title => '7. 結果のエクスポート';
   @override
   String get description => '比較結果を CSV、JSON、または Excel ファイルとして保存します。';
+}
+
+// Path: onboarding.steps.importFiles
+class _TranslationsOnboardingStepsImportFilesJa
+    implements TranslationsOnboardingStepsImportFilesEn {
+  _TranslationsOnboardingStepsImportFilesJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Import Files';
+  @override
+  String get description =>
+      'Load your source and target localization files to compare';
+}
+
+// Path: onboarding.steps.runComparison
+class _TranslationsOnboardingStepsRunComparisonJa
+    implements TranslationsOnboardingStepsRunComparisonEn {
+  _TranslationsOnboardingStepsRunComparisonJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Run Comparison';
+  @override
+  String get description =>
+      'Start comparing files to find differences and missing keys';
+}
+
+// Path: onboarding.steps.reviewMissing
+class _TranslationsOnboardingStepsReviewMissingJa
+    implements TranslationsOnboardingStepsReviewMissingEn {
+  _TranslationsOnboardingStepsReviewMissingJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Review Missing';
+  @override
+  String get description => 'Check entries that are missing in the target file';
+}
+
+// Path: onboarding.steps.useFilters
+class _TranslationsOnboardingStepsUseFiltersJa
+    implements TranslationsOnboardingStepsUseFiltersEn {
+  _TranslationsOnboardingStepsUseFiltersJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Use Filters';
+  @override
+  String get description =>
+      'Filter results by status, category, or search term';
+}
+
+// Path: onboarding.steps.searchResults
+class _TranslationsOnboardingStepsSearchResultsJa
+    implements TranslationsOnboardingStepsSearchResultsEn {
+  _TranslationsOnboardingStepsSearchResultsJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Search Results';
+  @override
+  String get description =>
+      'Use the search bar to find specific keys or translations';
+}
+
+// Path: onboarding.steps.advancedView
+class _TranslationsOnboardingStepsAdvancedViewJa
+    implements TranslationsOnboardingStepsAdvancedViewEn {
+  _TranslationsOnboardingStepsAdvancedViewJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Advanced View';
+  @override
+  String get description =>
+      'Switch to advanced view for detailed side-by-side comparison';
+}
+
+// Path: onboarding.steps.editCell
+class _TranslationsOnboardingStepsEditCellJa
+    implements TranslationsOnboardingStepsEditCellEn {
+  _TranslationsOnboardingStepsEditCellJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Edit Entries';
+  @override
+  String get description => 'Click on a cell to edit translations directly';
+}
+
+// Path: onboarding.steps.exportResults
+class _TranslationsOnboardingStepsExportResultsJa
+    implements TranslationsOnboardingStepsExportResultsEn {
+  _TranslationsOnboardingStepsExportResultsJa._(this._root);
+
+  final TranslationsJa _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Export Results';
+  @override
+  String get description => 'Save your changes or export comparison results';
 }
 
 // Path: settings.developer.themePlaygroundSection.palette
@@ -6175,6 +6449,56 @@ extension on TranslationsJa {
           'aiServices.geminiStreamingEmpty' => 'Gemini ストリーミングが空の応答を返しました',
           'aiServices.geminiRephraseEmpty' => 'Gemini が言い換えに対して空の応答を返しました',
           'aiServices.openaiEmptyResponse' => 'OpenAI が空の応答または失敗の応答を返しました',
+          'diffTable.columns.id' => '#',
+          'diffTable.columns.status' => 'Status',
+          'diffTable.columns.key' => 'Key',
+          'diffTable.columns.source' => 'Source',
+          'diffTable.columns.target' => 'Target',
+          'diffTable.empty' => 'No entries to display',
+          'diffTable.pagination.show' => 'Show',
+          'diffTable.messages.addedToTM' => 'Added to Translation Memory',
+          'diffTable.messages.reverted' => 'Entry reverted',
+          'diffTable.messages.deleted' => 'Entry deleted',
+          'diffTable.messages.appliedAndAdded' =>
+            'Applied and added to Translation Memory',
+          'diffTable.editDialog.title' => ({required Object key}) =>
+              'Edit: ${key}',
+          'diffTable.editDialog.sourceLabel' => 'Source',
+          'diffTable.editDialog.targetLabel' => 'Target',
+          'diffTable.editDialog.hint' => 'Enter translation...',
+          'diffTable.editDialog.cancel' => 'Cancel',
+          'diffTable.editDialog.applyAndAdd' => 'Apply & Add to TM',
+          'diffTable.editDialog.apply' => 'Apply',
+          'onboarding.gettingStarted' => 'Getting Started',
+          'onboarding.stepProgress' => (
+                  {required Object current, required Object total}) =>
+              'Step ${current} of ${total}',
+          'onboarding.skipTutorial' => 'Skip Tutorial',
+          'onboarding.loadSampleData' => 'Load Sample Data',
+          'onboarding.steps.importFiles.title' => 'Import Files',
+          'onboarding.steps.importFiles.description' =>
+            'Load your source and target localization files to compare',
+          'onboarding.steps.runComparison.title' => 'Run Comparison',
+          'onboarding.steps.runComparison.description' =>
+            'Start comparing files to find differences and missing keys',
+          'onboarding.steps.reviewMissing.title' => 'Review Missing',
+          'onboarding.steps.reviewMissing.description' =>
+            'Check entries that are missing in the target file',
+          'onboarding.steps.useFilters.title' => 'Use Filters',
+          'onboarding.steps.useFilters.description' =>
+            'Filter results by status, category, or search term',
+          'onboarding.steps.searchResults.title' => 'Search Results',
+          'onboarding.steps.searchResults.description' =>
+            'Use the search bar to find specific keys or translations',
+          'onboarding.steps.advancedView.title' => 'Advanced View',
+          'onboarding.steps.advancedView.description' =>
+            'Switch to advanced view for detailed side-by-side comparison',
+          'onboarding.steps.editCell.title' => 'Edit Entries',
+          'onboarding.steps.editCell.description' =>
+            'Click on a cell to edit translations directly',
+          'onboarding.steps.exportResults.title' => 'Export Results',
+          'onboarding.steps.exportResults.description' =>
+            'Save your changes or export comparison results',
           _ => null,
         };
   }

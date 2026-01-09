@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:localizer_app_main/business_logic/blocs/comparison_bloc.dart';
 import 'package:localizer_app_main/core/utils/time_utils.dart';
+import 'package:localizer_app_main/core/utils/file_explorer_utils.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/directory_comparison_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/git_bloc.dart';
@@ -1901,15 +1902,8 @@ class _FilePathRow extends StatelessWidget {
   }
 
   void _openFileLocation(String filePath) {
-    final file = File(filePath);
-    final directory = file.parent.path;
-    if (Platform.isWindows) {
-      Process.run('explorer.exe', [directory]);
-    } else if (Platform.isMacOS) {
-      Process.run('open', [directory]);
-    } else if (Platform.isLinux) {
-      Process.run('xdg-open', [directory]);
-    }
+    // SECURITY: Use validated file explorer utility
+    FileExplorerUtils.openAndSelectFile(filePath);
   }
 }
 

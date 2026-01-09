@@ -9,6 +9,7 @@ import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/services/git_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
+import 'package:localizer_app_main/core/utils/file_explorer_utils.dart';
 import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/common/diff_highlighter.dart';
@@ -1349,9 +1350,8 @@ class _ComparisonResultListState extends State<_ComparisonResultList> {
             if (showOpenFolder)
               TextButton(
                 onPressed: () {
-                  // Use shell: true and proper Windows path format
-                  final windowsPath = exportPath.replaceAll('/', '\\');
-                  Process.run('explorer.exe', [windowsPath], runInShell: true);
+                  // SECURITY: Use validated file explorer utility
+                  FileExplorerUtils.openAndSelectFile(exportPath);
                   Navigator.of(dialogContext).pop();
                 },
                 child: Text(context.t.common.open),

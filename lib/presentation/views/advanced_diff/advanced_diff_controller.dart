@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:io';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/data/models/ai_suggestion_result.dart';
@@ -108,8 +109,24 @@ class AdvancedDiffController extends ChangeNotifier {
   bool isRegexEnabled = false;
   bool isFuzzyEnabled = false;
 
+  // Search debouncing
+  Timer? _searchDebounceTimer;
+  static const Duration _searchDebounceDelay = Duration(milliseconds: 300);
+
   void updateSearch(String query) {
     searchQuery = query;
+    // Cancel any pending debounce timer
+    _searchDebounceTimer?.cancel();
+    // Debounce search to avoid excessive filtering on every keystroke
+    _searchDebounceTimer = Timer(_searchDebounceDelay, () {
+      _applyFilters();
+    });
+  }
+
+  /// Immediately applies the current search without waiting for debounce.
+  /// Use this when the user explicitly triggers search (e.g., pressing Enter).
+  void applySearchImmediately() {
+    _searchDebounceTimer?.cancel();
     _applyFilters();
   }
 
@@ -728,5 +745,11 @@ class AdvancedDiffController extends ChangeNotifier {
     }
 
     return translatedCount;
+  }
+
+  @override
+  void dispose() {
+    _searchDebounceTimer?.cancel();
+    super.dispose();
   }
 }

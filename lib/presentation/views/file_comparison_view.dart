@@ -18,6 +18,7 @@ import 'package:localizer_app_main/business_logic/blocs/file_watcher_bloc/file_w
 import 'package:localizer_app_main/business_logic/blocs/file_watcher_bloc/file_watcher_event.dart';
 import 'package:localizer_app_main/business_logic/blocs/file_watcher_bloc/file_watcher_state.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart'; // For ComparisonResult
+import 'package:localizer_app_main/core/utils/file_explorer_utils.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; // Import new model
 import 'package:uuid/uuid.dart'; // For generating unique IDs for history
 import 'package:localizer_app_main/data/models/comparison_history.dart';
@@ -2063,8 +2064,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
             ..writeAsBytesSync(fileBytes);
 
           if (mounted) {
-            if (settings.openFolderAfterExport && Platform.isWindows) {
-              Process.run('explorer.exe', [File(outputPath).parent.path]);
+            if (settings.openFolderAfterExport) {
+              // SECURITY: Use validated file explorer utility
+              FileExplorerUtils.openDirectory(File(outputPath).parent.path);
             }
 
             ToastService.showSuccessWithAction(
@@ -2128,8 +2130,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         );
         await File(outputPath).writeAsString(jsonString);
         if (mounted) {
-          if (settings.openFolderAfterExport && Platform.isWindows) {
-            Process.run('explorer.exe', [File(outputPath).parent.path]);
+          if (settings.openFolderAfterExport) {
+            // SECURITY: Use validated file explorer utility
+            FileExplorerUtils.openDirectory(File(outputPath).parent.path);
           }
           ToastService.showSuccessWithAction(
             context,
@@ -2187,8 +2190,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         );
         await File(outputPath).writeAsString(csvString);
         if (mounted) {
-          if (settings.openFolderAfterExport && Platform.isWindows) {
-            Process.run('explorer.exe', [File(outputPath).parent.path]);
+          if (settings.openFolderAfterExport) {
+            // SECURITY: Use validated file explorer utility
+            FileExplorerUtils.openDirectory(File(outputPath).parent.path);
           }
           ToastService.showSuccessWithAction(
             context,

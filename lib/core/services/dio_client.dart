@@ -3,6 +3,41 @@ import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:talker_dio_logger/talker_dio_logger.dart';
 
+/// Interceptor that redacts sensitive headers from logs.
+/// SECURITY: Prevents API keys from being logged.
+class _SensitiveHeaderRedactionInterceptor extends Interceptor {
+  static const _sensitiveHeaders = [
+    'authorization',
+    'x-api-key',
+    'api-key',
+    'x-goog-api-key',
+  ];
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // Create a copy of headers with redacted sensitive values for logging
+    final redactedHeaders = Map<String, dynamic>.from(options.headers);
+    for (final header in _sensitiveHeaders) {
+      // Check case-insensitive
+      final matchingKey = redactedHeaders.keys.firstWhere(
+        (k) => k.toLowerCase() == header,
+        orElse: () => '',
+      );
+      if (matchingKey.isNotEmpty) {
+        redactedHeaders[matchingKey] = '[REDACTED]';
+      }
+    }
+
+    // Log the request with redacted headers if in debug mode
+    if (kDebugMode) {
+      debugPrint('DioClient Request: ${options.method} ${options.uri}');
+      debugPrint('Headers (redacted): $redactedHeaders');
+    }
+
+    handler.next(options);
+  }
+}
+
 /// Centralized Dio HTTP client with common configuration.
 ///
 /// Provides consistent timeout handling, default headers, and optional
@@ -22,16 +57,22 @@ class DioClient {
                 headers: {
                   'Accept': 'application/json',
                 },
-                validateStatus: (status) => status != null && status < 500,
+                // SECURITY: Only treat 2xx as success, handle errors explicitly
+                validateStatus: (status) =>
+                    status != null && status >= 200 && status < 300,
               ),
             ) {
+    // SECURITY: Add header redaction interceptor first
+    _dio.interceptors.add(_SensitiveHeaderRedactionInterceptor());
+
     // Add Talker logging interceptor in debug mode only
     if (kDebugMode && talkerService != null) {
       _dio.interceptors.add(
         TalkerDioLogger(
           talker: talkerService.talker,
           settings: const TalkerDioLoggerSettings(
-            printRequestHeaders: true,
+            // SECURITY: Disable header logging to prevent API key exposure
+            printRequestHeaders: false,
             printResponseHeaders: false,
             printResponseMessage: true,
             printRequestData: true,

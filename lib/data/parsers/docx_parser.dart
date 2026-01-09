@@ -17,6 +17,9 @@ class DocxParser extends LocalizationParser {
     // docx_to_text package works directly on the byte stream of the DOCX file.
     final Map<String, String> translations = {};
     try {
+      // SECURITY: Validate file size before reading
+      await validateFileSize(file);
+
       final bytes = await file.readAsBytes();
       final text = docxToText(bytes);
 

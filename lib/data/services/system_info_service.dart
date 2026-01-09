@@ -58,10 +58,10 @@ class SystemInfoService {
     try {
       if (Platform.isWindows) {
         // Use WMIC to get free space on the system drive
+        // SECURITY: Removed runInShell: true, using hardcoded safe arguments
         final result = await Process.run(
           'wmic',
           ['logicaldisk', 'where', 'DeviceID="C:"', 'get', 'FreeSpace'],
-          runInShell: true,
         );
         if (result.exitCode == 0) {
           final output = result.stdout.toString().trim();
@@ -75,7 +75,8 @@ class SystemInfoService {
         }
       } else if (Platform.isMacOS || Platform.isLinux) {
         // Use df command for Unix-like systems
-        final result = await Process.run('df', ['-k', '/'], runInShell: true);
+        // SECURITY: Removed runInShell: true, using hardcoded safe arguments
+        final result = await Process.run('df', ['-k', '/']);
         if (result.exitCode == 0) {
           final lines = result.stdout.toString().trim().split('\n');
           if (lines.length > 1) {
@@ -102,10 +103,14 @@ class SystemInfoService {
       if (Platform.isWindows) {
         // Get current process memory using tasklist
         final currentPid = pid;
+        // SECURITY: Validate PID is a positive integer
+        if (currentPid <= 0 || currentPid > 2147483647) {
+          return {'usage': 'Unavailable', 'total': 'Unavailable'};
+        }
+        // SECURITY: Removed runInShell: true, PID is validated as numeric
         final result = await Process.run(
           'tasklist',
           ['/FI', 'PID eq $currentPid', '/FO', 'CSV', '/NH'],
-          runInShell: true,
         );
         if (result.exitCode == 0) {
           final output = result.stdout.toString().trim();
@@ -129,10 +134,14 @@ class SystemInfoService {
       } else if (Platform.isMacOS || Platform.isLinux) {
         // Get process memory using ps command
         final currentPid = pid;
+        // SECURITY: Validate PID is a positive integer
+        if (currentPid <= 0 || currentPid > 2147483647) {
+          return {'usage': 'Unavailable', 'total': 'Unavailable'};
+        }
+        // SECURITY: Removed runInShell: true, PID is validated as numeric
         final result = await Process.run(
           'ps',
           ['-o', 'rss=', '-p', '$currentPid'],
-          runInShell: true,
         );
         if (result.exitCode == 0) {
           final rssKb = int.tryParse(result.stdout.toString().trim());
@@ -153,10 +162,10 @@ class SystemInfoService {
   Future<String> _getSystemTotalMemory() async {
     try {
       if (Platform.isWindows) {
+        // SECURITY: Removed runInShell: true, using hardcoded safe arguments
         final result = await Process.run(
           'wmic',
           ['OS', 'get', 'TotalVisibleMemorySize'],
-          runInShell: true,
         );
         if (result.exitCode == 0) {
           final lines = result.stdout.toString().trim().split('\n');
@@ -168,10 +177,10 @@ class SystemInfoService {
           }
         }
       } else if (Platform.isMacOS) {
+        // SECURITY: Removed runInShell: true, using hardcoded safe arguments
         final result = await Process.run(
           'sysctl',
           ['-n', 'hw.memsize'],
-          runInShell: true,
         );
         if (result.exitCode == 0) {
           final totalBytes = int.tryParse(result.stdout.toString().trim());
@@ -180,10 +189,10 @@ class SystemInfoService {
           }
         }
       } else if (Platform.isLinux) {
+        // SECURITY: Removed runInShell: true, using hardcoded safe arguments
         final result = await Process.run(
           'grep',
           ['MemTotal', '/proc/meminfo'],
-          runInShell: true,
         );
         if (result.exitCode == 0) {
           final match = RegExp(r'(\d+)').firstMatch(result.stdout.toString());

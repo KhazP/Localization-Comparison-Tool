@@ -167,6 +167,10 @@ class LibGit2DartService implements GitService {
 
   Future<List<GitDiffFile>> _compareRefs(
       String repoPath, String base, String target) async {
+    // SECURITY: Validate git references before use
+    _validateGitRef(base);
+    _validateGitRef(target);
+
     try {
       // 1. Get Statuses (Added, Modified, Deleted)
       // git diff --name-status base target
@@ -375,13 +379,53 @@ class LibGit2DartService implements GitService {
 
   // --- CLI Fallback for Conflicts ---
 
+  /// Validates that a git reference (branch name, tag, or SHA) is safe.
+  /// Only allows alphanumeric characters, dashes, underscores, dots, and slashes.
+  static final _safeGitRefRegex = RegExp(r'^[a-zA-Z0-9_\-\.\/]+$');
+
+  /// Validates a git reference to prevent command injection.
+  String _validateGitRef(String ref) {
+    if (ref.isEmpty) {
+      throw ArgumentError('Git reference cannot be empty');
+    }
+    if (ref.contains('..') || ref.startsWith('-')) {
+      throw ArgumentError('Invalid git reference: $ref');
+    }
+    if (!_safeGitRefRegex.hasMatch(ref)) {
+      throw ArgumentError('Git reference contains invalid characters: $ref');
+    }
+    return ref;
+  }
+
+  /// Validates a file path for git operations.
+  String _validateFilePath(String path) {
+    if (path.isEmpty) {
+      throw ArgumentError('File path cannot be empty');
+    }
+    // Prevent path traversal and shell metacharacters
+    if (path.contains('..') ||
+        path.contains(';') ||
+        path.contains('|') ||
+        path.contains('&') ||
+        path.contains('\$') ||
+        path.contains('`') ||
+        path.contains('\n') ||
+        path.contains('\r')) {
+      throw ArgumentError('File path contains invalid characters: $path');
+    }
+    return path;
+  }
+
   Future<String> _runGitCommand(String repoPath, List<String> args) async {
+    // Validate repoPath
+    _validateFilePath(repoPath);
+
     try {
+      // SECURITY: Removed runInShell: true to prevent shell injection
       final process = await Process.run(
         'git',
         args,
         workingDirectory: repoPath,
-        runInShell: true,
       );
 
       if (process.exitCode != 0) {
@@ -389,18 +433,21 @@ class LibGit2DartService implements GitService {
       }
       return process.stdout.toString();
     } catch (e) {
-      if (e.toString().contains('No such file or directory')) {
-        // Try 'cmd /c git ...' for Windows if direct call fails
+      if (e.toString().contains('No such file or directory') ||
+          e.toString().contains('The system cannot find')) {
+        // Try with full path to git on Windows if direct call fails
         try {
+          // SECURITY: Use argument list instead of shell string concatenation
           final process = await Process.run(
-            'cmd',
-            ['/c', 'git', ...args],
+            'git',
+            args,
             workingDirectory: repoPath,
+            environment: Platform.environment,
           );
           if (process.exitCode != 0) throw Exception(process.stderr);
           return process.stdout.toString();
         } catch (inner) {
-          throw Exception('Git CL failed: $inner');
+          throw Exception('Git CLI failed: $inner');
         }
       }
       rethrow;
@@ -444,21 +491,26 @@ class LibGit2DartService implements GitService {
   @override
   Future<void> resolveConflict(
       String repoPath, String filePath, ResolutionStrategy strategy) async {
+    // SECURITY: Validate file path before use
+    _validateFilePath(filePath);
+
     try {
       switch (strategy) {
         case ResolutionStrategy.ours:
           // Keep current version
-          await _runGitCommand(repoPath, ['checkout', '--ours', filePath]);
-          await _runGitCommand(repoPath, ['add', filePath]);
+          await _runGitCommand(
+              repoPath, ['checkout', '--ours', '--', filePath]);
+          await _runGitCommand(repoPath, ['add', '--', filePath]);
           break;
         case ResolutionStrategy.theirs:
           // Accept incoming version
-          await _runGitCommand(repoPath, ['checkout', '--theirs', filePath]);
-          await _runGitCommand(repoPath, ['add', filePath]);
+          await _runGitCommand(
+              repoPath, ['checkout', '--theirs', '--', filePath]);
+          await _runGitCommand(repoPath, ['add', '--', filePath]);
           break;
         case ResolutionStrategy.manual:
           // User edited file manually, just add it
-          await _runGitCommand(repoPath, ['add', filePath]);
+          await _runGitCommand(repoPath, ['add', '--', filePath]);
           break;
       }
     } catch (e) {
@@ -568,8 +620,11 @@ class LibGit2DartService implements GitService {
 
   @override
   Future<void> markFileResolved(String repoPath, String filePath) async {
+    // SECURITY: Validate file path before use
+    _validateFilePath(filePath);
+
     try {
-      await _runGitCommand(repoPath, ['add', filePath]);
+      await _runGitCommand(repoPath, ['add', '--', filePath]);
       developer.log('Marked $filePath as resolved', name: 'GitService');
     } catch (e) {
       developer.log('Error marking file as resolved: $e', name: 'GitService');
@@ -581,6 +636,9 @@ class LibGit2DartService implements GitService {
 
   @override
   Future<void> checkoutBranch(String repoPath, String branchName) async {
+    // SECURITY: Validate branch name before use
+    _validateGitRef(branchName);
+
     try {
       await _runGitCommand(repoPath, ['checkout', branchName]);
     } catch (e) {
@@ -592,6 +650,9 @@ class LibGit2DartService implements GitService {
 
   @override
   Future<void> mergeBranch(String repoPath, String branchName) async {
+    // SECURITY: Validate branch name before use
+    _validateGitRef(branchName);
+
     try {
       // We don't use --no-commit so we can detect conflicts naturally if they occur
       await _runGitCommand(repoPath, ['merge', branchName]);

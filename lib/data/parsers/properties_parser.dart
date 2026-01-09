@@ -16,6 +16,9 @@ class PropertiesParser extends LocalizationParser {
     final Map<String, String> translations = {};
     List<String> lines;
     try {
+      // SECURITY: Validate file size before reading
+      await validateFileSize(file);
+
       final encoding = resolveEncoding(settings, extractionMode);
       lines = await file.readAsLines(encoding: encoding);
     } catch (e) {

@@ -1145,6 +1145,7 @@
         "added": "Добавлено",
         "change": "Изменение",
         "totalScope": "Общий объём",
+        "wordsCount": "${count} слов",
         "scopeGrowth": "Рост объёма",
         "range": "Диапазон",
         "aiUsage": "Использование ИИ и переводов",
@@ -1169,12 +1170,12 @@
         "exportDialogTitle": "Экспорт отчёта о качестве",
         "reportSaved": "Отчёт сохранён",
         "export": "Экспорт",
-        "requests": "Requests",
-        "tokens": "Tokens",
-        "characters": "Characters",
-        "estCost": "Est. Cost",
-        "prompt": "Prompt",
-        "completion": "Completion",
+        "requests": "Запросы",
+        "tokens": "Токены",
+        "characters": "Символы",
+        "estCost": "Оц. стоимость",
+        "prompt": "Промпт",
+        "completion": "Завершение",
         "showingCurrentProject": "Показано: Текущий проект",
         "showingAllHistory": "Показано: Вся история",
         "filesSkipped": "Некоторые файлы пропущены, так как не найдены."
@@ -1224,7 +1225,9 @@
             "removed": "Удалено",
             "modified": "Изменено",
             "noMatches": "Нет записей, соответствующих фильтрам",
-            "clickToggle": "Нажмите значки выше для переключения фильтров"
+            "clickToggle": "Нажмите значки выше для переключения фильтров",
+            "clickToHide": "(нажмите чтобы скрыть)",
+            "clickToShow": "(нажмите чтобы показать)"
         }
     },
     "grid": {

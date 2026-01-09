@@ -1429,6 +1429,7 @@
         "added": "Ajouté",
         "change": "Changement",
         "totalScope": "Portée totale",
+        "wordsCount": "${count} mots",
         "scopeGrowth": "Croissance de la portée",
         "range": "Plage",
         "aiUsage": "Utilisation de l'IA & Traduction",
@@ -1454,7 +1455,7 @@
         "reportSaved": "Rapport enregistré",
         "export": "Exporter",
         "requests": "Requêtes",
-        "tokens": "Tokens",
+        "tokens": "Jetons",
         "characters": "Caractères",
         "estCost": "Coût est.",
         "prompt": "Prompt",
@@ -1508,7 +1509,9 @@
             "removed": "Supprimé",
             "modified": "Modifié",
             "noMatches": "Aucune entrée ne correspond aux filtres actuels",
-            "clickToggle": "Cliquez sur les badges ci-dessus pour activer les filtres"
+            "clickToggle": "Cliquez sur les badges ci-dessus pour activer les filtres",
+            "clickToHide": "(cliquer pour masquer)",
+            "clickToShow": "(cliquer pour afficher)"
         }
     },
     "grid": {

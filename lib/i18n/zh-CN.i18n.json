@@ -1429,6 +1429,7 @@
         "added": "新增",
         "change": "变化",
         "totalScope": "总范围",
+        "wordsCount": "${count} 字",
         "scopeGrowth": "范围增长",
         "range": "范围",
         "aiUsage": "AI 与翻译使用情况",
@@ -1508,7 +1509,9 @@
             "removed": "移除",
             "modified": "修改",
             "noMatches": "没有条目匹配当前过滤器",
-            "clickToggle": "点击上方徽章以切换过滤器"
+            "clickToggle": "点击上方徽章以切换过滤器",
+            "clickToHide": "(点击隐藏)",
+            "clickToShow": "(点击显示)"
         }
     },
     "grid": {

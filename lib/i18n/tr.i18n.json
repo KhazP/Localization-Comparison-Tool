@@ -1429,6 +1429,7 @@
         "added": "Eklendi",
         "change": "Değişim",
         "totalScope": "Toplam Kapsam",
+        "wordsCount": "${count} kelime",
         "scopeGrowth": "Kapsam Büyümesi",
         "range": "Aralık",
         "aiUsage": "Yapay Zeka ve Çeviri Kullanımı",
@@ -1508,7 +1509,9 @@
             "removed": "Kaldırıldı",
             "modified": "Değiştirildi",
             "noMatches": "Geçerli filtrelerle eşleşen kayıt yok",
-            "clickToggle": "Filtreleri değiştirmek için yukarıdaki rozetlere tıklayın"
+            "clickToggle": "Filtreleri değiştirmek için yukarıdaki rozetlere tıklayın",
+            "clickToHide": "(gizlemek için tıkla)",
+            "clickToShow": "(göstermek için tıkla)"
         }
     },
     "grid": {

@@ -1429,6 +1429,7 @@
         "added": "追加済み",
         "change": "変更",
         "totalScope": "合計スコープ",
+        "wordsCount": "${count} 語",
         "scopeGrowth": "スコープの増加",
         "range": "範囲",
         "aiUsage": "AI と翻訳の使用状況",
@@ -1452,13 +1453,13 @@
         "exportFailed": "エクスポート失敗",
         "exportDialogTitle": "品質レポートをエクスポート",
         "reportSaved": "レポートを保存しました",
-        "export": "Export",
-        "requests": "Requests",
-        "tokens": "Tokens",
-        "characters": "Characters",
+        "export": "エクスポート",
+        "requests": "リクエスト",
+        "tokens": "トークン",
+        "characters": "文字数",
         "estCost": "推定コスト",
-        "prompt": "Prompt",
-        "completion": "Completion",
+        "prompt": "プロンプト",
+        "completion": "完了",
         "showingCurrentProject": "表示中: 現在のプロジェクト",
         "showingAllHistory": "表示中: すべての履歴",
         "filesSkipped": "一部のファイルが見つからなかったため、スキップされました。"
@@ -1508,7 +1509,9 @@
             "removed": "削除済み",
             "modified": "修正済み",
             "noMatches": "現在のフィルタに一致するエントリはありません",
-            "clickToggle": "上のバッジをクリックしてフィルタを切り替えます"
+            "clickToggle": "上のバッジをクリックしてフィルタを切り替えます",
+            "clickToHide": "(クリックで非表示)",
+            "clickToShow": "(クリックで表示)"
         }
     },
     "grid": {

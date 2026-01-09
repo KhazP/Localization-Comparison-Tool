@@ -2431,7 +2431,7 @@ class _FilterBadge extends StatelessWidget {
 
     return Tooltip(
       message:
-          '$label: $count${isActive ? ' (click to hide)' : ' (click to show)'}',
+          '$label: $count${isActive ? ' ${context.t.dialogs.diffViewer.clickToHide}' : ' ${context.t.dialogs.diffViewer.clickToShow}'}',
       child: Material(
         color: Colors.transparent,
         child: InkWell(

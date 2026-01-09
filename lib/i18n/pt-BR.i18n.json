@@ -1429,6 +1429,7 @@
         "added": "Adicionado",
         "change": "Alteração",
         "totalScope": "Escopo Total",
+        "wordsCount": "${count} palavras",
         "scopeGrowth": "Crescimento do Escopo",
         "range": "Intervalo",
         "aiUsage": "Uso de IA & Tradução",
@@ -1453,12 +1454,12 @@
         "exportDialogTitle": "Exportar Relatório de Qualidade",
         "reportSaved": "Relatório salvo",
         "export": "Exportar",
-        "requests": "Requests",
+        "requests": "Requisições",
         "tokens": "Tokens",
-        "characters": "Characters",
+        "characters": "Caracteres",
         "estCost": "Custo Est.",
         "prompt": "Prompt",
-        "completion": "Completion",
+        "completion": "Conclusão",
         "showingCurrentProject": "Mostrando: Projeto Atual",
         "showingAllHistory": "Mostrando: Todo o Histórico",
         "filesSkipped": "Alguns arquivos foram ignorados porque não foram encontrados."
@@ -1508,7 +1509,9 @@
             "removed": "Removido",
             "modified": "Modificado",
             "noMatches": "Nenhuma entrada corresponde aos filtros atuais",
-            "clickToggle": "Clique nos badges acima para alternar os filtros"
+            "clickToggle": "Clique nos badges acima para alternar os filtros",
+            "clickToHide": "(clique para ocultar)",
+            "clickToShow": "(clique para mostrar)"
         }
     },
     "grid": {

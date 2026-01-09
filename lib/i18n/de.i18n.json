@@ -1429,6 +1429,7 @@
         "added": "Hinzugefügt",
         "change": "Änderung",
         "totalScope": "Gesamtumfang",
+        "wordsCount": "${count} Wörter",
         "scopeGrowth": "Umfangswachstum",
         "range": "Bereich",
         "aiUsage": "KI & Übersetzungsnutzung",
@@ -1454,11 +1455,11 @@
         "reportSaved": "Bericht gespeichert",
         "export": "Exportieren",
         "requests": "Anfragen",
-        "tokens": "Tokens",
+        "tokens": "Token",
         "characters": "Zeichen",
         "estCost": "Gesch. Kosten",
         "prompt": "Prompt",
-        "completion": "Completion",
+        "completion": "Vervollständigung",
         "showingCurrentProject": "Zeige: Aktuelles Projekt",
         "showingAllHistory": "Zeige: Gesamten Verlauf",
         "filesSkipped": "Einige Dateien wurden übersprungen, da sie nicht gefunden wurden."
@@ -1508,7 +1509,9 @@
             "removed": "Entfernt",
             "modified": "Geändert",
             "noMatches": "Keine Einträge entsprechen den aktuellen Filtern",
-            "clickToggle": "Klicken Sie auf die Badges oben, um Filter umzuschalten"
+            "clickToggle": "Klicken Sie auf die Badges oben, um Filter umzuschalten",
+            "clickToHide": "(klicken zum Ausblenden)",
+            "clickToShow": "(klicken zum Anzeigen)"
         }
     },
     "grid": {

@@ -1429,6 +1429,7 @@
         "added": "Added",
         "change": "Change",
         "totalScope": "Total Scope",
+        "wordsCount": "${count} words",
         "scopeGrowth": "Scope Growth",
         "range": "Range",
         "aiUsage": "AI & Translation Usage",
@@ -1508,7 +1509,9 @@
             "removed": "Removed",
             "modified": "Modified",
             "noMatches": "No entries match the current filters",
-            "clickToggle": "Click the badges above to toggle filters"
+            "clickToggle": "Click the badges above to toggle filters",
+            "clickToHide": "(click to hide)",
+            "clickToShow": "(click to show)"
         }
     },
     "grid": {

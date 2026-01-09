@@ -1429,6 +1429,7 @@
         "added": "추가됨",
         "change": "변경",
         "totalScope": "총 범위",
+        "wordsCount": "${count}단어",
         "scopeGrowth": "범위 증가",
         "range": "범위",
         "aiUsage": "AI & 번역 사용량",
@@ -1452,13 +1453,13 @@
         "exportFailed": "내보내기 실패",
         "exportDialogTitle": "품질 보고서 내보내기",
         "reportSaved": "보고서 저장됨",
-        "export": "Export",
-        "requests": "Requests",
-        "tokens": "Tokens",
-        "characters": "Characters",
-        "estCost": "Est. Cost",
-        "prompt": "Prompt",
-        "completion": "Completion",
+        "export": "내보내기",
+        "requests": "요청",
+        "tokens": "토큰",
+        "characters": "문자",
+        "estCost": "예상 비용",
+        "prompt": "프롬프트",
+        "completion": "완료",
         "showingCurrentProject": "표시 중: 현재 프로젝트",
         "showingAllHistory": "표시 중: 모든 기록",
         "filesSkipped": "일부 파일을 찾을 수 없어 건너뛰었습니다."
@@ -1508,7 +1509,9 @@
             "removed": "제거됨",
             "modified": "수정됨",
             "noMatches": "현재 필터와 일치하는 항목 없음",
-            "clickToggle": "필터를 전환하려면 위 배지를 클릭하세요"
+            "clickToggle": "필터를 전환하려면 위 배지를 클릭하세요",
+            "clickToHide": "(클릭하여 숨김)",
+            "clickToShow": "(클릭하여 표시)"
         }
     },
     "grid": {

@@ -1611,7 +1611,8 @@ class _WordTrendChart extends StatelessWidget {
                 final dateLabel = tooltipDateFormat.format(point.timestamp);
                 final valueLabel = showCoverage
                     ? '${point.coveragePercent.toStringAsFixed(1)}%'
-                    : '${_formatCompactNumber(point.words)} words';
+                    : context.t.quality
+                        .wordsCount(count: _formatCompactNumber(point.words));
                 return LineTooltipItem(
                   '$dateLabel\n$valueLabel',
                   tooltipStyle ??

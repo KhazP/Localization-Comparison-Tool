@@ -1462,7 +1462,12 @@
         "completion": "Vervollständigung",
         "showingCurrentProject": "Zeige: Aktuelles Projekt",
         "showingAllHistory": "Zeige: Gesamten Verlauf",
-        "filesSkipped": "Einige Dateien wurden übersprungen, da sie nicht gefunden wurden."
+        "filesSkipped": "Einige Dateien wurden übersprungen, da sie nicht gefunden wurden.",
+        "charCount": {
+            "one": "1 Zeichen",
+            "other": "${count} Zeichen"
+        },
+        "lengthDiff": "Ziel ist ${target} (${percent}%) vs Quelle ${source}"
     },
     "errors": {
         "genericError": "Ein Fehler ist aufgetreten",

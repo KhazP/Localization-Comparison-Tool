@@ -11,8 +11,9 @@ import 'package:slang/generated.dart';
 import 'strings.g.dart';
 
 // Path: <root>
-class TranslationsEs extends Translations
-    with BaseTranslations<AppLocale, Translations> {
+class TranslationsEs
+    with BaseTranslations<AppLocale, Translations>
+    implements Translations {
   /// You can call this constructor and build your own translation instance of this locale.
   /// Constructing via the enum [AppLocale.build] is preferred.
   TranslationsEs(
@@ -28,12 +29,7 @@ class TranslationsEs extends Translations
               overrides: overrides ?? {},
               cardinalResolver: cardinalResolver,
               ordinalResolver: ordinalResolver,
-            ),
-        super(
-            cardinalResolver: cardinalResolver,
-            ordinalResolver: ordinalResolver) {
-    super.$meta.setFlatMapFunction(
-        $meta.getTranslation); // copy base translations to super.$meta
+            ) {
     $meta.setFlatMapFunction(_flatMapFunction);
   }
 
@@ -43,8 +39,7 @@ class TranslationsEs extends Translations
 
   /// Access flat map
   @override
-  dynamic operator [](String key) =>
-      $meta.getTranslation(key) ?? super.$meta.getTranslation(key);
+  dynamic operator [](String key) => $meta.getTranslation(key);
 
   late final TranslationsEs _root = this; // ignore: unused_field
 
@@ -130,10 +125,8 @@ class TranslationsEs extends Translations
 }
 
 // Path: app
-class _TranslationsAppEs extends TranslationsAppEn {
-  _TranslationsAppEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsAppEs implements TranslationsAppEn {
+  _TranslationsAppEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -145,10 +138,8 @@ class _TranslationsAppEs extends TranslationsAppEn {
 }
 
 // Path: common
-class _TranslationsCommonEs extends TranslationsCommonEn {
-  _TranslationsCommonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsCommonEs implements TranslationsCommonEn {
+  _TranslationsCommonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -252,10 +243,8 @@ class _TranslationsCommonEs extends TranslationsCommonEn {
 }
 
 // Path: menu
-class _TranslationsMenuEs extends TranslationsMenuEn {
-  _TranslationsMenuEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsMenuEs implements TranslationsMenuEn {
+  _TranslationsMenuEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -299,10 +288,8 @@ class _TranslationsMenuEs extends TranslationsMenuEn {
 }
 
 // Path: nav
-class _TranslationsNavEs extends TranslationsNavEn {
-  _TranslationsNavEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsNavEs implements TranslationsNavEn {
+  _TranslationsNavEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -336,10 +323,8 @@ class _TranslationsNavEs extends TranslationsNavEn {
 }
 
 // Path: settings
-class _TranslationsSettingsEs extends TranslationsSettingsEn {
-  _TranslationsSettingsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSettingsEs implements TranslationsSettingsEn {
+  _TranslationsSettingsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -394,10 +379,8 @@ class _TranslationsSettingsEs extends TranslationsSettingsEn {
 }
 
 // Path: fileComparison
-class _TranslationsFileComparisonEs extends TranslationsFileComparisonEn {
-  _TranslationsFileComparisonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsFileComparisonEs implements TranslationsFileComparisonEn {
+  _TranslationsFileComparisonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -557,10 +540,8 @@ class _TranslationsFileComparisonEs extends TranslationsFileComparisonEn {
 
 // Path: directoryComparison
 class _TranslationsDirectoryComparisonEs
-    extends TranslationsDirectoryComparisonEn {
-  _TranslationsDirectoryComparisonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsDirectoryComparisonEn {
+  _TranslationsDirectoryComparisonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -666,10 +647,8 @@ class _TranslationsDirectoryComparisonEs
 }
 
 // Path: gitComparison
-class _TranslationsGitComparisonEs extends TranslationsGitComparisonEn {
-  _TranslationsGitComparisonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsGitComparisonEs implements TranslationsGitComparisonEn {
+  _TranslationsGitComparisonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -786,10 +765,8 @@ class _TranslationsGitComparisonEs extends TranslationsGitComparisonEn {
 
 // Path: advancedComparison
 class _TranslationsAdvancedComparisonEs
-    extends TranslationsAdvancedComparisonEn {
-  _TranslationsAdvancedComparisonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedComparisonEn {
+  _TranslationsAdvancedComparisonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -799,10 +776,8 @@ class _TranslationsAdvancedComparisonEs
 }
 
 // Path: advancedDiff
-class _TranslationsAdvancedDiffEs extends TranslationsAdvancedDiffEn {
-  _TranslationsAdvancedDiffEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsAdvancedDiffEs implements TranslationsAdvancedDiffEn {
+  _TranslationsAdvancedDiffEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -860,10 +835,8 @@ class _TranslationsAdvancedDiffEs extends TranslationsAdvancedDiffEn {
 }
 
 // Path: issueDetails
-class _TranslationsIssueDetailsEs extends TranslationsIssueDetailsEn {
-  _TranslationsIssueDetailsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsIssueDetailsEs implements TranslationsIssueDetailsEn {
+  _TranslationsIssueDetailsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -912,10 +885,8 @@ class _TranslationsIssueDetailsEs extends TranslationsIssueDetailsEn {
 }
 
 // Path: importReview
-class _TranslationsImportReviewEs extends TranslationsImportReviewEn {
-  _TranslationsImportReviewEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsImportReviewEs implements TranslationsImportReviewEn {
+  _TranslationsImportReviewEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -942,10 +913,8 @@ class _TranslationsImportReviewEs extends TranslationsImportReviewEn {
 }
 
 // Path: historyView
-class _TranslationsHistoryViewEs extends TranslationsHistoryViewEn {
-  _TranslationsHistoryViewEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsHistoryViewEs implements TranslationsHistoryViewEn {
+  _TranslationsHistoryViewEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1045,10 +1014,8 @@ class _TranslationsHistoryViewEs extends TranslationsHistoryViewEn {
 }
 
 // Path: compare
-class _TranslationsCompareEs extends TranslationsCompareEn {
-  _TranslationsCompareEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsCompareEs implements TranslationsCompareEn {
+  _TranslationsCompareEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1092,10 +1059,8 @@ class _TranslationsCompareEs extends TranslationsCompareEn {
 }
 
 // Path: history
-class _TranslationsHistoryEs extends TranslationsHistoryEn {
-  _TranslationsHistoryEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsHistoryEs implements TranslationsHistoryEn {
+  _TranslationsHistoryEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1124,10 +1089,8 @@ class _TranslationsHistoryEs extends TranslationsHistoryEn {
 }
 
 // Path: projects
-class _TranslationsProjectsEs extends TranslationsProjectsEn {
-  _TranslationsProjectsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsProjectsEs implements TranslationsProjectsEn {
+  _TranslationsProjectsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1225,10 +1188,8 @@ class _TranslationsProjectsEs extends TranslationsProjectsEn {
 }
 
 // Path: diff
-class _TranslationsDiffEs extends TranslationsDiffEn {
-  _TranslationsDiffEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsDiffEs implements TranslationsDiffEn {
+  _TranslationsDiffEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1266,10 +1227,8 @@ class _TranslationsDiffEs extends TranslationsDiffEn {
 }
 
 // Path: git
-class _TranslationsGitEs extends TranslationsGitEn {
-  _TranslationsGitEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsGitEs implements TranslationsGitEn {
+  _TranslationsGitEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1307,10 +1266,8 @@ class _TranslationsGitEs extends TranslationsGitEn {
 }
 
 // Path: quality
-class _TranslationsQualityEs extends TranslationsQualityEn {
-  _TranslationsQualityEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsQualityEs implements TranslationsQualityEn {
+  _TranslationsQualityEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1478,13 +1435,24 @@ class _TranslationsQualityEs extends TranslationsQualityEn {
   @override
   String get filesSkipped =>
       'Algunos archivos se saltaron porque no se encontraron.';
+  @override
+  String charCount({required num n, required Object count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+        n,
+        one: '1 carácter',
+        other: '${count} caracteres',
+      );
+  @override
+  String lengthDiff(
+          {required Object target,
+          required Object percent,
+          required Object source}) =>
+      'Objetivo es ${target} (${percent}%) vs fuente ${source}';
 }
 
 // Path: errors
-class _TranslationsErrorsEs extends TranslationsErrorsEn {
-  _TranslationsErrorsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsErrorsEs implements TranslationsErrorsEn {
+  _TranslationsErrorsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1506,10 +1474,8 @@ class _TranslationsErrorsEs extends TranslationsErrorsEn {
 }
 
 // Path: wizards
-class _TranslationsWizardsEs extends TranslationsWizardsEn {
-  _TranslationsWizardsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsWizardsEs implements TranslationsWizardsEn {
+  _TranslationsWizardsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1520,10 +1486,8 @@ class _TranslationsWizardsEs extends TranslationsWizardsEn {
 }
 
 // Path: dialogs
-class _TranslationsDialogsEs extends TranslationsDialogsEn {
-  _TranslationsDialogsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsDialogsEs implements TranslationsDialogsEn {
+  _TranslationsDialogsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1537,10 +1501,8 @@ class _TranslationsDialogsEs extends TranslationsDialogsEn {
 }
 
 // Path: grid
-class _TranslationsGridEs extends TranslationsGridEn {
-  _TranslationsGridEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsGridEs implements TranslationsGridEn {
+  _TranslationsGridEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1551,10 +1513,8 @@ class _TranslationsGridEs extends TranslationsGridEn {
 }
 
 // Path: tutorial
-class _TranslationsTutorialEs extends TranslationsTutorialEn {
-  _TranslationsTutorialEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsTutorialEs implements TranslationsTutorialEn {
+  _TranslationsTutorialEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1583,10 +1543,8 @@ class _TranslationsTutorialEs extends TranslationsTutorialEn {
 }
 
 // Path: friendlyErrors
-class _TranslationsFriendlyErrorsEs extends TranslationsFriendlyErrorsEn {
-  _TranslationsFriendlyErrorsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsFriendlyErrorsEs implements TranslationsFriendlyErrorsEn {
+  _TranslationsFriendlyErrorsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1644,10 +1602,8 @@ class _TranslationsFriendlyErrorsEs extends TranslationsFriendlyErrorsEn {
 }
 
 // Path: systemTray
-class _TranslationsSystemTrayEs extends TranslationsSystemTrayEn {
-  _TranslationsSystemTrayEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSystemTrayEs implements TranslationsSystemTrayEn {
+  _TranslationsSystemTrayEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1659,10 +1615,8 @@ class _TranslationsSystemTrayEs extends TranslationsSystemTrayEn {
 }
 
 // Path: validation
-class _TranslationsValidationEs extends TranslationsValidationEn {
-  _TranslationsValidationEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsValidationEs implements TranslationsValidationEn {
+  _TranslationsValidationEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1694,10 +1648,8 @@ class _TranslationsValidationEs extends TranslationsValidationEn {
 }
 
 // Path: status
-class _TranslationsStatusEs extends TranslationsStatusEn {
-  _TranslationsStatusEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsStatusEs implements TranslationsStatusEn {
+  _TranslationsStatusEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1717,10 +1669,8 @@ class _TranslationsStatusEs extends TranslationsStatusEn {
 }
 
 // Path: aiServices
-class _TranslationsAiServicesEs extends TranslationsAiServicesEn {
-  _TranslationsAiServicesEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsAiServicesEs implements TranslationsAiServicesEn {
+  _TranslationsAiServicesEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1739,10 +1689,8 @@ class _TranslationsAiServicesEs extends TranslationsAiServicesEn {
 
 // Path: settings.appearance
 class _TranslationsSettingsAppearanceEs
-    extends TranslationsSettingsAppearanceEn {
-  _TranslationsSettingsAppearanceEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsAppearanceEn {
+  _TranslationsSettingsAppearanceEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1804,10 +1752,8 @@ class _TranslationsSettingsAppearanceEs
 }
 
 // Path: settings.general
-class _TranslationsSettingsGeneralEs extends TranslationsSettingsGeneralEn {
-  _TranslationsSettingsGeneralEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSettingsGeneralEs implements TranslationsSettingsGeneralEn {
+  _TranslationsSettingsGeneralEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1863,10 +1809,8 @@ class _TranslationsSettingsGeneralEs extends TranslationsSettingsGeneralEn {
 }
 
 // Path: settings.scope
-class _TranslationsSettingsScopeEs extends TranslationsSettingsScopeEn {
-  _TranslationsSettingsScopeEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSettingsScopeEs implements TranslationsSettingsScopeEn {
+  _TranslationsSettingsScopeEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1895,10 +1839,8 @@ class _TranslationsSettingsScopeEs extends TranslationsSettingsScopeEn {
 
 // Path: settings.searchKeywords
 class _TranslationsSettingsSearchKeywordsEs
-    extends TranslationsSettingsSearchKeywordsEn {
-  _TranslationsSettingsSearchKeywordsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsSearchKeywordsEn {
+  _TranslationsSettingsSearchKeywordsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -1998,10 +1940,8 @@ class _TranslationsSettingsSearchKeywordsEs
 
 // Path: settings.comparison
 class _TranslationsSettingsComparisonEs
-    extends TranslationsSettingsComparisonEn {
-  _TranslationsSettingsComparisonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsComparisonEn {
+  _TranslationsSettingsComparisonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2073,10 +2013,8 @@ class _TranslationsSettingsComparisonEs
 
 // Path: settings.fileHandling
 class _TranslationsSettingsFileHandlingEs
-    extends TranslationsSettingsFileHandlingEn {
-  _TranslationsSettingsFileHandlingEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsFileHandlingEn {
+  _TranslationsSettingsFileHandlingEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2121,10 +2059,8 @@ class _TranslationsSettingsFileHandlingEs
 
 // Path: settings.translationMemory
 class _TranslationsSettingsTranslationMemoryEs
-    extends TranslationsSettingsTranslationMemoryEn {
-  _TranslationsSettingsTranslationMemoryEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsTranslationMemoryEn {
+  _TranslationsSettingsTranslationMemoryEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2178,10 +2114,8 @@ class _TranslationsSettingsTranslationMemoryEs
 }
 
 // Path: settings.backup
-class _TranslationsSettingsBackupEs extends TranslationsSettingsBackupEn {
-  _TranslationsSettingsBackupEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSettingsBackupEs implements TranslationsSettingsBackupEn {
+  _TranslationsSettingsBackupEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2211,10 +2145,8 @@ class _TranslationsSettingsBackupEs extends TranslationsSettingsBackupEn {
 }
 
 // Path: settings.ai
-class _TranslationsSettingsAiEs extends TranslationsSettingsAiEn {
-  _TranslationsSettingsAiEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSettingsAiEs implements TranslationsSettingsAiEn {
+  _TranslationsSettingsAiEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2321,10 +2253,8 @@ class _TranslationsSettingsAiEs extends TranslationsSettingsAiEn {
 
 // Path: settings.integrations
 class _TranslationsSettingsIntegrationsEs
-    extends TranslationsSettingsIntegrationsEn {
-  _TranslationsSettingsIntegrationsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsIntegrationsEn {
+  _TranslationsSettingsIntegrationsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2420,10 +2350,9 @@ class _TranslationsSettingsIntegrationsEs
 }
 
 // Path: settings.developer
-class _TranslationsSettingsDeveloperEs extends TranslationsSettingsDeveloperEn {
-  _TranslationsSettingsDeveloperEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSettingsDeveloperEs
+    implements TranslationsSettingsDeveloperEn {
+  _TranslationsSettingsDeveloperEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2576,10 +2505,8 @@ class _TranslationsSettingsDeveloperEs extends TranslationsSettingsDeveloperEn {
 }
 
 // Path: settings.about
-class _TranslationsSettingsAboutEs extends TranslationsSettingsAboutEn {
-  _TranslationsSettingsAboutEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsSettingsAboutEs implements TranslationsSettingsAboutEn {
+  _TranslationsSettingsAboutEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2668,10 +2595,8 @@ class _TranslationsSettingsAboutEs extends TranslationsSettingsAboutEn {
 
 // Path: settings.onboarding
 class _TranslationsSettingsOnboardingEs
-    extends TranslationsSettingsOnboardingEn {
-  _TranslationsSettingsOnboardingEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingEn {
+  _TranslationsSettingsOnboardingEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2692,10 +2617,8 @@ class _TranslationsSettingsOnboardingEs
 
 // Path: settings.settingsView
 class _TranslationsSettingsSettingsViewEs
-    extends TranslationsSettingsSettingsViewEn {
-  _TranslationsSettingsSettingsViewEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsSettingsViewEn {
+  _TranslationsSettingsSettingsViewEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2760,10 +2683,8 @@ class _TranslationsSettingsSettingsViewEs
 
 // Path: advancedDiff.aiSuggestion
 class _TranslationsAdvancedDiffAiSuggestionEs
-    extends TranslationsAdvancedDiffAiSuggestionEn {
-  _TranslationsAdvancedDiffAiSuggestionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffAiSuggestionEn {
+  _TranslationsAdvancedDiffAiSuggestionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2796,10 +2717,8 @@ class _TranslationsAdvancedDiffAiSuggestionEs
 
 // Path: advancedDiff.detailEdit
 class _TranslationsAdvancedDiffDetailEditEs
-    extends TranslationsAdvancedDiffDetailEditEn {
-  _TranslationsAdvancedDiffDetailEditEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffDetailEditEn {
+  _TranslationsAdvancedDiffDetailEditEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2827,10 +2746,9 @@ class _TranslationsAdvancedDiffDetailEditEs
 }
 
 // Path: advancedDiff.table
-class _TranslationsAdvancedDiffTableEs extends TranslationsAdvancedDiffTableEn {
-  _TranslationsAdvancedDiffTableEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsAdvancedDiffTableEs
+    implements TranslationsAdvancedDiffTableEn {
+  _TranslationsAdvancedDiffTableEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2920,10 +2838,8 @@ class _TranslationsAdvancedDiffTableEs extends TranslationsAdvancedDiffTableEn {
 
 // Path: advancedDiff.diffRow
 class _TranslationsAdvancedDiffDiffRowEs
-    extends TranslationsAdvancedDiffDiffRowEn {
-  _TranslationsAdvancedDiffDiffRowEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffDiffRowEn {
+  _TranslationsAdvancedDiffDiffRowEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2936,10 +2852,8 @@ class _TranslationsAdvancedDiffDiffRowEs
 
 // Path: advancedDiff.status
 class _TranslationsAdvancedDiffStatusEs
-    extends TranslationsAdvancedDiffStatusEn {
-  _TranslationsAdvancedDiffStatusEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffStatusEn {
+  _TranslationsAdvancedDiffStatusEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -2956,10 +2870,8 @@ class _TranslationsAdvancedDiffStatusEs
 
 // Path: advancedDiff.sidebar
 class _TranslationsAdvancedDiffSidebarEs
-    extends TranslationsAdvancedDiffSidebarEn {
-  _TranslationsAdvancedDiffSidebarEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffSidebarEn {
+  _TranslationsAdvancedDiffSidebarEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3009,10 +2921,8 @@ class _TranslationsAdvancedDiffSidebarEs
 
 // Path: issueDetails.duplicateValue
 class _TranslationsIssueDetailsDuplicateValueEs
-    extends TranslationsIssueDetailsDuplicateValueEn {
-  _TranslationsIssueDetailsDuplicateValueEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsIssueDetailsDuplicateValueEn {
+  _TranslationsIssueDetailsDuplicateValueEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3032,10 +2942,8 @@ class _TranslationsIssueDetailsDuplicateValueEs
 
 // Path: issueDetails.lengthOutlier
 class _TranslationsIssueDetailsLengthOutlierEs
-    extends TranslationsIssueDetailsLengthOutlierEn {
-  _TranslationsIssueDetailsLengthOutlierEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsIssueDetailsLengthOutlierEn {
+  _TranslationsIssueDetailsLengthOutlierEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3050,10 +2958,8 @@ class _TranslationsIssueDetailsLengthOutlierEs
 
 // Path: issueDetails.standard
 class _TranslationsIssueDetailsStandardEs
-    extends TranslationsIssueDetailsStandardEn {
-  _TranslationsIssueDetailsStandardEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsIssueDetailsStandardEn {
+  _TranslationsIssueDetailsStandardEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3071,10 +2977,9 @@ class _TranslationsIssueDetailsStandardEs
 }
 
 // Path: issueDetails.types
-class _TranslationsIssueDetailsTypesEs extends TranslationsIssueDetailsTypesEn {
-  _TranslationsIssueDetailsTypesEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsIssueDetailsTypesEs
+    implements TranslationsIssueDetailsTypesEn {
+  _TranslationsIssueDetailsTypesEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3088,10 +2993,9 @@ class _TranslationsIssueDetailsTypesEs extends TranslationsIssueDetailsTypesEn {
 }
 
 // Path: issueDetails.notes
-class _TranslationsIssueDetailsNotesEs extends TranslationsIssueDetailsNotesEn {
-  _TranslationsIssueDetailsNotesEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsIssueDetailsNotesEs
+    implements TranslationsIssueDetailsNotesEn {
+  _TranslationsIssueDetailsNotesEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3109,10 +3013,8 @@ class _TranslationsIssueDetailsNotesEs extends TranslationsIssueDetailsNotesEn {
 
 // Path: issueDetails.fallbacks
 class _TranslationsIssueDetailsFallbacksEs
-    extends TranslationsIssueDetailsFallbacksEn {
-  _TranslationsIssueDetailsFallbacksEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsIssueDetailsFallbacksEn {
+  _TranslationsIssueDetailsFallbacksEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3129,10 +3031,8 @@ class _TranslationsIssueDetailsFallbacksEs
 }
 
 // Path: compare.tabs
-class _TranslationsCompareTabsEs extends TranslationsCompareTabsEn {
-  _TranslationsCompareTabsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsCompareTabsEs implements TranslationsCompareTabsEn {
+  _TranslationsCompareTabsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3146,10 +3046,9 @@ class _TranslationsCompareTabsEs extends TranslationsCompareTabsEn {
 }
 
 // Path: compare.fileTypes
-class _TranslationsCompareFileTypesEs extends TranslationsCompareFileTypesEn {
-  _TranslationsCompareFileTypesEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsCompareFileTypesEs
+    implements TranslationsCompareFileTypesEn {
+  _TranslationsCompareFileTypesEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3169,10 +3068,8 @@ class _TranslationsCompareFileTypesEs extends TranslationsCompareFileTypesEn {
 }
 
 // Path: history.timeAgo
-class _TranslationsHistoryTimeAgoEs extends TranslationsHistoryTimeAgoEn {
-  _TranslationsHistoryTimeAgoEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsHistoryTimeAgoEs implements TranslationsHistoryTimeAgoEn {
+  _TranslationsHistoryTimeAgoEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3210,10 +3107,8 @@ class _TranslationsHistoryTimeAgoEs extends TranslationsHistoryTimeAgoEn {
 }
 
 // Path: projects.stats
-class _TranslationsProjectsStatsEs extends TranslationsProjectsStatsEn {
-  _TranslationsProjectsStatsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsProjectsStatsEs implements TranslationsProjectsStatsEn {
+  _TranslationsProjectsStatsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3237,10 +3132,9 @@ class _TranslationsProjectsStatsEs extends TranslationsProjectsStatsEn {
 }
 
 // Path: projects.selection
-class _TranslationsProjectsSelectionEs extends TranslationsProjectsSelectionEn {
-  _TranslationsProjectsSelectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsProjectsSelectionEs
+    implements TranslationsProjectsSelectionEn {
+  _TranslationsProjectsSelectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3261,10 +3155,8 @@ class _TranslationsProjectsSelectionEs extends TranslationsProjectsSelectionEn {
 
 // Path: projects.createDialog
 class _TranslationsProjectsCreateDialogEs
-    extends TranslationsProjectsCreateDialogEn {
-  _TranslationsProjectsCreateDialogEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsProjectsCreateDialogEn {
+  _TranslationsProjectsCreateDialogEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3301,10 +3193,9 @@ class _TranslationsProjectsCreateDialogEs
 }
 
 // Path: projects.indicator
-class _TranslationsProjectsIndicatorEs extends TranslationsProjectsIndicatorEn {
-  _TranslationsProjectsIndicatorEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsProjectsIndicatorEs
+    implements TranslationsProjectsIndicatorEn {
+  _TranslationsProjectsIndicatorEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3326,10 +3217,9 @@ class _TranslationsProjectsIndicatorEs extends TranslationsProjectsIndicatorEn {
 }
 
 // Path: projects.glossary
-class _TranslationsProjectsGlossaryEs extends TranslationsProjectsGlossaryEn {
-  _TranslationsProjectsGlossaryEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsProjectsGlossaryEs
+    implements TranslationsProjectsGlossaryEn {
+  _TranslationsProjectsGlossaryEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3372,10 +3262,9 @@ class _TranslationsProjectsGlossaryEs extends TranslationsProjectsGlossaryEn {
 }
 
 // Path: projects.conflicts
-class _TranslationsProjectsConflictsEs extends TranslationsProjectsConflictsEn {
-  _TranslationsProjectsConflictsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsProjectsConflictsEs
+    implements TranslationsProjectsConflictsEn {
+  _TranslationsProjectsConflictsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3391,10 +3280,8 @@ class _TranslationsProjectsConflictsEs extends TranslationsProjectsConflictsEn {
 }
 
 // Path: projects.tm
-class _TranslationsProjectsTmEs extends TranslationsProjectsTmEn {
-  _TranslationsProjectsTmEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsProjectsTmEs implements TranslationsProjectsTmEn {
+  _TranslationsProjectsTmEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3425,10 +3312,8 @@ class _TranslationsProjectsTmEs extends TranslationsProjectsTmEn {
 }
 
 // Path: git.conflicts
-class _TranslationsGitConflictsEs extends TranslationsGitConflictsEn {
-  _TranslationsGitConflictsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsGitConflictsEs implements TranslationsGitConflictsEn {
+  _TranslationsGitConflictsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3481,10 +3366,8 @@ class _TranslationsGitConflictsEs extends TranslationsGitConflictsEn {
 }
 
 // Path: wizards.firstRun
-class _TranslationsWizardsFirstRunEs extends TranslationsWizardsFirstRunEn {
-  _TranslationsWizardsFirstRunEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsWizardsFirstRunEs implements TranslationsWizardsFirstRunEn {
+  _TranslationsWizardsFirstRunEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3512,10 +3395,8 @@ class _TranslationsWizardsFirstRunEs extends TranslationsWizardsFirstRunEn {
 
 // Path: dialogs.addIgnorePattern
 class _TranslationsDialogsAddIgnorePatternEs
-    extends TranslationsDialogsAddIgnorePatternEn {
-  _TranslationsDialogsAddIgnorePatternEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsDialogsAddIgnorePatternEn {
+  _TranslationsDialogsAddIgnorePatternEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3543,10 +3424,9 @@ class _TranslationsDialogsAddIgnorePatternEs
 }
 
 // Path: dialogs.diffViewer
-class _TranslationsDialogsDiffViewerEs extends TranslationsDialogsDiffViewerEn {
-  _TranslationsDialogsDiffViewerEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsDialogsDiffViewerEs
+    implements TranslationsDialogsDiffViewerEn {
+  _TranslationsDialogsDiffViewerEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3579,10 +3459,8 @@ class _TranslationsDialogsDiffViewerEs extends TranslationsDialogsDiffViewerEn {
 }
 
 // Path: grid.columns
-class _TranslationsGridColumnsEs extends TranslationsGridColumnsEn {
-  _TranslationsGridColumnsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsGridColumnsEs implements TranslationsGridColumnsEn {
+  _TranslationsGridColumnsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3598,10 +3476,8 @@ class _TranslationsGridColumnsEs extends TranslationsGridColumnsEn {
 }
 
 // Path: tutorial.steps
-class _TranslationsTutorialStepsEs extends TranslationsTutorialStepsEn {
-  _TranslationsTutorialStepsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+class _TranslationsTutorialStepsEs implements TranslationsTutorialStepsEn {
+  _TranslationsTutorialStepsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3631,10 +3507,8 @@ class _TranslationsTutorialStepsEs extends TranslationsTutorialStepsEn {
 
 // Path: friendlyErrors.fileNotFound
 class _TranslationsFriendlyErrorsFileNotFoundEs
-    extends TranslationsFriendlyErrorsFileNotFoundEn {
-  _TranslationsFriendlyErrorsFileNotFoundEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsFileNotFoundEn {
+  _TranslationsFriendlyErrorsFileNotFoundEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3647,10 +3521,8 @@ class _TranslationsFriendlyErrorsFileNotFoundEs
 
 // Path: friendlyErrors.accessDenied
 class _TranslationsFriendlyErrorsAccessDeniedEs
-    extends TranslationsFriendlyErrorsAccessDeniedEn {
-  _TranslationsFriendlyErrorsAccessDeniedEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsAccessDeniedEn {
+  _TranslationsFriendlyErrorsAccessDeniedEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3664,10 +3536,8 @@ class _TranslationsFriendlyErrorsAccessDeniedEs
 
 // Path: friendlyErrors.isDirectory
 class _TranslationsFriendlyErrorsIsDirectoryEs
-    extends TranslationsFriendlyErrorsIsDirectoryEn {
-  _TranslationsFriendlyErrorsIsDirectoryEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsIsDirectoryEn {
+  _TranslationsFriendlyErrorsIsDirectoryEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3680,10 +3550,8 @@ class _TranslationsFriendlyErrorsIsDirectoryEs
 
 // Path: friendlyErrors.fileAccess
 class _TranslationsFriendlyErrorsFileAccessEs
-    extends TranslationsFriendlyErrorsFileAccessEn {
-  _TranslationsFriendlyErrorsFileAccessEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsFileAccessEn {
+  _TranslationsFriendlyErrorsFileAccessEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3697,10 +3565,8 @@ class _TranslationsFriendlyErrorsFileAccessEs
 
 // Path: friendlyErrors.unsupportedFormat
 class _TranslationsFriendlyErrorsUnsupportedFormatEs
-    extends TranslationsFriendlyErrorsUnsupportedFormatEn {
-  _TranslationsFriendlyErrorsUnsupportedFormatEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsUnsupportedFormatEn {
+  _TranslationsFriendlyErrorsUnsupportedFormatEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3714,10 +3580,8 @@ class _TranslationsFriendlyErrorsUnsupportedFormatEs
 
 // Path: friendlyErrors.networkError
 class _TranslationsFriendlyErrorsNetworkErrorEs
-    extends TranslationsFriendlyErrorsNetworkErrorEn {
-  _TranslationsFriendlyErrorsNetworkErrorEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsNetworkErrorEn {
+  _TranslationsFriendlyErrorsNetworkErrorEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3731,10 +3595,8 @@ class _TranslationsFriendlyErrorsNetworkErrorEs
 
 // Path: friendlyErrors.notGitRepo
 class _TranslationsFriendlyErrorsNotGitRepoEs
-    extends TranslationsFriendlyErrorsNotGitRepoEn {
-  _TranslationsFriendlyErrorsNotGitRepoEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsNotGitRepoEn {
+  _TranslationsFriendlyErrorsNotGitRepoEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3748,10 +3610,8 @@ class _TranslationsFriendlyErrorsNotGitRepoEs
 
 // Path: friendlyErrors.mergeConflict
 class _TranslationsFriendlyErrorsMergeConflictEs
-    extends TranslationsFriendlyErrorsMergeConflictEn {
-  _TranslationsFriendlyErrorsMergeConflictEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsMergeConflictEn {
+  _TranslationsFriendlyErrorsMergeConflictEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3764,10 +3624,8 @@ class _TranslationsFriendlyErrorsMergeConflictEs
 
 // Path: friendlyErrors.gitAuthFailed
 class _TranslationsFriendlyErrorsGitAuthFailedEs
-    extends TranslationsFriendlyErrorsGitAuthFailedEn {
-  _TranslationsFriendlyErrorsGitAuthFailedEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsGitAuthFailedEn {
+  _TranslationsFriendlyErrorsGitAuthFailedEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3781,10 +3639,8 @@ class _TranslationsFriendlyErrorsGitAuthFailedEs
 
 // Path: friendlyErrors.gitOperationFailed
 class _TranslationsFriendlyErrorsGitOperationFailedEs
-    extends TranslationsFriendlyErrorsGitOperationFailedEn {
-  _TranslationsFriendlyErrorsGitOperationFailedEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsGitOperationFailedEn {
+  _TranslationsFriendlyErrorsGitOperationFailedEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3797,10 +3653,8 @@ class _TranslationsFriendlyErrorsGitOperationFailedEs
 
 // Path: friendlyErrors.invalidJson
 class _TranslationsFriendlyErrorsInvalidJsonEs
-    extends TranslationsFriendlyErrorsInvalidJsonEn {
-  _TranslationsFriendlyErrorsInvalidJsonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsInvalidJsonEn {
+  _TranslationsFriendlyErrorsInvalidJsonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3814,10 +3668,8 @@ class _TranslationsFriendlyErrorsInvalidJsonEs
 
 // Path: friendlyErrors.rateLimitReached
 class _TranslationsFriendlyErrorsRateLimitReachedEs
-    extends TranslationsFriendlyErrorsRateLimitReachedEn {
-  _TranslationsFriendlyErrorsRateLimitReachedEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsRateLimitReachedEn {
+  _TranslationsFriendlyErrorsRateLimitReachedEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3831,10 +3683,8 @@ class _TranslationsFriendlyErrorsRateLimitReachedEs
 
 // Path: friendlyErrors.invalidApiKey
 class _TranslationsFriendlyErrorsInvalidApiKeyEs
-    extends TranslationsFriendlyErrorsInvalidApiKeyEn {
-  _TranslationsFriendlyErrorsInvalidApiKeyEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsInvalidApiKeyEn {
+  _TranslationsFriendlyErrorsInvalidApiKeyEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3848,10 +3698,8 @@ class _TranslationsFriendlyErrorsInvalidApiKeyEs
 
 // Path: friendlyErrors.translationServiceError
 class _TranslationsFriendlyErrorsTranslationServiceErrorEs
-    extends TranslationsFriendlyErrorsTranslationServiceErrorEn {
-  _TranslationsFriendlyErrorsTranslationServiceErrorEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsTranslationServiceErrorEn {
+  _TranslationsFriendlyErrorsTranslationServiceErrorEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3864,10 +3712,8 @@ class _TranslationsFriendlyErrorsTranslationServiceErrorEs
 
 // Path: friendlyErrors.outOfMemory
 class _TranslationsFriendlyErrorsOutOfMemoryEs
-    extends TranslationsFriendlyErrorsOutOfMemoryEn {
-  _TranslationsFriendlyErrorsOutOfMemoryEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsOutOfMemoryEn {
+  _TranslationsFriendlyErrorsOutOfMemoryEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3882,10 +3728,8 @@ class _TranslationsFriendlyErrorsOutOfMemoryEs
 
 // Path: friendlyErrors.genericError
 class _TranslationsFriendlyErrorsGenericErrorEs
-    extends TranslationsFriendlyErrorsGenericErrorEn {
-  _TranslationsFriendlyErrorsGenericErrorEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsFriendlyErrorsGenericErrorEn {
+  _TranslationsFriendlyErrorsGenericErrorEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3899,10 +3743,8 @@ class _TranslationsFriendlyErrorsGenericErrorEs
 
 // Path: settings.appearance.presets
 class _TranslationsSettingsAppearancePresetsEs
-    extends TranslationsSettingsAppearancePresetsEn {
-  _TranslationsSettingsAppearancePresetsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsAppearancePresetsEn {
+  _TranslationsSettingsAppearancePresetsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3923,10 +3765,8 @@ class _TranslationsSettingsAppearancePresetsEs
 
 // Path: settings.appearance.preview
 class _TranslationsSettingsAppearancePreviewEs
-    extends TranslationsSettingsAppearancePreviewEn {
-  _TranslationsSettingsAppearancePreviewEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsAppearancePreviewEn {
+  _TranslationsSettingsAppearancePreviewEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3953,10 +3793,8 @@ class _TranslationsSettingsAppearancePreviewEs
 
 // Path: settings.comparison.patternPresets
 class _TranslationsSettingsComparisonPatternPresetsEs
-    extends TranslationsSettingsComparisonPatternPresetsEn {
-  _TranslationsSettingsComparisonPatternPresetsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsComparisonPatternPresetsEn {
+  _TranslationsSettingsComparisonPatternPresetsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -3973,10 +3811,8 @@ class _TranslationsSettingsComparisonPatternPresetsEs
 
 // Path: settings.comparison.previewMatch
 class _TranslationsSettingsComparisonPreviewMatchEs
-    extends TranslationsSettingsComparisonPreviewMatchEn {
-  _TranslationsSettingsComparisonPreviewMatchEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsComparisonPreviewMatchEn {
+  _TranslationsSettingsComparisonPreviewMatchEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4020,10 +3856,8 @@ class _TranslationsSettingsComparisonPreviewMatchEs
 
 // Path: settings.comparison.colorPresets
 class _TranslationsSettingsComparisonColorPresetsEs
-    extends TranslationsSettingsComparisonColorPresetsEn {
-  _TranslationsSettingsComparisonColorPresetsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsComparisonColorPresetsEn {
+  _TranslationsSettingsComparisonColorPresetsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4056,10 +3890,8 @@ class _TranslationsSettingsComparisonColorPresetsEs
 
 // Path: settings.integrations.materials
 class _TranslationsSettingsIntegrationsMaterialsEs
-    extends TranslationsSettingsIntegrationsMaterialsEn {
-  _TranslationsSettingsIntegrationsMaterialsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsIntegrationsMaterialsEn {
+  _TranslationsSettingsIntegrationsMaterialsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4080,10 +3912,8 @@ class _TranslationsSettingsIntegrationsMaterialsEs
 
 // Path: settings.integrations.fileTypes
 class _TranslationsSettingsIntegrationsFileTypesEs
-    extends TranslationsSettingsIntegrationsFileTypesEn {
-  _TranslationsSettingsIntegrationsFileTypesEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsIntegrationsFileTypesEn {
+  _TranslationsSettingsIntegrationsFileTypesEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4100,10 +3930,8 @@ class _TranslationsSettingsIntegrationsFileTypesEs
 
 // Path: settings.developer.themePlaygroundSection
 class _TranslationsSettingsDeveloperThemePlaygroundSectionEs
-    extends TranslationsSettingsDeveloperThemePlaygroundSectionEn {
-  _TranslationsSettingsDeveloperThemePlaygroundSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperThemePlaygroundSectionEn {
+  _TranslationsSettingsDeveloperThemePlaygroundSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4120,10 +3948,8 @@ class _TranslationsSettingsDeveloperThemePlaygroundSectionEs
 
 // Path: settings.developer.featureFlags
 class _TranslationsSettingsDeveloperFeatureFlagsEs
-    extends TranslationsSettingsDeveloperFeatureFlagsEn {
-  _TranslationsSettingsDeveloperFeatureFlagsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperFeatureFlagsEn {
+  _TranslationsSettingsDeveloperFeatureFlagsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4152,10 +3978,8 @@ class _TranslationsSettingsDeveloperFeatureFlagsEs
 
 // Path: settings.developer.storageInspectorSection
 class _TranslationsSettingsDeveloperStorageInspectorSectionEs
-    extends TranslationsSettingsDeveloperStorageInspectorSectionEn {
-  _TranslationsSettingsDeveloperStorageInspectorSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperStorageInspectorSectionEn {
+  _TranslationsSettingsDeveloperStorageInspectorSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4170,10 +3994,8 @@ class _TranslationsSettingsDeveloperStorageInspectorSectionEs
 
 // Path: settings.developer.deviceInfoSection
 class _TranslationsSettingsDeveloperDeviceInfoSectionEs
-    extends TranslationsSettingsDeveloperDeviceInfoSectionEn {
-  _TranslationsSettingsDeveloperDeviceInfoSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperDeviceInfoSectionEn {
+  _TranslationsSettingsDeveloperDeviceInfoSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4190,11 +4012,8 @@ class _TranslationsSettingsDeveloperDeviceInfoSectionEs
 
 // Path: settings.developer.localizationInspectorSection
 class _TranslationsSettingsDeveloperLocalizationInspectorSectionEs
-    extends TranslationsSettingsDeveloperLocalizationInspectorSectionEn {
-  _TranslationsSettingsDeveloperLocalizationInspectorSectionEs._(
-      TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperLocalizationInspectorSectionEn {
+  _TranslationsSettingsDeveloperLocalizationInspectorSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4212,10 +4031,8 @@ class _TranslationsSettingsDeveloperLocalizationInspectorSectionEs
 
 // Path: settings.onboarding.steps
 class _TranslationsSettingsOnboardingStepsEs
-    extends TranslationsSettingsOnboardingStepsEn {
-  _TranslationsSettingsOnboardingStepsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsEn {
+  _TranslationsSettingsOnboardingStepsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4248,10 +4065,8 @@ class _TranslationsSettingsOnboardingStepsEs
 
 // Path: settings.settingsView.categories
 class _TranslationsSettingsSettingsViewCategoriesEs
-    extends TranslationsSettingsSettingsViewCategoriesEn {
-  _TranslationsSettingsSettingsViewCategoriesEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsSettingsViewCategoriesEn {
+  _TranslationsSettingsSettingsViewCategoriesEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4278,10 +4093,8 @@ class _TranslationsSettingsSettingsViewCategoriesEs
 
 // Path: settings.settingsView.categoryLabels
 class _TranslationsSettingsSettingsViewCategoryLabelsEs
-    extends TranslationsSettingsSettingsViewCategoryLabelsEn {
-  _TranslationsSettingsSettingsViewCategoryLabelsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsSettingsViewCategoryLabelsEn {
+  _TranslationsSettingsSettingsViewCategoryLabelsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4308,10 +4121,8 @@ class _TranslationsSettingsSettingsViewCategoryLabelsEs
 
 // Path: advancedDiff.sidebar.actionsSection
 class _TranslationsAdvancedDiffSidebarActionsSectionEs
-    extends TranslationsAdvancedDiffSidebarActionsSectionEn {
-  _TranslationsAdvancedDiffSidebarActionsSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffSidebarActionsSectionEn {
+  _TranslationsAdvancedDiffSidebarActionsSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4336,10 +4147,8 @@ class _TranslationsAdvancedDiffSidebarActionsSectionEs
 
 // Path: advancedDiff.sidebar.aiSection
 class _TranslationsAdvancedDiffSidebarAiSectionEs
-    extends TranslationsAdvancedDiffSidebarAiSectionEn {
-  _TranslationsAdvancedDiffSidebarAiSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffSidebarAiSectionEn {
+  _TranslationsAdvancedDiffSidebarAiSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4401,10 +4210,8 @@ class _TranslationsAdvancedDiffSidebarAiSectionEs
 
 // Path: advancedDiff.sidebar.tmSection
 class _TranslationsAdvancedDiffSidebarTmSectionEs
-    extends TranslationsAdvancedDiffSidebarTmSectionEn {
-  _TranslationsAdvancedDiffSidebarTmSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffSidebarTmSectionEn {
+  _TranslationsAdvancedDiffSidebarTmSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4425,10 +4232,8 @@ class _TranslationsAdvancedDiffSidebarTmSectionEs
 
 // Path: advancedDiff.sidebar.filtersSection
 class _TranslationsAdvancedDiffSidebarFiltersSectionEs
-    extends TranslationsAdvancedDiffSidebarFiltersSectionEn {
-  _TranslationsAdvancedDiffSidebarFiltersSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffSidebarFiltersSectionEn {
+  _TranslationsAdvancedDiffSidebarFiltersSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4463,10 +4268,8 @@ class _TranslationsAdvancedDiffSidebarFiltersSectionEs
 
 // Path: advancedDiff.sidebar.similaritySection
 class _TranslationsAdvancedDiffSidebarSimilaritySectionEs
-    extends TranslationsAdvancedDiffSidebarSimilaritySectionEn {
-  _TranslationsAdvancedDiffSidebarSimilaritySectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffSidebarSimilaritySectionEn {
+  _TranslationsAdvancedDiffSidebarSimilaritySectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4485,10 +4288,8 @@ class _TranslationsAdvancedDiffSidebarSimilaritySectionEs
 
 // Path: advancedDiff.sidebar.statusSection
 class _TranslationsAdvancedDiffSidebarStatusSectionEs
-    extends TranslationsAdvancedDiffSidebarStatusSectionEn {
-  _TranslationsAdvancedDiffSidebarStatusSectionEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsAdvancedDiffSidebarStatusSectionEn {
+  _TranslationsAdvancedDiffSidebarStatusSectionEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4505,10 +4306,8 @@ class _TranslationsAdvancedDiffSidebarStatusSectionEs
 
 // Path: tutorial.steps.importSource
 class _TranslationsTutorialStepsImportSourceEs
-    extends TranslationsTutorialStepsImportSourceEn {
-  _TranslationsTutorialStepsImportSourceEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsTutorialStepsImportSourceEn {
+  _TranslationsTutorialStepsImportSourceEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4522,10 +4321,8 @@ class _TranslationsTutorialStepsImportSourceEs
 
 // Path: tutorial.steps.importTarget
 class _TranslationsTutorialStepsImportTargetEs
-    extends TranslationsTutorialStepsImportTargetEn {
-  _TranslationsTutorialStepsImportTargetEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsTutorialStepsImportTargetEn {
+  _TranslationsTutorialStepsImportTargetEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4539,10 +4336,8 @@ class _TranslationsTutorialStepsImportTargetEs
 
 // Path: tutorial.steps.compare
 class _TranslationsTutorialStepsCompareEs
-    extends TranslationsTutorialStepsCompareEn {
-  _TranslationsTutorialStepsCompareEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsTutorialStepsCompareEn {
+  _TranslationsTutorialStepsCompareEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4556,10 +4351,8 @@ class _TranslationsTutorialStepsCompareEs
 
 // Path: tutorial.steps.filter
 class _TranslationsTutorialStepsFilterEs
-    extends TranslationsTutorialStepsFilterEn {
-  _TranslationsTutorialStepsFilterEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsTutorialStepsFilterEn {
+  _TranslationsTutorialStepsFilterEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4573,10 +4366,8 @@ class _TranslationsTutorialStepsFilterEs
 
 // Path: tutorial.steps.search
 class _TranslationsTutorialStepsSearchEs
-    extends TranslationsTutorialStepsSearchEn {
-  _TranslationsTutorialStepsSearchEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsTutorialStepsSearchEn {
+  _TranslationsTutorialStepsSearchEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4590,10 +4381,8 @@ class _TranslationsTutorialStepsSearchEs
 
 // Path: tutorial.steps.advanced
 class _TranslationsTutorialStepsAdvancedEs
-    extends TranslationsTutorialStepsAdvancedEn {
-  _TranslationsTutorialStepsAdvancedEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsTutorialStepsAdvancedEn {
+  _TranslationsTutorialStepsAdvancedEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4607,10 +4396,8 @@ class _TranslationsTutorialStepsAdvancedEs
 
 // Path: tutorial.steps.export
 class _TranslationsTutorialStepsExportEs
-    extends TranslationsTutorialStepsExportEn {
-  _TranslationsTutorialStepsExportEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsTutorialStepsExportEn {
+  _TranslationsTutorialStepsExportEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4624,11 +4411,8 @@ class _TranslationsTutorialStepsExportEs
 
 // Path: settings.developer.themePlaygroundSection.palette
 class _TranslationsSettingsDeveloperThemePlaygroundSectionPaletteEs
-    extends TranslationsSettingsDeveloperThemePlaygroundSectionPaletteEn {
-  _TranslationsSettingsDeveloperThemePlaygroundSectionPaletteEs._(
-      TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperThemePlaygroundSectionPaletteEn {
+  _TranslationsSettingsDeveloperThemePlaygroundSectionPaletteEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4663,10 +4447,8 @@ class _TranslationsSettingsDeveloperThemePlaygroundSectionPaletteEs
 
 // Path: settings.developer.featureFlags.flags
 class _TranslationsSettingsDeveloperFeatureFlagsFlagsEs
-    extends TranslationsSettingsDeveloperFeatureFlagsFlagsEn {
-  _TranslationsSettingsDeveloperFeatureFlagsFlagsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperFeatureFlagsFlagsEn {
+  _TranslationsSettingsDeveloperFeatureFlagsFlagsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4693,10 +4475,8 @@ class _TranslationsSettingsDeveloperFeatureFlagsFlagsEs
 
 // Path: settings.onboarding.steps.importFiles
 class _TranslationsSettingsOnboardingStepsImportFilesEs
-    extends TranslationsSettingsOnboardingStepsImportFilesEn {
-  _TranslationsSettingsOnboardingStepsImportFilesEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsImportFilesEn {
+  _TranslationsSettingsOnboardingStepsImportFilesEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4709,10 +4489,8 @@ class _TranslationsSettingsOnboardingStepsImportFilesEs
 
 // Path: settings.onboarding.steps.runComparison
 class _TranslationsSettingsOnboardingStepsRunComparisonEs
-    extends TranslationsSettingsOnboardingStepsRunComparisonEn {
-  _TranslationsSettingsOnboardingStepsRunComparisonEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsRunComparisonEn {
+  _TranslationsSettingsOnboardingStepsRunComparisonEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4725,10 +4503,8 @@ class _TranslationsSettingsOnboardingStepsRunComparisonEs
 
 // Path: settings.onboarding.steps.reviewMissing
 class _TranslationsSettingsOnboardingStepsReviewMissingEs
-    extends TranslationsSettingsOnboardingStepsReviewMissingEn {
-  _TranslationsSettingsOnboardingStepsReviewMissingEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsReviewMissingEn {
+  _TranslationsSettingsOnboardingStepsReviewMissingEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4741,10 +4517,8 @@ class _TranslationsSettingsOnboardingStepsReviewMissingEs
 
 // Path: settings.onboarding.steps.useFilters
 class _TranslationsSettingsOnboardingStepsUseFiltersEs
-    extends TranslationsSettingsOnboardingStepsUseFiltersEn {
-  _TranslationsSettingsOnboardingStepsUseFiltersEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsUseFiltersEn {
+  _TranslationsSettingsOnboardingStepsUseFiltersEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4757,10 +4531,8 @@ class _TranslationsSettingsOnboardingStepsUseFiltersEs
 
 // Path: settings.onboarding.steps.searchResults
 class _TranslationsSettingsOnboardingStepsSearchResultsEs
-    extends TranslationsSettingsOnboardingStepsSearchResultsEn {
-  _TranslationsSettingsOnboardingStepsSearchResultsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsSearchResultsEn {
+  _TranslationsSettingsOnboardingStepsSearchResultsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4773,10 +4545,8 @@ class _TranslationsSettingsOnboardingStepsSearchResultsEs
 
 // Path: settings.onboarding.steps.advancedView
 class _TranslationsSettingsOnboardingStepsAdvancedViewEs
-    extends TranslationsSettingsOnboardingStepsAdvancedViewEn {
-  _TranslationsSettingsOnboardingStepsAdvancedViewEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsAdvancedViewEn {
+  _TranslationsSettingsOnboardingStepsAdvancedViewEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4789,10 +4559,8 @@ class _TranslationsSettingsOnboardingStepsAdvancedViewEs
 
 // Path: settings.onboarding.steps.editCell
 class _TranslationsSettingsOnboardingStepsEditCellEs
-    extends TranslationsSettingsOnboardingStepsEditCellEn {
-  _TranslationsSettingsOnboardingStepsEditCellEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsEditCellEn {
+  _TranslationsSettingsOnboardingStepsEditCellEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4805,10 +4573,8 @@ class _TranslationsSettingsOnboardingStepsEditCellEs
 
 // Path: settings.onboarding.steps.exportResults
 class _TranslationsSettingsOnboardingStepsExportResultsEs
-    extends TranslationsSettingsOnboardingStepsExportResultsEn {
-  _TranslationsSettingsOnboardingStepsExportResultsEs._(TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsOnboardingStepsExportResultsEn {
+  _TranslationsSettingsOnboardingStepsExportResultsEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4821,11 +4587,10 @@ class _TranslationsSettingsOnboardingStepsExportResultsEs
 
 // Path: settings.developer.featureFlags.flags.experimental_ai_batch
 class _TranslationsSettingsDeveloperFeatureFlagsFlagsExperimentalAiBatchEs
-    extends TranslationsSettingsDeveloperFeatureFlagsFlagsExperimentalAiBatchEn {
+    implements
+        TranslationsSettingsDeveloperFeatureFlagsFlagsExperimentalAiBatchEn {
   _TranslationsSettingsDeveloperFeatureFlagsFlagsExperimentalAiBatchEs._(
-      TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+      this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4838,11 +4603,10 @@ class _TranslationsSettingsDeveloperFeatureFlagsFlagsExperimentalAiBatchEs
 
 // Path: settings.developer.featureFlags.flags.new_diff_algorithm
 class _TranslationsSettingsDeveloperFeatureFlagsFlagsNewDiffAlgorithmEs
-    extends TranslationsSettingsDeveloperFeatureFlagsFlagsNewDiffAlgorithmEn {
+    implements
+        TranslationsSettingsDeveloperFeatureFlagsFlagsNewDiffAlgorithmEn {
   _TranslationsSettingsDeveloperFeatureFlagsFlagsNewDiffAlgorithmEs._(
-      TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+      this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4855,11 +4619,8 @@ class _TranslationsSettingsDeveloperFeatureFlagsFlagsNewDiffAlgorithmEs
 
 // Path: settings.developer.featureFlags.flags.enhanced_search
 class _TranslationsSettingsDeveloperFeatureFlagsFlagsEnhancedSearchEs
-    extends TranslationsSettingsDeveloperFeatureFlagsFlagsEnhancedSearchEn {
-  _TranslationsSettingsDeveloperFeatureFlagsFlagsEnhancedSearchEs._(
-      TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperFeatureFlagsFlagsEnhancedSearchEn {
+  _TranslationsSettingsDeveloperFeatureFlagsFlagsEnhancedSearchEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -4872,11 +4633,8 @@ class _TranslationsSettingsDeveloperFeatureFlagsFlagsEnhancedSearchEs
 
 // Path: settings.developer.featureFlags.flags.auto_save
 class _TranslationsSettingsDeveloperFeatureFlagsFlagsAutoSaveEs
-    extends TranslationsSettingsDeveloperFeatureFlagsFlagsAutoSaveEn {
-  _TranslationsSettingsDeveloperFeatureFlagsFlagsAutoSaveEs._(
-      TranslationsEs root)
-      : this._root = root,
-        super.internal(root);
+    implements TranslationsSettingsDeveloperFeatureFlagsFlagsAutoSaveEn {
+  _TranslationsSettingsDeveloperFeatureFlagsFlagsAutoSaveEs._(this._root);
 
   final TranslationsEs _root; // ignore: unused_field
 
@@ -6631,6 +6389,17 @@ extension on TranslationsEs {
           'quality.showingAllHistory' => 'Mostrando: Todo el Historial',
           'quality.filesSkipped' =>
             'Algunos archivos se saltaron porque no se encontraron.',
+          'quality.charCount' => ({required num n, required Object count}) =>
+              (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+                n,
+                one: '1 carácter',
+                other: '${count} caracteres',
+              ),
+          'quality.lengthDiff' => (
+                  {required Object target,
+                  required Object percent,
+                  required Object source}) =>
+              'Objetivo es ${target} (${percent}%) vs fuente ${source}',
           'errors.genericError' => 'Ocurrió un error',
           'errors.fileNotFound' => 'Archivo no encontrado',
           'errors.invalidFormat' => 'Formato de archivo inválido',

@@ -1462,7 +1462,12 @@
         "completion": "Completion",
         "showingCurrentProject": "显示：当前项目",
         "showingAllHistory": "显示：所有历史",
-        "filesSkipped": "部分文件因未找到而被跳过。"
+        "filesSkipped": "部分文件因未找到而被跳过。",
+        "charCount": {
+            "one": "1 个字符",
+            "other": "${count} 个字符"
+        },
+        "lengthDiff": "目标: ${target} (${percent}%) vs 源: ${source}"
     },
     "errors": {
         "genericError": "发生错误",

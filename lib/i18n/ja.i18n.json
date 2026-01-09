@@ -1462,7 +1462,12 @@
         "completion": "完了",
         "showingCurrentProject": "表示中: 現在のプロジェクト",
         "showingAllHistory": "表示中: すべての履歴",
-        "filesSkipped": "一部のファイルが見つからなかったため、スキップされました。"
+        "filesSkipped": "一部のファイルが見つからなかったため、スキップされました。",
+        "charCount": {
+            "one": "1文字",
+            "other": "${count}文字"
+        },
+        "lengthDiff": "ターゲット: ${target} (${percent}%) 対 ソース: ${source}"
     },
     "errors": {
         "genericError": "エラーが発生しました",

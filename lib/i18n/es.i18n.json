@@ -1462,7 +1462,12 @@
         "completion": "Completado",
         "showingCurrentProject": "Mostrando: Proyecto Actual",
         "showingAllHistory": "Mostrando: Todo el Historial",
-        "filesSkipped": "Algunos archivos se saltaron porque no se encontraron."
+        "filesSkipped": "Algunos archivos se saltaron porque no se encontraron.",
+        "charCount": {
+            "one": "1 carácter",
+            "other": "${count} caracteres"
+        },
+        "lengthDiff": "Objetivo es ${target} (${percent}%) vs fuente ${source}"
     },
     "errors": {
         "genericError": "Ocurrió un error",

@@ -1462,7 +1462,12 @@
         "completion": "완료",
         "showingCurrentProject": "표시 중: 현재 프로젝트",
         "showingAllHistory": "표시 중: 모든 기록",
-        "filesSkipped": "일부 파일을 찾을 수 없어 건너뛰었습니다."
+        "filesSkipped": "일부 파일을 찾을 수 없어 건너뛰었습니다.",
+        "charCount": {
+            "one": "1자",
+            "other": "${count}자"
+        },
+        "lengthDiff": "대상: ${target} (${percent}%) 대 원본: ${source}"
     },
     "errors": {
         "genericError": "오류가 발생했습니다",

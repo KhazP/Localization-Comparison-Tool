@@ -352,6 +352,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       '日本語 (JP)' => 'ja',
       '한국어 (KO)' => 'ko',
       '简体中文 (CN)' => 'zh-CN',
+      'العربية (AR)' => 'ar',
+      'हिन्दी (HI)' => 'hi',
       _ => 'en', // Default to English for unsupported languages
     };
 

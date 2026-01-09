@@ -1462,7 +1462,12 @@
         "completion": "Conclusão",
         "showingCurrentProject": "Mostrando: Projeto Atual",
         "showingAllHistory": "Mostrando: Todo o Histórico",
-        "filesSkipped": "Alguns arquivos foram ignorados porque não foram encontrados."
+        "filesSkipped": "Alguns arquivos foram ignorados porque não foram encontrados.",
+        "charCount": {
+            "one": "1 caractere",
+            "other": "${count} caracteres"
+        },
+        "lengthDiff": "Alvo: ${target} (${percent}%) vs fonte: ${source}"
     },
     "errors": {
         "genericError": "Ocorreu um erro",

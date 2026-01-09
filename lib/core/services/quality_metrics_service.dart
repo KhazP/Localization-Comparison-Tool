@@ -526,14 +526,15 @@ class QualityMetricsService {
     final percent = (diff / sourceLength * 100).round();
     final sign = diff > 0 ? '+' : '';
 
-    return 'Target is $targetLabel ($sign$percent%) vs source $sourceLabel';
+    return t.quality.lengthDiff(
+      target: targetLabel,
+      percent: '$sign$percent',
+      source: sourceLabel,
+    );
   }
 
   static String _formatCharCount(int count) {
-    if (count == 1) {
-      return '1 char';
-    }
-    return '$count chars';
+    return t.quality.charCount(n: count, count: count);
   }
 
   static String _formatDuplicateKeySummary(List<String> keys) {

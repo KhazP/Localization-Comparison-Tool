@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/advanced_diff_controller.dart';
 import 'package:localizer_app_main/presentation/views/advanced_diff/widgets/table/diff_row_item.dart';
 
@@ -35,54 +36,54 @@ class DiffDataTable extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const SizedBox(
+                  SizedBox(
                       width: 48,
                       child: Center(
                           child: Text(context.t.diffTable.columns.id,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
                       width: 1,
                       height: 24,
                       color: Theme.of(context).dividerColor),
-                  const SizedBox(
+                  SizedBox(
                       width: 80,
                       child: Center(
                           child: Text(context.t.diffTable.columns.status,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
                       width: 1,
                       height: 24,
                       color: Theme.of(context).dividerColor),
-                  const Expanded(
+                  Expanded(
                       flex: 2,
                       child: Padding(
-                          padding: EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.only(left: 8),
                           child: Text(context.t.diffTable.columns.key,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
                       width: 1,
                       height: 24,
                       color: Theme.of(context).dividerColor),
-                  const Expanded(
+                  Expanded(
                       flex: 3,
                       child: Padding(
-                          padding: EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.only(left: 8),
                           child: Text(context.t.diffTable.columns.source,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   Container(
                       width: 1,
                       height: 24,
                       color: Theme.of(context).dividerColor),
-                  const Expanded(
+                  Expanded(
                       flex: 3,
                       child: Padding(
-                          padding: EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.only(left: 8),
                           child: Text(context.t.diffTable.columns.target,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12)))),
                   const SizedBox(width: 40), // Actions column spacer
                 ],

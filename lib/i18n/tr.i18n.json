@@ -1462,7 +1462,12 @@
         "completion": "Completion",
         "showingCurrentProject": "Gösterilen: Mevcut Proje",
         "showingAllHistory": "Gösterilen: Tüm Geçmiş",
-        "filesSkipped": "Bazı dosyalar bulunamadığı için atlandı."
+        "filesSkipped": "Bazı dosyalar bulunamadığı için atlandı.",
+        "charCount": {
+            "one": "1 karakter",
+            "other": "${count} karakter"
+        },
+        "lengthDiff": "Hedef ${target} (%${percent}) vs kaynak ${source}"
     },
     "errors": {
         "genericError": "Bir hata oluştu",

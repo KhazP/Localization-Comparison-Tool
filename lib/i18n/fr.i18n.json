@@ -1462,7 +1462,12 @@
         "completion": "Complétion",
         "showingCurrentProject": "Affichage : Projet actuel",
         "showingAllHistory": "Affichage : Tout l'historique",
-        "filesSkipped": "Certains fichiers ont été ignorés car ils n'ont pas été trouvés."
+        "filesSkipped": "Certains fichiers ont été ignorés car ils n'ont pas été trouvés.",
+        "charCount": {
+            "one": "1 caractère",
+            "other": "${count} caractères"
+        },
+        "lengthDiff": "Cible est ${target} (${percent}%) vs source ${source}"
     },
     "errors": {
         "genericError": "Une erreur s'est produite",

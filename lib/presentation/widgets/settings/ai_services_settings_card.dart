@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
@@ -11,11 +10,9 @@ import 'package:localizer_app_main/data/services/translation_memory_service.dart
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_shared.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/setting_override_indicator.dart';
-import 'package:localizer_app_main/core/services/toast_service.dart';
-import 'package:localizer_app_main/core/services/dialog_service.dart';
-import 'dart:developer' as developer;
+
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:open_file_plus/open_file_plus.dart';
+
 import 'package:localizer_app_main/presentation/widgets/settings/global_translation_memory_card.dart';
 
 class AiServicesSettingsCard extends StatefulWidget {
@@ -43,7 +40,6 @@ class AiServicesSettingsCard extends StatefulWidget {
 }
 
 class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
-  bool _translationMemoryBusy = false;
   bool _showAdvancedParameters = false;
   late final Map<ApiProvider, TextEditingController> _apiKeyControllers;
   late final Map<ApiProvider, FocusNode> _apiKeyFocusNodes;
@@ -586,25 +582,6 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             indent: 16,
             endIndent: 16,
           ),
-      ],
-    );
-  }
-
-  Widget _buildStatItem(String label, String value, BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: AppThemeV2.darkTextMuted)),
-        const SizedBox(height: 4),
-        Text(value,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold)),
       ],
     );
   }

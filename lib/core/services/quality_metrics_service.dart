@@ -9,6 +9,7 @@ import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/data/models/quality_metrics.dart';
 import 'package:localizer_app_main/data/parsers/file_parser_factory.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 
 /// Builds analytics data for the quality dashboard.
 class QualityMetricsService {
@@ -221,7 +222,7 @@ class QualityMetricsService {
     final file2 = File(session.file2Path);
 
     if (!await file1.exists() || !await file2.exists()) {
-      warnings.add('Some files were skipped because they were not found.');
+      warnings.add(t.quality.filesSkipped);
       return null;
     }
 

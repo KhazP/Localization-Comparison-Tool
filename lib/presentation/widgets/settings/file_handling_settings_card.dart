@@ -79,7 +79,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
               label: context.t.settings.fileHandling.sourceFormat,
               control: SettingsDropdown(
                 value: defaultSourceFormat,
-                items: ['Auto', ...SettingsConstants.fileFormats],
+                items: const ['Auto', ...SettingsConstants.fileFormats],
                 onChanged: (val) {
                   if (val != null) {
                     if (state.isProjectScope) {
@@ -105,7 +105,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
               label: context.t.settings.fileHandling.targetFormat,
               control: SettingsDropdown(
                 value: defaultTargetFormat,
-                items: ['Auto', ...SettingsConstants.fileFormats],
+                items: const ['Auto', ...SettingsConstants.fileFormats],
                 onChanged: (val) {
                   if (val != null) {
                     if (state.isProjectScope) {

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/parsers/json_parser.dart';
-import 'package:localizer_app_main/data/parsers/localization_parser.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

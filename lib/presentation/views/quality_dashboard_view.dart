@@ -1488,8 +1488,9 @@ class _WordTrendChart extends StatelessWidget {
 
     // Add headroom to prevent line clipping at chart edges
     final adjustedMaxY = showCoverage ? 105.0 : (maxY == 0 ? 10.0 : maxY * 1.2);
-    final dateFormat = DateFormat('MMM d');
-    final tooltipDateFormat = DateFormat('MMM d, yyyy');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat.MMMd(locale);
+    final tooltipDateFormat = DateFormat.yMMMd(locale);
     final interval =
         points.length <= 4 ? 1.0 : (points.length / 4).ceilToDouble();
     final lineColor = theme.colorScheme.primary;

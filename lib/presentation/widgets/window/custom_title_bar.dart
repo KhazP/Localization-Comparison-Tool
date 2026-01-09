@@ -68,7 +68,10 @@ class CustomTitleBar extends StatelessWidget {
               // Window Buttons (right side)
               _WindowButtons(
                 buttonColor: foregroundColor,
-                hoverColor: foregroundColor.withOpacity(0.1),
+                hoverColor: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2),
               ),
             ],
           ),

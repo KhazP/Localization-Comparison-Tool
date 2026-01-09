@@ -161,7 +161,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                       Color(settings.accentColorValue),
                       (color) => context
                           .read<SettingsBloc>()
-                          .add(UpdateAccentColor(color.value)),
+                          .add(UpdateAccentColor(color.toARGB32())),
                       title: context.t.settings.appearance.pickAccentColor,
                     ),
                     child: Text(context.t.common.change),
@@ -371,25 +371,29 @@ class DiffColorsSettingsCard extends StatelessWidget {
         _buildColorRow(
             context, context.t.diff.added, Color(settings.diffAddedColor),
             (color) {
-          context.read<SettingsBloc>().add(UpdateDiffAddedColor(color.value));
+          context
+              .read<SettingsBloc>()
+              .add(UpdateDiffAddedColor(color.toARGB32()));
         }),
         _buildColorRow(
             context, context.t.diff.removed, Color(settings.diffRemovedColor),
             (color) {
-          context.read<SettingsBloc>().add(UpdateDiffRemovedColor(color.value));
+          context
+              .read<SettingsBloc>()
+              .add(UpdateDiffRemovedColor(color.toARGB32()));
         }),
         _buildColorRow(
             context, context.t.diff.modified, Color(settings.diffModifiedColor),
             (color) {
           context
               .read<SettingsBloc>()
-              .add(UpdateDiffModifiedColor(color.value));
+              .add(UpdateDiffModifiedColor(color.toARGB32()));
         }),
         _buildColorRow(context, context.t.settings.appearance.identical,
             Color(settings.diffIdenticalColor), (color) {
           context
               .read<SettingsBloc>()
-              .add(UpdateDiffIdenticalColor(color.value));
+              .add(UpdateDiffIdenticalColor(color.toARGB32()));
         }, showDivider: false),
       ],
     );
@@ -426,9 +430,9 @@ class DiffColorsSettingsCard extends StatelessWidget {
           label: Text(label),
           onPressed: () {
             context.read<SettingsBloc>().add(ApplyThemePreset(
-                  added: entry.value.added.value,
-                  removed: entry.value.removed.value,
-                  modified: entry.value.modified.value,
+                  added: entry.value.added.toARGB32(),
+                  removed: entry.value.removed.toARGB32(),
+                  modified: entry.value.modified.toARGB32(),
                 ));
           },
           labelStyle: const TextStyle(fontSize: 12),

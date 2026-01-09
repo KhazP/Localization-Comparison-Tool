@@ -3,7 +3,7 @@ import 'package:localizer_app_main/core/services/secure_storage_service.dart';
 import 'package:localizer_app_main/core/services/talker_service.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
 import 'package:localizer_app_main/data/services/gemini_translation_service.dart';
-import 'package:localizer_app_main/data/services/translation_exceptions.dart';
+
 import 'package:localizer_app_main/data/services/translation_service.dart';
 import 'package:mocktail/mocktail.dart';
 

@@ -46,10 +46,10 @@ class SettingOverrideIndicator extends StatelessWidget {
             vertical: compact ? 2 : 4,
           ),
           decoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.15),
+            color: colorScheme.primary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: colorScheme.primary.withOpacity(0.3),
+              color: colorScheme.primary.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -87,7 +87,7 @@ class SettingOverrideIndicator extends StatelessWidget {
                 child: Icon(
                   Icons.refresh_rounded,
                   size: compact ? 14 : 16,
-                  color: colorScheme.onSurface.withOpacity(0.5),
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -105,7 +105,7 @@ class SettingOverrideIndicator extends StatelessWidget {
         vertical: compact ? 2 : 4,
       ),
       decoration: BoxDecoration(
-        color: colorScheme.onSurface.withOpacity(0.08),
+        color: colorScheme.onSurface.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -114,7 +114,7 @@ class SettingOverrideIndicator extends StatelessWidget {
           Icon(
             Icons.link_rounded,
             size: compact ? 12 : 14,
-            color: colorScheme.onSurface.withOpacity(0.5),
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
           ),
           if (!compact) ...[
             const SizedBox(width: 4),
@@ -123,7 +123,7 @@ class SettingOverrideIndicator extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface.withOpacity(0.5),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],

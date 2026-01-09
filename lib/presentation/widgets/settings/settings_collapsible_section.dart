@@ -96,12 +96,6 @@ class _SettingsCollapsibleSectionState extends State<SettingsCollapsibleSection>
     return widget.isDark ? AppThemeV2.darkTextMuted : AppThemeV2.lightTextMuted;
   }
 
-  Color get _textSecondary {
-    return widget.isDark
-        ? AppThemeV2.darkTextSecondary
-        : AppThemeV2.lightTextSecondary;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

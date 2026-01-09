@@ -159,7 +159,7 @@ class _ColorChip extends StatelessWidget {
 
     return Tooltip(
       message:
-          '#${color.value.toRadixString(16).padLeft(8, '0').toUpperCase()}',
+          '#${color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(

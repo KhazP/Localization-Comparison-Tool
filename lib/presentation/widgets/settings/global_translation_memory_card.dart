@@ -168,9 +168,10 @@ class _GlobalTranslationMemoryCardState
       } catch (e, s) {
         developer.log('Failed to clear translation memory.',
             name: 'translation_memory.clear', error: e, stackTrace: s);
-        if (mounted)
+        if (mounted) {
           ToastService.showError(
               context, context.t.settings.translationMemory.couldNotClear);
+        }
       }
     });
   }
@@ -287,11 +288,11 @@ class _GlobalTranslationMemoryCardState
                       ),
                       OutlinedButton.icon(
                         onPressed: _busy ? null : () => _clear(context),
-                        icon: Icon(LucideIcons.trash2,
+                        icon: const Icon(LucideIcons.trash2,
                             size: 18, color: AppThemeV2.error),
                         label: Text(
                             context.t.settings.translationMemory.clearMemory,
-                            style: TextStyle(color: AppThemeV2.error)),
+                            style: const TextStyle(color: AppThemeV2.error)),
                         style: OutlinedButton.styleFrom(
                             side: BorderSide(
                                 color:

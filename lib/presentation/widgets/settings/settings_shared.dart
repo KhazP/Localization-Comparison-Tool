@@ -49,6 +49,7 @@ class SettingsCardContainer extends StatelessWidget {
   final bool isAmoled;
   final VoidCallback? onReset;
   final Widget? trailing;
+  final IconData? headerIcon;
 
   const SettingsCardContainer({
     super.key,
@@ -58,6 +59,7 @@ class SettingsCardContainer extends StatelessWidget {
     this.isAmoled = false,
     this.onReset,
     this.trailing,
+    this.headerIcon,
   });
 
   @override
@@ -80,6 +82,14 @@ class SettingsCardContainer extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
               children: [
+                if (headerIcon != null) ...[
+                  Icon(
+                    headerIcon,
+                    size: 16,
+                    color: theme.textSecondaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Text(
                     title,
@@ -206,6 +216,7 @@ class SettingsDropdown<T> extends StatelessWidget {
   final ValueChanged<T?> onChanged;
   final bool isDark;
   final bool isAmoled;
+  final String Function(T)? itemLabelBuilder;
 
   const SettingsDropdown({
     super.key,
@@ -214,6 +225,7 @@ class SettingsDropdown<T> extends StatelessWidget {
     required this.onChanged,
     this.isDark = false,
     this.isAmoled = false,
+    this.itemLabelBuilder,
   });
 
   @override
@@ -236,7 +248,7 @@ class SettingsDropdown<T> extends StatelessWidget {
                 (item) => DropdownMenuItem(
                   value: item,
                   child: Text(
-                    item.toString(),
+                    itemLabelBuilder?.call(item) ?? item.toString(),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

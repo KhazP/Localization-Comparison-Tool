@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/presentation/widgets/common/premium_toast.dart';
 import 'package:toastification/toastification.dart';
-import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:localizer_app_main/i18n/strings.g.dart';
 

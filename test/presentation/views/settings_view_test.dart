@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
+import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -66,25 +67,30 @@ Future<void> openAddIgnorePatternDialog(
   WidgetTester tester, {
   required ValueChanged<String> onSubmit,
 }) async {
+  // Initialize locale settings for slang translations
+  LocaleSettings.setLocale(AppLocale.en);
+
   await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (context) {
-            return ElevatedButton(
-              key: const Key('open_add_dialog_button'),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => AddIgnorePatternDialog(
-                    autofocus: false,
-                    onSubmit: onSubmit,
-                  ),
-                );
-              },
-              child: const Text('Open'),
-            );
-          },
+    TranslationProvider(
+      child: MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return ElevatedButton(
+                key: const Key('open_add_dialog_button'),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AddIgnorePatternDialog(
+                      autofocus: false,
+                      onSubmit: onSubmit,
+                    ),
+                  );
+                },
+                child: const Text('Open'),
+              );
+            },
+          ),
         ),
       ),
     ),

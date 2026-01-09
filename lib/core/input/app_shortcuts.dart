@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'app_intents.dart';
-import 'dart:io';
 
 class AppShortcuts {
   static Map<ShortcutActivator, Intent> get defaults {

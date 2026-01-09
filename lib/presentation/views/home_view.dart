@@ -164,7 +164,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       if (isFirstRun) {
         return FirstRunWizardView(
           onCompleted: () {
-            // State update handled by Bloc, which triggers rebuild.
+            // Force navigation to File Comparison view (index 1) which matches the tutorial flow
+            _onDestinationSelected(1);
           },
         );
       }

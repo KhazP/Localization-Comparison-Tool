@@ -165,16 +165,6 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                         Expanded(
                           child: _buildDropZone(
                             context: context,
-                            title: context.t.wizards.firstRun.sourceFile,
-                            file: _file1,
-                            isSource: true,
-                            isDragging: _isDraggingOverSource,
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(
-                          child: _buildDropZone(
-                            context: context,
                             title: context.t.wizards.firstRun.targetFile,
                             file: _file2,
                             isSource: false,

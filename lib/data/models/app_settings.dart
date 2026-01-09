@@ -405,7 +405,7 @@ class AppSettings extends HiveObject {
       ignorePatterns: ['^//.*', '^#.*'],
       ignoreCase: true,
       ignoreWhitespace: false,
-      appLanguage: 'English (US)', // Default for new field
+      appLanguage: 'Auto-Detect', // Default for new field
       defaultViewOnStartup: 'Basic Comparison', // Default for new field
       autoCheckForUpdates: true, // Default for new field
       appThemeMode: 'System', // Default for new field

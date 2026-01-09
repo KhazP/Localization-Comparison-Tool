@@ -17,6 +17,9 @@ class CsvParser extends LocalizationParser {
   }) async {
     final Map<String, String> translations = {};
     try {
+      // SECURITY: Validate file size before reading
+      await validateFileSize(file);
+
       // Respect the encoding setting from AppSettings
       final encoding = resolveEncoding(settings, extractionMode);
 

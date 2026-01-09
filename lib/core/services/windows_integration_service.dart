@@ -10,6 +10,26 @@ class WindowsIntegrationService {
   static const String _fileExtension = '.loc';
   static const String _protocolScheme = 'localizer';
 
+  /// SECURITY: Regex for validating file extensions.
+  /// Only allows alphanumeric characters after the dot.
+  static final RegExp _validExtensionRegex = RegExp(r'^\.?[a-zA-Z0-9]+$');
+
+  /// SECURITY: Validates that a file extension is safe for registry operations.
+  /// Prevents registry key injection attacks.
+  static String _validateExtension(String extension) {
+    if (extension.isEmpty) {
+      throw ArgumentError('Extension cannot be empty');
+    }
+    if (!_validExtensionRegex.hasMatch(extension)) {
+      throw ArgumentError(
+        'Invalid extension format: $extension. '
+        'Extensions must contain only alphanumeric characters.',
+      );
+    }
+    // Normalize to include leading dot
+    return extension.startsWith('.') ? extension : '.$extension';
+  }
+
   /// Supported localization file extensions with their descriptions
   static const Map<String, String> supportedExtensions = {
     '.loc': 'Localizer Project File',
@@ -345,13 +365,11 @@ class WindowsIntegrationService {
   static Future<bool> registerFileExtension(String extension) async {
     if (!isWindows) return false;
 
-    final description = supportedExtensions[extension] ?? 'Localization File';
-
     try {
+      // SECURITY: Validate extension to prevent registry injection
+      final ext = _validateExtension(extension);
+      final description = supportedExtensions[ext] ?? 'Localization File';
       final exePath = Platform.resolvedExecutable;
-
-      // Ensure extension starts with dot
-      final ext = extension.startsWith('.') ? extension : '.$extension';
       final typeId = '$_appName${ext.replaceAll('.', '_')}.Document';
 
       final classesKey = Registry.openPath(
@@ -411,7 +429,8 @@ class WindowsIntegrationService {
     if (!isWindows) return false;
 
     try {
-      final ext = extension.startsWith('.') ? extension : '.$extension';
+      // SECURITY: Validate extension to prevent registry injection
+      final ext = _validateExtension(extension);
       final typeId = '$_appName${ext.replaceAll('.', '_')}.Document';
 
       final classesKey = Registry.openPath(
@@ -447,7 +466,8 @@ class WindowsIntegrationService {
     if (!isWindows) return false;
 
     try {
-      final ext = extension.startsWith('.') ? extension : '.$extension';
+      // SECURITY: Validate extension to prevent registry injection
+      final ext = _validateExtension(extension);
 
       final key = Registry.openPath(
         RegistryHive.currentUser,

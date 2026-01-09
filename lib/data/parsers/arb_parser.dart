@@ -17,6 +17,9 @@ class ArbParser extends LocalizationParser {
   }) async {
     final Map<String, String> translations = {};
     try {
+      // SECURITY: Validate file size before reading
+      await validateFileSize(file);
+
       final encoding = resolveEncoding(settings, extractionMode);
       final content = await file.readAsString(encoding: encoding);
       if (content.isEmpty) {

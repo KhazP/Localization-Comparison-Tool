@@ -25,6 +25,39 @@ class InvalidBilingualFileException implements Exception {
   String toString() => message;
 }
 
+/// Thrown when a file exceeds the maximum allowed size.
+/// SECURITY: Prevents DoS attacks via extremely large files.
+class FileTooLargeException implements Exception {
+  FileTooLargeException(this.fileSize, this.maxSize);
+
+  final int fileSize;
+  final int maxSize;
+
+  @override
+  String toString() =>
+      'File too large: ${_formatBytes(fileSize)} (max: ${_formatBytes(maxSize)})';
+
+  static String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+}
+
+/// Maximum file size for parsing (50 MB).
+/// SECURITY: Prevents memory exhaustion from extremely large files.
+const int maxParseFileSize = 50 * 1024 * 1024;
+
+/// Validates that a file does not exceed the maximum allowed size.
+/// Throws [FileTooLargeException] if the file is too large.
+Future<void> validateFileSize(File file, {int? maxSize}) async {
+  final size = await file.length();
+  final limit = maxSize ?? maxParseFileSize;
+  if (size > limit) {
+    throw FileTooLargeException(size, limit);
+  }
+}
+
 /// Base contract for localization parsers.
 abstract class LocalizationParser {
   /// Parses a localization file into key/value pairs.

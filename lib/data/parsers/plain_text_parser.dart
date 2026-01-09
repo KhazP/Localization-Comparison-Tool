@@ -20,6 +20,9 @@ class PlainTextParser extends LocalizationParser {
   }) async {
     final Map<String, String> translations = {};
     try {
+      // SECURITY: Validate file size before reading
+      await validateFileSize(file);
+
       final encoding = resolveEncoding(settings, extractionMode);
       final String content = await file.readAsString(encoding: encoding);
 

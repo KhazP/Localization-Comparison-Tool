@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
@@ -6,31 +8,60 @@ import 'package:localizer_app_main/data/models/app_settings.dart';
 /// Progress callback for reporting diff calculation progress.
 typedef DiffProgressCallback = void Function(int processed, int total);
 
-/// Cache for string similarity calculations to avoid redundant computation.
+/// LRU Cache for string similarity calculations to avoid redundant computation.
 /// This is especially important for Smart Match mode which can have O(n²) comparisons.
+///
+/// Uses a LinkedHashMap with access-order to implement LRU eviction.
+/// When the cache is full, the least recently used entries are evicted.
 class _SimilarityCache {
-  final Map<String, double> _cache = {};
+  // LinkedHashMap maintains insertion order, which we use for LRU tracking
+  final LinkedHashMap<String, double> _cache = LinkedHashMap<String, double>();
   static const int _maxSize = 50000;
+  static const int _evictionBatchSize = 5000; // Evict in batches for efficiency
 
   String _makeKey(String a, String b) {
     // Ensure consistent key regardless of order
     return a.hashCode < b.hashCode ? '$a\n---\n$b' : '$b\n---\n$a';
   }
 
-  double? get(String a, String b) => _cache[_makeKey(a, b)];
+  double? get(String a, String b) {
+    final key = _makeKey(a, b);
+    final value = _cache[key];
+    if (value != null) {
+      // Move to end (most recently used) by re-inserting
+      _cache.remove(key);
+      _cache[key] = value;
+    }
+    return value;
+  }
 
   void set(String a, String b, double similarity) {
-    if (_cache.length >= _maxSize) {
-      // Clear half the cache when full
-      final keysToRemove = _cache.keys.take(_maxSize ~/ 2).toList();
-      for (final key in keysToRemove) {
-        _cache.remove(key);
-      }
+    final key = _makeKey(a, b);
+
+    // If key exists, remove it first to update its position
+    if (_cache.containsKey(key)) {
+      _cache.remove(key);
+    } else if (_cache.length >= _maxSize) {
+      // Evict least recently used entries (at the beginning of the map)
+      _evictLRU();
     }
-    _cache[_makeKey(a, b)] = similarity;
+
+    // Insert at the end (most recently used)
+    _cache[key] = similarity;
+  }
+
+  /// Evicts the least recently used entries from the cache.
+  void _evictLRU() {
+    final keysToRemove = _cache.keys.take(_evictionBatchSize).toList();
+    for (final key in keysToRemove) {
+      _cache.remove(key);
+    }
   }
 
   void clear() => _cache.clear();
+
+  /// Returns the current cache size (useful for debugging/monitoring).
+  int get size => _cache.length;
 }
 
 class DiffCalculator {

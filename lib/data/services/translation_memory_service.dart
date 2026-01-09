@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
@@ -64,6 +65,9 @@ class TranslationMemoryService {
   static const String _tableName = 'translation_units';
   static const String _unknownLanguage = 'und';
 
+  /// Default timeout for TM lookup operations to prevent blocking.
+  static const Duration defaultLookupTimeout = Duration(seconds: 5);
+
   static bool _databaseFactoryInitialized = false;
 
   TranslationMemoryService({
@@ -99,11 +103,51 @@ class TranslationMemoryService {
   }
 
   /// Finds the best fuzzy match for the given source text.
+  ///
+  /// [timeout] specifies the maximum duration to wait for results.
+  /// If the operation takes longer, returns null.
+  /// Pass [Duration.zero] to disable timeout (not recommended for large TMs).
   Future<TranslationMemoryMatch?> findBestMatch({
     required String sourceText,
     required String sourceLang,
     required String targetLang,
     double minScore = 0.85,
+    Duration? timeout,
+  }) async {
+    final effectiveTimeout = timeout ?? defaultLookupTimeout;
+
+    // Wrap the actual lookup in a timeout
+    if (effectiveTimeout != Duration.zero) {
+      try {
+        return await _findBestMatchInternal(
+          sourceText: sourceText,
+          sourceLang: sourceLang,
+          targetLang: targetLang,
+          minScore: minScore,
+        ).timeout(effectiveTimeout);
+      } on TimeoutException {
+        developer.log(
+          'TM findBestMatch timed out after $effectiveTimeout',
+          name: 'translation_memory.timeout',
+        );
+        return null;
+      }
+    }
+
+    return _findBestMatchInternal(
+      sourceText: sourceText,
+      sourceLang: sourceLang,
+      targetLang: targetLang,
+      minScore: minScore,
+    );
+  }
+
+  /// Internal implementation of findBestMatch without timeout handling.
+  Future<TranslationMemoryMatch?> _findBestMatchInternal({
+    required String sourceText,
+    required String sourceLang,
+    required String targetLang,
+    required double minScore,
   }) async {
     if (sourceText.trim().isEmpty) {
       return null;
@@ -168,12 +212,55 @@ class TranslationMemoryService {
   }
 
   /// Finds the best fuzzy matches for the given source text.
+  ///
+  /// [timeout] specifies the maximum duration to wait for results.
+  /// If the operation takes longer, returns an empty list.
+  /// Pass [Duration.zero] to disable timeout (not recommended for large TMs).
   Future<List<TranslationMemoryMatch>> findMatches({
     required String sourceText,
     required String sourceLang,
     required String targetLang,
     double minScore = 0.6,
     int limit = 3,
+    Duration? timeout,
+  }) async {
+    final effectiveTimeout = timeout ?? defaultLookupTimeout;
+
+    // Wrap the actual lookup in a timeout
+    if (effectiveTimeout != Duration.zero) {
+      try {
+        return await _findMatchesInternal(
+          sourceText: sourceText,
+          sourceLang: sourceLang,
+          targetLang: targetLang,
+          minScore: minScore,
+          limit: limit,
+        ).timeout(effectiveTimeout);
+      } on TimeoutException {
+        developer.log(
+          'TM findMatches timed out after $effectiveTimeout',
+          name: 'translation_memory.timeout',
+        );
+        return [];
+      }
+    }
+
+    return _findMatchesInternal(
+      sourceText: sourceText,
+      sourceLang: sourceLang,
+      targetLang: targetLang,
+      minScore: minScore,
+      limit: limit,
+    );
+  }
+
+  /// Internal implementation of findMatches without timeout handling.
+  Future<List<TranslationMemoryMatch>> _findMatchesInternal({
+    required String sourceText,
+    required String sourceLang,
+    required String targetLang,
+    required double minScore,
+    required int limit,
   }) async {
     if (sourceText.trim().isEmpty) {
       return [];

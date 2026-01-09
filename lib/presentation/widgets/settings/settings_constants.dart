@@ -57,6 +57,7 @@ class SettingsConstants {
     'Italiano (IT)',
     'Português (BR)',
     '日本語 (JP)',
+    '한국어 (KO)',
   ];
 
   static const List<String> defaultViews = [

@@ -405,7 +405,7 @@ class _DashboardHeader extends StatelessWidget {
                 showProjectFilter ? LucideIcons.filter : LucideIcons.filterX,
                 color: showProjectFilter
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.6),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -508,7 +508,7 @@ class _SummaryCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.12),
+              color: theme.colorScheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: theme.colorScheme.primary),
@@ -521,7 +521,7 @@ class _SummaryCard extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -577,8 +577,8 @@ class _AiUsageSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.colorScheme.primary.withOpacity(0.2),
-                      theme.colorScheme.tertiary.withOpacity(0.2),
+                      theme.colorScheme.primary.withValues(alpha: 0.2),
+                      theme.colorScheme.tertiary.withValues(alpha: 0.2),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -686,20 +686,20 @@ class _AiUsageCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            accentColor.withOpacity(isDark ? 0.15 : 0.08),
-            theme.colorScheme.surface.withOpacity(isDark ? 0.8 : 0.95),
+            accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
+            theme.colorScheme.surface.withValues(alpha: isDark ? 0.8 : 0.95),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: accentColor.withOpacity(isDark ? 0.3 : 0.2),
+          color: accentColor.withValues(alpha: isDark ? 0.3 : 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withOpacity(0.1),
+            color: accentColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -716,7 +716,7 @@ class _AiUsageCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -741,7 +741,8 @@ class _AiUsageCard extends StatelessWidget {
                         Text(
                           summary.lastModel!,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.5),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
                             fontSize: 11,
                           ),
                         ),
@@ -808,13 +809,13 @@ class _AiUsageCard extends StatelessWidget {
                   Icon(
                     LucideIcons.clock,
                     size: 12,
-                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     context.t.quality.lastUsed(date: lastUsedLabel),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 11,
                     ),
                   ),
@@ -823,13 +824,14 @@ class _AiUsageCard extends StatelessWidget {
                     Icon(
                       LucideIcons.zap,
                       size: 12,
-                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${summary.lastLatencyMs}ms',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 11,
                       ),
                     ),
@@ -881,11 +883,12 @@ class _MetricTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: highlight
-            ? accentColor.withOpacity(0.1)
-            : theme.colorScheme.surface.withOpacity(0.5),
+            ? accentColor.withValues(alpha: 0.1)
+            : theme.colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
-        border:
-            highlight ? Border.all(color: accentColor.withOpacity(0.3)) : null,
+        border: highlight
+            ? Border.all(color: accentColor.withValues(alpha: 0.3))
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -893,7 +896,7 @@ class _MetricTile extends StatelessWidget {
           Text(
             label,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               fontSize: 10,
               fontWeight: FontWeight.w500,
             ),
@@ -941,7 +944,7 @@ class _TokenBreakdownTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.3),
+        color: theme.colorScheme.surface.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -955,14 +958,14 @@ class _TokenBreakdownTile extends StatelessWidget {
                   Icon(
                     LucideIcons.arrowUp,
                     size: 10,
-                    color: accentColor.withOpacity(0.7),
+                    color: accentColor.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Prompt: ${_formatNumber(promptTokens)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontSize: 10,
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -979,7 +982,7 @@ class _TokenBreakdownTile extends StatelessWidget {
                     'Completion: ${_formatNumber(completionTokens)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontSize: 10,
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -996,7 +999,7 @@ class _TokenBreakdownTile extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: (promptPercent * 100).round(),
-                    child: Container(color: accentColor.withOpacity(0.5)),
+                    child: Container(color: accentColor.withValues(alpha: 0.5)),
                   ),
                   Expanded(
                     flex: ((1 - promptPercent) * 100).round(),
@@ -1079,7 +1082,7 @@ class _CoverageSection extends StatelessWidget {
                       value: percent / 100,
                       minHeight: 8,
                       backgroundColor:
-                          theme.colorScheme.primary.withOpacity(0.12),
+                          theme.colorScheme.primary.withValues(alpha: 0.12),
                       color: theme.colorScheme.primary,
                     ),
                   ),
@@ -1089,7 +1092,7 @@ class _CoverageSection extends StatelessWidget {
                         translated: coverage.translatedKeyCount,
                         total: coverage.sourceKeyCount),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -1214,10 +1217,10 @@ class _MainChartSection extends StatelessWidget {
             height: 280,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withOpacity(0.5),
+              color: theme.colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: theme.dividerColor.withOpacity(0.4),
+                color: theme.dividerColor.withValues(alpha: 0.4),
               ),
             ),
             child: mode == DashboardChartMode.burnUp
@@ -1418,7 +1421,7 @@ class _TrendStatChip extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.dividerColor.withOpacity(0.4),
+          color: theme.dividerColor.withValues(alpha: 0.4),
         ),
       ),
       child: Row(
@@ -1427,7 +1430,7 @@ class _TrendStatChip extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 16, color: theme.colorScheme.primary),
@@ -1440,7 +1443,7 @@ class _TrendStatChip extends StatelessWidget {
                 Text(
                   label,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1498,8 +1501,8 @@ class _WordTrendChart extends StatelessWidget {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        lineColor.withOpacity(0.35),
-        lineColor.withOpacity(0.02),
+        lineColor.withValues(alpha: 0.35),
+        lineColor.withValues(alpha: 0.02),
       ],
     );
     final tooltipStyle = theme.textTheme.bodySmall?.copyWith(
@@ -1523,13 +1526,13 @@ class _WordTrendChart extends StatelessWidget {
           horizontalInterval: adjustedMaxY / 4,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: theme.dividerColor.withOpacity(0.3),
+              color: theme.dividerColor.withValues(alpha: 0.3),
               strokeWidth: 1,
             );
           },
           getDrawingVerticalLine: (value) {
             return FlLine(
-              color: theme.dividerColor.withOpacity(0.15),
+              color: theme.dividerColor.withValues(alpha: 0.15),
               strokeWidth: 1,
             );
           },
@@ -1563,7 +1566,7 @@ class _WordTrendChart extends StatelessWidget {
                   child: Text(
                     dateFormat.format(points[index].timestamp),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 );
@@ -1585,7 +1588,7 @@ class _WordTrendChart extends StatelessWidget {
                         ? '${value.toInt()}%'
                         : _formatCompactNumber(value),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 );
@@ -1629,7 +1632,7 @@ class _WordTrendChart extends StatelessWidget {
             return spotIndexes.map((index) {
               return TouchedSpotIndicatorData(
                 FlLine(
-                  color: lineColor.withOpacity(0.4),
+                  color: lineColor.withValues(alpha: 0.4),
                   strokeWidth: 1,
                 ),
                 FlDotData(
@@ -1760,7 +1763,7 @@ class _IssuesSection extends StatelessWidget {
             Text(
               context.t.quality.noIssuesFound,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             )
           else ...[
@@ -1900,7 +1903,7 @@ class _IssueRow extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.12),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -1917,7 +1920,7 @@ class _IssueRow extends StatelessWidget {
             Text(
               description,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             if (samples.isNotEmpty) ...[
@@ -1934,7 +1937,7 @@ class _IssueRow extends StatelessWidget {
                           color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: theme.dividerColor.withOpacity(0.5),
+                            color: theme.dividerColor.withValues(alpha: 0.5),
                           ),
                         ),
                         child: Text(

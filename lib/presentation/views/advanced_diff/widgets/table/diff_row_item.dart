@@ -430,24 +430,29 @@ class _DiffRowItemState extends State<DiffRowItem> {
   Widget _buildStatusBadge(BuildContext context) {
     Color barColor;
     String label;
+    String prefix;
 
     switch (widget.detail.status) {
       case StringComparisonStatus.added:
         barColor = Colors.green;
         label = context.t.advancedDiff.status.added;
+        prefix = '+ ';
         break;
       case StringComparisonStatus.removed:
         barColor = Colors.red;
         label = context.t.advancedDiff.status.missing;
+        prefix = '- ';
         break;
       case StringComparisonStatus.modified:
         barColor = Colors.amber[700]!;
         int percent = ((1.0 - (widget.detail.similarity ?? 0)) * 100).toInt();
         label = context.t.advancedDiff.status.changed(percent: percent);
+        prefix = '~ ';
         break;
       default:
         barColor = Colors.grey[400]!;
         label = context.t.advancedDiff.status.same;
+        prefix = '= ';
     }
 
     return Row(
@@ -462,7 +467,16 @@ class _DiffRowItemState extends State<DiffRowItem> {
             borderRadius: BorderRadius.circular(1.5),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
+        Text(
+          prefix,
+          style: TextStyle(
+            color: barColor.withAlpha(180),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'monospace',
+          ),
+        ),
         Text(
           label,
           style: TextStyle(

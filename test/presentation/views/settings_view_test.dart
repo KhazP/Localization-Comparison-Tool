@@ -45,13 +45,17 @@ Future<void> pumpComparisonSettingsCard(
           builder: (context, snapshot) {
             final state = snapshot.data ?? initialState;
             return Scaffold(
-              body: ComparisonSettingsCard(
-                settings: state.appSettings,
-                state: state,
-                isDark: false,
-                isAmoled: false,
-                onShowAddPatternDialog: onShowAddPatternDialog ?? () {},
-                showLivePreview: false,
+              body: ListView(
+                children: [
+                  ComparisonSettingsCard(
+                    settings: state.appSettings,
+                    state: state,
+                    isDark: false,
+                    isAmoled: false,
+                    onShowAddPatternDialog: onShowAddPatternDialog ?? () {},
+                    showLivePreview: false,
+                  ),
+                ],
               ),
             );
           },
@@ -153,7 +157,6 @@ void main() {
         expect(find.byKey(const Key('settings_addPattern_button')),
             findsOneWidget);
       },
-      semanticsEnabled: false,
     );
 
     testWidgets(
@@ -178,7 +181,6 @@ void main() {
 
         expect(find.text('No ignore patterns set.'), findsOneWidget);
       },
-      semanticsEnabled: false,
     );
 
     testWidgets(
@@ -206,7 +208,6 @@ void main() {
 
         verify(() => testBloc.add(const UpdateIgnoreCase(true))).called(1);
       },
-      semanticsEnabled: false,
     );
 
     testWidgets(
@@ -237,7 +238,6 @@ void main() {
         verify(() => testBloc.add(const UpdateIgnoreWhitespace(true)))
             .called(1);
       },
-      semanticsEnabled: false,
     );
 
     testWidgets(
@@ -285,7 +285,6 @@ void main() {
         expect(
             find.byKey(Key('ignorePattern_tile_$newPattern')), findsOneWidget);
       },
-      semanticsEnabled: false,
     );
 
     testWidgets(
@@ -340,9 +339,8 @@ void main() {
         expect(find.byKey(Key('ignorePattern_tile_$otherPattern')),
             findsOneWidget);
       },
-      semanticsEnabled: false,
     );
-  }, skip: 'Widget layout assertions in tests are unstable.');
+  });
 
   group('AddIgnorePatternDialog', () {
     testWidgets(
@@ -367,7 +365,6 @@ void main() {
         expect(submittedPattern, 'new_pattern');
         expect(find.byKey(const Key('addPattern_textField')), findsNothing);
       },
-      semanticsEnabled: false,
     );
 
     testWidgets(
@@ -392,7 +389,6 @@ void main() {
         expect(submitted, isFalse);
         expect(find.byKey(const Key('addPattern_textField')), findsNothing);
       },
-      semanticsEnabled: false,
     );
   });
 }

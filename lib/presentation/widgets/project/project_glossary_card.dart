@@ -79,6 +79,7 @@ class ProjectGlossaryCard extends StatelessWidget {
                         context.t.projects.glossary.noSpecificTranslation)),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
+                  tooltip: 'Delete glossary term',
                   onPressed: () => _deleteTerm(context, item.id),
                 ),
                 onTap: () => _editTerm(context, item),

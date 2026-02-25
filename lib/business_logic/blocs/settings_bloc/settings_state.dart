@@ -92,9 +92,6 @@ class SettingsState with _$SettingsState {
     if (projectSettings?.defaultAiModel != null) {
       return projectSettings!.defaultAiModel!;
     }
-    if (projectSettings?.defaultAiModel != null) {
-      return projectSettings!.defaultAiModel!;
-    }
     return appSettings.defaultAiModel;
   }
 

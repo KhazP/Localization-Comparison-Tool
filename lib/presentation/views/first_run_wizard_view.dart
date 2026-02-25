@@ -28,6 +28,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
   File? _file2;
   bool _isDraggingOverSource = false;
   bool _isDraggingOverTarget = false;
+  bool _colorblindPresetApplied = false;
 
   Future<void> _pickFile(bool isSource) async {
     final result = await FilePicker.platform.pickFiles();
@@ -173,7 +174,12 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
+
+                    // Colorblind-Friendly Preset
+                    _buildColorblindPresetSection(context, colorScheme, isDark),
+
+                    const SizedBox(height: 32),
 
                     // Action Buttons
                     Center(
@@ -233,6 +239,108 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildColorblindPresetSection(
+      BuildContext context, ColorScheme colorScheme, bool isDark) {
+    const addedColor = Color(0xFF0077BB);
+    const removedColor = Color(0xFFEE7733);
+    const modifiedColor = Color(0xFF009988);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark
+            ? colorScheme.surface.withAlpha(40)
+            : colorScheme.surfaceContainerHighest.withAlpha(80),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(LucideIcons.eye, size: 20, color: colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Colorblind-Friendly Colors',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'These colors are distinguishable for most types of color blindness.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildColorChip('Added', addedColor),
+              const SizedBox(width: 16),
+              _buildColorChip('Removed', removedColor),
+              const SizedBox(width: 16),
+              _buildColorChip('Modified', modifiedColor),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _colorblindPresetApplied
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(LucideIcons.check, size: 16, color: Colors.green),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Preset applied',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.green,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                )
+              : OutlinedButton(
+                  onPressed: () {
+                    final bloc = context.read<SettingsBloc>();
+                    bloc.add(const UpdateDiffAddedColor(0xFF0077BB));
+                    bloc.add(const UpdateDiffRemovedColor(0xFFEE7733));
+                    bloc.add(const UpdateDiffModifiedColor(0xFF009988));
+                    setState(() => _colorblindPresetApplied = true);
+                  },
+                  child: const Text('Apply Colorblind-Friendly Preset'),
+                ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildColorChip(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 
@@ -299,7 +407,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
           height: 200,
           decoration: BoxDecoration(
             color: isDragging
-                ? colorScheme.primary.withOpacity(0.1)
+                ? colorScheme.primary.withValues(alpha: 0.1)
                 : theme.cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -311,7 +419,7 @@ class _FirstRunWizardViewState extends State<FirstRunWizardView> {
             boxShadow: [
               if (file != null)
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 )

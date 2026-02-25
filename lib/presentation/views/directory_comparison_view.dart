@@ -462,20 +462,20 @@ class _DirectoryComparisonViewState extends State<DirectoryComparisonView>
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isDragging ? accentColor.withOpacity(0.1) : cardColor,
+          color: isDragging ? accentColor.withValues(alpha: 0.1) : cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDragging
                 ? accentColor
                 : hasDirectory
-                    ? accentColor.withOpacity(0.5)
+                    ? accentColor.withValues(alpha: 0.5)
                     : borderColor,
             width: isDragging ? 2 : 1,
           ),
           boxShadow: isDragging
               ? [
                   BoxShadow(
-                    color: accentColor.withOpacity(0.2),
+                    color: accentColor.withValues(alpha: 0.2),
                     blurRadius: 12,
                     spreadRadius: 2,
                   )

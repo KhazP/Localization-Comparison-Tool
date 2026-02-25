@@ -1,17 +1,26 @@
 import 'dart:io';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:uuid/uuid.dart';
 import 'package:localizer_app_main/core/services/comparison_engine.dart';
+import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
+import 'package:localizer_app_main/data/models/comparison_history.dart';
+import 'package:localizer_app_main/data/models/comparison_status_detail.dart';
 import 'package:localizer_app_main/core/services/friendly_error_service.dart';
 import 'package:localizer_app_main/data/parsers/localization_parser.dart';
+import 'package:localizer_app_main/data/repositories/history_repository.dart';
 import 'package:localizer_app_main/data/repositories/warning_suppressions_repository.dart';
 
 part 'comparison_bloc.freezed.dart';
 
 // Events
-abstract class ComparisonEvent {}
+abstract class ComparisonEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
 /// Event to request file comparison.
 /// AppSettings are passed directly to avoid BLoC-to-BLoC coupling.
@@ -19,12 +28,17 @@ class CompareFilesRequested extends ComparisonEvent {
   final File file1;
   final File file2;
   final AppSettings settings;
+  final String? projectId;
 
   CompareFilesRequested({
     required this.file1,
     required this.file2,
     required this.settings,
+    this.projectId,
   });
+
+  @override
+  List<Object?> get props => [file1, file2, settings, projectId];
 }
 
 /// Event to request bilingual comparison from a single file.
@@ -32,12 +46,17 @@ class CompareBilingualFileRequested extends ComparisonEvent {
   final File file;
   final AppSettings settings;
   final bool isFromHistory;
+  final String? projectId;
 
   CompareBilingualFileRequested({
     required this.file,
     required this.settings,
     this.isFromHistory = false,
+    this.projectId,
   });
+
+  @override
+  List<Object?> get props => [file, settings, isFromHistory, projectId];
 }
 
 /// Event to compare files from history, with settings passed directly
@@ -46,13 +65,19 @@ class CompareFilesFromHistoryRequested extends ComparisonEvent {
   final String file2Path;
   final AppSettings settings;
   final bool isFromHistory;
+  final String? projectId;
 
   CompareFilesFromHistoryRequested({
     required this.file1Path,
     required this.file2Path,
     required this.settings,
     this.isFromHistory = true,
+    this.projectId,
   });
+
+  @override
+  List<Object?> get props =>
+      [file1Path, file2Path, settings, isFromHistory, projectId];
 }
 
 /// Updated progress callback type for percentage-based progress reporting
@@ -72,6 +97,9 @@ class ProceedWithComparison extends ComparisonEvent {
 
   ProceedWithComparison(this.result, this.file1, this.file2,
       {this.wasLoadedFromHistory = false});
+
+  @override
+  List<Object?> get props => [result, file1, file2, wasLoadedFromHistory];
 }
 
 /// Event to suppress the large file warning for a specific file path.
@@ -80,6 +108,9 @@ class SuppressLargeFileWarning extends ComparisonEvent {
   final String filePath;
 
   SuppressLargeFileWarning(this.filePath);
+
+  @override
+  List<Object?> get props => [filePath];
 }
 
 // States
@@ -113,6 +144,8 @@ class ComparisonState with _$ComparisonState {
 class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
   final ComparisonEngine comparisonEngine;
   final WarningSuppressionsRepository? warningSuppressionsRepository;
+  final HistoryRepository? historyRepository;
+  final QualityMetricsService _qualityMetricsService = QualityMetricsService();
 
   /// Optional progress callback for external progress tracking (percentage-based)
   final ProgressCallback? onProgress;
@@ -120,6 +153,7 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
   ComparisonBloc({
     required this.comparisonEngine,
     this.warningSuppressionsRepository,
+    this.historyRepository,
     this.onProgress,
   }) : super(ComparisonInitial()) {
     on<CompareFilesRequested>(_onCompareFilesRequested);
@@ -134,8 +168,10 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
     ComparisonResult result,
     File file1,
     File file2,
-    bool wasLoadedFromHistory,
-  ) {
+    bool wasLoadedFromHistory, {
+    AppSettings? settings,
+    String? projectId,
+  }) {
     // Check if the warning is suppressed for either file
     final isSuppressed = warningSuppressionsRepository != null &&
         (warningSuppressionsRepository!
@@ -150,6 +186,63 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       emit(ComparisonSuccess(result, file1, file2,
           wasLoadedFromHistory: wasLoadedFromHistory));
     }
+
+    // Record to history (fire-and-forget)
+    if (!wasLoadedFromHistory && settings != null) {
+      _recordHistory(result, file1, file2, settings, projectId);
+    }
+  }
+
+  Future<void> _recordHistory(
+    ComparisonResult result,
+    File file1,
+    File file2,
+    AppSettings settings,
+    String? projectId,
+  ) async {
+    if (historyRepository == null) return;
+
+    int added = 0, removed = 0, modified = 0, identical = 0;
+    result.diff.forEach((key, statusDetail) {
+      switch (statusDetail.status) {
+        case StringComparisonStatus.added:
+          added++;
+          break;
+        case StringComparisonStatus.removed:
+          removed++;
+          break;
+        case StringComparisonStatus.modified:
+          modified++;
+          break;
+        case StringComparisonStatus.identical:
+          identical++;
+          break;
+      }
+    });
+
+    final coverageMetrics = _qualityMetricsService.calculateCoverageFromMaps(
+      sourceData: result.file1Data,
+      targetData: result.file2Data,
+      settings: settings,
+    );
+
+    final session = ComparisonSession(
+      id: const Uuid().v4(),
+      timestamp: DateTime.now(),
+      file1Path: file1.path,
+      file2Path: file2.path,
+      stringsAdded: added,
+      stringsRemoved: removed,
+      stringsModified: modified,
+      stringsIdentical: identical,
+      sourceKeyCount: coverageMetrics.sourceKeyCount,
+      translatedKeyCount: coverageMetrics.translatedKeyCount,
+      sourceWordCount: coverageMetrics.sourceWordCount,
+      translatedWordCount: coverageMetrics.translatedWordCount,
+      projectId: projectId,
+    );
+
+    await historyRepository!.addComparisonToHistory(session);
   }
 
   void _onProceedWithComparison(
@@ -193,7 +286,8 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       );
 
       onProgress?.call(100, 'Comparison complete');
-      _handleComparisonResult(emit, result, event.file1, event.file2, false);
+      _handleComparisonResult(emit, result, event.file1, event.file2, false,
+          settings: event.settings, projectId: event.projectId);
     } catch (e) {
       final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
       emit(ComparisonFailure(friendlyError.toString()));
@@ -235,7 +329,8 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
       );
 
       onProgress?.call(100, 'Comparison complete');
-      _handleComparisonResult(emit, result, file1, file2, event.isFromHistory);
+      _handleComparisonResult(emit, result, file1, file2, event.isFromHistory,
+          settings: event.settings, projectId: event.projectId);
     } catch (e) {
       final friendlyError = FriendlyErrorService.getFriendlyMessage(e);
       emit(ComparisonFailure(friendlyError.toString()));
@@ -267,7 +362,8 @@ class ComparisonBloc extends Bloc<ComparisonEvent, ComparisonState> {
 
       onProgress?.call(100, 'Comparison complete');
       _handleComparisonResult(
-          emit, result, event.file, event.file, event.isFromHistory);
+          emit, result, event.file, event.file, event.isFromHistory,
+          settings: event.settings, projectId: event.projectId);
     } on InvalidBilingualFileException catch (e) {
       emit(ComparisonFailure(e.message));
     } catch (e) {

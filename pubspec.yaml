@@ -58,7 +58,6 @@ dependencies:
   protocol_handler: ^0.1.6 # For deep link protocol handling
   # macOS-specific integrations
   macos_window_utils: ^1.5.0 # For native macOS window styling (transparency, vibrancy)
-  macos_ui: ^2.0.9 # For macOS-native widgets (optional, can be used alongside Material)
   macos_dock_progress: ^0.1.0 # For dock progress and badges
   tray_manager: ^0.2.1 # For system tray support
   archive: ^3.6.1
@@ -77,6 +76,8 @@ dependencies:
   fast_immutable_collections: ^9.0.0 # High-performance immutable data structures for large translation maps
   google_generative_ai: ^0.4.3 # Gemini 3 Flash with chat/streaming
   tutorial_coach_mark: ^1.3.3
+  path_provider: ^2.1.5
+  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:

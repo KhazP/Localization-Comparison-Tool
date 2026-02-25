@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/data/cache/translation_cache.dart';
@@ -11,7 +12,10 @@ import 'package:localizer_app_main/data/services/translation_service.dart';
 part 'translation_bloc.freezed.dart';
 
 // Events
-abstract class TranslationEvent {}
+abstract class TranslationEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
 class TranslateText extends TranslationEvent {
   final String text;
@@ -26,11 +30,17 @@ class TranslateText extends TranslationEvent {
     this.sourceLanguage,
     required this.textKey,
   });
+
+  @override
+  List<Object?> get props => [text, targetLanguage, sourceLanguage, textKey];
 }
 
 class ClearTranslation extends TranslationEvent {
   final String textKey;
   ClearTranslation({required this.textKey});
+
+  @override
+  List<Object?> get props => [textKey];
 }
 
 // States

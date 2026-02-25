@@ -29,7 +29,7 @@ class AppSettingsAdapter extends TypeAdapter<AppSettings> {
           fields[6] == null ? 'Basic Comparison' : fields[6] as String,
       autoCheckForUpdates: fields[7] == null ? true : fields[7] as bool,
       appThemeMode: fields[8] == null ? 'System' : fields[8] as String,
-      accentColorValue: fields[9] == null ? 4286276095 : fields[9] as int,
+      accentColorValue: fields[9] == null ? 4288385023 : fields[9] as int,
       diffAddedColor: fields[10] == null ? 4283215696 : fields[10] as int,
       diffRemovedColor: fields[11] == null ? 4294198070 : fields[11] as int,
       diffModifiedColor: fields[12] == null ? 4294951175 : fields[12] as int,

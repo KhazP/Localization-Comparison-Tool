@@ -136,16 +136,19 @@ class ComparisonSettingsCard extends StatelessWidget {
               control: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SettingsDropdown(
-                    value: settings.comparisonMode,
-                    items: SettingsConstants.comparisonModes,
-                    onChanged: (val) {
-                      if (val != null) {
-                        bloc.add(UpdateComparisonMode(val));
-                      }
-                    },
-                    isDark: isDark,
-                    isAmoled: isAmoled,
+                  SizedBox(
+                    width: 180,
+                    child: SettingsDropdown(
+                      value: settings.comparisonMode,
+                      items: SettingsConstants.comparisonModes,
+                      onChanged: (val) {
+                        if (val != null) {
+                          bloc.add(UpdateComparisonMode(val));
+                        }
+                      },
+                      isDark: isDark,
+                      isAmoled: isAmoled,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Tooltip(

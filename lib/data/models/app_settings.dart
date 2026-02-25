@@ -33,7 +33,7 @@ class AppSettings extends HiveObject {
   @HiveField(8, defaultValue: 'System')
   String appThemeMode;
 
-  @HiveField(9, defaultValue: 0xFF7B61FF)
+  @HiveField(9, defaultValue: 0xFF9B8FFF)
   int accentColorValue;
 
   @HiveField(10, defaultValue: 0xFF4CAF50)
@@ -410,7 +410,7 @@ class AppSettings extends HiveObject {
       autoCheckForUpdates: true, // Default for new field
       appThemeMode: 'System', // Default for new field
       accentColorValue:
-          0xFF7B61FF, // Default for new field (Color(0xFF7B61FF).value)
+          0xFF9B8FFF, // Default accent color with WCAG AA contrast on dark
       diffAddedColor: 0xFF4CAF50, // Material Green
       diffRemovedColor: 0xFFF44336, // Material Red
       diffModifiedColor: 0xFFFFC107, // Material Amber

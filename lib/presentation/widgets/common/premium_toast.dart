@@ -82,15 +82,15 @@ class PremiumToast extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppThemeV2.darkCard.withOpacity(0.8)
+                    ? AppThemeV2.darkCard.withValues(alpha: 0.8)
                     : backgroundColor,
                 borderRadius: BorderRadius.circular(12),
                 border: isDark
-                    ? Border.all(color: foregroundColor.withOpacity(0.2))
+                    ? Border.all(color: foregroundColor.withValues(alpha: 0.2))
                     : null,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -146,7 +146,7 @@ class PremiumToast extends StatelessWidget {
                           size: 16,
                           color: isDark
                               ? AppThemeV2.darkTextSecondary
-                              : Colors.white.withOpacity(0.7),
+                              : Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
@@ -187,8 +187,8 @@ class _ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         backgroundColor: isDark
-            ? foregroundColor.withOpacity(0.1)
-            : Colors.white.withOpacity(0.2),
+            ? foregroundColor.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.2),
       ),
       child: Text(
         label,

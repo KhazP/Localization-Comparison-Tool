@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -9,43 +10,62 @@ import 'package:uuid/uuid.dart';
 part 'git_bloc.freezed.dart';
 
 // Events
-abstract class GitEvent {}
+abstract class GitEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
 class SelectRepository extends GitEvent {
   final String path;
   SelectRepository(this.path);
+
+  @override
+  List<Object?> get props => [path];
 }
 
-class LoadBranches extends GitEvent {
-  // final String repoPath; // Or get from state
-}
+class LoadBranches extends GitEvent {}
 
 class SwitchComparisonMode extends GitEvent {
   final ComparisonMode mode;
   SwitchComparisonMode(this.mode);
+
+  @override
+  List<Object?> get props => [mode];
 }
 
 class LoadCommits extends GitEvent {
   final String? branchName; // Optional filter
   final int limit;
   LoadCommits({this.branchName, this.limit = 50});
+
+  @override
+  List<Object?> get props => [branchName, limit];
 }
 
 class CompareBranches extends GitEvent {
   final String baseBranch;
   final String targetBranch;
   CompareBranches(this.baseBranch, this.targetBranch);
+
+  @override
+  List<Object?> get props => [baseBranch, targetBranch];
 }
 
 class CompareCommits extends GitEvent {
   final String baseSha;
   final String targetSha;
   CompareCommits(this.baseSha, this.targetSha);
+
+  @override
+  List<Object?> get props => [baseSha, targetSha];
 }
 
 class CheckConflicts extends GitEvent {
   final String repoPath;
   CheckConflicts(this.repoPath);
+
+  @override
+  List<Object?> get props => [repoPath];
 }
 
 class ResolveConflict extends GitEvent {
@@ -53,11 +73,17 @@ class ResolveConflict extends GitEvent {
   final String filePath;
   final ResolutionStrategy strategy;
   ResolveConflict(this.repoPath, this.filePath, this.strategy);
+
+  @override
+  List<Object?> get props => [repoPath, filePath, strategy];
 }
 
 class AbortMerge extends GitEvent {
   final String repoPath;
   AbortMerge(this.repoPath);
+
+  @override
+  List<Object?> get props => [repoPath];
 }
 
 class ResolveSingleConflict extends GitEvent {
@@ -67,22 +93,34 @@ class ResolveSingleConflict extends GitEvent {
   final ResolutionStrategy strategy;
   ResolveSingleConflict(
       this.repoPath, this.filePath, this.marker, this.strategy);
+
+  @override
+  List<Object?> get props => [repoPath, filePath, marker, strategy];
 }
 
 class MarkFileResolved extends GitEvent {
   final String repoPath;
   final String filePath;
   MarkFileResolved(this.repoPath, this.filePath);
+
+  @override
+  List<Object?> get props => [repoPath, filePath];
 }
 
 class CheckoutBranch extends GitEvent {
   final String branchName;
   CheckoutBranch(this.branchName);
+
+  @override
+  List<Object?> get props => [branchName];
 }
 
 class MergeBranch extends GitEvent {
   final String branchName;
   MergeBranch(this.branchName);
+
+  @override
+  List<Object?> get props => [branchName];
 }
 
 class PullChanges extends GitEvent {}
@@ -153,16 +191,34 @@ class GitState with _$GitState {
 }
 
 // BLoC
-// BLoC
 class GitBloc extends Bloc<GitEvent, GitState> {
   final GitService gitService;
   final HistoryRepository _historyRepository;
-  String? _currentRepoPath;
 
-  // Internal cache to persist state during mode switches if needed
-  List<GitBranch> _cachedBranches = [];
-  List<GitCommit> _cachedCommits = [];
-  ComparisonMode _currentMode = ComparisonMode.branch;
+  /// Reads the current repo path from the current state.
+  String? get _currentRepoPath => state.repoPath;
+
+  /// Reads cached branches from the current state.
+  List<GitBranch> get _cachedBranches =>
+      state.mapOrNull(
+        branchesLoaded: (s) => s.branches,
+      ) ??
+      [];
+
+  /// Reads cached commits from the current state.
+  List<GitCommit> get _cachedCommits =>
+      state.mapOrNull(
+        branchesLoaded: (s) => s.commits,
+      ) ??
+      [];
+
+  /// Reads the current comparison mode from the current state.
+  ComparisonMode get _currentMode =>
+      state.mapOrNull(
+        branchesLoaded: (s) => s.mode,
+        comparisonResult: (s) => s.mode,
+      ) ??
+      ComparisonMode.branch;
 
   GitBloc(
       {required this.gitService, required HistoryRepository historyRepository})
@@ -186,24 +242,16 @@ class GitBloc extends Bloc<GitEvent, GitState> {
 
   Future<void> _onSelectRepository(
       SelectRepository event, Emitter<GitState> emit) async {
-    // Reset caches on new repo
-    _cachedBranches = [];
-    _cachedCommits = [];
-    _currentMode = ComparisonMode.branch;
-
     try {
       final isValid = await gitService.isValidRepository(event.path);
       if (isValid) {
-        _currentRepoPath = event.path;
         emit(GitRepositorySelected(event.path, true));
         add(CheckConflicts(event.path)); // Check for conflicts first
         add(LoadBranches()); // Auto-load branches on valid selection
       } else {
-        _currentRepoPath = null;
         emit(GitRepositorySelected(event.path, false));
       }
     } catch (e) {
-      _currentRepoPath = null;
       emit(GitError('Error validating repository: ${e.toString()}',
           repoPath: event.path));
     }
@@ -211,90 +259,94 @@ class GitBloc extends Bloc<GitEvent, GitState> {
 
   Future<void> _onLoadBranches(
       LoadBranches event, Emitter<GitState> emit) async {
-    if (_currentRepoPath == null) {
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) {
       emit(GitError('No repository selected to load branches from.'));
       return;
     }
-    emit(GitLoading(_currentRepoPath!));
+    final cachedCommits = _cachedCommits;
+    final currentMode = _currentMode;
+    emit(GitLoading(repoPath));
     try {
-      final branches = await gitService.getBranches(_currentRepoPath!);
-      _cachedBranches = branches;
-      emit(GitBranchesLoaded(_currentRepoPath!, branches,
-          mode: _currentMode, commits: _cachedCommits));
+      final branches = await gitService.getBranches(repoPath);
+      emit(GitBranchesLoaded(repoPath, branches,
+          mode: currentMode, commits: cachedCommits));
     } catch (e) {
       emit(GitError('Failed to load branches: ${e.toString()}',
-          repoPath: _currentRepoPath));
+          repoPath: repoPath));
     }
   }
 
   void _onSwitchComparisonMode(
       SwitchComparisonMode event, Emitter<GitState> emit) {
-    if (_currentRepoPath == null) return;
-    _currentMode = event.mode;
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) return;
+    final newMode = event.mode;
 
     // If switching to commit mode and we don't have commits, load them
-    if (_currentMode == ComparisonMode.commit && _cachedCommits.isEmpty) {
+    if (newMode == ComparisonMode.commit && _cachedCommits.isEmpty) {
       add(LoadCommits());
     }
 
     // Re-emit Loaded state with new mode
-    emit(GitBranchesLoaded(_currentRepoPath!, _cachedBranches,
-        mode: _currentMode, commits: _cachedCommits));
+    emit(GitBranchesLoaded(repoPath, _cachedBranches,
+        mode: newMode, commits: _cachedCommits));
   }
 
   Future<void> _onLoadCommits(LoadCommits event, Emitter<GitState> emit) async {
-    if (_currentRepoPath == null) return;
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) return;
+
+    final cachedBranches = _cachedBranches;
+    final currentMode = _currentMode;
+    final cachedCommits = _cachedCommits;
 
     // Emit loading state for commits specifically - preserve existing branches/mode
-    emit(GitBranchesLoaded(_currentRepoPath!, _cachedBranches,
-        mode: _currentMode, commits: _cachedCommits, isLoadingCommits: true));
+    emit(GitBranchesLoaded(repoPath, cachedBranches,
+        mode: currentMode, commits: cachedCommits, isLoadingCommits: true));
 
     try {
-      final commits = await gitService.getCommits(_currentRepoPath!,
+      final commits = await gitService.getCommits(repoPath,
           branchName: event.branchName, limit: event.limit);
-      _cachedCommits = commits;
-      emit(GitBranchesLoaded(_currentRepoPath!, _cachedBranches,
-          mode: _currentMode, commits: commits, isLoadingCommits: false));
+      emit(GitBranchesLoaded(repoPath, cachedBranches,
+          mode: currentMode, commits: commits, isLoadingCommits: false));
     } catch (e) {
       // Don't error the whole screen, just stop loading
       debugPrint('Error loading commits: $e');
-      emit(GitBranchesLoaded(_currentRepoPath!, _cachedBranches,
-          mode: _currentMode,
-          commits: _cachedCommits, // Keep old if fail
+      emit(GitBranchesLoaded(repoPath, cachedBranches,
+          mode: currentMode,
+          commits: cachedCommits, // Keep old if fail
           isLoadingCommits: false));
-      // Optionally could emit a side-effect or snackbar via listener but keeping it simple
     }
   }
 
   Future<void> _onCompareBranches(
       CompareBranches event, Emitter<GitState> emit) async {
-    if (_currentRepoPath == null) return;
-    emit(GitComparisonInProgress(_currentRepoPath!));
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) return;
+    emit(GitComparisonInProgress(repoPath));
     try {
       final diffFiles = await gitService.compareBranches(
-          _currentRepoPath!, event.baseBranch, event.targetBranch);
+          repoPath, event.baseBranch, event.targetBranch);
       emit(GitComparisonResult(
-          _currentRepoPath!, diffFiles, event.baseBranch, event.targetBranch,
+          repoPath, diffFiles, event.baseBranch, event.targetBranch,
           mode: ComparisonMode.branch));
 
       // Save to history
       try {
-        final totalChanges =
-            diffFiles.length; // Approximate, assuming file count
-        // Can refine stats if GitDiffFile has more info
+        final totalChanges = diffFiles.length;
 
         final session = ComparisonSession(
           id: const Uuid().v4(),
           timestamp: DateTime.now(),
-          file1Path: _currentRepoPath!,
-          file2Path: _currentRepoPath!,
-          stringsAdded:
-              0, // Git diff usually lines, not easily mapped to strings w/o parsing
+          file1Path: repoPath,
+          file2Path: repoPath,
+          stringsAdded: 0,
           stringsRemoved: 0,
           stringsModified: 0,
           stringsIdentical: 0,
           type: ComparisonType.git,
-          gitRepoPath: _currentRepoPath!,
+          gitRepoPath: repoPath,
           gitBranch1: event.baseBranch,
           gitBranch2: event.targetBranch,
           fileCount: totalChanges,
@@ -305,19 +357,20 @@ class GitBloc extends Bloc<GitEvent, GitState> {
       }
     } catch (e) {
       emit(GitError('Failed to compare branches: ${e.toString()}',
-          repoPath: _currentRepoPath));
+          repoPath: repoPath));
     }
   }
 
   Future<void> _onCompareCommits(
       CompareCommits event, Emitter<GitState> emit) async {
-    if (_currentRepoPath == null) return;
-    emit(GitComparisonInProgress(_currentRepoPath!));
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) return;
+    emit(GitComparisonInProgress(repoPath));
     try {
       final diffFiles = await gitService.compareCommits(
-          _currentRepoPath!, event.baseSha, event.targetSha);
+          repoPath, event.baseSha, event.targetSha);
       emit(GitComparisonResult(
-          _currentRepoPath!, diffFiles, event.baseSha, event.targetSha,
+          repoPath, diffFiles, event.baseSha, event.targetSha,
           mode: ComparisonMode.commit));
 
       // Save to history
@@ -327,14 +380,14 @@ class GitBloc extends Bloc<GitEvent, GitState> {
         final session = ComparisonSession(
           id: const Uuid().v4(),
           timestamp: DateTime.now(),
-          file1Path: _currentRepoPath!,
-          file2Path: _currentRepoPath!,
+          file1Path: repoPath,
+          file2Path: repoPath,
           stringsAdded: 0,
           stringsRemoved: 0,
           stringsModified: 0,
           stringsIdentical: 0,
           type: ComparisonType.git,
-          gitRepoPath: _currentRepoPath!,
+          gitRepoPath: repoPath,
           gitCommit1: event.baseSha,
           gitCommit2: event.targetSha,
           fileCount: totalChanges,
@@ -345,7 +398,7 @@ class GitBloc extends Bloc<GitEvent, GitState> {
       }
     } catch (e) {
       emit(GitError('Failed to compare commits: ${e.toString()}',
-          repoPath: _currentRepoPath));
+          repoPath: repoPath));
     }
   }
 
@@ -415,44 +468,44 @@ class GitBloc extends Bloc<GitEvent, GitState> {
 
   Future<void> _onCheckoutBranch(
       CheckoutBranch event, Emitter<GitState> emit) async {
-    if (_currentRepoPath == null) return;
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) return;
     try {
-      await gitService.checkoutBranch(_currentRepoPath!, event.branchName);
+      await gitService.checkoutBranch(repoPath, event.branchName);
       add(LoadBranches()); // Refresh branches/head
-      add(CheckConflicts(_currentRepoPath!));
-      emit(GitOperationSuccess(
-          _currentRepoPath!, 'Checked out ${event.branchName}'));
+      add(CheckConflicts(repoPath));
+      emit(GitOperationSuccess(repoPath, 'Checked out ${event.branchName}'));
     } catch (e) {
-      emit(GitError('Failed to checkout branch: $e',
-          repoPath: _currentRepoPath));
+      emit(GitError('Failed to checkout branch: $e', repoPath: repoPath));
     }
   }
 
   Future<void> _onMergeBranch(MergeBranch event, Emitter<GitState> emit) async {
-    if (_currentRepoPath == null) return;
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) return;
     try {
-      await gitService.mergeBranch(_currentRepoPath!, event.branchName);
-      add(CheckConflicts(_currentRepoPath!)); // Check if merge caused conflict
+      await gitService.mergeBranch(repoPath, event.branchName);
+      add(CheckConflicts(repoPath)); // Check if merge caused conflict
       add(LoadBranches());
-      emit(
-          GitOperationSuccess(_currentRepoPath!, 'Merged ${event.branchName}'));
+      emit(GitOperationSuccess(repoPath, 'Merged ${event.branchName}'));
     } catch (e) {
       // Even if failed, check for conflicts (handled inside service mostly but safe to double check)
-      add(CheckConflicts(_currentRepoPath!));
-      emit(GitError('Merge failed: $e', repoPath: _currentRepoPath));
+      add(CheckConflicts(repoPath));
+      emit(GitError('Merge failed: $e', repoPath: repoPath));
     }
   }
 
   Future<void> _onPullChanges(PullChanges event, Emitter<GitState> emit) async {
-    if (_currentRepoPath == null) return;
+    final repoPath = _currentRepoPath;
+    if (repoPath == null) return;
     try {
-      await gitService.pull(_currentRepoPath!);
-      add(CheckConflicts(_currentRepoPath!));
+      await gitService.pull(repoPath);
+      add(CheckConflicts(repoPath));
       add(LoadBranches());
-      emit(GitOperationSuccess(_currentRepoPath!, 'Pull successful'));
+      emit(GitOperationSuccess(repoPath, 'Pull successful'));
     } catch (e) {
-      add(CheckConflicts(_currentRepoPath!));
-      emit(GitError('Pull failed: $e', repoPath: _currentRepoPath));
+      add(CheckConflicts(repoPath));
+      emit(GitError('Pull failed: $e', repoPath: repoPath));
     }
   }
 }

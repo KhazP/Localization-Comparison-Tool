@@ -454,7 +454,7 @@ Widget _buildOverflowMenu({
           size: 18,
           color: theme.iconTheme.color,
         ),
-        tooltip: '',
+        tooltip: 'More actions',
         onSelected: (action) {
           switch (action) {
             case _OverflowAction.edit:
@@ -575,20 +575,17 @@ class _ActionIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Icon(
-            icon,
-            size: 18,
-            color: color ?? Theme.of(context).iconTheme.color,
-          ),
-        ),
+    return IconButton(
+      icon: Icon(
+        icon,
+        size: 18,
+        color: color ?? Theme.of(context).iconTheme.color,
       ),
+      tooltip: tooltip,
+      onPressed: onPressed,
+      padding: const EdgeInsets.all(6),
+      constraints: const BoxConstraints(),
+      splashRadius: 16,
     );
   }
 }

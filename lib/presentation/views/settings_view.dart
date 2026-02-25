@@ -209,6 +209,7 @@ class _SettingsViewState extends State<SettingsView>
                 title: Text(context.t.settings.title),
                 leading: IconButton(
                   icon: const Icon(LucideIcons.arrowLeft),
+                  tooltip: 'Back',
                   onPressed: () => Navigator.of(context).maybePop(),
                 ),
               )
@@ -506,6 +507,7 @@ class _SettingsViewState extends State<SettingsView>
                               ? AppThemeV2.darkTextMuted
                               : AppThemeV2.lightTextMuted,
                         ),
+                        tooltip: 'Clear search',
                         onPressed: () {
                           setState(() {
                             _searchController.clear();

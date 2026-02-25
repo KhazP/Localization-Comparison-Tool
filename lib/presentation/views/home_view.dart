@@ -292,52 +292,58 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                       const ProjectIndicator(),
                                       const SizedBox(height: 12),
                                       // Theme toggle button
-                                      Tooltip(
-                                        message:
-                                            context.t.nav.tooltipThemeToggle,
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            onTap: _toggleTheme,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: BoxDecoration(
-                                                color: colorScheme.surface,
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: Theme.of(
-                                                    context,
-                                                  ).dividerColor,
-                                                ),
+                                      Semantics(
+                                        button: true,
+                                        label: 'Toggle theme',
+                                        child: Tooltip(
+                                          message:
+                                              context.t.nav.tooltipThemeToggle,
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap: _toggleTheme,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                12,
                                               ),
-                                              child: AnimatedSwitcher(
-                                                duration: const Duration(
-                                                  milliseconds: 200,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                  color: colorScheme.surface,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).dividerColor,
+                                                  ),
                                                 ),
-                                                transitionBuilder:
-                                                    (child, animation) {
-                                                  return RotationTransition(
-                                                    turns: Tween(
-                                                      begin: 0.5,
-                                                      end: 1.0,
-                                                    ).animate(animation),
-                                                    child: FadeTransition(
-                                                      opacity: animation,
-                                                      child: child,
-                                                    ),
-                                                  );
-                                                },
-                                                child: Icon(
-                                                  isDarkMode
-                                                      ? LucideIcons.sun
-                                                      : LucideIcons.moon,
-                                                  key: ValueKey(isDarkMode),
-                                                  size: 20,
-                                                  color: colorScheme.primary,
+                                                child: AnimatedSwitcher(
+                                                  duration: const Duration(
+                                                    milliseconds: 200,
+                                                  ),
+                                                  transitionBuilder:
+                                                      (child, animation) {
+                                                    return RotationTransition(
+                                                      turns: Tween(
+                                                        begin: 0.5,
+                                                        end: 1.0,
+                                                      ).animate(animation),
+                                                      child: FadeTransition(
+                                                        opacity: animation,
+                                                        child: child,
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Icon(
+                                                    isDarkMode
+                                                        ? LucideIcons.sun
+                                                        : LucideIcons.moon,
+                                                    key: ValueKey(isDarkMode),
+                                                    size: 20,
+                                                    color: colorScheme.primary,
+                                                  ),
                                                 ),
                                               ),
                                             ),

@@ -18,6 +18,8 @@ class MockApiKeyValidationService extends Mock
     implements ApiKeyValidationService {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late MockSettingsRepository mockSettingsRepository;
   late MockSecureStorageService mockSecureStorageService;
   late MockApiKeyValidationService mockApiKeyValidationService;
@@ -143,16 +145,6 @@ void main() {
     blocTest<SettingsBloc, SettingsState>(
       'UpdateGoogleTranslateApiKey saves to Secure Storage and clears from Hive',
       build: () {
-        when(() => mockSettingsRepository.loadSettings())
-            .thenAnswer((_) async => initialSettings);
-        when(() => mockSecureStorageService.getGoogleApiKey())
-            .thenAnswer((_) async => null);
-        when(() => mockSecureStorageService.getDeepLApiKey())
-            .thenAnswer((_) async => null);
-        when(() => mockSecureStorageService.getGeminiApiKey())
-            .thenAnswer((_) async => null);
-        when(() => mockSecureStorageService.getOpenAiApiKey())
-            .thenAnswer((_) async => null);
         when(() => mockSecureStorageService.storeGoogleApiKey(any()))
             .thenAnswer((_) async {});
         when(() => mockSettingsRepository.saveSettings(any()))
@@ -164,12 +156,14 @@ void main() {
           apiKeyValidationService: mockApiKeyValidationService,
         );
       },
-      act: (bloc) async {
-        bloc.add(LoadSettings());
-        await Future.delayed(const Duration(milliseconds: 50)); // Wait for load
-        bloc.add(const UpdateGoogleTranslateApiKey('new_google_key'));
-      },
-      skip: 2, // Skip loading and first loaded state
+      seed: () => SettingsState(
+        status: SettingsStatus.loaded,
+        appSettings: initialSettings,
+        apiKeyTests: {},
+      ),
+      act: (bloc) =>
+          bloc.add(const UpdateGoogleTranslateApiKey('new_google_key')),
+      wait: const Duration(milliseconds: 100),
       verify: (_) {
         verify(() =>
                 mockSecureStorageService.storeGoogleApiKey('new_google_key'))

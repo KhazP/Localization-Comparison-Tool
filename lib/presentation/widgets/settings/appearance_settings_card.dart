@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/appearance_bloc/appearance_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/themes/app_theme_v2.dart';
@@ -40,7 +40,7 @@ class AppearanceSettingsCard extends StatelessWidget {
           isAmoled: isAmoled,
           onReset: () {
             final defaults = AppSettings.defaultSettings();
-            context.read<SettingsBloc>()
+            context.read<AppearanceBloc>()
               ..add(UpdateAppThemeMode(defaults.appThemeMode))
               ..add(UpdateDiffFontSize(defaults.diffFontSize))
               ..add(UpdateDiffFontFamily(defaults.diffFontFamily))
@@ -55,7 +55,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                 items: themeModes,
                 onChanged: (val) {
                   if (val != null) {
-                    context.read<SettingsBloc>().add(UpdateAppThemeMode(val));
+                    context.read<AppearanceBloc>().add(UpdateAppThemeMode(val));
                   }
                 },
                 isDark: isDark,
@@ -95,7 +95,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                         divisions: 8,
                         label: '${settings.diffFontSize.round()}px',
                         onChanged: (value) => context
-                            .read<SettingsBloc>()
+                            .read<AppearanceBloc>()
                             .add(UpdateDiffFontSize(value)),
                         activeColor: Theme.of(context).colorScheme.primary,
                       ),
@@ -122,7 +122,9 @@ class AppearanceSettingsCard extends StatelessWidget {
                 items: fontFamilies,
                 onChanged: (val) {
                   if (val != null) {
-                    context.read<SettingsBloc>().add(UpdateDiffFontFamily(val));
+                    context
+                        .read<AppearanceBloc>()
+                        .add(UpdateDiffFontFamily(val));
                   }
                 },
                 isDark: isDark,
@@ -141,16 +143,20 @@ class AppearanceSettingsCard extends StatelessWidget {
               label: context.t.settings.appearance.accentColor,
               control: Row(
                 children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: Color(settings.accentColorValue),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: SettingsThemeHelper(
-                                isDark: isDark, isAmoled: isAmoled)
-                            .borderColor,
+                  Semantics(
+                    label:
+                        'Color swatch: #${Color(settings.accentColorValue).value.toRadixString(16).toUpperCase().substring(2)}',
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: Color(settings.accentColorValue),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: SettingsThemeHelper(
+                                  isDark: isDark, isAmoled: isAmoled)
+                              .borderColor,
+                        ),
                       ),
                     ),
                   ),
@@ -160,7 +166,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                       context,
                       Color(settings.accentColorValue),
                       (color) => context
-                          .read<SettingsBloc>()
+                          .read<AppearanceBloc>()
                           .add(UpdateAccentColor(color.toARGB32())),
                       title: context.t.settings.appearance.pickAccentColor,
                     ),
@@ -345,7 +351,7 @@ class DiffColorsSettingsCard extends StatelessWidget {
       isDark: isDark,
       isAmoled: isAmoled,
       onReset: () {
-        context.read<SettingsBloc>().add(ResetDiffColors());
+        context.read<AppearanceBloc>().add(ResetDiffColors());
       },
       children: [
         Padding(
@@ -372,27 +378,27 @@ class DiffColorsSettingsCard extends StatelessWidget {
             context, context.t.diff.added, Color(settings.diffAddedColor),
             (color) {
           context
-              .read<SettingsBloc>()
+              .read<AppearanceBloc>()
               .add(UpdateDiffAddedColor(color.toARGB32()));
         }),
         _buildColorRow(
             context, context.t.diff.removed, Color(settings.diffRemovedColor),
             (color) {
           context
-              .read<SettingsBloc>()
+              .read<AppearanceBloc>()
               .add(UpdateDiffRemovedColor(color.toARGB32()));
         }),
         _buildColorRow(
             context, context.t.diff.modified, Color(settings.diffModifiedColor),
             (color) {
           context
-              .read<SettingsBloc>()
+              .read<AppearanceBloc>()
               .add(UpdateDiffModifiedColor(color.toARGB32()));
         }),
         _buildColorRow(context, context.t.settings.appearance.identical,
             Color(settings.diffIdenticalColor), (color) {
           context
-              .read<SettingsBloc>()
+              .read<AppearanceBloc>()
               .add(UpdateDiffIdenticalColor(color.toARGB32()));
         }, showDivider: false),
       ],
@@ -429,7 +435,7 @@ class DiffColorsSettingsCard extends StatelessWidget {
         return ActionChip(
           label: Text(label),
           onPressed: () {
-            context.read<SettingsBloc>().add(ApplyThemePreset(
+            context.read<AppearanceBloc>().add(ApplyThemePreset(
                   added: entry.value.added.toARGB32(),
                   removed: entry.value.removed.toARGB32(),
                   modified: entry.value.modified.toARGB32(),
@@ -457,15 +463,19 @@ class DiffColorsSettingsCard extends StatelessWidget {
       showDivider: showDivider,
       control: Row(
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled)
-                    .borderColor,
+          Semantics(
+            label:
+                'Color swatch: #${color.value.toRadixString(16).toUpperCase().substring(2)}',
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: SettingsThemeHelper(isDark: isDark, isAmoled: isAmoled)
+                      .borderColor,
+                ),
               ),
             ),
           ),

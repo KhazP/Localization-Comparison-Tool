@@ -13,6 +13,9 @@ import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_sta
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_event.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_scope.dart';
 import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/appearance_bloc/appearance_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/ai_services_bloc/ai_services_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/file_handling_bloc/file_handling_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/theme_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/translation_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/file_watcher_bloc/file_watcher_bloc.dart';
@@ -86,6 +89,23 @@ class MyApp extends StatelessWidget {
               apiKeyValidationService: apiKeyValidationService,
             )..add(LoadSettings()),
           ),
+          BlocProvider<AppearanceBloc>(
+            create: (context) => AppearanceBloc(
+              settingsRepository: settingsRepository,
+            )..add(LoadAppearanceSettings()),
+          ),
+          BlocProvider<AiServicesBloc>(
+            create: (context) => AiServicesBloc(
+              settingsRepository: settingsRepository,
+              secureStorageService: secureStorageService,
+              apiKeyValidationService: apiKeyValidationService,
+            )..add(LoadAiServicesSettings()),
+          ),
+          BlocProvider<FileHandlingBloc>(
+            create: (context) => FileHandlingBloc(
+              settingsRepository: settingsRepository,
+            )..add(LoadFileHandlingSettings()),
+          ),
           BlocProvider<ThemeBloc>(
             create: (context) => ThemeBloc(initialSettings: initialAppSettings),
           ),
@@ -96,6 +116,7 @@ class MyApp extends StatelessWidget {
             create: (context) => ComparisonBloc(
               comparisonEngine: comparisonEngine,
               warningSuppressionsRepository: warningSuppressionsRepository,
+              historyRepository: historyRepository,
               onProgress: (percentage, stage, {bytesProcessed, totalBytes}) {
                 final progressBloc = context.read<ProgressBloc>();
                 if (percentage <= 0) {

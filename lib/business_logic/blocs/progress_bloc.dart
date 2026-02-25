@@ -1,19 +1,24 @@
-import 'dart:io';
-
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:windows_taskbar/windows_taskbar.dart';
+import 'package:localizer_app_main/core/services/platform_taskbar_service.dart';
 
 part 'progress_bloc.freezed.dart';
 
 // Events
-abstract class ProgressEvent {}
+abstract class ProgressEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
 class ComparisonStarted extends ProgressEvent {
   final int totalSteps;
   final String initialMessage;
   ComparisonStarted(
       {this.totalSteps = 100, this.initialMessage = 'Starting...'});
+
+  @override
+  List<Object?> get props => [totalSteps, initialMessage];
 }
 
 /// Updated progress event with more granular information
@@ -29,6 +34,9 @@ class ProgressUpdated extends ProgressEvent {
     this.bytesProcessed,
     this.totalBytes,
   });
+
+  @override
+  List<Object?> get props => [percentage, stage, bytesProcessed, totalBytes];
 }
 
 class ComparisonCompleted extends ProgressEvent {}
@@ -36,6 +44,9 @@ class ComparisonCompleted extends ProgressEvent {}
 class ComparisonError extends ProgressEvent {
   final String errorMessage;
   ComparisonError(this.errorMessage);
+
+  @override
+  List<Object?> get props => [errorMessage];
 }
 
 // States
@@ -107,6 +118,7 @@ String _formatBytes(int bytes) {
 // BLoC
 class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
   DateTime? _startTime;
+  final PlatformTaskbarService _taskbar = PlatformTaskbarService();
 
   ProgressBloc() : super(ProgressInitial()) {
     on<ComparisonStarted>((event, emit) {
@@ -144,27 +156,18 @@ class ProgressBloc extends Bloc<ProgressEvent, ProgressState> {
     });
   }
 
-  /// Update the Windows taskbar progress indicator
+  /// Update the taskbar progress indicator
   void _updateTaskbarProgress(int percentage) {
-    if (!Platform.isWindows) return;
-
-    final progress = percentage.clamp(0, 100);
-    WindowsTaskbar.setProgress(progress, 100);
-    WindowsTaskbar.setProgressMode(TaskbarProgressMode.normal);
+    _taskbar.setNormalProgress(percentage);
   }
 
-  /// Clear the Windows taskbar progress indicator
+  /// Clear the taskbar progress indicator
   void _clearTaskbarProgress() {
-    if (!Platform.isWindows) return;
-
-    WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
+    _taskbar.clearProgress();
   }
 
-  /// Set the Windows taskbar to error state
+  /// Set the taskbar to error state
   void _setTaskbarError() {
-    if (!Platform.isWindows) return;
-
-    WindowsTaskbar.setProgressMode(TaskbarProgressMode.error);
-    WindowsTaskbar.setProgress(100, 100);
+    _taskbar.setError();
   }
 }

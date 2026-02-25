@@ -1,7 +1,23 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart'
+    hide
+        UpdateDefaultSourceEncoding,
+        UpdateDefaultTargetEncoding,
+        UpdateAutoDetectEncoding,
+        UpdateCsvDelimiter,
+        UpdateHandleByteOrderMark,
+        UpdateAutoReloadOnChange,
+        UpdateDefaultExportDirectory,
+        UpdateDefaultExportFormat,
+        UpdateIncludeUtf8Bom,
+        UpdateOpenFolderAfterExport,
+        UpdateAutoBackup,
+        UpdateBackupDirectory,
+        UpdateBackupsToKeep,
+        ResetFileHandlingSettings;
+import 'package:localizer_app_main/business_logic/blocs/file_handling_bloc/file_handling_bloc.dart';
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/presentation/widgets/settings/settings_constants.dart';
@@ -28,13 +44,14 @@ class FileHandlingSettingsCard extends StatelessWidget {
     if (selected == null) return;
 
     if (context.mounted) {
-      context.read<SettingsBloc>().add(UpdateBackupDirectory(selected));
+      context.read<FileHandlingBloc>().add(UpdateBackupDirectory(selected));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<SettingsBloc>();
+    final fileBloc = context.read<FileHandlingBloc>();
+    final settingsBloc = context.read<SettingsBloc>();
 
     // Use effective values for overridden settings
     final defaultSourceFormat = state.isProjectScope
@@ -62,19 +79,19 @@ class FileHandlingSettingsCard extends StatelessWidget {
           headerIcon: LucideIcons.fileType,
           onReset: () {
             if (state.isProjectScope) {
-              bloc.add(const ResetCategoryToGlobal(
+              settingsBloc.add(const ResetCategoryToGlobal(
                   'fileHandling')); // This resets ALL file handling, might strictly be section based but category is 'fileHandling'
               // Note: Spec says per-section reset. Currently 'fileHandling' covers formats + encoding.
               // We will use ResetCategoryToGlobal('fileHandling') for both containers for now as they share the override category.
             } else {
-              bloc.add(ResetFileHandlingSettings());
+              fileBloc.add(ResetFileHandlingSettings());
             }
           },
-          trailing: _buildSectionResetButton(context, bloc),
+          trailing: _buildSectionResetButton(context, settingsBloc),
           children: [
             _buildOverridableSettingsRow(
               context: context,
-              bloc: bloc,
+              bloc: settingsBloc,
               settingKey: 'defaultSourceFormat',
               label: context.t.settings.fileHandling.sourceFormat,
               control: SettingsDropdown(
@@ -83,10 +100,10 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 onChanged: (val) {
                   if (val != null) {
                     if (state.isProjectScope) {
-                      bloc.add(UpdateProjectOverridableSetting(
+                      settingsBloc.add(UpdateProjectOverridableSetting(
                           settingKey: 'defaultSourceFormat', value: val));
                     } else {
-                      bloc.add(UpdateDefaultSourceFormat(val));
+                      settingsBloc.add(UpdateDefaultSourceFormat(val));
                     }
                   }
                 },
@@ -100,7 +117,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
             ),
             _buildOverridableSettingsRow(
               context: context,
-              bloc: bloc,
+              bloc: settingsBloc,
               settingKey: 'defaultTargetFormat',
               label: context.t.settings.fileHandling.targetFormat,
               control: SettingsDropdown(
@@ -109,10 +126,10 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 onChanged: (val) {
                   if (val != null) {
                     if (state.isProjectScope) {
-                      bloc.add(UpdateProjectOverridableSetting(
+                      settingsBloc.add(UpdateProjectOverridableSetting(
                           settingKey: 'defaultTargetFormat', value: val));
                     } else {
-                      bloc.add(UpdateDefaultTargetFormat(val));
+                      settingsBloc.add(UpdateDefaultTargetFormat(val));
                     }
                   }
                 },
@@ -133,11 +150,11 @@ class FileHandlingSettingsCard extends StatelessWidget {
           isAmoled: isAmoled,
           headerIcon: LucideIcons.binary,
           trailing: _buildSectionResetButton(context,
-              bloc), // Reuse same reset logic for now as they are same category
+              settingsBloc), // Reuse same reset logic for now as they are same category
           children: [
             _buildOverridableSettingsRow(
               context: context,
-              bloc: bloc,
+              bloc: settingsBloc,
               settingKey: 'defaultSourceEncoding',
               label: context.t.settings.fileHandling.sourceEncoding,
               control: SettingsDropdown(
@@ -146,10 +163,10 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 onChanged: (val) {
                   if (val != null) {
                     if (state.isProjectScope) {
-                      bloc.add(UpdateProjectOverridableSetting(
+                      settingsBloc.add(UpdateProjectOverridableSetting(
                           settingKey: 'defaultSourceEncoding', value: val));
                     } else {
-                      bloc.add(UpdateDefaultSourceEncoding(val));
+                      fileBloc.add(UpdateDefaultSourceEncoding(val));
                     }
                   }
                 },
@@ -159,7 +176,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
             ),
             _buildOverridableSettingsRow(
               context: context,
-              bloc: bloc,
+              bloc: settingsBloc,
               settingKey: 'defaultTargetEncoding',
               label: context.t.settings.fileHandling.targetEncoding,
               control: SettingsDropdown(
@@ -168,10 +185,10 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 onChanged: (val) {
                   if (val != null) {
                     if (state.isProjectScope) {
-                      bloc.add(UpdateProjectOverridableSetting(
+                      settingsBloc.add(UpdateProjectOverridableSetting(
                           settingKey: 'defaultTargetEncoding', value: val));
                     } else {
-                      bloc.add(UpdateDefaultTargetEncoding(val));
+                      fileBloc.add(UpdateDefaultTargetEncoding(val));
                     }
                   }
                 },
@@ -181,7 +198,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
             ),
             _buildOverridableSettingsRow(
               context: context,
-              bloc: bloc,
+              bloc: settingsBloc,
               settingKey: 'autoDetectEncoding',
               label: context.t.settings.fileHandling.autoDetect,
               description:
@@ -190,10 +207,10 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 value: autoDetectEncoding,
                 onChanged: (val) {
                   if (state.isProjectScope) {
-                    bloc.add(UpdateProjectOverridableSetting(
+                    settingsBloc.add(UpdateProjectOverridableSetting(
                         settingKey: 'autoDetectEncoding', value: val));
                   } else {
-                    bloc.add(UpdateAutoDetectEncoding(val));
+                    fileBloc.add(UpdateAutoDetectEncoding(val));
                   }
                 },
                 activeColor: Theme.of(context).colorScheme.primary,
@@ -243,7 +260,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 onChanged: (val) {
                   if (val != null) {
                     context
-                        .read<SettingsBloc>()
+                        .read<FileHandlingBloc>()
                         .add(UpdateDefaultExportFormat(val));
                   }
                 },
@@ -259,8 +276,9 @@ class FileHandlingSettingsCard extends StatelessWidget {
                   context.t.settings.fileHandling.includeUtf8BomDescription,
               control: Switch(
                 value: settings.includeUtf8Bom,
-                onChanged: (val) =>
-                    context.read<SettingsBloc>().add(UpdateIncludeUtf8Bom(val)),
+                onChanged: (val) => context
+                    .read<FileHandlingBloc>()
+                    .add(UpdateIncludeUtf8Bom(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
               isDark: isDark,
@@ -271,7 +289,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
               control: Switch(
                 value: settings.openFolderAfterExport,
                 onChanged: (val) => context
-                    .read<SettingsBloc>()
+                    .read<FileHandlingBloc>()
                     .add(UpdateOpenFolderAfterExport(val)),
                 activeColor: Theme.of(context).colorScheme.primary,
               ),
@@ -308,8 +326,9 @@ class FileHandlingSettingsCard extends StatelessWidget {
                 children: [
                   Switch(
                     value: settings.autoBackup,
-                    onChanged: (val) =>
-                        context.read<SettingsBloc>().add(UpdateAutoBackup(val)),
+                    onChanged: (val) => context
+                        .read<FileHandlingBloc>()
+                        .add(UpdateAutoBackup(val)),
                     activeColor: Theme.of(context).colorScheme.primary,
                   ),
                   // Status indicator
@@ -359,7 +378,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
                         controller: TextEditingController(
                             text: settings.backupDirectory),
                         onChanged: (value) => context
-                            .read<SettingsBloc>()
+                            .read<FileHandlingBloc>()
                             .add(UpdateBackupDirectory(value)),
                         decoration: InputDecoration(
                           hintText: context.t.settings.backup.useOriginalFolder,
@@ -395,7 +414,7 @@ class FileHandlingSettingsCard extends StatelessWidget {
                   divisions: 9,
                   label: settings.backupsToKeep.toString(),
                   onChanged: (val) => context
-                      .read<SettingsBloc>()
+                      .read<FileHandlingBloc>()
                       .add(UpdateBackupsToKeep(val.round())),
                   activeColor: Theme.of(context).colorScheme.primary,
                 ),

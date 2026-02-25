@@ -185,6 +185,7 @@ class DiffDataTable extends StatelessWidget {
                   const SizedBox(width: 16),
                   IconButton(
                     icon: const Icon(Icons.first_page),
+                    tooltip: 'First page',
                     onPressed: controller.currentPage > 0
                         ? () {
                             controller.firstPage();
@@ -193,6 +194,7 @@ class DiffDataTable extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
+                    tooltip: 'Previous page',
                     onPressed: controller.currentPage > 0
                         ? () {
                             controller.previousPage();
@@ -203,6 +205,7 @@ class DiffDataTable extends StatelessWidget {
                       ' ${controller.currentPage + 1} / ${(totalCount / controller.itemsPerPage).ceil()} '),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
+                    tooltip: 'Next page',
                     onPressed: endIndex < totalCount
                         ? () {
                             controller.nextPage();
@@ -211,6 +214,7 @@ class DiffDataTable extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.last_page),
+                    tooltip: 'Last page',
                     onPressed: endIndex < totalCount
                         ? () {
                             controller.lastPage();

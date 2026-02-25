@@ -39,6 +39,12 @@ class UserOnboardingChecklist extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsBloc, SettingsState>(
+      buildWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.appSettings.isOnboardingCompleted !=
+              current.appSettings.isOnboardingCompleted ||
+          previous.appSettings.onboardingStep !=
+              current.appSettings.onboardingStep,
       builder: (context, state) {
         if (state.status != SettingsStatus.loaded)
           return const SizedBox.shrink();

@@ -325,6 +325,7 @@ class _HistoryViewState extends State<HistoryView>
                                         ? AppThemeV2.darkTextMuted
                                         : AppThemeV2.lightTextMuted,
                                   ),
+                                  tooltip: 'Clear search',
                                   onPressed: () => _filterController.clear(),
                                 )
                               : null,

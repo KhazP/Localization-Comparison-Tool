@@ -2120,7 +2120,8 @@ class _GitFileDiffDialogState extends State<_GitFileDiffDialog> {
                   ),
                   IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close)),
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Close'),
                 ],
               ),
             ),

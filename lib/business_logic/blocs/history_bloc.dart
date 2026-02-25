@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:localizer_app_main/data/models/comparison_history.dart';
@@ -8,18 +9,27 @@ import 'package:localizer_app_main/data/repositories/history_repository.dart';
 part 'history_bloc.freezed.dart';
 
 // Events
-abstract class HistoryEvent {}
+abstract class HistoryEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 
 class LoadHistory extends HistoryEvent {}
 
 class AddToHistory extends HistoryEvent {
   final ComparisonSession session;
   AddToHistory(this.session);
+
+  @override
+  List<Object?> get props => [session];
 }
 
 class DeleteHistoryItem extends HistoryEvent {
   final String sessionId;
   DeleteHistoryItem(this.sessionId);
+
+  @override
+  List<Object?> get props => [sessionId];
 }
 
 class ClearHistory extends HistoryEvent {}
@@ -29,6 +39,9 @@ class UndoDeleteHistoryItem extends HistoryEvent {}
 class ImportHistory extends HistoryEvent {
   final List<ComparisonSession> sessions;
   ImportHistory(this.sessions);
+
+  @override
+  List<Object?> get props => [sessions];
 }
 
 // States

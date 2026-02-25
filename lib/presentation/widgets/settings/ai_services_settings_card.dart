@@ -2,7 +2,34 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart';
+import 'package:localizer_app_main/business_logic/blocs/settings_bloc/settings_bloc.dart'
+    hide
+        UpdateAiTranslationService,
+        UpdateGoogleTranslateApiKey,
+        UpdateDeeplApiKey,
+        UpdateEnableAiTranslation,
+        UpdateTranslationConfidenceThreshold,
+        UpdateGeminiApiKey,
+        UpdateOpenAiApiKey,
+        TestApiKey,
+        FetchAvailableModels,
+        UpdateAiTemperature,
+        UpdateMaxTokens,
+        UpdateDefaultAiModel,
+        UpdateSystemTranslationContext,
+        UpdateContextStringsCount,
+        UpdateIncludeContextStrings,
+        UpdateEnableTranslationMemory,
+        UpdateEnableFuzzyFill,
+        UpdateFuzzyFillMinScore,
+        UpdateFuzzyFillAutoApply,
+        UpdateFuzzyFillOnlyEmptyTargets,
+        UpdateFuzzyFillMatchLimit,
+        UpdateFuzzyFillExactMatchesOnly,
+        UpdateTranslationStrategy,
+        ResetAiServicesSettings;
+import 'package:localizer_app_main/business_logic/blocs/ai_services_bloc/ai_services_bloc.dart'
+    hide ApiKeyTestResult, ApiKeyTestStatus;
 import 'package:localizer_app_main/data/models/app_settings.dart';
 import 'package:localizer_app_main/i18n/strings.g.dart';
 import 'package:localizer_app_main/data/services/api_key_validation_service.dart';
@@ -111,7 +138,8 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<SettingsBloc>();
+    final aiBloc = context.read<AiServicesBloc>();
+    final settingsBloc = context.read<SettingsBloc>();
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -128,7 +156,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                 value: widget.settings.translationStrategy,
                 items: const ['Generative AI (LLM)', 'Cloud Translation'],
                 onChanged: (val) {
-                  if (val != null) bloc.add(UpdateTranslationStrategy(val));
+                  if (val != null) aiBloc.add(UpdateTranslationStrategy(val));
                 },
                 isDark: widget.isDark,
                 isAmoled: widget.isAmoled,
@@ -150,7 +178,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
               description: context.t.settings.ai.enableAiTranslationDescription,
               control: Switch(
                 value: widget.settings.enableAiTranslation,
-                onChanged: (val) => bloc.add(UpdateEnableAiTranslation(val)),
+                onChanged: (val) => aiBloc.add(UpdateEnableAiTranslation(val)),
                 activeColor: colorScheme.primary,
               ),
               isDark: widget.isDark,
@@ -164,11 +192,11 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
             title: context.t.settings.ai.llmProvider,
             isDark: widget.isDark,
             isAmoled: widget.isAmoled,
-            trailing: _buildSectionResetButton(context, bloc),
+            trailing: _buildSectionResetButton(context, settingsBloc),
             children: [
               _buildOverridableSettingsRow(
                 context: context,
-                bloc: bloc,
+                bloc: settingsBloc,
                 label: context.t.settings.ai.service,
                 description: context.t.settings.ai.serviceDescription,
                 settingKey: 'aiTranslationService',
@@ -180,12 +208,12 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   onChanged: (val) {
                     if (val != null) {
                       if (widget.state.isProjectScope) {
-                        bloc.add(UpdateProjectOverridableSetting(
+                        settingsBloc.add(UpdateProjectOverridableSetting(
                           settingKey: 'aiTranslationService',
                           value: val,
                         ));
                       } else {
-                        bloc.add(UpdateAiTranslationService(val));
+                        aiBloc.add(UpdateAiTranslationService(val));
                       }
                     }
                   },
@@ -207,7 +235,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   ApiProvider.gemini,
                   _apiKeyControllers[ApiProvider.gemini]!,
                   _apiKeyFocusNodes[ApiProvider.gemini]!,
-                  (val) => bloc.add(UpdateGeminiApiKey(val)),
+                  (val) => aiBloc.add(UpdateGeminiApiKey(val)),
                 ),
               if (widget.settings.aiTranslationService == 'OpenAI')
                 _buildApiKeyField(
@@ -216,11 +244,11 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   ApiProvider.openAi,
                   _apiKeyControllers[ApiProvider.openAi]!,
                   _apiKeyFocusNodes[ApiProvider.openAi]!,
-                  (val) => bloc.add(UpdateOpenAiApiKey(val)),
+                  (val) => aiBloc.add(UpdateOpenAiApiKey(val)),
                 ),
               _buildOverridableSettingsRow(
                 context: context,
-                bloc: bloc,
+                bloc: settingsBloc,
                 label: context.t.settings.ai.model,
                 description: context.t.settings.ai.modelDescription,
                 settingKey: 'defaultAiModel',
@@ -240,12 +268,12 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   onChanged: (val) {
                     if (val != null) {
                       if (widget.state.isProjectScope) {
-                        bloc.add(UpdateProjectOverridableSetting(
+                        settingsBloc.add(UpdateProjectOverridableSetting(
                           settingKey: 'defaultAiModel',
                           value: val,
                         ));
                       } else {
-                        bloc.add(UpdateDefaultAiModel(val));
+                        aiBloc.add(UpdateDefaultAiModel(val));
                       }
                     }
                   },
@@ -267,6 +295,9 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                   icon: Icon(_showAdvancedParameters
                       ? LucideIcons.chevronUp
                       : LucideIcons.chevronDown),
+                  tooltip: _showAdvancedParameters
+                      ? 'Hide AI parameters'
+                      : 'Show AI parameters',
                   onPressed: () => setState(
                       () => _showAdvancedParameters = !_showAdvancedParameters),
                 ),
@@ -292,8 +323,10 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                           min: 0.0,
                           max: 2.0,
                           divisions: 20,
+                          label:
+                              widget.settings.aiTemperature.toStringAsFixed(1),
                           onChanged: (val) =>
-                              bloc.add(UpdateAiTemperature(val)),
+                              aiBloc.add(UpdateAiTemperature(val)),
                         ),
                       ),
                     ],
@@ -310,7 +343,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                       value: widget.settings.maxTokens,
                       items: const [512, 1024, 2048, 4096, 8192, 16384, 32768],
                       onChanged: (val) {
-                        if (val != null) bloc.add(UpdateMaxTokens(val));
+                        if (val != null) aiBloc.add(UpdateMaxTokens(val));
                       },
                       isDark: widget.isDark,
                       isAmoled: widget.isAmoled,
@@ -345,8 +378,9 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                                     .isOverridden('systemTranslationContext'),
                                 onReset: widget.state.isOverridden(
                                         'systemTranslationContext')
-                                    ? () => bloc.add(const ResetSettingToGlobal(
-                                        'systemTranslationContext'))
+                                    ? () => settingsBloc.add(
+                                        const ResetSettingToGlobal(
+                                            'systemTranslationContext'))
                                     : null,
                                 compact: true,
                               ),
@@ -363,12 +397,12 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                         ),
                         onChanged: (val) {
                           if (widget.state.isProjectScope) {
-                            bloc.add(UpdateProjectOverridableSetting(
+                            settingsBloc.add(UpdateProjectOverridableSetting(
                               settingKey: 'systemTranslationContext',
                               value: val,
                             ));
                           } else {
-                            bloc.add(UpdateSystemTranslationContext(val));
+                            aiBloc.add(UpdateSystemTranslationContext(val));
                           }
                         },
                         decoration: InputDecoration(
@@ -390,7 +424,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                         control: Switch(
                           value: widget.settings.includeContextStrings,
                           onChanged: (val) =>
-                              bloc.add(UpdateIncludeContextStrings(val)),
+                              aiBloc.add(UpdateIncludeContextStrings(val)),
                         ),
                         isDark: widget.isDark,
                         isAmoled: widget.isAmoled,
@@ -406,7 +440,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                             items: const [1, 2, 3, 5, 10],
                             onChanged: (val) {
                               if (val != null)
-                                bloc.add(UpdateContextStringsCount(val));
+                                aiBloc.add(UpdateContextStringsCount(val));
                             },
                             isDark: widget.isDark,
                             isAmoled: widget.isAmoled,
@@ -433,7 +467,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                 ApiProvider.googleTranslate,
                 _apiKeyControllers[ApiProvider.googleTranslate]!,
                 _apiKeyFocusNodes[ApiProvider.googleTranslate]!,
-                (val) => bloc.add(UpdateGoogleTranslateApiKey(val)),
+                (val) => aiBloc.add(UpdateGoogleTranslateApiKey(val)),
               ),
               _buildApiKeyField(
                 context,
@@ -441,7 +475,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                 ApiProvider.deepl,
                 _apiKeyControllers[ApiProvider.deepl]!,
                 _apiKeyFocusNodes[ApiProvider.deepl]!,
-                (val) => bloc.add(UpdateDeeplApiKey(val)),
+                (val) => aiBloc.add(UpdateDeeplApiKey(val)),
                 showDivider: false,
               ),
             ],
@@ -516,7 +550,7 @@ class _AiServicesSettingsCardState extends State<AiServicesSettingsCard> {
                         ? null
                         : () {
                             final value = controller.text;
-                            context.read<SettingsBloc>().add(
+                            context.read<AiServicesBloc>().add(
                                 TestApiKey(provider: provider, apiKey: value));
                           },
                     style: FilledButton.styleFrom(

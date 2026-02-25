@@ -7,8 +7,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
-import 'package:csv/csv.dart';
-import 'package:excel/excel.dart' hide Border;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -20,7 +18,6 @@ import 'package:localizer_app_main/business_logic/blocs/file_watcher_bloc/file_w
 import 'package:localizer_app_main/core/services/comparison_engine.dart'; // For ComparisonResult
 import 'package:localizer_app_main/core/utils/file_explorer_utils.dart';
 import 'package:localizer_app_main/data/models/comparison_status_detail.dart'; // Import new model
-import 'package:uuid/uuid.dart'; // For generating unique IDs for history
 import 'package:localizer_app_main/data/models/comparison_history.dart';
 import 'package:localizer_app_main/business_logic/blocs/history_bloc.dart';
 import 'package:localizer_app_main/business_logic/blocs/project_bloc/project_bloc.dart';
@@ -34,15 +31,17 @@ import 'package:localizer_app_main/core/services/backup_service.dart';
 import 'package:localizer_app_main/core/services/toast_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:localizer_app_main/core/services/problem_detector.dart';
-import 'package:localizer_app_main/core/services/quality_metrics_service.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:flutter/services.dart';
-import 'package:windows_taskbar/windows_taskbar.dart';
+import 'package:localizer_app_main/core/services/platform_taskbar_service.dart';
 import 'package:localizer_app_main/core/input/app_intents.dart';
 import 'package:localizer_app_main/core/di/service_locator.dart';
 import 'package:localizer_app_main/core/services/app_command_service.dart';
 import 'package:localizer_app_main/core/utils/drag_drop_utils.dart';
 import 'package:localizer_app_main/core/services/onboarding_tutorial_service.dart';
+import 'package:localizer_app_main/presentation/widgets/diff/diff_list_item.dart';
+import 'package:localizer_app_main/core/services/export_service.dart';
+import 'package:localizer_app_main/presentation/widgets/file_picker_drop_zone.dart';
 import 'package:path/path.dart' as path;
 
 // Enum for filter status in Basic View
@@ -65,8 +64,17 @@ class FileComparisonView extends StatefulWidget {
 
 class _FileComparisonViewState extends State<FileComparisonView> {
   // ... existing fields ...
-  final QualityMetricsService _qualityMetricsService = QualityMetricsService();
+  final ExportService _exportService = const ExportService();
+  final PlatformTaskbarService _taskbar = PlatformTaskbarService();
   StreamSubscription<AppCommand>? _appCommandSubscription;
+
+  /// Returns the current project ID if one is loaded, or null.
+  String? get _currentProjectId {
+    final projectState = context.read<ProjectBloc>().state;
+    return projectState.status == ProjectStatus.loaded
+        ? projectState.currentProject?.id
+        : null;
+  }
 
   void _navigateToAiSettings() {
     // Navigate to Settings tab (index 5)
@@ -165,11 +173,6 @@ class _FileComparisonViewState extends State<FileComparisonView> {
   // Store the latest comparison results for the analytics bar
   ComparisonResult? _latestComparisonResult;
   BasicDiffFilter _currentFilter = BasicDiffFilter.all;
-
-  // Drag & drop state
-  bool _isDraggingOverFile1 = false;
-  bool _isDraggingOverFile2 = false;
-  bool _isDraggingOverBilingualFile = false;
 
   // Search/filter state
   final TextEditingController _searchController = TextEditingController();
@@ -552,6 +555,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               file1: _file1!,
               file2: _file2!,
               settings: settingsState.appSettings,
+              projectId: _currentProjectId,
             ));
       }
       _updateFileWatcher();
@@ -576,6 +580,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               CompareBilingualFileRequested(
                 file: _bilingualFile!,
                 settings: settingsState.appSettings,
+                projectId: _currentProjectId,
               ),
             );
       }
@@ -835,6 +840,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
   Widget build(BuildContext context) {
     // Determine if Amoled mode is active
     final settingsState = context.watch<SettingsBloc>().state;
+    final themeState = context.watch<ThemeBloc>().state;
     final bool isAmoled = settingsState.status == SettingsStatus.loaded &&
         Theme.of(context).brightness == Brightness.dark &&
         settingsState.appSettings.appThemeMode.toLowerCase() == 'amoled';
@@ -946,6 +952,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                     file: File(state.file1Path),
                                     settings:
                                         settingsStateForReload.appSettings,
+                                    projectId: _currentProjectId,
                                   ),
                                 );
                           } else {
@@ -955,6 +962,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                     file2: File(state.file2Path),
                                     settings:
                                         settingsStateForReload.appSettings,
+                                    projectId: _currentProjectId,
                                   ),
                                 );
                           }
@@ -992,15 +1000,13 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                               if (_isBilingualMode)
                                 Row(
                                   children: [
-                                    _buildFilePicker(
-                                      context: context,
+                                    FilePickerDropZone(
                                       title: context
                                           .t.fileComparison.bilingualFile,
                                       file: _bilingualFile,
-                                      fileNumber: 3,
                                       onPressed: () => _pickFile(3),
-                                      isDraggingOver:
-                                          _isDraggingOverBilingualFile,
+                                      onFilePicked: (path) =>
+                                          _onFileDropped(path, 3),
                                       isAmoled: isAmoled,
                                       shortcutHint: 'Ctrl+O',
                                     ),
@@ -1013,14 +1019,13 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                   children: <Widget>[
                                     Container(
                                       key: _keySourceFilePicker,
-                                      child: _buildFilePicker(
-                                        context: context,
+                                      child: FilePickerDropZone(
                                         title:
                                             context.t.fileComparison.sourceFile,
                                         file: _file1,
-                                        fileNumber: 1,
                                         onPressed: () => _pickFile(1),
-                                        isDraggingOver: _isDraggingOverFile1,
+                                        onFilePicked: (path) =>
+                                            _onFileDropped(path, 1),
                                         isAmoled: isAmoled,
                                         shortcutHint: 'Ctrl+O',
                                       ),
@@ -1028,14 +1033,13 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                     const SizedBox(width: 12),
                                     Container(
                                       key: _keyTargetFilePicker,
-                                      child: _buildFilePicker(
-                                        context: context,
+                                      child: FilePickerDropZone(
                                         title:
                                             context.t.fileComparison.targetFile,
                                         file: _file2,
-                                        fileNumber: 2,
                                         onPressed: () => _pickFile(2),
-                                        isDraggingOver: _isDraggingOverFile2,
+                                        onFilePicked: (path) =>
+                                            _onFileDropped(path, 2),
                                         isAmoled: isAmoled,
                                       ),
                                     ),
@@ -1080,7 +1084,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                         ),
                       ),
                       // Analytics and Actions Bar - Modified Layout
-                      _buildAnalyticsAndActionsBar(),
+                      _buildAnalyticsAndActionsBar(settingsState, themeState),
                       const SizedBox(height: 16.0), // Reduced bottom margin
                       BlocBuilder<ProgressBloc, ProgressState>(
                         builder: (context, state) {
@@ -1174,71 +1178,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                 TextDirection.ltr,
                               );
 
-                              // Only add to history if it wasn't loaded from history
-                              if (!state.wasLoadedFromHistory) {
-                                final result = state.result;
-                                int added = 0,
-                                    removed = 0,
-                                    modified = 0,
-                                    identical = 0;
-                                result.diff.forEach((key, statusDetail) {
-                                  switch (statusDetail.status) {
-                                    case StringComparisonStatus.added:
-                                      added++;
-                                      break;
-                                    case StringComparisonStatus.removed:
-                                      removed++;
-                                      break;
-                                    case StringComparisonStatus.modified:
-                                      modified++;
-                                      break;
-                                    case StringComparisonStatus.identical:
-                                      identical++;
-                                      break;
-                                  }
-                                });
-                                // Ensure file paths from the state are used for history
-                                final coverageMetrics = _qualityMetricsService
-                                    .calculateCoverageFromMaps(
-                                  sourceData: result.file1Data,
-                                  targetData: result.file2Data,
-                                  settings: settingsState.appSettings,
-                                );
-                                final session = ComparisonSession(
-                                  id: const Uuid().v4(),
-                                  timestamp: DateTime.now(),
-                                  file1Path:
-                                      state.file1.path, // Use path from state
-                                  file2Path:
-                                      state.file2.path, // Use path from state
-                                  stringsAdded: added,
-                                  stringsRemoved: removed,
-                                  stringsModified: modified,
-                                  stringsIdentical: identical,
-                                  sourceKeyCount:
-                                      coverageMetrics.sourceKeyCount,
-                                  translatedKeyCount:
-                                      coverageMetrics.translatedKeyCount,
-                                  sourceWordCount:
-                                      coverageMetrics.sourceWordCount,
-                                  translatedWordCount:
-                                      coverageMetrics.translatedWordCount,
-                                  projectId: context
-                                              .read<ProjectBloc>()
-                                              .state
-                                              .status ==
-                                          ProjectStatus.loaded
-                                      ? context
-                                          .read<ProjectBloc>()
-                                          .state
-                                          .currentProject
-                                          ?.id
-                                      : null,
-                                );
-                                context
-                                    .read<HistoryBloc>()
-                                    .add(AddToHistory(session));
-                              }
+                              // History recording is now handled by ComparisonBloc
                             } else if (state is ComparisonFailure) {
                               context
                                   .read<ProgressBloc>()
@@ -1636,14 +1576,17 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                             ),
                                                           ),
                                                           Expanded(
-                                                            child:
-                                                                _buildDiffListItem(
-                                                              key: key,
+                                                            child: DiffListItem(
+                                                              diffKey: key,
                                                               status: status,
                                                               value1: value1,
                                                               value2: value2,
                                                               isAmoled:
                                                                   isAmoled,
+                                                              settingsState:
+                                                                  settingsState,
+                                                              themeState:
+                                                                  themeState,
                                                             ),
                                                           ),
                                                         ],
@@ -1707,6 +1650,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                   IconButton(
                                                     icon: const Icon(LucideIcons
                                                         .chevronsLeft),
+                                                    tooltip: 'First page',
                                                     splashRadius: 20,
                                                     onPressed: _currentPage > 0
                                                         ? () {
@@ -1721,6 +1665,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                   IconButton(
                                                     icon: const Icon(LucideIcons
                                                         .chevronLeft),
+                                                    tooltip: 'Previous page',
                                                     splashRadius: 20,
                                                     onPressed: _currentPage > 0
                                                         ? () {
@@ -1738,6 +1683,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                   IconButton(
                                                     icon: const Icon(LucideIcons
                                                         .chevronRight),
+                                                    tooltip: 'Next page',
                                                     splashRadius: 20,
                                                     onPressed:
                                                         endIndex < filteredCount
@@ -1752,6 +1698,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                                                   IconButton(
                                                     icon: const Icon(LucideIcons
                                                         .chevronsRight),
+                                                    tooltip: 'Last page',
                                                     splashRadius: 20,
                                                     onPressed:
                                                         endIndex < filteredCount
@@ -1814,17 +1761,6 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     );
   }
 
-  String _exportFileName(String format) {
-    switch (format) {
-      case 'Excel':
-        return 'comparison_report.xlsx';
-      case 'JSON':
-        return 'comparison_report.json';
-      default:
-        return 'comparison_report.csv';
-    }
-  }
-
   FileFormat _exportFileFormat(String format) {
     switch (format) {
       case 'Excel':
@@ -1836,144 +1772,6 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     }
   }
 
-  Future<Uint8List> _buildExportBytes(String format) async {
-    switch (format) {
-      case 'Excel':
-        return _buildExcelBytes();
-      case 'JSON':
-        return Uint8List.fromList(utf8.encode(_buildJsonString()));
-      default:
-        return Uint8List.fromList(utf8.encode(_buildCsvString()));
-    }
-  }
-
-  Uint8List _buildExcelBytes() {
-    if (_latestComparisonResult == null) {
-      return Uint8List(0);
-    }
-
-    final excel = Excel.createExcel();
-    final sheetObject = excel['Sheet1'];
-
-    sheetObject.appendRow([
-      TextCellValue('Status'),
-      TextCellValue('String Key'),
-      TextCellValue('Old Value (Source)'),
-      TextCellValue('New Value (Target)'),
-      TextCellValue('Similarity')
-    ]);
-
-    for (final entry in _latestComparisonResult!.diff.entries) {
-      final key = entry.key;
-      final status = entry.value.status;
-      final similarity = entry.value.similarity;
-      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
-      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-
-      final statusText = status == StringComparisonStatus.added
-          ? 'EXTRA'
-          : status == StringComparisonStatus.removed
-              ? 'MISSING'
-              : 'CHANGED';
-      final simText =
-          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-
-      sheetObject.appendRow([
-        TextCellValue(statusText),
-        TextCellValue(key),
-        TextCellValue(status == StringComparisonStatus.added ? '' : file1Value),
-        TextCellValue(
-            status == StringComparisonStatus.removed ? '' : file2Value),
-        TextCellValue(simText)
-      ]);
-    }
-
-    final fileBytes = excel.save();
-    if (fileBytes == null) {
-      return Uint8List(0);
-    }
-
-    return Uint8List.fromList(fileBytes);
-  }
-
-  String _buildJsonString() {
-    if (_latestComparisonResult == null) {
-      return '[]';
-    }
-
-    final jsonData = <Map<String, dynamic>>[];
-    for (final entry in _latestComparisonResult!.diff.entries) {
-      final key = entry.key;
-      final status = entry.value.status;
-      final similarity = entry.value.similarity;
-      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
-      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-
-      jsonData.add({
-        'status': status == StringComparisonStatus.added
-            ? 'extra'
-            : status == StringComparisonStatus.removed
-                ? 'missing'
-                : status.name,
-        'key': key,
-        'old_value': status == StringComparisonStatus.added ? null : file1Value,
-        'new_value':
-            status == StringComparisonStatus.removed ? null : file2Value,
-        'similarity': similarity
-      });
-    }
-
-    return const JsonEncoder.withIndent('  ').convert(jsonData);
-  }
-
-  String _buildCsvString() {
-    if (_latestComparisonResult == null) {
-      return '';
-    }
-
-    final csvData = <List<dynamic>>[
-      [
-        'Status',
-        'String Key',
-        'Old Value (Source)',
-        'New Value (Target)',
-        'Similarity'
-      ]
-    ];
-    for (final entry in _latestComparisonResult!.diff.entries) {
-      final key = entry.key;
-      final status = entry.value.status;
-      final similarity = entry.value.similarity;
-      final file1Value = _latestComparisonResult!.file1Data[key] ?? '';
-      final file2Value = _latestComparisonResult!.file2Data[key] ?? '';
-
-      final statusText = status == StringComparisonStatus.added
-          ? 'EXTRA'
-          : status == StringComparisonStatus.removed
-              ? 'MISSING'
-              : 'CHANGED';
-      final simText =
-          similarity != null ? '${(similarity * 100).toStringAsFixed(1)}%' : '';
-
-      csvData.add([
-        statusText,
-        key,
-        status == StringComparisonStatus.added ? '' : file1Value,
-        status == StringComparisonStatus.removed ? '' : file2Value,
-        simText
-      ]);
-    }
-
-    var csvString = const ListToCsvConverter().convert(csvData);
-
-    final settings = context.read<SettingsBloc>().state.appSettings;
-    if (settings.includeUtf8Bom) {
-      csvString = '\uFEFF$csvString';
-    }
-
-    return csvString;
-  }
-
   Future<DragItem?> _buildExportDragItem(
     DragItemRequest request,
   ) async {
@@ -1983,7 +1781,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
 
     final settings = context.read<SettingsBloc>().state.appSettings;
     final format = settings.defaultExportFormat;
-    final fileName = _exportFileName(format);
+    final fileName = _exportService.exportFileName(format);
 
     final item = DragItem(
       localData: {
@@ -1997,7 +1795,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
       return null;
     }
 
-    final bytes = await _buildExportBytes(format);
+    final bytes =
+        await _exportService.buildExportBytes(_latestComparisonResult!, format);
 
     if (item.virtualFileSupported) {
       item.addVirtualFile(
@@ -2036,7 +1835,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
   }
 
   Future<void> _exportToExcel() async {
-    final fileBytes = _buildExcelBytes();
+    final fileBytes = _exportService.buildExcelBytes(_latestComparisonResult!);
 
     // Save
     String? outputPath = await FilePicker.platform.saveFile(
@@ -2048,10 +1847,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
 
     if (outputPath != null) {
       try {
-        // Show taskbar progress during export (Windows only)
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
-        }
+        _taskbar.setIndeterminate();
 
         final settings = context.read<SettingsBloc>().state.appSettings;
         await BackupService().createBackupIfNeeded(
@@ -2081,20 +1877,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
               context, context.t.fileComparison.saveError(format: 'Excel'));
         }
 
-        // Clear taskbar progress on success
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
-        }
+        _taskbar.clearProgress();
       } catch (e) {
-        // Set taskbar to error state on failure
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.error);
-          WindowsTaskbar.setProgress(100, 100);
-          // Clear after 2 seconds
-          Future.delayed(const Duration(seconds: 2), () {
-            WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
-          });
-        }
+        _taskbar.setError();
 
         if (mounted) {
           ToastService.showError(
@@ -2107,7 +1892,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
   }
 
   Future<void> _exportToJson() async {
-    final jsonString = _buildJsonString();
+    final jsonString = _exportService.buildJsonString(_latestComparisonResult!);
 
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: context.t.fileComparison.exportReport(format: 'JSON'),
@@ -2118,10 +1903,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
 
     if (outputPath != null) {
       try {
-        // Show taskbar progress during export (Windows only)
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
-        }
+        _taskbar.setIndeterminate();
 
         final settings = context.read<SettingsBloc>().state.appSettings;
         await BackupService().createBackupIfNeeded(
@@ -2142,19 +1924,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
           );
         }
 
-        // Clear taskbar progress on success
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
-        }
+        _taskbar.clearProgress();
       } catch (e) {
-        // Set taskbar to error state on failure
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.error);
-          WindowsTaskbar.setProgress(100, 100);
-          Future.delayed(const Duration(seconds: 2), () {
-            WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
-          });
-        }
+        _taskbar.setError();
 
         if (mounted) {
           ToastService.showError(
@@ -2167,8 +1939,11 @@ class _FileComparisonViewState extends State<FileComparisonView> {
   }
 
   Future<void> _exportToCsv() async {
-    final csvString = _buildCsvString();
     final settings = context.read<SettingsBloc>().state.appSettings;
+    final csvString = _exportService.buildCsvString(
+      _latestComparisonResult!,
+      includeUtf8Bom: settings.includeUtf8Bom,
+    );
 
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: context.t.fileComparison.exportReport(format: 'CSV'),
@@ -2179,10 +1954,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
 
     if (outputPath != null) {
       try {
-        // Show taskbar progress during export (Windows only)
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.indeterminate);
-        }
+        _taskbar.setIndeterminate();
 
         await BackupService().createBackupIfNeeded(
           targetPath: outputPath,
@@ -2202,19 +1974,9 @@ class _FileComparisonViewState extends State<FileComparisonView> {
           );
         }
 
-        // Clear taskbar progress on success
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
-        }
+        _taskbar.clearProgress();
       } catch (e) {
-        // Set taskbar to error state on failure
-        if (Platform.isWindows) {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.error);
-          WindowsTaskbar.setProgress(100, 100);
-          Future.delayed(const Duration(seconds: 2), () {
-            WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress);
-          });
-        }
+        _taskbar.setError();
 
         if (mounted) {
           ToastService.showError(
@@ -2226,304 +1988,8 @@ class _FileComparisonViewState extends State<FileComparisonView> {
     }
   }
 
-  Widget _buildFilePicker({
-    required BuildContext context,
-    required String title,
-    required File? file,
-    required int fileNumber,
-    required VoidCallback onPressed,
-    required bool isDraggingOver,
-    required bool isAmoled,
-    String? shortcutHint,
-  }) {
-    final theme = Theme.of(context);
-    // isDarkMode is implicit in theme.brightness
-    final hasFile = file != null;
-
-    // Abbreviated path display for long paths
-    String displayText = '';
-    String tooltipPath = '';
-    String? fileExtension;
-
-    if (hasFile) {
-      tooltipPath = file.path;
-      final parts = file.path.split(Platform.isWindows ? '\\' : '/');
-      final fileName = parts.last;
-      fileExtension = fileName.contains('.')
-          ? fileName.split('.').last.toUpperCase()
-          : null;
-
-      // Abbreviate long paths: show .../<parent>/<filename>
-      if (parts.length > 2 && file.path.length > 40) {
-        displayText = '.../${parts[parts.length - 2]}/$fileName';
-      } else {
-        displayText = fileName;
-      }
-    } else {
-      displayText = isDraggingOver
-          ? context.t.fileComparison.dropFileHere
-          : context.t.fileComparison.dropFileOrBrowse;
-    }
-
-    Color borderColor = isDraggingOver
-        ? theme.colorScheme.primary
-        : (hasFile
-            ? theme.colorScheme.primary.withValues(alpha: 0.3)
-            : theme.dividerColor);
-    Color backgroundColor = isDraggingOver
-        ? theme.colorScheme.primary.withValues(alpha: 0.08)
-        : (isAmoled
-            ? (hasFile ? Colors.grey[900]! : Colors.transparent)
-            : (hasFile
-                ? theme.colorScheme.primary.withValues(alpha: 0.04)
-                : theme.cardColor.withValues(alpha: 0.5)));
-
-    // Active state (file loaded): compact inline layout ~44px
-    // Idle state (empty): slightly larger ~70px for easy drop
-    final double verticalPadding = hasFile ? 10.0 : 16.0;
-    final double horizontalPadding = 14.0;
-
-    return Expanded(
-      child: DropRegion(
-        formats: Formats.standardFormats,
-        onDropOver: (event) async {
-          // Smart Format Rejection: only "light up" for supported file types
-          final hasValidFile = await _hasValidDropItem(event.session.items);
-          if (hasValidFile) {
-            setState(() {
-              if (fileNumber == 1) {
-                _isDraggingOverFile1 = true;
-              } else if (fileNumber == 2) {
-                _isDraggingOverFile2 = true;
-              } else {
-                _isDraggingOverBilingualFile = true;
-              }
-            });
-            return DropOperation.copy;
-          }
-          setState(() {
-            if (fileNumber == 1) {
-              _isDraggingOverFile1 = false;
-            } else if (fileNumber == 2) {
-              _isDraggingOverFile2 = false;
-            } else {
-              _isDraggingOverBilingualFile = false;
-            }
-          });
-          return DropOperation.none;
-        },
-        onDropLeave: (event) {
-          setState(() {
-            if (fileNumber == 1) {
-              _isDraggingOverFile1 = false;
-            } else if (fileNumber == 2) {
-              _isDraggingOverFile2 = false;
-            } else {
-              _isDraggingOverBilingualFile = false;
-            }
-          });
-        },
-        onPerformDrop: (event) async {
-          setState(() {
-            if (fileNumber == 1) {
-              _isDraggingOverFile1 = false;
-            } else if (fileNumber == 2) {
-              _isDraggingOverFile2 = false;
-            } else {
-              _isDraggingOverBilingualFile = false;
-            }
-          });
-          for (final item in event.session.items) {
-            final localData = item.localData;
-            if (localData is String &&
-                DragDropUtils.isValidFilePath(localData)) {
-              _onFileDropped(localData, fileNumber);
-              return;
-            }
-
-            final reader = item.dataReader;
-            if (reader == null) continue;
-
-            if (reader.canProvide(Formats.fileUri)) {
-              reader.getValue<Uri>(Formats.fileUri, (uri) {
-                if (uri != null) {
-                  final path = uri.toFilePath();
-                  _onFileDropped(path, fileNumber);
-                }
-              });
-              break;
-            }
-          }
-        },
-        child: _wrapWithFileDrag(
-          file,
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(10.0),
-              border: Border.all(
-                color: borderColor,
-                width: isDraggingOver ? 2.0 : 1.0,
-              ),
-            ),
-            child: Material(
-              type: MaterialType.transparency,
-              borderRadius: BorderRadius.circular(10.0),
-              child: InkWell(
-                onTap: onPressed,
-                borderRadius: BorderRadius.circular(10.0),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding, vertical: verticalPadding),
-                  child: Row(
-                    children: [
-                      // Icon
-                      Icon(
-                        hasFile ? LucideIcons.fileText : LucideIcons.upload,
-                        color: isDraggingOver
-                            ? theme.colorScheme.primary
-                            : (hasFile
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.primary
-                                    .withValues(alpha: 0.5)),
-                        size: hasFile ? 20 : 24,
-                        semanticLabel: hasFile
-                            ? context.t.fileComparison
-                                .fileSelected(label: '', fileName: '')
-                                .split(':')[0]
-                            : context.t.fileComparison.fileUpload,
-                      ),
-                      const SizedBox(width: 12),
-                      // Text content
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Title label (small, muted)
-                            Text(
-                              title,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.5),
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            // Filename or placeholder
-                            Tooltip(
-                              message:
-                                  hasFile ? tooltipPath : (shortcutHint ?? ''),
-                              waitDuration: const Duration(milliseconds: 400),
-                              child: Text(
-                                displayText,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: hasFile
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                  color: hasFile
-                                      ? theme.colorScheme.onSurface
-                                      : theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.6),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // File extension badge (when file is loaded)
-                      if (hasFile && fileExtension != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            fileExtension,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.primary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                      // Change button (when file is loaded)
-                      if (hasFile) ...[
-                        const SizedBox(width: 8),
-                        Icon(
-                          LucideIcons.arrowRightLeft,
-                          size: 18,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.4),
-                          semanticLabel: context.t.fileComparison.changeFile,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _wrapWithFileDrag(File? file, Widget child) {
-    if (file == null) {
-      return child;
-    }
-
-    final filePath = file.path;
-    final fileName = filePath.split(Platform.pathSeparator).last;
-
-    return DragItemWidget(
-      allowedOperations: () => [DropOperation.copy],
-      dragItemProvider: (request) async {
-        final item = DragItem(
-          localData: filePath,
-          suggestedName: fileName,
-        );
-        item.add(Formats.fileUri(Uri.file(filePath)));
-        return item;
-      },
-      child: DraggableWidget(
-        child: child,
-      ),
-    );
-  }
-
-  Future<bool> _hasValidDropItem(List<DropItem> items) async {
-    for (final item in items) {
-      final localData = item.localData;
-      if (localData is String && DragDropUtils.isValidFilePath(localData)) {
-        return true;
-      }
-
-      final reader = item.dataReader;
-      if (reader == null) continue;
-      final suggestedName = await reader.getSuggestedName();
-      if (DragDropUtils.isValidFileName(suggestedName)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  Widget _buildAnalyticsAndActionsBar() {
-    final settingsState = context.watch<SettingsBloc>().state;
-    final themeState = context.watch<ThemeBloc>().state;
+  Widget _buildAnalyticsAndActionsBar(
+      SettingsState settingsState, AppThemeState themeState) {
     final theme = Theme.of(context);
     final bool isDarkMode = theme.brightness == Brightness.dark;
     final bool isAmoled = isDarkMode &&
@@ -2626,6 +2092,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                           size: 16,
                           color: theme.colorScheme.onSurface.withAlpha(120),
                         ),
+                        tooltip: 'Clear search',
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -2690,21 +2157,21 @@ class _FileComparisonViewState extends State<FileComparisonView> {
                 _buildFilterChip(
                   BasicDiffFilter.added,
                   context.t.diff.extra,
-                  context.watch<ThemeBloc>().state.diffAddedColor,
+                  themeState.diffAddedColor,
                   context.t.diff.extra,
                 ),
                 const SizedBox(width: 4),
                 _buildFilterChip(
                   BasicDiffFilter.removed,
                   context.t.diff.missing,
-                  context.watch<ThemeBloc>().state.diffRemovedColor,
+                  themeState.diffRemovedColor,
                   context.t.diff.missing,
                 ),
                 const SizedBox(width: 4),
                 _buildFilterChip(
                   BasicDiffFilter.modified,
                   context.t.diff.modified,
-                  context.watch<ThemeBloc>().state.diffModifiedColor,
+                  themeState.diffModifiedColor,
                   context.t.diff.modified,
                 ),
                 const SizedBox(width: 4),
@@ -2844,7 +2311,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
         border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -2933,7 +2400,7 @@ class _FileComparisonViewState extends State<FileComparisonView> {
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
         ),
         backgroundColor: Colors.transparent,
-        selectedColor: color.withOpacity(0.15),
+        selectedColor: color.withValues(alpha: 0.15),
         showCheckmark: false,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
         visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
@@ -3051,348 +2518,6 @@ class _FileComparisonViewState extends State<FileComparisonView> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDiffListItem({
-    required String key,
-    required StringComparisonStatus status,
-    String? value1,
-    String? value2,
-    required bool isAmoled,
-  }) {
-    final themeState = context.watch<ThemeBloc>().state;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // Status-based colors and labels
-    Color statusColor;
-    Color bgColor;
-    String statusLabel;
-
-    switch (status) {
-      case StringComparisonStatus.added:
-        statusColor = themeState.diffAddedColor;
-        bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = context.t.diff.extra.toUpperCase();
-        break;
-      case StringComparisonStatus.removed:
-        statusColor = themeState.diffRemovedColor;
-        bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = context.t.diff.missing.toUpperCase();
-        break;
-      case StringComparisonStatus.modified:
-        statusColor = themeState.diffModifiedColor;
-        bgColor = statusColor.withAlpha(isDark ? 15 : 10);
-        statusLabel = context.t.diff.modified.toUpperCase();
-        break;
-      case StringComparisonStatus.identical:
-        statusColor = isDark ? Colors.grey[600]! : Colors.grey[400]!;
-        bgColor = Colors.transparent;
-        statusLabel = context.t.settings.appearance.identical.toUpperCase();
-    }
-
-    final borderColor = isAmoled
-        ? Colors.grey[850]!
-        : (isDark ? const Color(0xFF2E2E38) : Colors.grey[200]!);
-    final textMuted = isDark ? Colors.grey[500]! : Colors.grey[500]!;
-
-    final settingsState = context.watch<SettingsBloc>().state;
-    // Get font family from settings, with safe fallback for old data
-    String fontFamily;
-    try {
-      fontFamily = settingsState.status == SettingsStatus.loaded
-          ? settingsState.appSettings.diffFontFamily
-          : 'System Default';
-      if (fontFamily.isEmpty) fontFamily = 'System Default';
-    } catch (_) {
-      fontFamily = 'System Default';
-    }
-    // Map font family name to actual font family string
-    final String actualFontFamily = fontFamily == 'System Default'
-        ? 'Consolas, Monaco, monospace'
-        : fontFamily;
-
-    // Monospace text style for values
-    final monoStyle = TextStyle(
-      fontFamily: actualFontFamily,
-      fontSize: settingsState.status == SettingsStatus.loaded
-          ? settingsState.appSettings.diffFontSize
-          : 14.0,
-      height: 1.4,
-    );
-
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: () {}, // Enable hover effect
-        hoverColor: theme.colorScheme.onSurface.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderColor.withAlpha(isDark ? 60 : 80)),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Status indicator bar (thin 3px)
-                Container(
-                  width: 3,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                    ),
-                  ),
-                ),
-                // Content
-                Expanded(
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Key row with compact status chip
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                key,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.onSurface,
-                                  fontSize: 13,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Compact status chip (just dot + label)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: statusColor.withAlpha(isDark ? 35 : 25),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      color: statusColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    statusLabel,
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
-                                      color: statusColor,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        // Values section - different layouts based on status
-                        if (status == StringComparisonStatus.modified) ...[
-                          // Side-by-side layout for modified items
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Source (left column)
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: themeState.diffRemovedColor
-                                        .withAlpha(isDark ? 20 : 15),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                      color: themeState.diffRemovedColor
-                                          .withAlpha(isDark ? 40 : 30),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        context.t.fileComparison.source,
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w600,
-                                          color: textMuted,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        value1 ?? '--',
-                                        style: monoStyle.copyWith(
-                                          color: theme.colorScheme.onSurface
-                                              .withAlpha(220),
-                                          decoration:
-                                              TextDecoration.lineThrough,
-                                          decorationColor: themeState
-                                              .diffRemovedColor
-                                              .withAlpha(150),
-                                        ),
-                                        maxLines: 4,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Arrow indicator
-                              Padding(
-                                padding: const EdgeInsets.only(top: 16),
-                                child: Icon(
-                                  LucideIcons.arrowRight,
-                                  size: 14,
-                                  color: textMuted,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Target (right column)
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: themeState.diffAddedColor
-                                        .withAlpha(isDark ? 20 : 15),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                      color: themeState.diffAddedColor
-                                          .withAlpha(isDark ? 40 : 30),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        context.t.fileComparison.target,
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w600,
-                                          color: textMuted,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        value2 ?? '--',
-                                        style: monoStyle.copyWith(
-                                          color: theme.colorScheme.onSurface
-                                              .withAlpha(220),
-                                        ),
-                                        maxLines: 4,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ] else if (status ==
-                            StringComparisonStatus.removed) ...[
-                          // Single row for removed items
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${context.t.fileComparison.source}: ',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: textMuted,
-                                      fontWeight: FontWeight.w500)),
-                              Expanded(
-                                child: Text(
-                                  value1 ?? '--',
-                                  style: monoStyle.copyWith(
-                                    color: statusColor.withAlpha(220),
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ] else if (status == StringComparisonStatus.added) ...[
-                          // Single row for added items
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${context.t.fileComparison.value}: ',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: textMuted,
-                                      fontWeight: FontWeight.w500)),
-                              Expanded(
-                                child: Text(
-                                  value2 ?? '--',
-                                  style: monoStyle.copyWith(
-                                    color: statusColor.withAlpha(220),
-                                  ),
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ] else ...[
-                          // Single row for identical items
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${context.t.fileComparison.value}: ',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: textMuted,
-                                      fontWeight: FontWeight.w500)),
-                              Expanded(
-                                child: Text(
-                                  value1 ?? '--',
-                                  style: monoStyle.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withAlpha(180),
-                                  ),
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 

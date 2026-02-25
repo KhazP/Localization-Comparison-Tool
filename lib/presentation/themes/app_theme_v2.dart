@@ -66,19 +66,39 @@ class AppThemeV2 {
   // THEME FACTORIES
   // ═══════════════════════════════════════════════════════════════════════════
 
+  /// Computes the derived color palette from an accent color.
+  /// [primaryLightness] controls the primary variant lightness (0.5 for dark, 0.7 for light).
+  /// [tertiaryContainerLightness] controls the tertiary container lightness (0.3 for dark, 0.8 for light).
+  static ({
+    Color primary,
+    Color primaryVariant,
+    Color secondary,
+    Color tertiary,
+    Color tertiaryContainer,
+  }) _computeColorPalette(
+    Color accentColor, {
+    double primaryLightness = 0.5,
+    double tertiaryContainerLightness = 0.3,
+  }) {
+    final hsl = HSLColor.fromColor(accentColor);
+    return (
+      primary: accentColor,
+      primaryVariant: hsl.withLightness(primaryLightness).toColor(),
+      secondary: hsl.withHue((hsl.hue + 30) % 360).toColor(),
+      tertiary: hsl.withHue((hsl.hue + 180) % 360).toColor(),
+      tertiaryContainer: HSLColor.fromColor(
+        hsl.withHue((hsl.hue + 180) % 360).toColor(),
+      ).withLightness(tertiaryContainerLightness).toColor(),
+    );
+  }
+
   static ThemeData createDarkTheme(Color accentColor) {
-    final primary = accentColor;
-    final primaryDark = HSLColor.fromColor(accentColor)
-        .withLightness(0.5)
-        .toColor(); // Slightly darker
-    final secondary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
-        .toColor(); // Analogous
-    final tertiary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
-        .toColor(); // Complementary
-    final tertiaryContainer =
-        HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
+    final palette = _computeColorPalette(accentColor);
+    final primary = palette.primary;
+    final primaryDark = palette.primaryVariant;
+    final secondary = palette.secondary;
+    final tertiary = palette.tertiary;
+    final tertiaryContainer = palette.tertiaryContainer;
 
     return ThemeData(
       useMaterial3: true,
@@ -130,17 +150,12 @@ class AppThemeV2 {
 
   /// Mica-enabled dark theme with transparent backgrounds for Windows 11
   static ThemeData createMicaTheme(Color accentColor) {
-    final primary = accentColor;
-    final primaryDark =
-        HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
-    final secondary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
-        .toColor();
-    final tertiary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
-        .toColor();
-    final tertiaryContainer =
-        HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
+    final palette = _computeColorPalette(accentColor);
+    final primary = palette.primary;
+    final primaryDark = palette.primaryVariant;
+    final secondary = palette.secondary;
+    final tertiary = palette.tertiary;
+    final tertiaryContainer = palette.tertiaryContainer;
 
     // Semi-transparent colors for Mica effect
     // Higher alpha values for darker overlays that still show Mica blur but are readable
@@ -228,17 +243,12 @@ class AppThemeV2 {
 
   /// AMOLED theme with pure black backgrounds for OLED displays
   static ThemeData createAmoledTheme(Color accentColor) {
-    final primary = accentColor;
-    final primaryDark =
-        HSLColor.fromColor(accentColor).withLightness(0.5).toColor();
-    final secondary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
-        .toColor();
-    final tertiary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
-        .toColor();
-    final tertiaryContainer =
-        HSLColor.fromColor(tertiary).withLightness(0.3).toColor();
+    final palette = _computeColorPalette(accentColor);
+    final primary = palette.primary;
+    final primaryDark = palette.primaryVariant;
+    final secondary = palette.secondary;
+    final tertiary = palette.tertiary;
+    final tertiaryContainer = palette.tertiaryContainer;
 
     return ThemeData(
       useMaterial3: true,
@@ -289,17 +299,16 @@ class AppThemeV2 {
   }
 
   static ThemeData createLightTheme(Color accentColor) {
-    final primary = accentColor;
-    final primaryLight =
-        HSLColor.fromColor(accentColor).withLightness(0.7).toColor();
-    final secondary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 30) % 360)
-        .toColor();
-    final tertiary = HSLColor.fromColor(accentColor)
-        .withHue((HSLColor.fromColor(accentColor).hue + 180) % 360)
-        .toColor();
-    final tertiaryContainer =
-        HSLColor.fromColor(tertiary).withLightness(0.8).toColor();
+    final palette = _computeColorPalette(
+      accentColor,
+      primaryLightness: 0.7,
+      tertiaryContainerLightness: 0.8,
+    );
+    final primary = palette.primary;
+    final primaryLight = palette.primaryVariant;
+    final secondary = palette.secondary;
+    final tertiary = palette.tertiary;
+    final tertiaryContainer = palette.tertiaryContainer;
 
     return ThemeData(
       useMaterial3: true,

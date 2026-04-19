@@ -12,7 +12,6 @@ permissions:
   checks: write
 
 jobs:
-  # Code quality checks
   analyze:
     name: Analyze & Format
     runs-on: ubuntu-latest
@@ -23,7 +22,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          flutter-version: '3.32.1'
           channel: 'stable'
           cache: true
 
@@ -39,7 +38,6 @@ jobs:
       - name: Run analyzer
         run: flutter analyze --no-pub --no-fatal-warnings --no-fatal-infos
 
-  # Unit and widget tests
   test:
     name: Run Tests
     runs-on: ubuntu-latest
@@ -51,7 +49,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          flutter-version: '3.32.1'
           channel: 'stable'
           cache: true
 
@@ -63,3 +61,58 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.1'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Calculate coverage percentage
+        id: coverage
+        shell: bash
+        run: |
+          LF=$(grep -E '^LF:' coverage/lcov.info | awk -F: '{sum += $2} END {print sum + 0}')
+          LH=$(grep -E '^LH:' coverage/lcov.info | awk -F: '{sum += $2} END {print sum + 0}')
+
+          if [ "$LF" -eq 0 ]; then
+            PERCENT="0.00"
+          else
+            PERCENT=$(awk "BEGIN {printf \"%.2f\", ($LH/$LF)*100}")
+          fi
+
+          echo "coverage=$PERCENT" >> "$GITHUB_OUTPUT"
+          echo "Coverage: $PERCENT%"
+
+      - name: Enforce minimum coverage
+        shell: bash
+        run: |
+          THRESHOLD=20
+          ACTUAL=${{ steps.coverage.outputs.coverage }}
+          echo "Coverage threshold: ${THRESHOLD}%"
+          echo "Actual coverage: ${ACTUAL}%"
+          awk -v actual="$ACTUAL" -v threshold="$THRESHOLD" 'BEGIN {exit (actual >= threshold) ? 0 : 1}'
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-coverage
+          path: coverage/lcov.info

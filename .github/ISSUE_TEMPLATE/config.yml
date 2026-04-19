@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Community Discussions
+    url: https://github.com/KhazP/Localization-Comparison-Tool/discussions
+    about: Ask questions, share ideas, and discuss usage.
+  - name: Support Guide
+    url: https://github.com/KhazP/Localization-Comparison-Tool/blob/main/SUPPORT.md
+    about: Learn where and how to get help.
+  - name: Security Reports
+    url: https://github.com/KhazP/Localization-Comparison-Tool/security/advisories/new
+    about: Report security vulnerabilities privately.

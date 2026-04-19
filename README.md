@@ -4,6 +4,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=for-the-badge)](https://flutter.dev/desktop)
 [![License](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/KhazP/Localization-Comparison-Tool/flutter.yml?style=for-the-badge&label=CI)](https://github.com/KhazP/Localization-Comparison-Tool/actions/workflows/flutter.yml)
+[![Windows Build](https://img.shields.io/github/actions/workflow/status/KhazP/Localization-Comparison-Tool/build-windows.yml?style=for-the-badge&label=Windows+Build&logo=windows)](https://github.com/KhazP/Localization-Comparison-Tool/actions/workflows/build-windows.yml)
 [![GitHub stars](https://img.shields.io/github/stars/KhazP/Localization-Comparison-Tool?style=for-the-badge)](https://github.com/KhazP/Localization-Comparison-Tool/stargazers)
 
 A desktop app for comparing, analyzing, and improving localization files with a fast diff workflow, quality checks, and AI-assisted translation support.
@@ -89,6 +90,20 @@ This project is free to use, free to fork, and open to contributions.
 ## Download
 
 - Latest release binaries: https://github.com/KhazP/Localization-Comparison-Tool/releases
+
+## Development Builds
+
+Every time code is pushed to `main`, a fresh Windows build is automatically compiled and uploaded.
+
+These are **bleeding-edge builds** — you get the very latest features and fixes before they appear in an official release, but they may occasionally be less stable.
+
+**How to get one:**
+1. Go to the [Build Windows Actions page](https://github.com/KhazP/Localization-Comparison-Tool/actions/workflows/build-windows.yml)
+2. Click the most recent successful run (green checkmark ✅)
+3. Scroll to the bottom and download **`localizer-windows-release`**
+4. Unzip and run `localizer_app_main.exe` — no installation needed
+
+> These builds are not code-signed. Windows may show a security warning the first time you run the app. Click **"More info" → "Run anyway"** to proceed.
 
 ## Installation
 
